@@ -109,6 +109,18 @@ A RLS de **todas** as tabelas de tenant libera INSERT/UPDATE/DELETE pra qualquer
 admin — um cabanheiro logado podia se autopromover a admin via API direta. Pré-existente, sistêmico. Retomar com
 o `arquiteto`.
 
+## 💳 Captura de cartão do trial — decisão de arquitetura (ADR 0004, 2026-08-02)
+A landing (`mimba-landing`) pausou o formulário do trial com uma objeção correta: mandar o cartão pra
+nossa `criar-checkout-trial` coloca o projeto em escopo PCI-DSS SAQ D. Investigamos a doc oficial do
+Asaas antes de decidir: **eles não oferecem tokenização client-side** (sem SDK tipo Stripe.js, sem
+chave pública) — o jeito documentado é exatamente o que construímos, backend recebe o cartão e chama
+a API deles com a `access_token` secreta. Decisão: aceitar o risco por ora (sem alternativa
+disponível), documentado em `docs/adr/0004-captura-de-cartao-trial-sem-tokenizacao-client-side.md`.
+Mitigação aplicada na mesma sessão: rate-limit por IP nos dois endpoints públicos de cadastro
+(`criar-checkout` 8/60min, `criar-checkout-trial` 5/60min — mais rígido por lidar com cartão). A
+landing pode retomar o formulário com as regras de higiene do ADR (autocomplete correto, sem
+log/storage do cartão, limpar o form após envio).
+
 ## 🐴 Reprodutivo v3 — TODAS AS 6 FASES CONCLUÍDAS (2026-08-02) — falta QA em staging real + deploy
 Spec completa em `docs/spec-reprodutivo-v3.md`. Unifica as antigas páginas "Reprodutivo" e "Gestação" numa
 tela só, organizada por Ciclo Reprodutivo (jul-jun): Planejador de ciclo (garanhões com saldo por ciclo,
@@ -207,7 +219,7 @@ Asaas → asaas-webhook (valida token) → provisionar-cabanha → cabanha isola
 | **Promover `staging` → `main`** | ❌ decisão pendente há várias sessões, trava suporte a cliente real |
 | Rename repo `cabanha`→`mimba` | ⏳ adiado |
 | Cutover Asaas p/ produção | ❌ trocar `ASAAS_API_KEY`/`ASAAS_BASE_URL` + domínio + redeploy |
-| reCAPTCHA/rate-limit no `criar-checkout` | ❌ antes de expor de verdade |
+| Rate-limit no `criar-checkout`/`criar-checkout-trial` | ✅ 8/60min e 5/60min por IP (2026-08-02) — reCAPTCHA ainda não |
 | Refactor do index.html | ❌ futuro (ADR 0004 com o `arquiteto`) |
 
 ## Gotchas (já mordido)
