@@ -442,6 +442,21 @@
     #modal-midia .modal{width:100%!important;max-width:100vw;border-radius:12px 12px 0 0;max-height:88vh;}
     #modal-foto-full img{max-width:95vw;max-height:70vh;}
   }
+
+  /* V1.5 (Fase 4): Relatórios em PDF via impressão nativa do navegador. #print-area fica
+     fora da tela normal; ao imprimir, ela vira a única coisa visível na página. */
+  #print-area { display:none; }
+  #print-area h1 { font-family:var(--serif); font-size:20px; margin-bottom:4px; }
+  #print-area .rel-sub { font-size:12px; color:#555; margin-bottom:18px; }
+  #print-area table { width:100%; border-collapse:collapse; font-size:11px; }
+  #print-area th, #print-area td { border:1px solid #ccc; padding:5px 7px; text-align:left; }
+  #print-area th { background:#f2f2f2; }
+  #print-area .rel-rodape { margin-top:24px; font-size:10px; color:#888; }
+  @media print {
+    body * { visibility:hidden; }
+    #print-area, #print-area * { visibility:visible; }
+    #print-area { display:block; position:absolute; top:0; left:0; width:100%; }
+  }
 </style>
 </head>
 <body>
@@ -597,6 +612,8 @@
   <button class="nav-btn" onclick="showPage('estoque')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span><span>Estoque</span></button>
   <button class="nav-btn" onclick="showPage('medidas')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="6" rx="1"/><line x1="7" y1="9" x2="7" y2="12"/><line x1="11" y1="9" x2="11" y2="12"/><line x1="15" y1="9" x2="15" y2="12"/><line x1="19" y1="9" x2="19" y2="12"/></svg></span><span>Medidas</span></button>
   <button class="nav-btn" onclick="showPage('sangues')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c0 6 12 6 12 12"/><path d="M18 21c0-6-12-6-12-12"/><line x1="7.5" y1="6" x2="16.5" y2="6"/><line x1="8.5" y1="9.5" x2="15.5" y2="9.5"/><line x1="8.5" y1="14.5" x2="15.5" y2="14.5"/><line x1="7.5" y1="18" x2="16.5" y2="18"/></svg></span><span>Sangues</span></button>
+  <!-- V1.5 (Fase 4): Relatórios em PDF — só aparece se o plano permitir (features.relatorios). -->
+  <button class="nav-btn" id="nav-btn-relatorios" onclick="showPage('relatorios')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span><span>Relatórios</span></button>
   <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border)">
     <!-- V1.5 (Fase 3): só aparece pra quem está em public.mimba_staff (checado no login). -->
     <button id="sidebar-btn-painel-mimba" onclick="abrirPainelMimba()" style="display:none;width:100%;margin-bottom:8px;padding:7px 8px;border-radius:var(--radius);background:var(--purple-l);color:var(--purple-d);border:0.5px solid var(--purple);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
@@ -1429,6 +1446,42 @@
     </div>
   </div>
 </div>
+
+<!-- V1.5 (Fase 4): Relatórios em PDF. Gera um HTML formatado numa área impressa
+     (#print-area) e chama window.print() — sem biblioteca nova (mesma decisão já tomada
+     pra .xlsx: evitar a 1ª dependência externa do projeto sem necessidade real). O
+     usuário escolhe "Salvar como PDF" no diálogo de impressão do navegador. -->
+<div class="page" id="page-relatorios">
+  <div class="page-header">
+    <div><div class="page-title">Relatórios</div><div class="page-sub">Exportáveis em PDF pelo diálogo de impressão do navegador</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+    <div class="card">
+      <div class="card-title">Sanidade do plantel</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Situação, próxima vacina e próximo exame de todos os animais ativos.</div>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorioSanidade()">Gerar PDF</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Histórico sanitário por animal</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Todas as vacinas e exames de um animal específico.</div>
+      <select id="rel-animal-sel" style="width:100%;margin-bottom:10px"><option value="">Selecione um animal...</option></select>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorioHistoricoAnimal()">Gerar PDF</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Relatório de gestações</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Gestações ativas e histórico (dado real — tabela `gestacoes`).</div>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorioGestacoes()">Gerar PDF</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Análise de sangues</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Resumo de linhagem e concentração de sangue do plantel.</div>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorioSangues()">Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Área impressa — invisível na tela normal, é tudo que aparece no diálogo de impressão. -->
+<div id="print-area"></div>
 
 </div><!-- end main -->
 <div class="save-badge" id="save-badge">✓ Dados salvos</div>
@@ -8644,6 +8697,7 @@ showPage=function(id){
   if(id==='estoque'){renderEstoque();renderMovimentos();}
   if(id==='medidas'){renderMedLista();}
   if(id==='saude'){renderSaude();}
+  if(id==='relatorios'){_popularSelectRelatorioAnimal();}
 };
 
 // ─── PATCH switchTab ──────────────────────────────────────────────────────────
@@ -9289,12 +9343,12 @@ async function renderPlanosDisponiveis() {
         <div style="font-size:14px;font-weight:700">${p.nome}${atual ? ' <span class="badge bg" style="font-size:9px">atual</span>' : ''}</div>
         <div style="font-size:18px;font-weight:800;margin:4px 0">R$ ${Number(p.preco_mensal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}<span style="font-size:11px;font-weight:400;color:var(--text3)">/mês</span></div>
         <div style="font-size:11px;color:var(--text2);line-height:1.5">${limites.join('<br>')}</div>
-        ${!atual ? `<button class="btn btn-sm" style="margin-top:10px;width:100%" onclick="_trocarPlanoClick('${p.id}','${p.nome}')">Mudar para este plano</button>` : ''}
+        ${!atual ? `<button class="btn btn-sm" style="margin-top:10px;width:100%" onclick='_trocarPlanoClick(${JSON.stringify(p.id)}, ${JSON.stringify(p.nome)}, ${JSON.stringify(p.features || {})})'>Mudar para este plano</button>` : ''}
       </div>`;
     }).join('') + '</div>';
 }
 
-async function _trocarPlanoClick(planoId, planoNome) {
+async function _trocarPlanoClick(planoId, planoNome, planoFeatures) {
   if (!TENANT_INFO?.tenant_id) return;
   if (!confirm(`Mudar para o plano ${planoNome}?\n\nSe algo na sua cabanha não couber nesse plano (ex.: mais animais do que o limite), a troca é bloqueada e mostramos o que precisa ajustar antes.`)) return;
 
@@ -9311,6 +9365,9 @@ async function _trocarPlanoClick(planoId, planoNome) {
     }
     if (!r.ok || !data?.sucesso) throw new Error(data?.erro || 'Falha ao trocar de plano.');
     TENANT_INFO.plano_id = planoId;
+    TENANT_INFO.plano_features = planoFeatures || null;
+    const relBtn = document.getElementById('nav-btn-relatorios');
+    if (relBtn) relBtn.style.display = planoFeatures?.relatorios === false ? 'none' : '';
     _mostrarStatusSync(`✅ Plano alterado para ${planoNome}`, 'green');
     renderPlanosDisponiveis();
   } catch (e) {
@@ -11288,6 +11345,89 @@ async function _cancelarTrialClick() {
 // Cross-tenant, restrito a public.mimba_staff — não define TENANT_SCHEMA nenhum,
 // só lê agregados via admin_listar_cabanhas() (que já checa sou_staff_mimba()
 // internamente, então não precisa reconferir aqui — a RPC nega sozinha).
+// ─── RELATÓRIOS EM PDF (V1.5, Fase 4) ───────────────────────────────────────
+// Sem biblioteca nova: monta HTML na #print-area e chama window.print() — o
+// usuário escolhe "Salvar como PDF" no diálogo nativo do navegador.
+function _cabecalhoRelatorio(titulo, subtitulo) {
+  const nomeCab = TENANT_INFO?.nome_exibicao || TENANT_INFO?.nome_cabanha || 'Cabanha';
+  return `<h1>${titulo}</h1>
+    <div class="rel-sub">${nomeCab} · ${subtitulo} · gerado em ${new Date().toLocaleDateString('pt-BR')}</div>`;
+}
+function _imprimirRelatorio(html) {
+  document.getElementById('print-area').innerHTML = html;
+  window.print();
+}
+
+function _popularSelectRelatorioAnimal() {
+  const sel = document.getElementById('rel-animal-sel');
+  if (!sel) return;
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Selecione um animal...</option>' +
+    animais.map((a, i) => `<option value="${i}">${a.nome}${a.sbb ? ' · SBB ' + a.sbb : ''}</option>`).join('');
+  if (animais.some((_, i) => String(i) === atual)) sel.value = atual;
+}
+
+function gerarRelatorioSanidade() {
+  const ativos = animais.filter(isNaCabanha);
+  const linhas = ativos.map(a => {
+    const i = animais.indexOf(a);
+    const vac = svac(a.prox_vac), exam = svac(a.val_exame);
+    return `<tr>
+      <td>${a.nome}</td><td>${a.sbb || '—'}</td><td>${a.situacao || '—'}</td>
+      <td>${fd(a.prox_vac)} (${vac.l})</td><td>${fd(a.val_exame)} (${exam.l})</td>
+    </tr>`;
+  }).join('');
+  const html = _cabecalhoRelatorio('Sanidade do Plantel', `${ativos.length} animal(is) ativo(s)`) +
+    `<table><thead><tr><th>Animal</th><th>SBB</th><th>Situação</th><th>Próxima vacina</th><th>Próximo exame</th></tr></thead>
+     <tbody>${linhas || '<tr><td colspan="5">Nenhum animal ativo.</td></tr>'}</tbody></table>
+     <div class="rel-rodape">Mimba — Gestão Crioulos</div>`;
+  _imprimirRelatorio(html);
+}
+
+function gerarRelatorioHistoricoAnimal() {
+  const idx = document.getElementById('rel-animal-sel').value;
+  if (idx === '') return alert('Selecione um animal.');
+  const a = animais[idx];
+  const vacinas = getHistVac(idx).slice().sort((x, y) => y.data.localeCompare(x.data));
+  const exames = getHistExam(idx).slice().sort((x, y) => y.data.localeCompare(x.data));
+  const html = _cabecalhoRelatorio(`Histórico Sanitário — ${a.nome}`, a.sbb ? `SBB ${a.sbb}` : 'sem SBB cadastrado') +
+    `<h3 style="font-size:13px;margin:14px 0 6px">Vacinas (${vacinas.length})</h3>
+     <table><thead><tr><th>Data</th><th>Vacina</th><th>Próxima</th><th>Veterinário</th><th>Dose</th></tr></thead>
+     <tbody>${vacinas.map(v => `<tr><td>${fd(v.data)}</td><td>${v.vacina || '—'}</td><td>${fd(v.prox)}</td><td>${v.vet || '—'}</td><td>${v.dose || '—'}</td></tr>`).join('') || '<tr><td colspan="5">Nenhuma vacina registrada.</td></tr>'}</tbody></table>
+     <h3 style="font-size:13px;margin:14px 0 6px">Exames (${exames.length})</h3>
+     <table><thead><tr><th>Data</th><th>Tipo</th><th>Resultado</th><th>Validade</th><th>Veterinário</th></tr></thead>
+     <tbody>${exames.map(e => `<tr><td>${fd(e.data)}</td><td>${e.tipo || '—'}</td><td>${e.resultado || '—'}</td><td>${fd(e.validade)}</td><td>${e.vet || '—'}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum exame registrado.</td></tr>'}</tbody></table>
+     <div class="rel-rodape">Mimba — Gestão Crioulos</div>`;
+  _imprimirRelatorio(html);
+}
+
+function gerarRelatorioGestacoes() {
+  const ativas = gestacoes.filter(g => g.status === 'gestando');
+  const hist = gestacoes.filter(g => g.status !== 'gestando');
+  const linha = g => `<tr><td>${g.egua_nome || '—'}</td><td>${g.garanhao_nome || '—'}</td><td>${fd(g.data_cobertura)}</td><td>${fd(g.parto_previsto)}</td><td>${g.status}</td></tr>`;
+  const html = _cabecalhoRelatorio('Relatório de Gestações', `${ativas.length} ativa(s) · ${hist.length} no histórico`) +
+    `<h3 style="font-size:13px;margin:14px 0 6px">Gestações ativas</h3>
+     <table><thead><tr><th>Égua</th><th>Garanhão</th><th>Cobertura</th><th>Parto previsto</th><th>Status</th></tr></thead>
+     <tbody>${ativas.map(linha).join('') || '<tr><td colspan="5">Nenhuma gestação ativa.</td></tr>'}</tbody></table>
+     <h3 style="font-size:13px;margin:14px 0 6px">Histórico</h3>
+     <table><thead><tr><th>Égua</th><th>Garanhão</th><th>Cobertura</th><th>Parto previsto</th><th>Status</th></tr></thead>
+     <tbody>${hist.map(linha).join('') || '<tr><td colspan="5">Sem histórico.</td></tr>'}</tbody></table>
+     <div class="rel-rodape">Mimba — Gestão Crioulos</div>`;
+  _imprimirRelatorio(html);
+}
+
+function gerarRelatorioSangues() {
+  // Resumo de pedigree básico do plantel — não é a análise profunda de ancestrais/
+  // consanguinidade (essa é sob consulta individual na página Sangues); aqui é o
+  // export rápido de mãe/pai/pelagem por animal, pra conferência em lote.
+  const linhas = animais.map(a => `<tr><td>${a.nome}</td><td>${a.sbb || '—'}</td><td>${a.pelagem || '—'}</td><td>${a.mae || '—'}</td><td>${a.pai || '—'}</td></tr>`).join('');
+  const html = _cabecalhoRelatorio('Análise de Sangues — Resumo de Pedigree', `${animais.length} animal(is)`) +
+    `<table><thead><tr><th>Animal</th><th>SBB</th><th>Pelagem</th><th>Mãe</th><th>Pai</th></tr></thead>
+     <tbody>${linhas || '<tr><td colspan="5">Nenhum animal cadastrado.</td></tr>'}</tbody></table>
+     <div class="rel-rodape">Mimba — Gestão Crioulos · Para análise detalhada de consanguinidade, use a página Sangues.</div>`;
+  _imprimirRelatorio(html);
+}
+
 async function _checarStaffMimba() {
   const btn = document.getElementById('sidebar-btn-painel-mimba');
   if (!btn) return;
@@ -11382,6 +11522,10 @@ function _entrarApp() {
   }
   _atualizarBannerTrial();
   _checarStaffMimba();
+  // V1.5 (Fase 4): Relatórios em PDF — só pra quem o plano permite (features.relatorios).
+  // Sem plano/feature definida, assume permitido (mesmo default usado nas checagens do banco).
+  const relBtn = document.getElementById('nav-btn-relatorios');
+  if (relBtn) relBtn.style.display = TENANT_INFO?.plano_features?.relatorios === false ? 'none' : '';
   if(nomeCab) document.title = `${nomeCab} — Mimba`;
   const usrSub = document.getElementById('usuarios-sub');
   if(usrSub) usrSub.textContent = 'Controle de acesso ao sistema' + (nomeCab ? ` — ${nomeCab}` : '');

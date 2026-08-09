@@ -2,7 +2,12 @@
 
 > Origem: `docs/roadmap-gestao-crioulo.pdf` (roadmap geral, marco "V1.5 · Consolidação da plataforma ·
 > Agosto 2026"). Decisão do Pedro em 2026-08-02: meta é entregar a V1.5 **completa** até dia 29.
-> Faltam ~27 dias. Este documento quebra os 6 itens da V1.5 em fases executáveis, na ordem recomendada.
+> Este documento quebra os 6 itens da V1.5 em fases executáveis, na ordem recomendada.
+>
+> **✅ Status (2026-08-02): as Fases 1-4 (as 6 funcionalidades da V1.5) estão construídas e testadas
+> localmente, todas em `staging`.** Falta a Fase 0 (QA em staging real com login/dado de verdade +
+> promoção `staging→main`), deliberadamente adiada até o pacote inteiro estar pronto — ver decisão
+> abaixo. Sem essa fase, nada disto chega em produção.
 
 ## Panorama antes de começar
 
@@ -144,9 +149,23 @@ flags de teste que façam sentido + deploy) quando o pacote da V1.5 estiver pron
     status traduzidos, validação de campos do modal mostra erro corretamente.
   - Troca de plano continua bloqueada (ver acima) — só essa parte do Portal ficou pra quando a lista
     chegar.
-- **Relatórios em PDF**: sanidade do plantel, histórico sanitário por animal, relatório de gestações,
-  análise de sangues — geração client-side (`jsPDF` ou similar) ou via Edge Function; independente das
-  outras fases, pode ser paralelizado por outra frente se houver.
+- **Relatórios em PDF ✅ CONSTRUÍDO (2026-08-02) — a V1.5 está completa.**
+  - **Decisão de implementação**: impressão nativa do navegador (`window.print()` + CSS `@media print`
+    numa `#print-area` dedicada) em vez de uma biblioteca como `jsPDF` — mesma lógica já usada pra adiar
+    `.xlsx` na importação de animais: evita a 1ª dependência externa JS do projeto sem necessidade real.
+    O usuário gera o relatório e escolhe "Salvar como PDF" no diálogo de impressão — sem servidor, sem
+    biblioteca, zero dependência nova.
+  - Nova página "Relatórios" (nav lateral) com os 4 relatórios do roadmap geral: **Sanidade do
+    plantel** (situação + próxima vacina/exame de todos os animais ativos), **Histórico sanitário por
+    animal** (vacinas/exames de um animal selecionado), **Relatório de gestações** (ativas + histórico,
+    dado real da tabela `gestacoes`), **Análise de sangues** (resumo de pedigree — mãe/pai/pelagem/SBB
+    em lote; a análise profunda de consanguinidade continua sendo consulta individual na página Sangues,
+    que já existia).
+  - **Gated por plano**: só aparece se `features.relatorios !== false` no plano atual (Potro não tem,
+    Arreio e Tropilha têm) — checado no login (`minhas_cabanhas()` ganhou `plano_features`) e atualizado
+    na hora se o admin trocar de plano pela aba Faturamento, sem precisar relogar.
+  - Testado via servidor local: nav some/aparece conforme o plano, os 4 relatórios geram o HTML esperado
+    (conteúdo real dos arrays em memória — animais, gestações, histórico de vacina/exame).
 
 ## Risco explícito sobre o prazo
 
