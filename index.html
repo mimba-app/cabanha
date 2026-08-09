@@ -1503,6 +1503,11 @@
          de limites por plano (troca de plano fica bloqueada até o Pedro mandar essa lista,
          ver docs/roadmap-v15.md). Admin-only, mesmo padrão de acesso da aba Usuários. -->
     <div id="conta-tab-faturamento" style="display:none;overflow-y:auto;flex:1">
+      <div class="card-title" style="margin-bottom:8px">Seu plano</div>
+      <div id="fat-planos-content" style="margin-bottom:22px">
+        <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
+      </div>
+
       <div class="card-title" style="margin-bottom:8px">Cartão de cobrança</div>
       <div id="fat-cartao-resumo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
       <button class="btn btn-sm" onclick="abrirModalAtualizarCartao()">Atualizar cartão</button>
@@ -9161,7 +9166,7 @@ function abrirTelaConta() {
   if(TENANT_INFO?.logo_url) { logoImg.src = TENANT_INFO.logo_url; logoImg.style.display=''; logoPh.style.display='none'; }
   else { logoImg.style.display='none'; logoPh.style.display='flex'; }
   window._contaNovoLogo = undefined;
-  document.getElementById('conta-cor-primaria').value = TENANT_INFO?.cor_primaria || '#2D5A3D';
+  document.getElementById('conta-cor-primaria').value = TENANT_INFO?.cor_primaria || '#2D6A4F';
   document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
   document.getElementById('conta-tab-cabanha').style.display = '';
   document.getElementById('conta-tab-usuarios').style.display = 'none';
@@ -9242,7 +9247,7 @@ async function salvarDadosCabanha() {
 }
 
 function _resetCorPrimaria() {
-  document.getElementById('conta-cor-primaria').value = '#2D5A3D';
+  document.getElementById('conta-cor-primaria').value = '#2D6A4F';
 }
 
 // ── FATURAMENTO (V1.5, Fase 4 — Portal do cliente, parte 1) ──────────────────
@@ -9257,7 +9262,65 @@ const FAT_STATUS_BADGE = {
 };
 const FAT_FORMA_LABEL = { CREDIT_CARD: 'Cartão de crédito', BOLETO: 'Boleto', PIX: 'PIX', UNDEFINED: 'A escolher' };
 
+// Troca de plano self-service (V1.5, Fase 4). Limites definidos pelo Pedro em 2026-08-02:
+// Potro (15 animais/3 usuários, sem logo/cor/relatórios), Arreio (40/8, com logo e
+// relatórios, sem cor), Tropilha (ilimitado, tudo liberado) — já seedados em public.planos
+// (max_animais/max_usuarios: -1 = ilimitado; features.logo_personalizada/
+// cores_personalizadas/relatorios). A verificação de verdade roda no banco
+// (verificar_troca_plano) — isto aqui só monta a lista e mostra o resultado.
+async function renderPlanosDisponiveis() {
+  const el = document.getElementById('fat-planos-content');
+  let planos;
+  try {
+    planos = await _rpc('listar_planos_ativos', {});
+  } catch (e) { planos = null; }
+  if (!Array.isArray(planos)) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:1.5rem;color:var(--red-d);font-size:12px">Falha ao carregar os planos.</div>';
+    return;
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">' +
+    planos.map(p => {
+      const atual = p.id === TENANT_INFO?.plano_id;
+      const limites = [
+        p.max_animais >= 0 ? `${p.max_animais} animais` : 'Animais ilimitados',
+        p.max_usuarios >= 0 ? `${p.max_usuarios} usuários` : 'Usuários ilimitados',
+      ];
+      return `<div class="card" style="${atual ? 'border-color:var(--green);background:var(--green-l)' : ''}">
+        <div style="font-size:14px;font-weight:700">${p.nome}${atual ? ' <span class="badge bg" style="font-size:9px">atual</span>' : ''}</div>
+        <div style="font-size:18px;font-weight:800;margin:4px 0">R$ ${Number(p.preco_mensal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}<span style="font-size:11px;font-weight:400;color:var(--text3)">/mês</span></div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.5">${limites.join('<br>')}</div>
+        ${!atual ? `<button class="btn btn-sm" style="margin-top:10px;width:100%" onclick="_trocarPlanoClick('${p.id}','${p.nome}')">Mudar para este plano</button>` : ''}
+      </div>`;
+    }).join('') + '</div>';
+}
+
+async function _trocarPlanoClick(planoId, planoNome) {
+  if (!TENANT_INFO?.tenant_id) return;
+  if (!confirm(`Mudar para o plano ${planoNome}?\n\nSe algo na sua cabanha não couber nesse plano (ex.: mais animais do que o limite), a troca é bloqueada e mostramos o que precisa ajustar antes.`)) return;
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/portal-trocar-plano`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: TENANT_INFO.tenant_id, plano_novo_id: planoId }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 409 && data?.bloqueios?.length) {
+      alert(`Não é possível trocar pro plano ${planoNome} agora:\n\n` + data.bloqueios.map(b => `• ${b}`).join('\n'));
+      return;
+    }
+    if (!r.ok || !data?.sucesso) throw new Error(data?.erro || 'Falha ao trocar de plano.');
+    TENANT_INFO.plano_id = planoId;
+    _mostrarStatusSync(`✅ Plano alterado para ${planoNome}`, 'green');
+    renderPlanosDisponiveis();
+  } catch (e) {
+    alert(e instanceof Error ? e.message : 'Falha ao trocar de plano.');
+  }
+}
+
 async function renderFaturamento() {
+  renderPlanosDisponiveis();
+
   const resumoEl = document.getElementById('fat-cartao-resumo');
   resumoEl.textContent = TENANT_INFO?.status === 'trial'
     ? 'Cartão cadastrado no teste grátis — será cobrado automaticamente ao final do período.'
@@ -11163,6 +11226,11 @@ function _misturarComBranco(hex, pct) {
 }
 function _aplicarCorPrimaria(cor) {
   const root = document.documentElement.style;
+  // tenants.cor_primaria tem um DEFAULT no banco ('#2D6A4F') — nunca é null de verdade,
+  // então "não personalizada" precisa ser tratado como esse valor de fábrica, não só null
+  // (achado no meio da Fase 4: sem isso, TODA cabanha aplicava essa cor por engano desde a
+  // Fase 1, mesmo quem nunca abriu a Tela de Conta pra mexer nisso).
+  if (cor === '#2D6A4F') cor = null;
   if (cor && _hexParaRgb(cor)) {
     root.setProperty('--green', cor);
     root.setProperty('--green-d', cor);

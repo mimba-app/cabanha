@@ -102,11 +102,34 @@ flags de teste que façam sentido + deploy) quando o pacote da V1.5 estiver pron
     cadastrados do que o plano novo permite), a troca **bloqueia** com uma mensagem explicando exatamente
     o que precisa ajustar antes (ex.: "reduza pra X animais ativos"), não deixa trocar e só regularizar
     depois.
-  - **🚫 BLOQUEADO — aguardando o Pedro**: ainda não existe a lista de recursos/limites de cada plano
-    (Potro/Arreio/Tropilha). Sem isso não dá pra escrever a validação (não sei o que checar). **Não
-    implementar a troca de plano até essa lista chegar** — combinado explicitamente, não é esquecimento.
-  - O resto do Portal do cliente (histórico de faturas, atualização de forma de pagamento) não depende
-    dessa lista — pode ser construído em paralelo.
+  - **✅ Lista de limites recebida e troca de plano CONSTRUÍDA (2026-08-02).** Potro (15 animais, 3
+    usuários, sem logo/cor/relatórios), Arreio (40 animais, 8 usuários, com logo e relatórios, sem cor),
+    Tropilha (ilimitado, tudo liberado). **Achado ao investigar**: `max_animais`/`max_usuarios`/
+    `features.logo_personalizada`/`cores_personalizadas`/`relatorios` **já existiam em `public.planos`**,
+    seedados desde antes desta sessão com exatamente esses valores — nunca tinham sido conectados a
+    nenhuma validação. Zero migration de schema necessária, só a lógica.
+  - Nova RPC `verificar_troca_plano(tenant_id, plano_novo_id)` (admin-only): conta animais/usuários ativos
+    no schema da cabanha, compara com os limites do plano novo, checa se logo/cor personalizada em uso
+    são permitidas no plano novo — devolve `{pode, bloqueios: [...]}` com mensagem específica por
+    violação. Nova edge function `portal-trocar-plano` (roda a verificação com o JWT do próprio usuário,
+    se bloqueado devolve os motivos; se liberado, troca `tenants.plano_id` e atualiza o valor da
+    assinatura ativa no Asaas, se houver). Nova RPC `listar_planos_ativos()` (achado: `public.planos` só
+    tinha policy de leitura pra `anon`, não `authenticated` — o app usa sempre o JWT do usuário, nunca a
+    anon key, então precisava de uma RPC pra conseguir listar os planos na Tela de Conta).
+  - **⚠️ Achado sério corrigido no caminho**: `tenants.cor_primaria` tem um valor **padrão no banco**
+    (`#2D6A4F`) — nunca é `null` de verdade. A função `_aplicarCorPrimaria` da Fase 1 tratava qualquer
+    valor truthy como "cor personalizada" e aplicava por cima do verde padrão da Mimba — na prática, isso
+    aplicava essa cor (ligeiramente diferente do verde real da marca) pra **toda cabanha desde a Fase 1**,
+    mesmo quem nunca abriu a Tela de Conta pra mexer nisso. Confirmado no banco: 6 das 7 cabanhas
+    provisionadas tinham o valor padrão, só 1 (cabanha de teste) tinha cor de verdade customizada.
+    Corrigido: `_aplicarCorPrimaria` agora trata `#2D6A4F` como "não personalizado" (equivalente a null);
+    `_resetCorPrimaria()` e o valor de fallback ao abrir a Tela de Conta também alinhados pra esse mesmo
+    valor (antes usavam `#2D5A3D`, um verde diferente, o que faria "Restaurar padrão" gravar um valor que
+    a própria verificação de troca de plano trataria como "ainda personalizado").
+  - Testado via servidor local com `_rpc`/`fetch` simulados: lista de planos renderiza com preços/limites/
+    "ilimitado", badge de plano atual, botão de troca só nos outros planos.
+  - O resto do Portal do cliente (histórico de faturas, atualização de forma de pagamento) não dependia
+    dessa lista — já tinha sido construído antes, ver item abaixo.
   - **✅ Histórico de faturas + atualizar cartão — CONSTRUÍDO (2026-08-02).** Nova aba "Faturamento" na
     Tela de Conta (admin-only, mesmo padrão da aba Usuários). Duas edge functions novas
     (`verify_jwt=true`, mesmo padrão de `convidar-usuario` — checam admin ativo do tenant antes de
