@@ -220,7 +220,7 @@ Asaas → asaas-webhook (valida token) → provisionar-cabanha → cabanha isola
 | Rename repo `cabanha`→`mimba` | ⏳ adiado |
 | Cutover Asaas p/ produção | ❌ trocar `ASAAS_API_KEY`/`ASAAS_BASE_URL` + domínio + redeploy |
 | Rate-limit no `criar-checkout`/`criar-checkout-trial` | ✅ 8/60min e 5/60min por IP (2026-08-02) — reCAPTCHA ainda não |
-| Refactor do index.html | ❌ futuro (ADR 0004 com o `arquiteto`) |
+| Refactor do index.html | ❌ futuro (precisa de um ADR novo com o `arquiteto` — `0004` já foi usado pra captura de cartão do trial) |
 
 ## Gotchas (já mordido)
 - **Trocou secret de Edge Function → redeploy a função** (cache do valor antigo).
