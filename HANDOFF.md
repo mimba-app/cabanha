@@ -125,8 +125,18 @@ log/storage do cartão, limpar o form após envio).
 Spec completa em `docs/spec-reprodutivo-v3.md`. Unifica as antigas páginas "Reprodutivo" e "Gestação" numa
 tela só, organizada por Ciclo Reprodutivo (jul-jun): Planejador de ciclo (garanhões com saldo por ciclo,
 éguas de cria com toggle "reprodutora neste ciclo", receptora/cobertura comprada via SBB, marketplace entre
-cabanhas), mais as abas herdadas da Gestação (Acasalamentos, Gestações, Agenda, Fontes, Protocolos,
-Nascimentos, Crias por ciclo, Matrizes, Reprodutores, Histórico arquivado).
+cabanhas), mais as abas herdadas da Gestação.
+- **Limpeza de abas (2026-08-11)**: pedido do Pedro — 12 abas estavam confusas, do 3º menu em diante. Reduzido
+  pra 8: Planejador de ciclo e Acasalamentos ficaram como estavam (já claras). Removidas "Agenda reprodutiva"
+  (só lia a tabela legada `coberturas2`, redundante e inferior aos cards de "Gestações", que já mostram
+  timeline real por gestação) e "Nascimentos" (lista idêntica a "Crias por ciclo", só sem agrupar por ciclo).
+  "Matrizes" + "Reprodutores" viraram uma aba só ("Plantel", duas seções). "Gestações legadas em aberto" +
+  "Histórico arquivado" viraram uma aba só ("Legado", duas seções) — **não foram removidas** apesar de serem
+  dados legados, porque a Cabanha Mãe de Deus ainda tem 4 gestações legadas em aberto de verdade (confirmado
+  no banco) que precisam ser fechadas manualmente por lá. "Fontes de Cobertura" ganhou o rótulo "(histórico
+  completo)" pra deixar claro que complementa o Planejador (que só mostra ciclo atual+próximo) com o
+  histórico de todos os ciclos. `renderGestAgenda()` e os divs/ids órfãos (`gest-agenda`, `gest-nascimentos`,
+  `tab-reprod`, `tab-cob-hist` como tab separada) foram removidos do código, não só escondidos.
 - **Fase 0** (banco): `animais.confirmado`, `fontes_cobertura.demerito`, corte de ciclo em julho, bônus
   `tem_rm`+`demerito` empilhado, `coberturas` arquivada (`coberturas_arquivadas_legado`), provisionamento
   corrigido. Aplicada em produção (banco compartilhado). Migration: `docs/migrations/2026-08-02-reprodutivo-fase0.sql`.

@@ -1021,15 +1021,11 @@
     <button class="tab active" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
     <button class="tab" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
     <button class="tab" onclick="switchTab(this,'gest-gestacoes')">Gestações</button>
-    <button class="tab" onclick="switchTab(this,'gest-agenda')">Agenda reprodutiva</button>
-    <button class="tab" onclick="switchTab(this,'gest-fontes')">Fontes de Cobertura</button>
+    <button class="tab" onclick="switchTab(this,'gest-fontes')">Fontes de Cobertura (histórico completo)</button>
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
-    <button class="tab" onclick="switchTab(this,'gest-nascimentos')">Nascimentos</button>
-    <button class="tab" onclick="switchTab(this,'gest-ativas')">Gestações legadas em aberto</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
-    <button class="tab" onclick="switchTab(this,'tab-matrizes')">Matrizes</button>
-    <button class="tab" onclick="switchTab(this,'tab-reprod')">Reprodutores</button>
-    <button class="tab" onclick="switchTab(this,'tab-cob-hist')">Histórico arquivado</button>
+    <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
+    <button class="tab" onclick="switchTab(this,'gest-ativas')">Legado</button>
   </div>
   <div id="tab-planejador">
     <div id="planejador-ciclo-pills" style="display:flex;gap:8px;margin-bottom:14px"></div>
@@ -1053,27 +1049,16 @@
     <div id="planejador-ofertas-enviadas" style="margin-top:10px"></div>
   </div>
   <div id="tab-ciclos" style="display:none"><div id="ciclos-content"></div></div>
-  <div id="tab-matrizes" style="display:none"><div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Matriz</th><th>SBB</th><th>Pelagem</th><th>Crias registradas</th><th>Situação</th></tr></thead><tbody id="tbody-matrizes"></tbody></table></div></div>
-  <div id="tab-reprod" style="display:none"><div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Reprodutor</th><th>Crias na cabanha</th></tr></thead><tbody id="tbody-reprod"></tbody></table></div></div>
-  <div id="tab-cob-hist" style="display:none">
-    <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Histórico arquivado — este registro antigo de cobertura foi descontinuado (ver aba "Planejador de ciclo"). Os dados abaixo ficam preservados só como consulta.</div>
-    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Égua</th><th>Padrillo / Macho</th><th>Data</th><th>Tipo</th><th>Resultado</th><th>Obs</th></tr></thead><tbody id="tbody-cob-hist"></tbody></table></div>
+  <div id="tab-matrizes" style="display:none">
+    <div class="card-title" style="margin:0 0 8px">Matrizes</div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Matriz</th><th>SBB</th><th>Pelagem</th><th>Crias registradas</th><th>Situação</th></tr></thead><tbody id="tbody-matrizes"></tbody></table></div>
+    <div class="card-title" style="margin:22px 0 8px">Reprodutores</div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Reprodutor</th><th>Crias na cabanha</th></tr></thead><tbody id="tbody-reprod"></tbody></table></div>
   </div>
 
   <!-- Abaixo: abas herdadas da antiga página "Gestação", fundida aqui na Fase 5 da spec
        docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
-       lugar, só o menu. "Gestações ativas"/"Histórico de coberturas" (que liam a tabela
-       coberturas_arquivadas_legado) foram descontinuadas — "Histórico" já era 100%
-       redundante com "Histórico arquivado" acima; a parte "ativas" virou "Gestações
-       legadas em aberto" (só as que ainda não foram fechadas, sem botão de criar novas). -->
-  <div id="gest-nascimentos" style="display:none">
-    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
-      <table><thead><tr>
-        <th style="padding:9px 10px">Animal</th><th>Nascimento</th><th>Mãe</th><th>Pai</th><th>Sexo</th><th>Pelagem</th><th>Situação</th>
-      </tr></thead><tbody id="tbody-nascimentos"></tbody></table>
-    </div>
-  </div>
-  <div id="gest-agenda" style="display:none"><div id="gest-agenda-content"></div></div>
+       lugar, só o menu. -->
   <div id="gest-fontes" style="display:none">
     <div class="filter-row">
       <select id="fc-f-ciclo" onchange="renderFontesCobertura()" style="width:160px">
@@ -1152,8 +1137,12 @@
     <div id="gest-protocolos-content"></div>
   </div>
   <div id="gest-ativas" style="display:none">
+    <div class="card-title" style="margin:0 0 8px">Gestações legadas em aberto</div>
     <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Registro legado (tabela arquivada) — só mostra prenhezes que ainda não foram fechadas. Sem botão de criar novas; feche as que restarem editando o resultado.</div>
     <div id="gest-ativas-content"></div>
+    <div class="card-title" style="margin:22px 0 8px">Histórico arquivado</div>
+    <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Histórico arquivado — este registro antigo de cobertura foi descontinuado (ver aba "Planejador de ciclo"). Os dados abaixo ficam preservados só como consulta.</div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Égua</th><th>Padrillo / Macho</th><th>Data</th><th>Tipo</th><th>Resultado</th><th>Obs</th></tr></thead><tbody id="tbody-cob-hist"></tbody></table></div>
   </div>
 </div>
 
@@ -5519,7 +5508,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-planejador','tab-ciclos','tab-matrizes','tab-reprod','tab-cob-hist','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-nascimentos','gest-agenda','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -7191,7 +7180,7 @@ function salvarCoberturaGest() {
   else { coberturas2.push(obj); _dbSalvarCobertura(obj, coberturas2.length-1); }
   window._padrilloExtra = null;
   closeModal('modal-cobertura-gest');
-  renderGestacao(); renderGestAgenda();
+  renderGestacao();
 }
 
 function editCobGest(i) {
@@ -7261,56 +7250,6 @@ function renderGestacao(){
       ${c.obs?`<div style="font-size:11px;color:var(--text3);margin-top:6px">Obs: ${c.obs}</div>`:''}
     </div>`;
   }).join('');}
-
-  const nel=document.getElementById('tbody-nascimentos');
-  if(nel){
-    const crias=animais.filter(a=>a.nasc&&a.mae&&a.pai).sort((a,b)=>b.nasc.localeCompare(a.nasc));
-    nel.innerHTML=crias.map(a=>`<tr>
-      <td style="padding:8px 10px;font-weight:600">${a.nome}</td>
-      <td style="font-size:12px">${fd(a.nasc)}</td>
-      <td style="font-size:12px">${a.mae}</td>
-      <td style="font-size:12px">${a.pai}</td>
-      <td>${sexm(a.sexo)}</td>
-      <td style="font-size:11px">${a.pelagem||'—'}</td>
-      <td>${sitb(a.situacao)}</td>
-    </tr>`).join('');
-  }
-}
-
-function renderGestAgenda(){
-  const el=document.getElementById('gest-agenda-content');if(!el)return;
-  const itens=[];
-  coberturas2.filter(c=>c.resultado==='Prenha'&&c.data).forEach(c=>{
-    // Usar data de parto prevista manual se existir, senão calcular pelos 335 dias
-    const dCob=pd(c.data);
-    const dtP = c.parto_prev ? pd(c.parto_prev) : (dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null);
-    if(!dtP) return;
-    const dias=Math.round((dtP-HOJE)/864e5);
-    itens.push({tipo:'parto',data:dtP,dias,
-      texto:`Parto previsto — ${c.egua} (padrillo: ${c.garanhao||'?'})`,
-      urgente:dias<=30});
-  });
-  coberturas2.filter(c=>c.resultado==='Aguardando'&&c.data).forEach(c=>{
-    const dCob=pd(c.data);if(!dCob)return;
-    const dtD=new Date(dCob.getTime()+18*864e5);
-    const dias=Math.round((dtD-HOJE)/864e5);
-    itens.push({tipo:'diag',data:dtD,dias,texto:`Diagnóstico USG pendente — ${c.egua}`,urgente:dias<=5});
-  });
-  itens.sort((a,b)=>a.dias-b.dias);
-  if(itens.length===0){el.innerHTML='<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum evento reprodutivo programado.</div>';return;}
-  el.innerHTML='<div class="card"><div class="card-title">Próximos eventos reprodutivos</div>'+
-    itens.map(it=>{
-      const cor=it.dias<0?'var(--red)':it.urgente?'var(--amber)':'var(--green)';
-      const cls=it.dias<0?'br':it.urgente?'ba':'bg';
-      return`<div class="agenda-item">
-        <div class="agenda-dot" style="background:${cor}"></div>
-        <div class="agenda-content">
-          <div class="agenda-title">${it.texto}</div>
-          <div class="agenda-sub">${it.tipo==='parto'?_iconGestacao(12)+' Parto':_iconExame(12)+' Diagnóstico'} · ${it.data.toLocaleDateString('pt-BR')}</div>
-        </div>
-        <span class="badge ${cls}">${it.dias<0?Math.abs(it.dias)+'d atrás':it.dias===0?'Hoje!':it.dias+'d'}</span>
-      </div>`;
-    }).join('')+'</div>';
 }
 
 // ─── FONTES DE COBERTURA (Fase 1 — cadastro; consumo real vem nas Fases 2/3) ──
@@ -8693,7 +8632,7 @@ showPage=function(id){
   if(id==='eventos'){renderEventos();renderEvtPorAnimal();renderEvtResultados();}
   // "gestacao" foi fundida em "reprodutivo" na Fase 5 (spec docs/spec-reprodutivo-v3.md) —
   // mesmas funções de render, só a página que mudou.
-  if(id==='reprodutivo'){popularSelectEguas();renderGestacao();renderGestAgenda();renderFontesCobertura();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
+  if(id==='reprodutivo'){popularSelectEguas();renderGestacao();renderFontesCobertura();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
   if(id==='estoque'){renderEstoque();renderMovimentos();}
   if(id==='medidas'){renderMedLista();}
   if(id==='saude'){renderSaude();}
@@ -8708,8 +8647,6 @@ switchTab=function(btn,tid){
   if(tid==='nut-templates')renderTemplatesPage();
   if(tid==='evt-animais')renderEvtPorAnimal();
   if(tid==='evt-resultados')renderEvtResultados();
-  if(tid==='gest-agenda')renderGestAgenda();
-  if(tid==='gest-nascimentos')renderGestacao();
   if(tid==='gest-fontes')renderFontesCobertura();
   if(tid==='est-alertas'||tid==='est-lista')renderEstoque();
   if(tid==='est-movimentos')renderMovimentos();
@@ -9631,7 +9568,6 @@ function excluirCobertura(i) {
   coberturas2.splice(i, 1);
   _dbExcluirCobertura(cob.db_id);
   renderGestacao();
-  renderGestAgenda();
   _mostrarStatusSync('🗑️ Cobertura excluída', 'green');
 }
 
