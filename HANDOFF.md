@@ -137,6 +137,24 @@ cabanhas), mais as abas herdadas da Gestação.
   completo)" pra deixar claro que complementa o Planejador (que só mostra ciclo atual+próximo) com o
   histórico de todos os ciclos. `renderGestAgenda()` e os divs/ids órfãos (`gest-agenda`, `gest-nascimentos`,
   `tab-reprod`, `tab-cob-hist` como tab separada) foram removidos do código, não só escondidos.
+
+## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
+Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
+Investigado a fundo — **dados nunca foram perdidos** (confirmado no banco: 4 gestações abertas intactas
+na tabela `coberturas_arquivadas_legado`). Dois problemas distintos, corrigidos:
+- **`main` (produção) — bug real, isolado do trabalho desta sessão**: o incidente de 02/08 (rename
+  `coberturas` → `coberturas_arquivadas_legado`) só teve o fix aplicado no código que virou o `staging`.
+  O `main` nunca foi corrigido e ficou consultando o nome antigo em 5 pontos (bootstrap de login,
+  exclusão, timeline do animal, salvar cobertura) — a seção "Gestações ativas" ficava sempre vazia em
+  produção, pra **todas as cabanhas**, desde então. Corrigido e deployado via
+  [PR #1](https://github.com/mimba-app/cabanha/pull/1) (hotfix direto, sem passar pelo `staging`, por
+  ser uma correção isolada de nome de tabela já validada lá).
+- **`staging` — problema de visibilidade, não de dado**: a aba nova "Gestações" (Fase 5) é a mais
+  visível e fica vazia pra quem ainda não migrou pro fluxo de Acasalamentos (caso do Luciano) — os
+  dados reais dele ficam só na aba "Legado", que soava como histórico morto. Melhorado: o texto do
+  aviso agora deixa claro que são gestações reais em aberto (não histórico), e a aba "Legado" ganhou um
+  badge com a contagem de gestações abertas (`tab-btn-legado`, atualizado em `renderGestacao()`) pra não
+  parecer vazia/descontinuada quando há dados reais pendentes de fechamento.
 - **Fase 0** (banco): `animais.confirmado`, `fontes_cobertura.demerito`, corte de ciclo em julho, bônus
   `tem_rm`+`demerito` empilhado, `coberturas` arquivada (`coberturas_arquivadas_legado`), provisionamento
   corrigido. Aplicada em produção (banco compartilhado). Migration: `docs/migrations/2026-08-02-reprodutivo-fase0.sql`.

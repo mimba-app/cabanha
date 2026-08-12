@@ -1025,7 +1025,7 @@
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
     <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
-    <button class="tab" onclick="switchTab(this,'gest-ativas')">Legado</button>
+    <button class="tab" id="tab-btn-legado" onclick="switchTab(this,'gest-ativas')">Legado</button>
   </div>
   <div id="tab-planejador">
     <div id="planejador-ciclo-pills" style="display:flex;gap:8px;margin-bottom:14px"></div>
@@ -1138,7 +1138,7 @@
   </div>
   <div id="gest-ativas" style="display:none">
     <div class="card-title" style="margin:0 0 8px">Gestações legadas em aberto</div>
-    <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Registro legado (tabela arquivada) — só mostra prenhezes que ainda não foram fechadas. Sem botão de criar novas; feche as que restarem editando o resultado.</div>
+    <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Gestações reais, registradas no fluxo antigo, que ainda não foram fechadas — não é histórico morto. Sem botão de criar novas; feche cada uma editando o resultado (parto, perda etc.) conforme for confirmando.</div>
     <div id="gest-ativas-content"></div>
     <div class="card-title" style="margin:22px 0 8px">Histórico arquivado</div>
     <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Histórico arquivado — este registro antigo de cobertura foi descontinuado (ver aba "Planejador de ciclo"). Os dados abaixo ficam preservados só como consulta.</div>
@@ -7211,6 +7211,8 @@ function editCobGest(i) {
 
 function renderGestacao(){
   const ativas=coberturas2.filter(c=>c.resultado==='Prenha'||c.resultado==='Aguardando');
+  const tabBtn=document.getElementById('tab-btn-legado');
+  if(tabBtn) tabBtn.innerHTML = ativas.length>0 ? `Legado <span class="badge ba" style="margin-left:4px">${ativas.length}</span>` : 'Legado';
   const el=document.getElementById('gest-ativas-content');
   if(!el)return;
   if(ativas.length===0){el.innerHTML='<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma gestação ativa. Registre uma cobertura com resultado "Prenha".</div>';}
