@@ -2442,11 +2442,14 @@
           ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
         </div>
       </div>
-      <div class="form-group" style="grid-column:1/-1">
+      <div class="form-group">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
           <input type="checkbox" id="ncastrado" style="width:auto"> Castrado
         </label>
       </div>
+      <div class="form-group"><label>Coberturas por ciclo (padrão)
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — só pra garanhões, usado no Planejador</span></label>
+        <input type="number" id="nqtdcob" min="0" step="1" value="120"></div>
       <div class="form-group"><label>Estágio / atividade</label><select id="nest">
         <option value="">— selecione —</option>
         <option value="CAMPO">CAMPO</option>
@@ -2541,6 +2544,7 @@
           <option value="proprio">Próprio</option>
           <option value="cota">Cota</option>
           <option value="direito_uso">Direito de uso</option>
+          <option value="cobertura">Cobertura</option>
         </select>
       </div>
       <div class="form-group"><label>Garanhão</label><input type="text" id="fc-garanhao-nome" placeholder="Nome do garanhão"></div>
@@ -4677,11 +4681,13 @@ function _renderDetCorpo(i, editando) {
             ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
           </div>
         </div>
-        <div class="form-group" style="grid-column:1/-1">
+        <div class="form-group">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
             <input type="checkbox" id="ed-castrado" style="width:auto" ${a.castrado?'checked':''}> Castrado
           </label>
         </div>
+        <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Coberturas por ciclo (padrão)</label>
+          <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:100%;font-size:12px"></div>
       </div>
     </div>`;
   } else {
@@ -4866,6 +4872,7 @@ function salvarEdicaoAnimal() {
   a.obs      = document.getElementById('ed-obs')?.value||'';
   a.confirmado = !!document.getElementById('ed-confirmado')?.checked;
   a.castrado = !!document.getElementById('ed-castrado')?.checked;
+  a.qtd_coberturas_padrao = parseInt(document.getElementById('ed-qtdcob')?.value || '120');
   a.status_cadastro = document.getElementById('ed-status-cadastro')?.value || a.status_cadastro || 'ativo';
   // Persistir no banco
   _dbSalvarAnimal(a, i);
@@ -5082,30 +5089,39 @@ function renderPlanejadorReprodutivo() {
     return;
   }
 
+  // Reprodutivo v4, Fase 2 (spec 3.3): garanhão "próprio" não pede mais quantidade por modal —
+  // o saldo do ciclo nasce automaticamente do padrão cadastrado no animal (qtd_coberturas_padrao,
+  // default 120), editável direto no card (só pra diminuir em relação ao padrão) ou no cadastro do
+  // animal (muda o padrão pra valer nos próximos ciclos).
+  garanhoes.forEach(a => {
+    const jaTem = fontesCobertura.some(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
+      ((a.sbb && f.garanhao_sbb && f.garanhao_sbb === a.sbb) || f.garanhao_nome === a.nome));
+    if (jaTem) return;
+    const novaFonte = {
+      tipo: 'proprio', garanhao_nome: a.nome, garanhao_sbb: a.sbb || '',
+      tem_rm: false, demerito: false,
+      quantidade_adquirida: a.qtd_coberturas_padrao || 120,
+      ciclo, vigencia_inicio: '', vigencia_fim: '',
+      proprietario_cota: '', percentual_cota: '', valor_cobertura: '',
+      status: 'ativa', obs: '',
+    };
+    fontesCobertura.push(novaFonte);
+    _dbSalvarFonteCobertura(novaFonte, fontesCobertura.length - 1);
+  });
+
   contentEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">' +
     garanhoes.map(a => {
       const fIdx = fontesCobertura.findIndex(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
         ((a.sbb && f.garanhao_sbb && f.garanhao_sbb === a.sbb) || f.garanhao_nome === a.nome));
-      const f = fIdx >= 0 ? fontesCobertura[fIdx] : null;
-
-      if (!f) {
-        return `<div class="card" style="border-style:dashed">
-          <div style="font-size:14px;font-weight:700">${a.nome}</div>
-          <div style="font-size:11px;color:var(--text2);margin:4px 0 10px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Sem saldo definido para o ciclo ${ciclo}</div>
-          <button class="btn btn-sm btn-primary" onclick="_criarFonteParaGaranhao('${a.nome.replace(/'/g, "\\'")}','${(a.sbb || '').replace(/'/g, "\\'")}','${ciclo}')">+ Definir saldo deste ciclo</button>
-        </div>`;
-      }
+      const f = fontesCobertura[fIdx];
+      const padrao = a.qtd_coberturas_padrao || 120;
 
       const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
       const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
       return `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
           <div>
-            <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">
-              ${a.nome}
-              ${f.tem_rm ? '<span class="badge ba" style="font-size:9px">RM</span>' : ''}
-              ${f.demerito ? '<span class="badge bb" style="font-size:9px">Demérito</span>' : ''}
-            </div>
+            <div style="font-size:14px;font-weight:700">${a.nome}</div>
             <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
           </div>
         </div>
@@ -5114,26 +5130,48 @@ function renderPlanejadorReprodutivo() {
           <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
         </div>
         <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
-        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-sm" onclick="editFonteCobertura(${fIdx})">Editar saldo do ciclo</button>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px">
+          <label style="display:flex;align-items:center;gap:4px">Disponível neste ciclo:
+            <input type="number" id="fc-inline-qtd-${fIdx}" value="${f.quantidade_adquirida}" min="0" max="${padrao}" step="1" style="width:64px">
+          </label>
+          <button class="btn btn-sm" onclick="_ajustarSaldoCicloProprio(${fIdx},'fc-inline-qtd-${fIdx}')">Salvar</button>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-rm-${fIdx}" style="width:auto" ${f.tem_rm ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'tem_rm',this.checked)"> RM</label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-demerito-${fIdx}" style="width:auto" ${f.demerito ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'demerito',this.checked)"> Demérito</label>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">Máx. ${padrao} — padrão do cadastro do animal. Pra aumentar, edite o padrão em Animais.</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
           ${(f.status === 'ativa' && disponivel > 0) ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${fIdx})">Negociar com outra cabanha</button>` : ''}
         </div>
       </div>`;
     }).join('') + '</div>';
 }
 
-function _selecionarCicloPlanejador(ciclo) {
-  window._cicloPlanejador = ciclo;
+function _ajustarSaldoCicloProprio(fIdx, inputId) {
+  const f = fontesCobertura[fIdx];
+  if (!f) return;
+  const el = document.getElementById(inputId);
+  const novo = parseInt(el?.value || '0');
+  const a = animais.find(x => (f.garanhao_sbb && x.sbb === f.garanhao_sbb) || x.nome === f.garanhao_nome);
+  const padrao = a?.qtd_coberturas_padrao || 120;
+  if (isNaN(novo) || novo < 0) return alert('Informe uma quantidade válida.');
+  if (novo > padrao) return alert(`O saldo deste ciclo não pode passar do padrão do cadastro do animal (${padrao}). Pra aumentar, edite o padrão em Animais.`);
+  f.quantidade_adquirida = novo;
+  _dbSalvarFonteCobertura(f, fIdx);
+  renderPlanejadorReprodutivo();
+  _mostrarStatusSync('✅ Saldo do ciclo atualizado', 'green');
+}
+
+function _ajustarFlagFonteCobertura(fIdx, campo, valor) {
+  const f = fontesCobertura[fIdx];
+  if (!f) return;
+  f[campo] = valor;
+  _dbSalvarFonteCobertura(f, fIdx);
   renderPlanejadorReprodutivo();
 }
 
-// Atalho: abre o modal já-existente de fonte de cobertura pré-preenchido com o
-// garanhão e o ciclo selecionados no planejador — evita digitar tudo de novo.
-function _criarFonteParaGaranhao(nome, sbb, ciclo) {
-  abrirModalFonteCobertura();
-  document.getElementById('fc-garanhao-nome').value = nome;
-  document.getElementById('fc-garanhao-sbb').value = sbb;
-  document.getElementById('fc-ciclo').value = ciclo;
+function _selecionarCicloPlanejador(ciclo) {
+  window._cicloPlanejador = ciclo;
+  renderPlanejadorReprodutivo();
 }
 
 // ─── ÉGUAS DE CRIA NO PLANEJADOR (Fase 3 da spec) ─────────────────────────────
@@ -5313,6 +5351,7 @@ function salvarAnimal(){
     pelagem:document.getElementById('npel').value,
     confirmado:document.getElementById('ncnf').checked,
     castrado:document.getElementById('ncastrado').checked,
+    qtd_coberturas_padrao:parseInt(document.getElementById('nqtdcob').value||'120'),
     ult_vac:'',prox_vac:document.getElementById('npvac').value,
     ult_verm:'',val_exame:document.getElementById('npexame').value,
   });
@@ -5334,6 +5373,7 @@ function _limparFormNovoAnimal() {
   const estEl = document.getElementById('nest'); if (estEl) estEl.value = '';
   const cnfEl = document.getElementById('ncnf'); if (cnfEl) cnfEl.checked = false;
   const casEl = document.getElementById('ncastrado'); if (casEl) casEl.checked = false;
+  const qtdEl = document.getElementById('nqtdcob'); if (qtdEl) qtdEl.value = '120';
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
 }
@@ -7281,7 +7321,7 @@ function renderGestacao(){
 }
 
 // ─── FONTES DE COBERTURA (Fase 1 — cadastro; consumo real vem nas Fases 2/3) ──
-const FC_TIPO_LABEL = {proprio:'Próprio', cota:'Cota', direito_uso:'Direito de uso'};
+const FC_TIPO_LABEL = {proprio:'Próprio', cota:'Cota', direito_uso:'Direito de uso', cobertura:'Cobertura'};
 const FC_STATUS_LABEL = {ativa:'Ativa', vencida:'Vencida', esgotada:'Esgotada', cancelada:'Cancelada'};
 
 function _toggleCamposFonteCobertura() {
@@ -7301,14 +7341,17 @@ function _toggleCamposFonteCobertura() {
 function abrirModalFonteCobertura() {
   document.getElementById('fc-titulo').textContent = 'Nova fonte de cobertura';
   document.getElementById('fc-edit-idx').value = '-1';
-  document.getElementById('fc-tipo').value = 'proprio';
+  // Reprodutivo v4, Fase 2 (spec 3.3): "Próprio" nasce automático no Planejador — este modal (botão
+  // "+ Nova fonte" do topo) agora é pra Cota/Direito de uso/Cobertura, sempre já dentro do ciclo
+  // selecionado no planejador (nunca solto, sem ciclo).
+  document.getElementById('fc-tipo').value = 'cota';
   document.getElementById('fc-garanhao-nome').value = '';
   document.getElementById('fc-garanhao-sbb').value = '';
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = false;
   document.getElementById('fc-demerito').checked = false;
   document.getElementById('fc-qtd').value = '';
-  document.getElementById('fc-ciclo').value = '';
+  document.getElementById('fc-ciclo').value = window._cicloPlanejador || _cicloAtualTexto();
   document.getElementById('fc-vig-ini').value = '';
   document.getElementById('fc-vig-fim').value = '';
   document.getElementById('fc-cota-prop').value = '';
@@ -7348,6 +7391,12 @@ function salvarFonteCobertura() {
   if(!garanhao_nome) return alert('Informe o nome do garanhão.');
   const quantidade_adquirida = parseInt(document.getElementById('fc-qtd').value || '0');
   if(!quantidade_adquirida || quantidade_adquirida <= 0) return alert('Informe a quantidade disponível (maior que zero).');
+  if(tipo === 'proprio') {
+    const sbb = document.getElementById('fc-garanhao-sbb').value.trim();
+    const a = animais.find(x => (sbb && x.sbb === sbb) || x.nome === garanhao_nome);
+    const padrao = a?.qtd_coberturas_padrao || 120;
+    if(quantidade_adquirida > padrao) return alert(`Fonte "Próprio" não pode passar do padrão do cadastro do animal (${padrao}). Pra aumentar, edite o padrão em Animais.`);
+  }
   const ciclo = document.getElementById('fc-ciclo').value.trim();
   if(!ciclo) return alert('Informe o ciclo (ex: 26/27).');
   const vigencia_inicio = document.getElementById('fc-vig-ini').value || '';
@@ -10336,6 +10385,7 @@ async function _sincronizarAoLogin() {
         ult_vac: '', prox_vac: a.prox_vac||'', ult_verm:'', val_exame: a.val_exame||'',
         confirmado: !!a.confirmado,
         castrado: !!a.castrado,
+        qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         status_cadastro: a.status_cadastro || 'ativo',
         ativo: a.ativo
       }));
@@ -10690,6 +10740,7 @@ async function _dbSalvarAnimal(a, idx) {
     val_exame: a.val_exame||null,
     confirmado: !!a.confirmado,
     castrado: !!a.castrado,
+    qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
     status_cadastro: a.status_cadastro || 'ativo',
     criado_por: usuarioAtual?.db_id || null
   };

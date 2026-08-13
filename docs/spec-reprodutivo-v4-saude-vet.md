@@ -305,14 +305,29 @@ fazer sentido sozinha.
   renderizando dados reais de `gestacoes`, campo Castrado some da lista do Planejador, e duas aberturas
   seguidas do modal de receptora sem vazar dado da anterior.
 
-### Fase 2 — Garanhões e Coberturas reestruturados
+### Fase 2 — Garanhões e Coberturas reestruturados ✅ APLICADA (2026-08-13)
 
-- Novo tipo de fonte **"Cobertura"** (avulsa) no modal de fonte.
-- Fluxo **"Próprio"**: para de abrir o modal genérico pedindo quantidade por ciclo. Usa a
-  `qtd_coberturas_padrao` do cadastro do animal (Fase 0, default 120) como saldo inicial do ciclo,
-  editável tanto no cadastro do animal (muda o padrão) quanto dentro do ciclo específico (só pra diminuir).
-- Fluxo **Cota / Direito de uso / Cobertura**: continua pedindo quantidade manual, mas o cadastro passa a
-  acontecer sempre dentro do ciclo do planejador (não solto).
+- Novo tipo de fonte **"Cobertura"** (avulsa) adicionado ao select do modal de fonte (`fc-tipo`) e ao
+  `FC_TIPO_LABEL` — se comporta como "Direito de uso" pra fins de campos visíveis (vigência, sem
+  proprietário/percentual de cota).
+- Fluxo **"Próprio"**: `renderPlanejadorReprodutivo()` não mostra mais "+ Definir saldo deste ciclo" — ao
+  renderizar, cria automaticamente (sem modal) uma fonte `proprio` pro ciclo usando
+  `animais.qtd_coberturas_padrao` (default 120) como saldo inicial. O card do garanhão ganhou edição
+  inline: input de quantidade com `max` travado no padrão do animal (só diminui — tentar passar do
+  padrão mostra alerta explicando que precisa editar o padrão em Animais) + checkboxes de RM/Demérito
+  direto no card, sem abrir modal nenhum. A mesma trava de teto foi replicada em `salvarFonteCobertura()`
+  pra cobrir edições feitas pela aba "Garanhões e Coberturas" (que ainda usa o modal genérico).
+- Campo `qtd_coberturas_padrao` (padrão 120) adicionado ao cadastro/edição de Animais, editável junto do
+  campo Castrado.
+- Fluxo **Cota / Direito de uso / Cobertura**: `abrirModalFonteCobertura()` (botão "+ Nova fonte" do
+  topo) não abre mais com tipo "Próprio" nem ciclo vazio — tipo padrão agora é "Cota", e o campo Ciclo já
+  vem pré-preenchido com o ciclo selecionado no Planejador (nunca mais solto).
+- `_criarFonteParaGaranhao()` removida (função órfã depois da mudança — o fluxo que ela abria não existe
+  mais).
+- Testado via servidor estático local: fonte "própria" nasce automática com o padrão certo, edição inline
+  bloqueia valor acima do padrão (mantém o valor anterior + alerta) e aceita diminuir normalmente, modal
+  genérico abre com tipo "Cota" e ciclo do planejador pré-preenchido, opção "Cobertura" disponível no
+  select.
 
 ### Fase 3 — Remover "Marcar como reprodutora" + simplificar Acasalar
 

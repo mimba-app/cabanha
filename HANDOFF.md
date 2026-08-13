@@ -204,6 +204,14 @@ cabanhas), mais as abas herdadas da Gestação.
   limpava os campos entre usos (afetava sobretudo "+ Adicionar receptora via SBB" usado em sequência).
   Testado localmente, sem tocar em schema/RLS (não precisou de `revisor-isolamento`). Detalhe completo em
   `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 1).
+- **Fase 2 — aplicada em staging (2026-08-13)**: fonte "Próprio" no Planejador de ciclo deixou de abrir
+  modal — nasce automática usando o novo campo `qtd_coberturas_padrao` do cadastro do animal (default
+  120, editável junto do campo Castrado), e o card ganhou edição inline (quantidade travada no padrão —
+  só diminui — + checkboxes RM/Demérito) sem precisar abrir nada. Novo tipo "Cobertura" no select de
+  fonte. O botão "+ Nova fonte" do topo (agora só pra Cota/Direito de uso/Cobertura) já abre com o ciclo
+  do Planejador pré-preenchido, nunca mais solto. Mesma mudança de fluxo/UI da Fase 1, sem schema/RLS
+  novo (a coluna já tinha vindo pronta da Fase 0) — não precisou de `revisor-isolamento`. Detalhe completo
+  em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 2).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
