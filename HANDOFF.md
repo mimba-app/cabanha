@@ -171,14 +171,22 @@ cabanhas), mais as abas herdadas da Gestação.
   `docs/spec-reprodutivo-v4-saude-vet.md`, com plano de 8 fases (Fase 0 = schema; Fases 1-4 = tela do
   criador; Fase 5 = Kanban do veterinário, a maior/mais arriscada; Fases 6-7 = Tratamentos/lote e Menu
   Animais, independentes, podem rodar em paralelo).
-- **Fase 0 — migration escrita (2026-08-13), aguardando o Pedro rodar no SQL Editor**:
-  `docs/migrations/2026-08-13-reprodutivo-v4-fase0.sql`. Cobre `animais.castrado`/
-  `qtd_coberturas_padrao`/`receptora`, `fontes_cobertura.tipo` (+`cobertura`/`embriao`),
-  `acasalamentos.receptora_animal_id` (+ `tipo_cobertura` virou nullable — decidido pelo veterinário, não
-  mais pelo criador), e as tabelas novas `reproducao_estagios`/`reproducao_atividades`/`tratamentos`.
-  Resolve o ❓ que ficava em aberto na spec: `reproducao_estagios` referencia `acasalamentos` (não
-  `gestacoes` — o funil do vet roda todo antes de existir gestação confirmada). Revisão de isolamento
-  rodada, sem vazamento — detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 0).
+- **Fase 0 — aplicada em produção (2026-08-13)**: `docs/migrations/2026-08-13-reprodutivo-v4-fase0.sql`.
+  Cobre `animais.castrado`/`qtd_coberturas_padrao`/`receptora`, `fontes_cobertura.tipo`
+  (+`cobertura`/`embriao`), `acasalamentos.receptora_animal_id` (+ `tipo_cobertura` virou nullable —
+  decidido pelo veterinário, não mais pelo criador), e as tabelas novas
+  `reproducao_estagios`/`reproducao_atividades`/`tratamentos`. Resolve o ❓ que ficava em aberto na spec:
+  `reproducao_estagios` referencia `acasalamentos` (não `gestacoes` — o funil do vet roda todo antes de
+  existir gestação confirmada). Aplicada via `mcp__supabase__apply_migration` — **o MCP não estava mais
+  read-only pra writes**, apesar do `CLAUDE.md` dizer o contrário (confirmar isso antes de assumir que
+  precisa aplicar manualmente numa próxima vez). Verificada ponta a ponta nos 7 tenants (colunas, tabelas,
+  FKs, policies, grants).
+  ⚠️ **Achado real corrigido na hora**: as 3 tabelas novas nasceram no template `public` com RLS desligada
+  e grant padrão pra `anon` (diferente de `public.animais`, que já tinha RLS ligada e zero grant `anon`) —
+  como `public` é exposto pelo PostgREST, isso era uma porta aberta (sem dado real, mas ainda assim).
+  Corrigido: RLS ligada + `revoke ... from anon` nas 3. Migration no repo já reflete a correção.
+  Revisão de isolamento (`revisor-isolamento`) rodada antes de aplicar, sem vazamento cross-tenant.
+  Detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 0).
   ⚠️ **Achado fora de escopo, registrado pra depois**: a RPC `provisionar_schema_cabanha` não recria os
   FKs "antigos" de `acasalamentos` (egua_id, fonte_cobertura_id, veterinario_id, aprovado_por,
   criado_por) pra cabanhas provisionadas a partir de agora — só existem nos tenants já provisionados por

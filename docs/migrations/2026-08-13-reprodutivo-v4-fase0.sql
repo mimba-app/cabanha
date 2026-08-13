@@ -11,8 +11,13 @@
 -- por isso vira nullable aqui. Não duplicamos o campo em `reproducao_estagios` — é 1:1 com
 -- `acasalamentos`, então o valor mora só lá.
 --
--- Aplicar em: template public (passo 1) + todos os schemas cab_* existentes (passo 2).
--- MCP do Supabase é read-only pra writes — rodar este arquivo inteiro no SQL Editor.
+-- Aplicar em: template public (passo 1) + todos os schemas cab_* existentes (passo 2) + RPC de
+-- provisionamento (passo 3). Aplicada em produção em 2026-08-13 via mcp__supabase__apply_migration
+-- (o MCP não estava mais em modo read-only pra writes, apesar do CLAUDE.md dizer o contrário —
+-- confirmado com `select current_setting('transaction_read_only')` = 'off' antes de aplicar).
+-- Rodada em passos separados (não numa transação única) por causa de um erro de sintaxe no meio
+-- do caminho (ver nota antes do segundo `do $$` do Passo 2) — o arquivo abaixo já está com a
+-- versão corrigida, idempotente, pronta pra reaplicar do zero num ambiente novo se precisar.
 
 begin;
 
@@ -117,9 +122,26 @@ comment on table public.tratamentos is
   'Reprodutivo v4 (spec seção 5): machucados, medicação por período etc. — categoria nova em '
   'Saúde & Vacinas, ao lado de Vacinação/Vermifugação/Exames.';
 
+-- Achado ao verificar a migration já aplicada (2026-08-13): tabela nova no template `public`
+-- nasce com RLS desligada e grant padrão pra `anon` — diferente de public.animais, que já tem
+-- RLS ligada (deny-all, zero policies) e anon sem grant nenhum. Como o `public` é exposto pelo
+-- PostgREST por padrão, isso deixaria as 3 tabelas novas do template legíveis/graváveis por
+-- qualquer chamada anônima até esta correção (dado real nunca mora lá, mas mesmo assim).
+alter table public.reproducao_estagios enable row level security;
+alter table public.reproducao_atividades enable row level security;
+alter table public.tratamentos enable row level security;
+revoke all privileges on public.reproducao_estagios from anon;
+revoke all privileges on public.reproducao_atividades from anon;
+revoke all privileges on public.tratamentos from anon;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- PASSO 2 — Replicar em todos os schemas cab_* já provisionados
 -- ═══════════════════════════════════════════════════════════════════════════
+
+-- Nota: a primeira versão deste passo usava um bloco aninhado (declare/begin/end + for r2 in
+-- select unnest(...) loop) pra gerar as 4 policies por tabela sem repetir código. Postgres
+-- rejeitou com "loop variable of loop over rows must be a record variable" — trocado pela forma
+-- linear abaixo (mais verbosa, sem aninhamento), que é o que rodou de verdade em produção.
 
 do $$
 declare r record;
@@ -175,39 +197,60 @@ begin
         criado_em timestamptz not null default now(),
         criado_por uuid references %I.usuarios(id)
       )$f$, r.schema_name, r.schema_name, r.schema_name);
+  end loop;
+end $$;
 
-    -- RLS + grants nas 3 tabelas novas, replicando exatamente o padrão real já em uso nas
-    -- demais tabelas operacionais do tenant (confirmado em cab_mae_de_deus.fontes_cobertura):
-    -- 4 policies por tabela (select/insert/update/delete), cada uma com
-    -- tem_acesso_tenant((select tenants.id from tenants where tenants.schema_name = '<literal>')),
-    -- authenticated apenas — anon sem grant nenhum.
-    declare
-      tselect text := format(
-        '(select public.tem_acesso_tenant((select tenants.id from tenants where tenants.schema_name = %L)))',
-        r.schema_name
-      );
-    begin
-      execute format('alter table %I.reproducao_estagios enable row level security', r.schema_name);
-      execute format('alter table %I.reproducao_atividades enable row level security', r.schema_name);
-      execute format('alter table %I.tratamentos enable row level security', r.schema_name);
+-- RLS + policies + grants nas 3 tabelas novas, em cada tenant — mesmo padrão real já em uso nas
+-- demais tabelas operacionais reprodutivas do tenant (confirmado ao vivo em
+-- cab_mae_de_deus.fontes_cobertura/acasalamentos/gestacoes/tentativas): 4 policies por tabela
+-- (select/insert/update/delete), usando tem_acesso_tenant(<tenant_id> resolvido 1x por tenant),
+-- authenticated apenas — anon sem grant nenhum.
+do $$
+declare
+  r record;
+  v_tenant uuid;
+  tselect text;
+begin
+  for r in select schema_name from public.tenants
+           where provisionado = true
+             and exists (select 1 from pg_namespace where nspname = schema_name)
+  loop
+    select id into v_tenant from public.tenants where schema_name = r.schema_name;
+    tselect := format('(select public.tem_acesso_tenant(%L))', v_tenant);
 
-      for r2 in select unnest(array['reproducao_estagios','reproducao_atividades','tratamentos']) as tabela loop
-        execute format('drop policy if exists %I_select on %I.%I', r2.tabela, r.schema_name, r2.tabela);
-        execute format('create policy %I_select on %I.%I for select to authenticated using (%s)',
-          r2.tabela, r.schema_name, r2.tabela, tselect);
-        execute format('drop policy if exists %I_insert on %I.%I', r2.tabela, r.schema_name, r2.tabela);
-        execute format('create policy %I_insert on %I.%I for insert to authenticated with check (%s)',
-          r2.tabela, r.schema_name, r2.tabela, tselect);
-        execute format('drop policy if exists %I_update on %I.%I', r2.tabela, r.schema_name, r2.tabela);
-        execute format('create policy %I_update on %I.%I for update to authenticated using (%s) with check (%s)',
-          r2.tabela, r.schema_name, r2.tabela, tselect, tselect);
-        execute format('drop policy if exists %I_delete on %I.%I', r2.tabela, r.schema_name, r2.tabela);
-        execute format('create policy %I_delete on %I.%I for delete to authenticated using (%s)',
-          r2.tabela, r.schema_name, r2.tabela, tselect);
+    execute format('alter table %I.reproducao_estagios enable row level security', r.schema_name);
+    execute format('alter table %I.reproducao_atividades enable row level security', r.schema_name);
+    execute format('alter table %I.tratamentos enable row level security', r.schema_name);
 
-        execute format('grant select, insert, update, delete on %I.%I to authenticated', r.schema_name, r2.tabela);
-      end loop;
-    end;
+    execute format('drop policy if exists reproducao_estagios_select on %I.reproducao_estagios', r.schema_name);
+    execute format('create policy reproducao_estagios_select on %I.reproducao_estagios for select to authenticated using (%s)', r.schema_name, tselect);
+    execute format('drop policy if exists reproducao_estagios_insert on %I.reproducao_estagios', r.schema_name);
+    execute format('create policy reproducao_estagios_insert on %I.reproducao_estagios for insert to authenticated with check (%s)', r.schema_name, tselect);
+    execute format('drop policy if exists reproducao_estagios_update on %I.reproducao_estagios', r.schema_name);
+    execute format('create policy reproducao_estagios_update on %I.reproducao_estagios for update to authenticated using (%s) with check (%s)', r.schema_name, tselect, tselect);
+    execute format('drop policy if exists reproducao_estagios_delete on %I.reproducao_estagios', r.schema_name);
+    execute format('create policy reproducao_estagios_delete on %I.reproducao_estagios for delete to authenticated using (%s)', r.schema_name, tselect);
+    execute format('grant select, insert, update, delete on %I.reproducao_estagios to authenticated', r.schema_name);
+
+    execute format('drop policy if exists reproducao_atividades_select on %I.reproducao_atividades', r.schema_name);
+    execute format('create policy reproducao_atividades_select on %I.reproducao_atividades for select to authenticated using (%s)', r.schema_name, tselect);
+    execute format('drop policy if exists reproducao_atividades_insert on %I.reproducao_atividades', r.schema_name);
+    execute format('create policy reproducao_atividades_insert on %I.reproducao_atividades for insert to authenticated with check (%s)', r.schema_name, tselect);
+    execute format('drop policy if exists reproducao_atividades_update on %I.reproducao_atividades', r.schema_name);
+    execute format('create policy reproducao_atividades_update on %I.reproducao_atividades for update to authenticated using (%s) with check (%s)', r.schema_name, tselect, tselect);
+    execute format('drop policy if exists reproducao_atividades_delete on %I.reproducao_atividades', r.schema_name);
+    execute format('create policy reproducao_atividades_delete on %I.reproducao_atividades for delete to authenticated using (%s)', r.schema_name, tselect);
+    execute format('grant select, insert, update, delete on %I.reproducao_atividades to authenticated', r.schema_name);
+
+    execute format('drop policy if exists tratamentos_select on %I.tratamentos', r.schema_name);
+    execute format('create policy tratamentos_select on %I.tratamentos for select to authenticated using (%s)', r.schema_name, tselect);
+    execute format('drop policy if exists tratamentos_insert on %I.tratamentos', r.schema_name);
+    execute format('create policy tratamentos_insert on %I.tratamentos for insert to authenticated with check (%s)', r.schema_name, tselect);
+    execute format('drop policy if exists tratamentos_update on %I.tratamentos', r.schema_name);
+    execute format('create policy tratamentos_update on %I.tratamentos for update to authenticated using (%s) with check (%s)', r.schema_name, tselect, tselect);
+    execute format('drop policy if exists tratamentos_delete on %I.tratamentos', r.schema_name);
+    execute format('create policy tratamentos_delete on %I.tratamentos for delete to authenticated using (%s)', r.schema_name, tselect);
+    execute format('grant select, insert, update, delete on %I.tratamentos to authenticated', r.schema_name);
   end loop;
 end $$;
 

@@ -223,10 +223,12 @@ Se, depois de um DG positivo (gestação ativa), o veterinário registra que a �
 
 ## 8. Fases de implementação
 
-### Fase 0 — Fundação de banco ✅ MIGRATION ESCRITA (2026-08-13), aguardando o Pedro rodar no SQL Editor
+### Fase 0 — Fundação de banco ✅ APLICADA EM PRODUÇÃO (2026-08-13)
 
-Migration em `docs/migrations/2026-08-13-reprodutivo-v4-fase0.sql`. MCP do Supabase é read-only pra
-writes — não foi aplicada por aqui, precisa ser rodada manualmente.
+Migration em `docs/migrations/2026-08-13-reprodutivo-v4-fase0.sql`. Aplicada via
+`mcp__supabase__apply_migration` (o MCP não estava mais read-only pra writes, apesar do CLAUDE.md dizer
+o contrário — confirmado com `select current_setting('transaction_read_only')` antes de aplicar).
+Verificada ponta a ponta nos 7 tenants provisionados (colunas, tabelas, FKs, policies, grants).
 
 - `animais`: novas colunas `castrado boolean not null default false`, `qtd_coberturas_padrao integer not
   null default 120` (padrão sugerido pra fonte "Próprio" por ciclo — não substitui o teto de 240 pra
@@ -263,6 +265,13 @@ writes — não foi aplicada por aqui, precisa ser rodada manualmente.
   como o padrão real hoje em `fontes_cobertura`/`acasalamentos`/`gestacoes`/`tentativas` (tabelas
   "antigas" tipo `animais`/`vacinacoes` ainda usam 1 policy `memb_all`, herdada de antes do Reprodutivo
   v3) — mantido como está por ser o padrão vigente do domínio reprodutivo, não uma invenção.
+- **Achado real na verificação pós-aplicação (corrigido na hora)**: as 3 tabelas novas nasceram no
+  template `public` com RLS **desligada** e grant padrão pra `anon` — diferente de `public.animais`
+  (RLS ligada, deny-all, zero grant pra `anon`). Como o `public` é exposto pelo PostgREST por padrão,
+  isso deixava as 3 tabelas do template legíveis/graváveis por qualquer chamada anônima (dado real nunca
+  mora no template, mas ainda assim era uma porta aberta). Corrigido: RLS ligada + `revoke all ... from
+  anon` nas 3, replicando o padrão de `animais`. Migration/spec atualizadas pra já nascer assim numa
+  reaplicação futura.
 
 ### Fase 1 — Reprodutivo do criador: reordenar, renomear, corrigir
 
