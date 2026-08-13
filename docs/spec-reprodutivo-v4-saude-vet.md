@@ -1,10 +1,9 @@
 # Spec — Reprodutivo v4 + Saúde & Vacinas (revisão pós-reunião com o sócio)
 
-> **Status: revisado pelo Pedro e pelo Thiago (2026-08-12) — pronto para virar plano de fases.** Este
-> documento organiza as anotações da reunião entre Pedro e Thiago revendo o módulo Reprodutivo (v3, recém
-> lançado — `docs/spec-reprodutivo-v3.md`) e a tela de Saúde & Vacinas, e incorpora as respostas às
-> perguntas que ficaram em aberto na primeira rodada. Restam só 2 pontos secundários sem decisão final (❓,
-> seção "Perguntas em aberto") — não bloqueiam o início do trabalho.
+> **Status: spec fechada, pronta pra desenvolvimento.** Revisada por Pedro, Thiago e Luciano em 2026-08-12.
+> Todas as perguntas em aberto foram respondidas — as duas últimas ("Fontes de Cobertura" renomeada pra
+> **"Garanhões e Coberturas"**; corte de perda de cria **reaproveita** a regra de corte de ciclo já
+> existente) foram confirmadas por Pedro em 2026-08-12 e estão incorporadas abaixo.
 
 ## Contexto
 
@@ -69,13 +68,12 @@ Fica como **aba separada** (não funde com o Planejador). Lista tudo disponível
 garanhões, éguas de cria, cotas de cobertura, embriões, receptoras (seção 3.5) etc. — sempre escopado ao
 ciclo selecionado, do mesmo jeito que o Planejador já é por ciclo hoje.
 
-### 3.3 Fontes de Cobertura → renomear e reestruturar
+### 3.3 Fontes de Cobertura → renomeada para "Garanhões e Coberturas" e reestruturada
 
 - **Falta um tipo de fonte**: hoje só existe Próprio / Cota / Direito de uso — falta **"Cobertura"** como
   tipo (cobertura comprada avulsa, sem ser cota nem direito de uso recorrente). Também falta **"Embrião"**
   (próprio ou comprado de outra cabanha) — ver detalhamento completo na seção 3.5 (Receptoras).
-- **Renomear** o conceito/aba "Fontes de Cobertura" para algo como **"Garanhões e Coberturas"** (nome exato
-  a validar).
+- **Renomear** o conceito/aba "Fontes de Cobertura" para **"Garanhões e Coberturas"** (nome confirmado).
 - **Fluxo quando a fonte é "Próprio"** — hoje abre o mesmo modal genérico de "Nova fonte", pedindo pra
   definir quantidade manualmente a cada ciclo, um garanhão por vez. Trocar por:
   - Uma **quantidade máxima padrão**, configurada **no cadastro do animal** (aba Animais), sugerida com
@@ -193,9 +191,9 @@ Se, depois de um DG positivo (gestação ativa), o veterinário registra que a �
   partir daí.
 - **Perda a partir de 01/07** — não dá mais tempo de fechar um novo acasalamento e confirmar gestação
   dentro do ciclo corrente: a égua fica disponível **só pro planejamento do próximo ciclo**.
-- Nota de implementação: essa data de corte (30/06 → 01/07) parece ser a mesma regra de corte de ciclo em
-  julho que já existe no sistema desde a Fase 0 do Reprodutivo v3 — provavelmente dá pra reaproveitar a
-  lógica existente em vez de criar uma nova regra de data do zero. **Confirmar ao especificar a fase.**
+- **Confirmado (2026-08-12): reaproveita a regra de corte de ciclo já existente** (`_calc_ciclo_texto`/
+  `_cicloAtualTexto`, corte em `month >= 7`, Fase 0 do Reprodutivo v3) — não precisa de lógica de data nova,
+  só reusar a mesma função de corte pra decidir se a perda cai antes ou depois da virada de ciclo.
 
 ## 5. Saúde & Vacinas — outras adições (fora do funil reprodutivo)
 
@@ -206,25 +204,133 @@ Se, depois de um DG positivo (gestação ativa), o veterinário registra que a �
 
 ---
 
-## Perguntas em aberto (secundárias — não bloqueiam início do trabalho)
+## 6. Fora de escopo desta rodada (registrado pra não perder, não construir agora)
 
-1. Nome final pra "Fontes de Cobertura" renomeada (seção 3.3) — sugestão "Garanhões e Coberturas",
-   confirmar antes de nomear telas/campos na implementação.
-2. Corte 30/06→01/07 (seção 4.3) — confirmar, ao especificar a fase, se reaproveita a regra de corte de
-   ciclo já existente (Fase 0 do Reprodutivo v3) ou precisa de lógica própria.
+- Importação em lote de SBB puxando a lista completa direto do proprietário via ABCCC (seção 1) — depende
+  de validar se a API/portal da ABCCC expõe isso; tratar como investigação separada antes de virar fase.
 
-Todas as demais perguntas da rodada anterior foram respondidas por Pedro/Thiago/Luciano em 2026-08-12 e
-incorporadas nas seções correspondentes (castrado, apelo gráfico, regra de bloqueio, Plantel disponível,
-receptoras).
+## 7. Dependências entre fases
 
-## Próximos passos
+- **Fase 0** (schema) é pré-requisito de tudo que precisa de coluna/tabela nova: Fases 1 (parte do
+  `castrado`), 2, 4 e 5. Fases 3 e 6 não dependem de schema novo.
+- **Fase 1 → 2 → 3** são sequenciais na mesma tela (Reprodutivo do criador), cada uma builda em cima da
+  anterior.
+- **Fase 4** (Kanban do veterinário) é a maior e mais arriscada — depende da Fase 0 (tabelas novas) e
+  idealmente das Fases 1-3 prontas (o funil recebe o que sai do planejador reestruturado). Fazer por último
+  entre as fases do Reprodutivo, mesmo já com schema pronto desde a Fase 0.
+- **Fase 5** (Tratamentos + lote) e **Fase 6** (Menu Animais) são independentes entre si e do resto —
+  podem rodar em paralelo a qualquer momento, inclusive antes da Fase 4.
 
-1. Quebrar esta spec em fases de implementação — separando o que é **mudança de fluxo/UI** (baixo risco,
-   reaproveita schema existente: reordenar abas, renomear campos, remover "marcar como reprodutora",
-   corrigir o bug do formulário) do que precisa de **schema novo** (estágios do Kanban veterinário, flag de
-   receptora + fonte "embrião", categoria "Tratamentos", quantidade-padrão de coberturas no cadastro de
-   animal, flag "castrado").
-2. Seguir o formato de fases de `docs/spec-reprodutivo-v3.md` (spec fechada → fases numeradas → cada fase
-   testada isoladamente antes da próxima).
-3. As 2 perguntas secundárias acima podem ser resolvidas durante a especificação da fase correspondente,
-   sem precisar de nova rodada de revisão com o sócio.
+## 8. Fases de implementação
+
+### Fase 0 — Fundação de banco
+
+Migration única cobrindo todas as colunas/tabelas novas identificadas nesta spec, aplicada e refletida em
+todos os schemas `cab_*` existentes (skill `nova-migration-tenant`) + template `public`. Revisão de
+isolamento (`revisor-isolamento`) obrigatória — mexe no template e em tabelas novas cross-tenant-schema.
+
+- `animais`: nova coluna `castrado boolean not null default false` (seção 2).
+- `animais`: nova coluna `qtd_coberturas_padrao integer not null default 120` — quantidade máxima padrão
+  de coberturas por ciclo pra garanhão próprio (seção 3.3). Segue valendo o teto de 240 pra Demérito, já
+  existente desde a Fase 0 do Reprodutivo v3 — essa coluna é só o *padrão sugerido*, não substitui o teto
+  regulatório.
+- `animais`: nova coluna `receptora boolean not null default false` — flag estruturada substituindo o texto
+  livre em Observações (seção 3.5). Exigir SBB preenchido como pré-condição de UI ao marcar (não
+  necessariamente constraint de banco).
+- `fontes_cobertura.tipo`: adicionar os valores `cobertura` e `embriao` ao enum/check existente
+  (hoje `proprio`/`cota`/`direito_uso`) — seção 3.3 e 3.5.
+- `acasalamentos` (ou `gestacoes`, avaliar qual tabela é a dona do relacionamento na hora de especificar):
+  nova coluna `receptora_animal_id uuid null references animais(id)` — vincula a gestação à receptora
+  física quando o tipo for TE, mantendo a doadora como a "dona" do registro principal (seção 3.5).
+- Nova tabela **`reproducao_estagios`** (kanban do veterinário, seção 4): acasalamento/gestação de
+  referência, estágio (`controle`/`inseminacao`/`ovuladas`/`dg_precoce`), tipo de acasalamento (IA/monta
+  natural/TE), data de entrada no estágio atual (base pros alertas de janela), flag `bloqueado` (regra da
+  seção 3.1/4.1).
+- Nova tabela **`reproducao_atividades`** (seção 4.2): atividades soltas do veterinário por acasalamento —
+  tipo (medicação/toque/ultrassom/comentário), data, texto/observação, autor.
+- Nova tabela **`tratamentos`** (seção 5), mesmo formato de `vermifugacoes` (animal, data, descrição,
+  período/duração, responsável, observações) — categoria nova em Saúde & Vacinas.
+- ❓ **Único ponto técnico a decidir na hora de escrever a migration** (não bloqueia começar a fase): se
+  `reproducao_estagios` referencia `acasalamentos` ou `gestacoes` como chave estrangeira principal — decidir
+  olhando o schema real das duas tabelas nesse momento, não antecipar aqui.
+
+### Fase 1 — Reprodutivo do criador: reordenar, renomear, corrigir
+
+Mudanças de fluxo/UI de baixo risco na tela Reprodutivo existente — sem depender do Kanban (Fase 4) pra
+fazer sentido sozinha.
+
+- Reordenar abas: **Gestações ativas do ciclo corrente** primeiro, **Planejador de ciclo** segundo,
+  **Acasalamentos** terceiro (seção 3.1).
+- Estilo de card com barra de progresso pra "Gestações ativas" (mesma referência visual da aba "Legado"
+  hoje) — só o estilo, aplicado à aba de dado real do ciclo atual.
+- Renomear "Fontes de Cobertura" pra **"Garanhões e Coberturas"** (seção 3.3).
+- Renomear campo "quantidade adquirida" pra **"quantidade disponível"** (seção 3.3).
+- Campo **"Castrado"** no cadastro/edição de Animais (schema da Fase 0) — some do Plantel disponível e de
+  qualquer seleção em planejamento novo; não afeta histórico (seção 2).
+- Corrigir o bug: modal "Adicionar égua" do planejador não limpa os campos após salvar (seção 3.6).
+
+### Fase 2 — Garanhões e Coberturas reestruturados
+
+- Novo tipo de fonte **"Cobertura"** (avulsa) no modal de fonte.
+- Fluxo **"Próprio"**: para de abrir o modal genérico pedindo quantidade por ciclo. Usa a
+  `qtd_coberturas_padrao` do cadastro do animal (Fase 0, default 120) como saldo inicial do ciclo,
+  editável tanto no cadastro do animal (muda o padrão) quanto dentro do ciclo específico (só pra diminuir).
+- Fluxo **Cota / Direito de uso / Cobertura**: continua pedindo quantidade manual, mas o cadastro passa a
+  acontecer sempre dentro do ciclo do planejador (não solto).
+
+### Fase 3 — Remover "Marcar como reprodutora" + simplificar Acasalar
+
+- Remove o toggle "reprodutora neste ciclo" — égua em estágio "Cria" já é elegível automaticamente.
+- Fluxo "Acasalar" simplificado: seleciona garanhão + égua → gera acasalamento, validando saldo na hora.
+- Égua com gestação ativa pode entrar no planejamento do **próximo** ciclo sempre; no **mesmo** ciclo, só
+  depois que a gestação atual for encerrada (nasceu ou perdeu).
+
+### Fase 4 — Receptoras / Transferência de Embrião + Plantel disponível
+
+- Tipo de fonte **"Embrião"** (próprio ou comprado de outra cabanha), ao lado de Próprio/Cota/Direito de
+  uso/Cobertura.
+- Flag `receptora` (Fase 0) substitui o texto livre em Observações — exigir SBB válido antes de permitir
+  marcar.
+- Regra de parentesco: ao registrar nascimento de um produto de TE, a **mãe gravada é sempre a doadora**
+  (nunca a receptora) — ajustar a tela/fluxo de registro de cria pra pedir explicitamente "doadora do
+  embrião" nesse caso, em vez de assumir a receptora como mãe.
+- Exibição da gestação vinculada à doadora, com sub-rótulo da receptora + SBB (formato exato: seção 3.5).
+- Nova aba **"Plantel disponível"**, separada, escopada por ciclo — garanhões, éguas de cria, cotas,
+  embriões e receptoras disponíveis naquele ciclo (seção 3.2).
+
+### Fase 5 — Kanban do veterinário (Saúde & Vacinas → aba Reprodutivo)
+
+A fase mais complexa da spec — avaliar, ao especificar em detalhe, se vale dividir em sub-fases (ex.:
+5a — estágios 1-2, 5b — estágios 3-4 + regra de corte, 5c — atividades soltas + protocolo automático).
+
+- 4 estágios do Kanban: Controle → Inseminação/Cruzamento → Ovuladas → DG precoce aguardando definitivo
+  (seção 4.1), com transições de avanço/retorno conforme sinalização do veterinário.
+- Migrar o campo "tipo de acasalamento" (IA/monta natural/TE) da aba Acasalamentos do criador pro estágio
+  Controle do Kanban.
+- Alertas visuais de janela: 3-7 dias (estágio 2), 15-20 dias (estágio 3), ~45 dias (estágio 4).
+- Cards de égua com gestação ativa do ciclo atual aparecem **bloqueados** na coluna Controle (não movem até
+  a gestação encerrar) — regra revisada da seção 3.1/4.1.
+- Ação "devolver pro planejamento do criador", disponível em qualquer estágio.
+- Registro de atividades soltas (medicação, toque, ultrassom, comentário) por acasalamento, em qualquer
+  ponto do funil (tabela `reproducao_atividades`, Fase 0).
+- Ao confirmar prenhez (fim do estágio 4): criar protocolo gestacional, reaproveitando "Protocolos" já
+  existente em Saúde & Vacinas.
+- Última etapa do funil: visão "Gestações ativas" em formato Kanban pro veterinário, pra continuar
+  registrando atividades durante a gestação.
+- Perda/nascimento de cria registrável a qualquer momento, por criador ou veterinário.
+- Regra de corte 30/06→01/07 pra perda de cria (seção 4.3), **reaproveitando** `_calc_ciclo_texto`/
+  `_cicloAtualTexto` já existente — perda antes do corte volta pro Controle (com opção de devolver ao
+  planejamento); perda depois do corte só libera pro planejamento do próximo ciclo.
+
+### Fase 6 — Saúde & Vacinas: Tratamentos + registro em lote
+
+- Nova categoria **"Tratamentos"** (tabela `tratamentos`, Fase 0) — machucados, medicação por período etc.
+- Registro em lote pra **Vacinas** e **Exames**, replicando o padrão que já existe em Vermifugação
+  (selecionar vários animais, registrar o mesmo evento pra todos de uma vez).
+
+### Fase 7 — Menu Animais
+
+- Foto do animal no cadastro, visível na listagem.
+- Redesenho da listagem pra grid/swimlane (menos "cara de planilha", mais detalhe por card/linha).
+- Importação em lote por SBB (colar lista, ou subir `.txt`/`.csv`) — a variante "puxar lista completa do
+  proprietário via ABCCC" fica de fora por ora (seção 6, fora de escopo).

@@ -137,15 +137,18 @@ cabanhas), mais as abas herdadas da Gestação.
   completo)" pra deixar claro que complementa o Planejador (que só mostra ciclo atual+próximo) com o
   histórico de todos os ciclos. `renderGestAgenda()` e os divs/ids órfãos (`gest-agenda`, `gest-nascimentos`,
   `tab-reprod`, `tab-cob-hist` como tab separada) foram removidos do código, não só escondidos.
-- **Reprodutivo v4 + funil do veterinário (revisado, 2026-08-12)**: reunião Pedro+Thiago+Luciano levantou
-  uma reestruturação maior — reordenar as abas do criador (gestações ativas primeiro, planejamento depois),
-  remover "marcar como reprodutora", reformular fontes de cobertura (+ tipos "Cobertura" e "Embrião"),
-  reformular receptoras/TE (mãe registrada é sempre a doadora do embrião, não a receptora), e criar um
-  Kanban de acompanhamento reprodutivo pro veterinário dentro de Saúde & Vacinas (hoje isso não existe como
-  fluxo — inclui bloqueio visual, na coluna Controle, de éguas com gestação ativa do ciclo atual). Spec em
-  `docs/spec-reprodutivo-v4-saude-vet.md` — **revisada e pronta pra virar plano de fases**, só 2 perguntas
-  secundárias seguem em aberto (nome final de "Fontes de Cobertura" renomeada; se o corte 30/06→01/07
-  reaproveita a regra de corte de ciclo já existente). Próximo passo: quebrar em fases (padrão da v3).
+- **Reprodutivo v4 + funil do veterinário — spec fechada, 8 fases prontas pra começar (2026-08-12)**:
+  reunião Pedro+Thiago+Luciano levantou uma reestruturação maior — reordenar as abas do criador (gestações
+  ativas primeiro, planejamento depois), remover "marcar como reprodutora", renomear/reformular "Fontes de
+  Cobertura" pra "Garanhões e Coberturas" (+ tipos "Cobertura" e "Embrião"), reformular receptoras/TE (mãe
+  registrada é sempre a doadora do embrião, não a receptora), e criar um Kanban de acompanhamento
+  reprodutivo pro veterinário dentro de Saúde & Vacinas (hoje isso não existe como fluxo — inclui bloqueio
+  visual, na coluna Controle, de éguas com gestação ativa do ciclo atual; corte de perda de cria em 30/06
+  reaproveita a regra de corte de ciclo já existente, sem lógica nova). Spec fechada em
+  `docs/spec-reprodutivo-v4-saude-vet.md`, com plano de 8 fases (Fase 0 = schema; Fases 1-4 = tela do
+  criador; Fase 5 = Kanban do veterinário, a maior/mais arriscada; Fases 6-7 = Tratamentos/lote e Menu
+  Animais, independentes, podem rodar em paralelo). **Ainda não começado** — próximo passo é iniciar pela
+  Fase 0.
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
