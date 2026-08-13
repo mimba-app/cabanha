@@ -9037,7 +9037,7 @@ async function salvarUsuario() {
     if(!ok) {
       if(status === 409) return alert('Este usuário já tem acesso a esta cabanha.');
       if(status === 403) return alert('Somente administradores podem convidar usuários.');
-      return alert('Falha ao convidar usuário: ' + (data?.erro || 'erro desconhecido'));
+      return alert('Falha ao convidar usuário: ' + (data?.erro || data?.message || data?.msg || 'erro desconhecido'));
     }
     closeModal('modal-usuario');
     await _recarregarUsuarios();
@@ -9063,9 +9063,33 @@ async function salvarUsuario() {
   }
 }
 
+// O JWT expira em 1h (padrão Supabase) e só era renovado ao recarregar a página
+// (_tentarRetomarSessao) — sessões abertas por mais de 1h sem reload chamavam
+// edge functions com token vencido. Como essas funções têm verify_jwt=true, o
+// GATEWAY do Supabase barra a chamada ANTES do código da função rodar, com um
+// corpo de erro que não tem a chave "erro" (contrato só das nossas funções) —
+// por isso caía sempre no fallback genérico "erro desconhecido" em vez de um
+// aviso claro. Achado ao investigar convite de usuário falhando pra um admin
+// com sessão aberta há um tempo (2026-08-12).
+async function _garantirTokenValido() {
+  const sessao = _lerSessaoSalva();
+  if(!sessao?.expires_at || Date.now() <= sessao.expires_at - 30000) return;
+  if(!sessao.refresh_token) return;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: sessao.refresh_token })
+    });
+    const d = await r.json().catch(()=>({}));
+    if(r.ok && d.access_token) { AUTH_TOKEN = d.access_token; _salvarSessao(d); }
+  } catch(e) {}
+}
+
 // Chama a edge function convidar-usuario com o JWT do admin logado (não é
 // service_role — a função autentica e autoriza o chamador do lado do servidor).
 async function _chamarConvidarUsuario(payload) {
+  await _garantirTokenValido();
   try {
     const r = await fetch(`${SUPABASE_URL}/functions/v1/convidar-usuario`, {
       method: 'POST',
@@ -9073,6 +9097,7 @@ async function _chamarConvidarUsuario(payload) {
       body: JSON.stringify(payload)
     });
     const data = await r.json().catch(()=>({}));
+    if(r.status === 401) return { ok: false, status: 401, data: { erro: 'Sessão expirada. Recarregue a página (F5) e tente de novo.' } };
     return { ok: r.ok, status: r.status, data };
   } catch(e) {
     return { ok: false, status: 0, data: { erro: 'Falha de conexão' } };
@@ -9104,7 +9129,7 @@ async function reenviarConviteUsuario(idx) {
   const { ok, status, data } = await _chamarConvidarUsuario({ tenant_id: TENANT_INFO?.tenant_id, nome: u.nome, email: u.login, perfil: u.perfil });
   if(!ok) {
     if(status === 403) return alert('Somente administradores podem reenviar convites.');
-    return alert('Falha ao reenviar convite: ' + (data?.erro || 'erro desconhecido'));
+    return alert('Falha ao reenviar convite: ' + (data?.erro || data?.message || data?.msg || 'erro desconhecido'));
   }
   _mostrarStatusSync(data?.email_enviado === false ? '⚠️ Falha ao enviar o e-mail' : '✅ Código reenviado', data?.email_enviado === false ? 'amber' : 'green');
 }
