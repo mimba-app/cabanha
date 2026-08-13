@@ -450,11 +450,26 @@ Implementada inteira, sem dividir em sub-fases — o desenho ficou direto o sufi
   solta persiste e aparece no card; devolver pro planejamento reseta o acasalamento e remove o estágio;
   botão de tentativa removido do lado do criador sem quebrar o resto do card.
 
-### Fase 6 — Saúde & Vacinas: Tratamentos + registro em lote
+### Fase 6 — Saúde & Vacinas: Tratamentos + registro em lote ✅ APLICADA (2026-08-13)
 
-- Nova categoria **"Tratamentos"** (tabela `tratamentos`, Fase 0) — machucados, medicação por período etc.
-- Registro em lote pra **Vacinas** e **Exames**, replicando o padrão que já existe em Vermifugação
-  (selecionar vários animais, registrar o mesmo evento pra todos de uma vez).
+- Nova categoria **"Tratamentos"** (tabela `tratamentos`, Fase 0) — aba própria em Saúde & Vacinas,
+  botão "+ Tratamento" no cabeçalho, lista simples (animal/início/fim/descrição/responsável) com
+  editar/excluir. Sem registro em lote — é sempre específico de um animal por natureza.
+- Registro em lote pra **Vacinas** e **Exames** (`renderLoteAnimais()`, `loteToggleAnimal()`,
+  `loteSelecionarTodos()` — genéricas, parametrizadas por `'vac'`/`'exam'` em vez de duplicar a lista de
+  seleção duas vezes): mesma UI de seleção (buscar, todos/nenhum, contador) que já existia só em
+  Vermifugação, reaproveitando as classes CSS `.verm-animal-row`/`.verm-check` (genéricas apesar do
+  nome). Versão de formulário **simplificada** em relação ao "+ Vacinar"/"+ Exame" de 1 animal — sem os
+  campos especiais de AIE (resultado/laboratório/número) e sem anexo de laudo em PDF; quem precisar
+  desses recursos continua usando o fluxo individual, que não mudou.
+- **Achado real no caminho, corrigido**: `salvarVermifugacaoGrupo()` — a função que já existia e serviu
+  de referência pro padrão de lote — **nunca chamava `_dbSalvarVermifugacao()`**. O registro em lote de
+  vermifugação só gravava em memória (`histVermifugacoes`, `animais[i].ult_verm`) e nunca persistia no
+  banco; a função de persistência existia pronta, só não era chamada de lugar nenhum. Corrigido (uma
+  linha) — sem isso, teria replicado o mesmo bug nas funções novas de Vacina/Exame em lote.
+- Testado via servidor estático local: vacina/exame em lote persistem (`POST vacinacoes`/`POST exames`)
+  pra cada animal selecionado; vermifugação em lote agora também persiste (`POST vermifugacoes`,
+  confirmado que antes não chamava nada); tratamento novo salva, aparece na lista, e edita/exclui.
 
 ### Fase 7 — Menu Animais
 

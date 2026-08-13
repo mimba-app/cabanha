@@ -803,13 +803,17 @@
     <div><div class="page-title">Saúde & Vacinas</div><div class="page-sub">Controle sanitário do plantel</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="abrirModalVac()">+ Vacinar</button>
+      <button class="btn" onclick="openModal('modal-vac-lote');renderLoteAnimais('vac')">+ Vacinar em lote</button>
       <button class="btn" onclick="abrirModalExame()">+ Exame</button>
+      <button class="btn" onclick="openModal('modal-exam-lote');renderLoteAnimais('exam')">+ Exame em lote</button>
+      <button class="btn" onclick="abrirModalTratamento()">+ Tratamento</button>
     </div>
   </div>
   <div class="tab-row">
     <button class="tab active" onclick="switchTab(this,'tab-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
     <button class="tab" onclick="switchTab(this,'tab-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
     <button class="tab" onclick="switchTab(this,'tab-verm')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
+    <button class="tab" onclick="switchTab(this,'tab-tratamentos')">Tratamentos</button>
     <button class="tab" onclick="switchTab(this,'tab-hist-vac')">Histórico Vacinas</button>
     <button class="tab" onclick="switchTab(this,'tab-hist-exam')">Histórico Exames</button>
     <button class="tab" onclick="switchTab(this,'tab-pendencias')">Pendências <span id="pend-count-badge"></span></button>
@@ -968,6 +972,15 @@
       </div>
       <div id="verm-historico-content"></div>
     </div>
+  </div>
+
+  <!-- Reprodutivo v4, Fase 6 (spec seção 5): categoria nova, ao lado de Vacinação/Vermifugação/
+       Exames — machucados, medicação por período etc. -->
+  <div id="tab-tratamentos" style="display:none">
+    <div class="filter-row">
+      <input type="text" id="trat-busca" placeholder="Buscar animal..." style="width:200px" oninput="renderTratamentos()">
+    </div>
+    <div id="tratamentos-content"></div>
   </div>
 
   <!-- HISTÓRICO VACINAS -->
@@ -2278,6 +2291,110 @@
       <button class="btn" onclick="closeModal('modal-reg-exam')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarRegistroExame()">Salvar exame</button>
     </div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 6 (spec seção 5): registro em lote de Vacina, mesmo comportamento que já
+     existia só em Vermifugação — selecionar vários animais e registrar a mesma vacina pra todos.
+     Versão simplificada da rica (sem AIE/anexos, que continuam só no "+ Vacinar" de 1 animal). -->
+<div class="modal-bg" id="modal-vac-lote">
+  <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
+    <div class="modal-header"><span class="modal-title">Vacinar em lote</span><button class="modal-close" onclick="closeModal('modal-vac-lote')">×</button></div>
+    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <div style="font-size:13px;font-weight:700">Selecionar animais</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="vaclote-sel-count" class="verm-sel-count" style="display:none">0 selecionados</span>
+            <button class="btn btn-sm" onclick="loteSelecionarTodos('vac',true)">Todos</button>
+            <button class="btn btn-sm" onclick="loteSelecionarTodos('vac',false)">Nenhum</button>
+          </div>
+        </div>
+        <div style="padding:6px 8px;border-bottom:0.5px solid var(--border)">
+          <input type="text" id="vaclote-busca" placeholder="Buscar..." style="width:100%;font-size:11px" oninput="renderLoteAnimais('vac')">
+        </div>
+        <div id="vaclote-animais-lista" style="max-height:380px;overflow-y:auto"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1"><label>Vacina</label><input type="text" id="vaclote-vacina" placeholder="Ex: Influenza/Tétano"></div>
+        <div class="form-group"><label>Data</label><input type="date" id="vaclote-data"></div>
+        <div class="form-group"><label>Próxima dose</label><input type="date" id="vaclote-prox"></div>
+        <div class="form-group"><label>Veterinário</label><input type="text" id="vaclote-vet"></div>
+        <div class="form-group"><label>Dose</label><input type="text" id="vaclote-dose"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="vaclote-obs"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-vac-lote')">Cancelar</button><button class="btn btn-primary" onclick="salvarVacinaLote()">Registrar pra selecionados</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 6: mesma ideia pra Exames. -->
+<div class="modal-bg" id="modal-exam-lote">
+  <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
+    <div class="modal-header"><span class="modal-title">Exame em lote</span><button class="modal-close" onclick="closeModal('modal-exam-lote')">×</button></div>
+    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <div style="font-size:13px;font-weight:700">Selecionar animais</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="examlote-sel-count" class="verm-sel-count" style="display:none">0 selecionados</span>
+            <button class="btn btn-sm" onclick="loteSelecionarTodos('exam',true)">Todos</button>
+            <button class="btn btn-sm" onclick="loteSelecionarTodos('exam',false)">Nenhum</button>
+          </div>
+        </div>
+        <div style="padding:6px 8px;border-bottom:0.5px solid var(--border)">
+          <input type="text" id="examlote-busca" placeholder="Buscar..." style="width:100%;font-size:11px" oninput="renderLoteAnimais('exam')">
+        </div>
+        <div id="examlote-animais-lista" style="max-height:380px;overflow-y:auto"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1"><label>Tipo de exame</label>
+          <select id="examlote-tipo">
+            <option>Anemia Infecciosa Equina (AIE)</option>
+            <option>Mormo</option>
+            <option>Exame parasitológico</option>
+            <option>Exame pré-prova</option>
+            <option>Exame pré-transporte</option>
+            <option>Hemograma completo</option>
+            <option>Bioquímica sérica</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Data</label><input type="date" id="examlote-data"></div>
+        <div class="form-group"><label>Validade</label><input type="date" id="examlote-validade"></div>
+        <div class="form-group"><label>Veterinário/Laboratório</label><input type="text" id="examlote-vet"></div>
+        <div class="form-group"><label>Resultado</label>
+          <select id="examlote-resultado">
+            <option value="PENDENTE">Pendente</option>
+            <option value="NEGATIVO">Negativo</option>
+            <option value="POSITIVO">Positivo</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="examlote-obs"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-exam-lote')">Cancelar</button><button class="btn btn-primary" onclick="salvarExameLote()">Registrar pra selecionados</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 6 (spec seção 5): categoria nova "Tratamentos" — machucados, medicação por
+     período etc. Mesmo espírito de Vermifugação, sem registro em lote (é sempre específico de um
+     animal por natureza — não faz sentido "machucar vários ao mesmo tempo"). -->
+<div class="modal-bg" id="modal-tratamento">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><span class="modal-title" id="trat-titulo">Novo tratamento</span><button class="modal-close" onclick="closeModal('modal-tratamento')">×</button></div>
+    <input type="hidden" id="trat-edit-idx" value="-1">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Animal</label>
+        <select id="trat-animal"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group"><label>Data de início</label><input type="date" id="trat-data-inicio"></div>
+      <div class="form-group"><label>Data de fim (opcional)</label><input type="date" id="trat-data-fim"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Descrição</label><input type="text" id="trat-descricao" placeholder="Ex: Machucado na pata traseira, medicação com X"></div>
+      <div class="form-group"><label>Responsável</label><input type="text" id="trat-resp" placeholder="Veterinário / cabanheiro"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Observações</label><textarea id="trat-obs" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-tratamento')">Cancelar</button><button class="btn btn-primary" onclick="salvarTratamento()">Salvar</button></div>
   </div>
 </div>
 
@@ -4070,7 +4187,11 @@ function salvarVermifugacaoGrupo() {
   const reg   = { data, prox, produto, via, resp, obs, registradoEm: new Date().toISOString().slice(0,10) };
   const nomes = [];
   _vermSelecionados.forEach(i=>{
-    getHistVerm(i).push({...reg});
+    const novoReg = {...reg};
+    getHistVerm(i).push(novoReg);
+    // Achado real (Reprodutivo v4, Fase 6): esse registro em lote nunca chamava
+    // _dbSalvarVermifugacao — ficava só em memória, sem persistir no banco.
+    _dbSalvarVermifugacao(novoReg, i);
     // Atualizar ult_verm no animal
     const mais = getHistVerm(i).reduce((a,b)=>b.data>a.data?b:a);
     animais[i].ult_verm = mais.data;
@@ -4088,6 +4209,186 @@ function salvarVermifugacaoGrupo() {
   renderVermStatusPlantel();
   renderDashboard();
   alert(`✅ Vermifugação registrada para ${nomes.length} animal(is):\n${nomes.join(', ')}`);
+}
+
+// ── Reprodutivo v4, Fase 6 (spec seção 5): registro em lote genérico, mesmo comportamento de
+// seleção que já existia só em Vermifugação — reaproveitado aqui pra Vacinas e Exames em vez de
+// duplicar a lista de seleção duas vezes. `tipo` é 'vac' ou 'exam'.
+const _loteSelecionados = { vac: new Set(), exam: new Set() };
+
+function renderLoteAnimais(tipo) {
+  const el = document.getElementById(`${tipo}lote-animais-lista`);
+  if(!el) return;
+  const busca = (document.getElementById(`${tipo}lote-busca`)?.value||'').toLowerCase();
+  const lista = animais.filter(a => isAtivo(a) && (!busca || a.nome.toLowerCase().includes(busca)));
+  if(!lista.length) { el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--text3);font-size:12px">Nenhum animal encontrado.</div>'; return; }
+  const sel = _loteSelecionados[tipo];
+  el.innerHTML = lista.map(a=>{
+    const i = animais.indexOf(a);
+    const marcado = sel.has(i);
+    return `<div class="verm-animal-row${marcado?' selected':''}" onclick="loteToggleAnimal('${tipo}',${i})">
+      <div class="verm-check">${marcado?'✓':''}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${a.nome}</div>
+        <div style="font-size:10px;color:var(--text2)">${a.sexo||'—'} · ${a.estagio||'—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  _loteAtualizarResumo(tipo);
+}
+
+function loteToggleAnimal(tipo, i) {
+  const sel = _loteSelecionados[tipo];
+  if(sel.has(i)) sel.delete(i); else sel.add(i);
+  renderLoteAnimais(tipo);
+}
+
+function loteSelecionarTodos(tipo, marcar) {
+  const busca = (document.getElementById(`${tipo}lote-busca`)?.value||'').toLowerCase();
+  const sel = _loteSelecionados[tipo];
+  animais.forEach((a,i)=>{
+    if(!isAtivo(a)) return;
+    if(busca && !a.nome.toLowerCase().includes(busca)) return;
+    if(marcar) sel.add(i); else sel.delete(i);
+  });
+  renderLoteAnimais(tipo);
+}
+
+function _loteAtualizarResumo(tipo) {
+  const countEl = document.getElementById(`${tipo}lote-sel-count`);
+  const n = _loteSelecionados[tipo].size;
+  if(countEl) {
+    countEl.textContent = `${n} selecionado${n!==1?'s':''}`;
+    countEl.style.display = n>0?'inline-block':'none';
+  }
+}
+
+function salvarVacinaLote() {
+  const sel = _loteSelecionados.vac;
+  if(sel.size===0) return alert('Selecione pelo menos um animal.');
+  const vacina = document.getElementById('vaclote-vacina').value.trim();
+  if(!vacina) return alert('Informe a vacina.');
+  const data = document.getElementById('vaclote-data').value;
+  if(!data) return alert('Informe a data.');
+  const prox = document.getElementById('vaclote-prox').value;
+  const vet  = document.getElementById('vaclote-vet').value;
+  const dose = document.getElementById('vaclote-dose').value;
+  const obs  = document.getElementById('vaclote-obs').value;
+  const nomes = [];
+  sel.forEach(i=>{
+    const reg = { vacina, data, prox, vet, dose, obs, isAIE:false };
+    if(!histVacinas[i]) histVacinas[i] = [];
+    histVacinas[i].push(reg);
+    _dbSalvarVacina(reg, i);
+    if(prox) animais[i].prox_vac = prox;
+    nomes.push(animais[i].nome);
+  });
+  sel.clear();
+  closeModal('modal-vac-lote');
+  ['vaclote-vacina','vaclote-data','vaclote-prox','vaclote-vet','vaclote-dose','vaclote-obs'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  renderKanbanVac(); renderDashboard();
+  alert(`✅ Vacina registrada para ${nomes.length} animal(is):\n${nomes.join(', ')}`);
+}
+
+function salvarExameLote() {
+  const sel = _loteSelecionados.exam;
+  if(sel.size===0) return alert('Selecione pelo menos um animal.');
+  const tipo = document.getElementById('examlote-tipo').value;
+  const data = document.getElementById('examlote-data').value;
+  if(!data) return alert('Informe a data.');
+  const validade = document.getElementById('examlote-validade').value;
+  const vet = document.getElementById('examlote-vet').value;
+  const resultado = document.getElementById('examlote-resultado').value;
+  const obs = document.getElementById('examlote-obs').value;
+  const nomes = [];
+  sel.forEach(i=>{
+    const reg = { tipo, data, validade, vet, resultado, obs };
+    if(!histExames[i]) histExames[i] = [];
+    histExames[i].push(reg);
+    _dbSalvarExame(reg, i);
+    if(validade) animais[i].val_exame = validade;
+    nomes.push(animais[i].nome);
+  });
+  sel.clear();
+  closeModal('modal-exam-lote');
+  ['examlote-data','examlote-validade','examlote-vet','examlote-obs'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  renderKanbanExam(); renderDashboard();
+  alert(`✅ Exame registrado para ${nomes.length} animal(is):\n${nomes.join(', ')}`);
+}
+
+// ── Reprodutivo v4, Fase 6: Tratamentos ────────────────────────────────────
+function renderTratamentos() {
+  const el = document.getElementById('tratamentos-content');
+  if(!el) return;
+  const busca = (document.getElementById('trat-busca')?.value||'').toLowerCase();
+  const lista = tratamentos.filter(t => !busca || (t.animal_nome||'').toLowerCase().includes(busca))
+    .slice().sort((a,b) => (b.data_inicio||'').localeCompare(a.data_inicio||''));
+  if(!lista.length) { el.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum tratamento registrado.</div>'; return; }
+  el.innerHTML = '<div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr>' +
+    '<th style="padding:9px 10px">Animal</th><th>Início</th><th>Fim</th><th>Descrição</th><th>Responsável</th><th></th>' +
+    '</tr></thead><tbody>' +
+    lista.map(t => {
+      const i = tratamentos.indexOf(t);
+      return `<tr>
+        <td style="padding:8px 10px;font-weight:600">${t.animal_nome}</td>
+        <td style="font-size:12px">${fd(t.data_inicio)}</td>
+        <td style="font-size:12px">${t.data_fim ? fd(t.data_fim) : '<span class="badge ba">em andamento</span>'}</td>
+        <td style="font-size:12px">${t.descricao}</td>
+        <td style="font-size:12px;color:var(--text2)">${t.resp||'—'}</td>
+        <td><button class="btn btn-sm" onclick="abrirModalTratamento(${i})">editar</button> <button class="btn btn-sm" style="color:var(--red-d)" onclick="excluirTratamento(${i})">🗑</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table></div>';
+}
+
+function abrirModalTratamento(idx) {
+  const t = idx !== undefined && idx >= 0 ? tratamentos[idx] : null;
+  document.getElementById('trat-titulo').textContent = t ? 'Editar tratamento' : 'Novo tratamento';
+  document.getElementById('trat-edit-idx').value = t ? idx : -1;
+  const selAnimal = document.getElementById('trat-animal');
+  const ativos = animais.filter(isAtivo);
+  selAnimal.innerHTML = '<option value="">Selecione...</option>' +
+    ativos.map(a => `<option value="${a.db_id}">${a.nome}</option>`).join('');
+  selAnimal.value = t?.animal_id || '';
+  document.getElementById('trat-data-inicio').value = t?.data_inicio || HOJE.toISOString().slice(0,10);
+  document.getElementById('trat-data-fim').value = t?.data_fim || '';
+  document.getElementById('trat-descricao').value = t?.descricao || '';
+  document.getElementById('trat-resp').value = t?.resp || '';
+  document.getElementById('trat-obs').value = t?.obs || '';
+  openModal('modal-tratamento');
+}
+
+function salvarTratamento() {
+  const idx = parseInt(document.getElementById('trat-edit-idx').value || '-1');
+  const animalId = document.getElementById('trat-animal').value;
+  if(!animalId) return alert('Selecione o animal.');
+  const animal = animais.find(a => String(a.db_id) === String(animalId));
+  const dataInicio = document.getElementById('trat-data-inicio').value;
+  if(!dataInicio) return alert('Informe a data de início.');
+  const descricao = document.getElementById('trat-descricao').value.trim();
+  if(!descricao) return alert('Informe a descrição do tratamento.');
+  const obj = {
+    animal_id: animalId, animal_nome: animal?.nome || '',
+    data_inicio: dataInicio, data_fim: document.getElementById('trat-data-fim').value || null,
+    descricao, resp: document.getElementById('trat-resp').value || '',
+    obs: document.getElementById('trat-obs').value || '',
+  };
+  if(idx >= 0) { tratamentos[idx] = {...tratamentos[idx], ...obj}; _dbSalvarTratamento(tratamentos[idx], idx); }
+  else { tratamentos.push(obj); _dbSalvarTratamento(obj, tratamentos.length - 1); }
+  closeModal('modal-tratamento');
+  renderTratamentos();
+}
+
+function excluirTratamento(idx) {
+  const t = tratamentos[idx];
+  if(!t) return;
+  if(!confirm(`Excluir o tratamento de ${t.animal_nome} (${t.descricao})?\n\nEsta ação não pode ser desfeita.`)) return;
+  tratamentos.splice(idx, 1);
+  _dbExcluirTratamento(t.db_id);
+  renderTratamentos();
 }
 
 function renderVermStatusPlantel() {
@@ -5711,7 +6012,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-planejador','tab-plantel-disponivel','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-plantel-disponivel','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -5731,6 +6032,7 @@ function switchTab(btn,tid){
   if(tid==='gest-protocolos') renderProtocolos();
   if(tid==='tab-proto-repro') renderKanbanProtoRepro();
   if(tid==='tab-reprodutivo-vet') renderReprodutivoVet();
+  if(tid==='tab-tratamentos') renderTratamentos();
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -7174,6 +7476,10 @@ const REPRO_ESTAGIO_LABEL = {controle:'Controle', inseminacao:'Inseminação/Cru
 // em qualquer ponto do funil — inclusive depois de virar gestação real.
 let reproducaoAtividades = [];
 const REPRO_ATIVIDADE_LABEL = {medicacao:'Medicação', toque:'Toque', ultrassom:'Ultrassom', comentario:'Comentário'};
+
+// Reprodutivo v4, Fase 6 (spec seção 5): Tratamentos — machucados, medicação por período etc.,
+// categoria nova em Saúde & Vacinas (tabela `tratamentos`, Fase 0).
+let tratamentos = [];
 
 // ─── PADRILLO: seletor e busca ABCCC ─────────────────────────────────────────
 function popularSelectEguas() {
@@ -11068,6 +11374,23 @@ async function _sincronizarAoLogin() {
       });
     }
 
+    tratamentos.length = 0;
+    let dbTrat = bootstrap.tratamentos;
+    if(!dbTrat) {
+      try { dbTrat = await _supa('GET', 'tratamentos', null, '?order=data_inicio.desc'); }
+      catch(e) { dbTrat = null; }
+    }
+    if(dbTrat) {
+      dbTrat.forEach(t => {
+        const animal = animais.find(a => a.db_id === t.animal_id);
+        tratamentos.push({
+          db_id: t.id, animal_id: t.animal_id, animal_nome: animal?.nome || '(animal removido)',
+          data_inicio: t.data_inicio, data_fim: t.data_fim || null,
+          descricao: t.descricao, resp: t.resp || '', obs: t.obs || '',
+        });
+      });
+    }
+
     // 6. Medidas
     if(dbMed) {
       Object.keys(medidas).forEach(k => delete medidas[k]);
@@ -11467,6 +11790,25 @@ async function _dbSalvarReproducaoAtividade(at, idx) {
   if(res?.[0]?.id) reproducaoAtividades[idx].db_id = res[0].id;
 }
 
+// ── Reprodutivo v4, Fase 6: Tratamentos ───────────────────────────────────
+async function _dbSalvarTratamento(t, idx) {
+  const payload = {
+    animal_id: t.animal_id, data_inicio: t.data_inicio, data_fim: t.data_fim || null,
+    descricao: t.descricao, resp: t.resp || null, obs: t.obs || null,
+    criado_por: usuarioAtual?.db_id || null,
+  };
+  if(t.db_id) {
+    await _supa('PATCH', 'tratamentos', payload, '?id=eq.' + t.db_id);
+  } else {
+    const res = await _supa('POST', 'tratamentos', payload);
+    if(res?.[0]?.id) tratamentos[idx].db_id = res[0].id;
+  }
+}
+async function _dbExcluirTratamento(dbId) {
+  if(!dbId) return;
+  await _supa('DELETE', 'tratamentos', null, '?id=eq.' + dbId);
+}
+
 // ── Protocolos reprodutivos (Fase 5) ──────────────────────────────────────
 async function _dbSalvarProtocolo(p, idx) {
   const payload = {
@@ -11781,7 +12123,7 @@ function _limparEstadoLocal() {
   // da cabanha ANTERIOR. Achado na revisão de isolamento antes do corte final da Fase 5.
   [animais, coberturas2, coberturas, eventosEsp, estoque, movimentos, lancamentos, pendencias, USUARIOS,
    fontesCobertura, acasalamentos, coberturasNegociadas, gestacoes, tentativas,
-   reproducaoEstagios, reproducaoAtividades]
+   reproducaoEstagios, reproducaoAtividades, tratamentos]
     .forEach(a => { if (Array.isArray(a)) a.length = 0; });
   [histVacinas, histExames, medidas, histVermifugacoes]
     .forEach(o => Object.keys(o).forEach(k => delete o[k]));

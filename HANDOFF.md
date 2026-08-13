@@ -247,6 +247,15 @@ cabanhas), mais as abas herdadas da Gestação.
   Planejador já recalculam dinamicamente a partir de hoje, então o ciclo antigo simplesmente some das
   opções depois do corte, sem precisar de lógica de bloqueio dedicada. Detalhe completo em
   `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 5).
+- **Fase 6 — aplicada em staging (2026-08-13)**: nova aba "Tratamentos" em Saúde & Vacinas (tabela já
+  criada na Fase 0). Registro em lote pra Vacinas e Exames — mesma UI de seleção (buscar/todos/nenhum)
+  que já existia só em Vermifugação, agora genérica (`renderLoteAnimais('vac'|'exam')`) em vez de
+  duplicada; formulário simplificado (sem AIE/anexo, que continuam só no fluxo individual).
+  ⚠️ **Achado real, corrigido**: o registro em lote de Vermifugação (a função que serviu de referência
+  pro padrão) **nunca persistia no banco** — só gravava em memória, `_dbSalvarVermifugacao()` existia
+  mas não era chamada de lugar nenhum. Corrigido; sem isso, o mesmo bug teria sido replicado nas funções
+  novas. Mudança de fluxo/UI + tabela já criada na Fase 0 — não precisou de `revisor-isolamento`. Detalhe
+  completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 6).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
