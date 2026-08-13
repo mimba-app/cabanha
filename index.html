@@ -71,7 +71,7 @@
     display:block; font-family:var(--serif); font-size:17px; font-weight:700; color:var(--text);
     margin-top:10px; line-height:1.2; overflow-wrap:break-word;
   }
-  .powered-by { margin-top:auto; text-align:center; font-family:var(--serif); font-size:11px; color:var(--ouro); padding-top:10px; letter-spacing:.02em; }
+  .powered-by { font-family:var(--serif); color:var(--ouro); letter-spacing:.02em; }
   .nav-btn {
     display:flex; align-items:center; gap:10px; padding:8px 10px 8px 12px; border-radius:var(--radius);
     cursor:pointer; font-size:13px; color:var(--text2); border:none; background:none; width:100%;
@@ -611,8 +611,7 @@
   <button class="nav-btn" onclick="showPage('sangues')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c0 6 12 6 12 12"/><path d="M18 21c0-6-12-6-12-12"/><line x1="7.5" y1="6" x2="16.5" y2="6"/><line x1="8.5" y1="9.5" x2="15.5" y2="9.5"/><line x1="8.5" y1="14.5" x2="15.5" y2="14.5"/><line x1="7.5" y1="18" x2="16.5" y2="18"/></svg></span><span>Sangues</span></button>
   <!-- V1.5 (Fase 4): Relatórios em PDF — só aparece se o plano permitir (features.relatorios). -->
   <button class="nav-btn" id="nav-btn-relatorios" onclick="showPage('relatorios')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span><span>Relatórios</span></button>
-  <div class="powered-by">powered by Mimba.</div>
-  <div style="padding-top:1rem;border-top:0.5px solid var(--border)">
+  <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border)">
     <!-- V1.5 (Fase 3): só aparece pra quem está em public.mimba_staff (checado no login). -->
     <button id="sidebar-btn-painel-mimba" onclick="abrirPainelMimba()" style="display:none;width:100%;margin-bottom:8px;padding:7px 8px;border-radius:var(--radius);background:var(--purple-l);color:var(--purple-d);border:0.5px solid var(--purple);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
@@ -649,7 +648,7 @@
 <div class="page active" id="page-dashboard">
   <div class="page-header">
     <div><div class="page-title">Dashboard</div><div class="page-sub" id="data-hoje"></div></div>
-    <span style="font-size:11px;color:var(--text3)" id="update-label">Dados ABCCC integrados</span>
+    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba.</span></span>
   </div>
 
   <!-- MÉTRICAS -->
