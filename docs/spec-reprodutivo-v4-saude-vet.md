@@ -273,20 +273,37 @@ Verificada ponta a ponta nos 7 tenants provisionados (colunas, tabelas, FKs, pol
   anon` nas 3, replicando o padrão de `animais`. Migration/spec atualizadas pra já nascer assim numa
   reaplicação futura.
 
-### Fase 1 — Reprodutivo do criador: reordenar, renomear, corrigir
+### Fase 1 — Reprodutivo do criador: reordenar, renomear, corrigir ✅ APLICADA (2026-08-13)
 
 Mudanças de fluxo/UI de baixo risco na tela Reprodutivo existente — sem depender do Kanban (Fase 4) pra
 fazer sentido sozinha.
 
 - Reordenar abas: **Gestações ativas do ciclo corrente** primeiro, **Planejador de ciclo** segundo,
-  **Acasalamentos** terceiro (seção 3.1).
+  **Acasalamentos** terceiro (seção 3.1). Feito — só reordenação de botões/visibilidade padrão, nenhum id
+  mudou (o "Ver gestação" do kanban de Protocolo Reprodutivo, que seleciona a aba por atributo `onclick`,
+  continua funcionando sem ajuste).
 - Estilo de card com barra de progresso pra "Gestações ativas" (mesma referência visual da aba "Legado"
-  hoje) — só o estilo, aplicado à aba de dado real do ciclo atual.
-- Renomear "Fontes de Cobertura" pra **"Garanhões e Coberturas"** (seção 3.3).
-- Renomear campo "quantidade adquirida" pra **"quantidade disponível"** (seção 3.3).
-- Campo **"Castrado"** no cadastro/edição de Animais (schema da Fase 0) — some do Plantel disponível e de
-  qualquer seleção em planejamento novo; não afeta histórico (seção 2).
-- Corrigir o bug: modal "Adicionar égua" do planejador não limpa os campos após salvar (seção 3.6).
+  hoje) — `_gestCard()` trocou o visual `.kanban-card` (compacto, sem barra) pelo `.gest-card` +
+  `.gest-prog`/`.gest-dias` (nome, garanhão, badge de trimestre, barra de progresso, dias de gestação e
+  parto previsto) — mantendo a timeline detalhada e os botões de ação (aplicar protocolo, registrar
+  parto/aborto/perda) que já existiam.
+- Renomeada "Fontes de Cobertura" pra **"Garanhões e Coberturas"** (seção 3.3) — só o rótulo da aba, id
+  (`gest-fontes`) e função de render (`renderFontesCobertura`) não mudaram de nome, evitando retrabalho.
+- Renomeado campo "Quantidade adquirida" pra **"Quantidade disponível"** (label do formulário + mensagem
+  de validação) — a coluna do banco (`quantidade_adquirida`) e as variáveis internas continuam com o nome
+  antigo, é só o texto visível pro usuário.
+- Campo **"Castrado"** no cadastro/edição de Animais — checkbox simples (sem gating por sexo, mesmo
+  padrão do campo "Confirmado" já existente). Filtra a lista de garanhões do Planejador de ciclo
+  (`renderPlanejadorReprodutivo`); a listagem de "Reprodutores" na aba Plantel **não** foi filtrada de
+  propósito — é uma contagem histórica de crias por padrillo (inclusive nomes externos), não uma tela de
+  seleção pra planejamento novo, então um garanhão castrado que já teve produção no passado continua
+  contado ali (seção 2, "histórico não é afetado").
+- Corrigido o bug do formulário "Cadastrar animal" (usado tanto por "+ Novo animal" quanto por "+
+  Adicionar receptora (via SBB)"): não limpava os campos entre usos — extraído `_limparFormNovoAnimal()`,
+  chamado antes de abrir o modal nos dois pontos de entrada e depois de salvar (seção 3.6).
+- Testado via servidor estático local + sessão injetada: ordem/visibilidade das abas, card com progresso
+  renderizando dados reais de `gestacoes`, campo Castrado some da lista do Planejador, e duas aberturas
+  seguidas do modal de receptora sem vazar dado da anterior.
 
 ### Fase 2 — Garanhões e Coberturas reestruturados
 

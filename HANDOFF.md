@@ -196,6 +196,14 @@ cabanhas), mais as abas herdadas da Gestação.
   que introduz, mas não retroage nos FKs antigos que já estavam faltando. Vale uma sessão dedicada pra
   auditar TODAS as tabelas do `v_tabelas` da RPC e comparar com os FKs reais de um tenant provisionado,
   corrigindo de vez.
+- **Fase 1 — aplicada em staging (2026-08-13)**: reordenação de abas do Reprodutivo (Gestações primeiro,
+  Planejador segundo, Acasalamentos terceiro), card de "Gestações" ganhou o visual de barra de progresso
+  que só existia no Legado, "Fontes de Cobertura" virou "Garanhões e Coberturas", campo "Quantidade
+  adquirida" virou "Quantidade disponível", campo novo "Castrado" no cadastro de Animais (filtra o
+  Planejador de ciclo, não mexe em histórico), e corrigido o bug do modal "Cadastrar animal" que não
+  limpava os campos entre usos (afetava sobretudo "+ Adicionar receptora via SBB" usado em sequência).
+  Testado localmente, sem tocar em schema/RLS (não precisou de `revisor-isolamento`). Detalhe completo em
+  `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 1).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
