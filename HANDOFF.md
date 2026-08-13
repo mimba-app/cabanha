@@ -11,6 +11,29 @@ Toda a maratona de correções desde a apresentação (ver `ROADMAP.md` + seçõ
 
 Isso já mordeu na prática: quando o Thiago (sócio, admin da Cabanha Santa Adelina — cliente real) precisou de um reenvio de convite, o botão que resolve isso só existe na `staging`, e a `staging` só mostra cabanhas com `ambiente_teste=true` — foi preciso marcar a cabanha dele como teste temporariamente pra usar o fluxo. **Enquanto a promoção não acontece, todo suporte a cliente real por esse tipo de fluxo depende desse contorno.**
 
+## 🎨 Paleta de cores revertida pra skin verde-oliva/creme (2026-08-12, staging apenas)
+Pedido do Pedro: recuperar exatamente a paleta de um arquivo de referência (`index_7.html`, anexado por
+ele) que ele identificou como "a skin oficial definida". **Achado antes de aplicar**: esse arquivo é, na
+verdade, um export de antes do rebranding Mimba — título "Cabanha Mãe de Deus — Sistema de Gestão", sidebar
+"Cavalos Crioulos · ABCCC" (sem logo/marca Mimba), zero ocorrências de `Mimba`/`ouro`/`terra` no arquivo.
+Isso diverge da paleta terra/ouro/campo/creme que estava documentada como identidade da marca desde o
+redesign de 2026-08-02 (seção abaixo) e no `CLAUDE.md`. **Sinalizado explicitamente ao Pedro antes de mexer
+— ele confirmou que queria mesmo assim.** Aplicado:
+- `:root` do `index.html` trocado pra paleta verde-oliva (`--green: #639922`) + fundo creme neutro
+  (`--bg: #f5f4f0`), igual ao arquivo de referência, light e dark mode.
+- `--ouro` (única variável de acento "dourado", usada só no título "Mimba" da tela de login) foi mantida
+  como variável (não removida, evita quebrar o CSS que a referencia) mas **realinhada ao verde** — o
+  arquivo de referência não tem conceito de acento dourado separado, então sem isso o título ficaria com
+  cor indefinida.
+- `--card-neutral`/`--card-neutral-border` (cinza neutro do card de conta na sidebar, adicionado depois da
+  época do arquivo de referência) **mantidos como estavam** — não existe equivalente no arquivo antigo, e
+  são só um cinza de UI, não fazem parte do debate de "verde vs. terra".
+- `CLAUDE.md` atualizado pra não descrever mais a paleta antiga como a oficial.
+- Testado visualmente (light + dark) via servidor estático local — login e dashboard sem nenhum traço de
+  marrom, confirmando a causa da reclamação original ("o marrom que mudou") não era um bug, era mesmo a
+  paleta terra/ouro que estava em produção/staging até aqui.
+- **Só aplicado no `staging`**, por pedido explícito — `main` continua com a paleta anterior até decisão.
+
 ## 🎨 Redesign visual da casca (2026-08-02)
 Pedido do sócio: a sidebar/navegação estava com "cara de vibe coding" (emoji cru como ícone de menu, marca ausente
 quando a cabanha não tem logo própria cadastrada). Feito:

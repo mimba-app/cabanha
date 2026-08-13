@@ -6,7 +6,7 @@
 **Mimba** — SaaS multi-tenant de gestão para cabanhas de cavalo crioulo, integrado à ABCCC. Marca: Mimba (razão social: Mimba Tech; posicionamento v1: "Gestão Crioulos"). Domínios: **mimba.com.br** (landing) e **app.mimba.com.br** (sistema). Cada cabanha assinante tem seus dados isolados no banco.
 
 ## Arquitetura
-- **Frontend:** `index.html` único, sem framework/bundler/`package.json`, hospedado no **GitHub Pages**. Escolha deliberada pra deploy leve. Marca Mimba via variáveis CSS (paleta terra/ouro/campo/creme; fontes DM Sans + Playfair + DM Mono).
+- **Frontend:** `index.html` único, sem framework/bundler/`package.json`, hospedado no **GitHub Pages**. Escolha deliberada pra deploy leve. Marca Mimba via variáveis CSS (paleta verde-oliva/creme neutro — skin oficial recuperada de uma versão de referência em 2026-08-12, ver `HANDOFF.md`; fontes DM Sans + Playfair + DM Mono).
 - **Backend:** Supabase (projeto `fmjfvfufkqswweyasjyp`) — Postgres + Edge Functions (Deno) + Auth. anon key é pública (está no index.html).
 - **Multi-tenant por schema Postgres:** cada cabanha = schema `cab_<slug>`. **`public` é o template** (tabelas operacionais vazias). Control-plane em `public` (tenants, signups, tenant_memberships, planos, usuarios_master).
 - **Identidade/login (identity-first):** Supabase Auth (email+senha, JWT). `tenant_memberships` liga uma identidade a N cabanhas (perfil adm/vet/cab por cabanha). Login: email → JWT → RPC `minhas_cabanhas()` → 1 entra direto, N abre seletor. O app usa o **JWT do usuário** (não a anon key).
