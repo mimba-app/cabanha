@@ -19,7 +19,7 @@
     --border: rgba(0,0,0,0.1);
     --border2: rgba(0,0,0,0.18);
     --green: #639922; --green-l: #EAF3DE; --green-d: #3B6D11;
-    --ouro: #639922; --ouro-l: #EAF3DE; --ouro-d: #3B6D11;      /* sem acento dourado nessa skin — alinhado ao verde pra não sumir onde é usado (título de login) */
+    --ouro: #B8860B; --ouro-l: #FBF5DC; --ouro-d: #8A6608;      /* acento dourado da marca — só usado no wordmark "Mimba." (login, rodapé da sidebar), nunca em fundo/UI */
     --amber: #EF9F27; --amber-l: #FAEEDA; --amber-d: #854F0B;
     --red: #E24B4A; --red-l: #FCEBEB; --red-d: #A32D2D;
     --blue: #378ADD; --blue-l: #E6F1FB; --blue-d: #185FA5;
@@ -39,7 +39,7 @@
       --text: #f0efe9; --text2: #a8a69e; --text3: #6b6963;
       --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
       --green-l: #1a2e0a; --green-d: #9fcc56;
-      --ouro-l: #1a2e0a; --ouro-d: #9fcc56;
+      --ouro: #E8C547; --ouro-l: #2a2008; --ouro-d: #E8C547;
       --amber-l: #2e1f08; --amber-d: #f0b94a;
       --red-l: #2e0d0d; --red-d: #f07070;
       --blue-l: #0d1e2e; --blue-d: #7ab8f0;
@@ -60,16 +60,16 @@
     overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
   }
   .logo { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
-  .logo-row { display:flex; align-items:center; gap:10px; }
-  .logo-mark {
-    width:34px; height:34px; border-radius:9px; flex-shrink:0; overflow:hidden;
+  .logo img { max-width:100%; max-height:72px; mix-blend-mode:screen; filter:brightness(1.1); }
+  .logo-monogram {
+    width:56px; height:56px; border-radius:12px; flex-shrink:0; overflow:hidden;
     background:linear-gradient(155deg, var(--green), var(--green-d));
-    display:flex; align-items:center; justify-content:center; position:relative;
+    display:flex; align-items:center; justify-content:center;
   }
-  .logo-mark img { width:100%; height:100%; object-fit:cover; }
-  .logo-mark span { font-family:var(--serif); font-weight:700; font-size:16px; color:#fff; line-height:1; }
-  .logo-wordmark { font-family:var(--serif); font-weight:700; font-size:19px; color:var(--text); letter-spacing:-0.01em; line-height:1.1; }
+  .logo-monogram span { font-family:var(--serif); font-weight:700; font-size:24px; color:#fff; line-height:1; }
+  .logo-sub { font-size:11px; color:var(--text2); margin-top:8px; }
   .logo-badge { display:inline-block; background: var(--green-l); color: var(--green-d); font-size:10px; padding:2px 8px; border-radius:99px; margin-top:8px; font-weight:600; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .powered-by { text-align:center; font-family:var(--serif); font-size:11px; color:var(--ouro); margin-top:10px; letter-spacing:.02em; }
   .nav-btn {
     display:flex; align-items:center; gap:10px; padding:8px 10px 8px 12px; border-radius:var(--radius);
     cursor:pointer; font-size:13px; color:var(--text2); border:none; background:none; width:100%;
@@ -592,13 +592,9 @@
 
 <div class="sidebar" id="sidebar-main">
   <div class="logo">
-    <div class="logo-row">
-      <div class="logo-mark" id="sidebar-logo-mark">
-        <img id="sidebar-logo-img" alt="" style="display:none">
-        <span id="sidebar-logo-monogram">M</span>
-      </div>
-      <div class="logo-wordmark">Mimba</div>
-    </div>
+    <img id="sidebar-logo-img" alt="" style="display:none">
+    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M</span></div>
+    <div class="logo-sub">Cavalos Crioulos · ABCCC</div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
   </div>
@@ -634,6 +630,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Sair
     </button>
+    <div class="powered-by">powered by Mimba.</div>
   </div>
 </div>
 
@@ -9254,10 +9251,10 @@ async function salvarDadosCabanha() {
   TENANT_INFO.cor_primaria = cor;
   const cabEl = document.getElementById('sidebar-cabanha'); if(cabEl) cabEl.textContent = nome || TENANT_INFO.nome_cabanha || '';
   const logoEl = document.getElementById('sidebar-logo-img');
-  const monoEl = document.getElementById('sidebar-logo-monogram');
+  const markEl = document.getElementById('sidebar-logo-mark');
   if(logoEl) {
-    if(logo) { logoEl.src = logo; logoEl.style.display=''; if(monoEl) monoEl.style.display='none'; }
-    else { logoEl.removeAttribute('src'); logoEl.style.display='none'; if(monoEl) monoEl.style.display=''; }
+    if(logo) { logoEl.src = logo; logoEl.style.display=''; if(markEl) markEl.style.display='none'; }
+    else { logoEl.removeAttribute('src'); logoEl.style.display='none'; if(markEl) markEl.style.display=''; }
   }
   if(nome) document.title = `${nome} — Mimba`;
   _aplicarCorPrimaria(cor);
@@ -11465,10 +11462,10 @@ function _entrarApp() {
   if(cabEl) cabEl.textContent = nomeCab;
   // Logo vem do tenant (tenants.logo_url). Sem logo cadastrado, fica o monograma "M".
   const logoEl = document.getElementById('sidebar-logo-img');
-  const monoEl = document.getElementById('sidebar-logo-monogram');
+  const markEl = document.getElementById('sidebar-logo-mark');
   if(logoEl) {
-    if(TENANT_INFO && TENANT_INFO.logo_url) { logoEl.src = TENANT_INFO.logo_url; logoEl.style.display=''; if(monoEl) monoEl.style.display='none'; }
-    else { logoEl.removeAttribute('src'); logoEl.style.display='none'; if(monoEl) monoEl.style.display=''; }
+    if(TENANT_INFO && TENANT_INFO.logo_url) { logoEl.src = TENANT_INFO.logo_url; logoEl.style.display=''; if(markEl) markEl.style.display='none'; }
+    else { logoEl.removeAttribute('src'); logoEl.style.display='none'; if(markEl) markEl.style.display=''; }
   }
   _aplicarCorPrimaria(TENANT_INFO?.cor_primaria);
   // V1.5 (Fase 2, trial automático): avisa quantos dias faltam do trial (badge pequeno,
@@ -11513,6 +11510,7 @@ function fazerLogout() {
   // limpar a marca da cabanha (logo/nome/título/cor) ao voltar para o login
   const _lg = document.getElementById('sidebar-logo-img');
   if(_lg){ _lg.removeAttribute('src'); _lg.style.display='none'; }
+  const _mk = document.getElementById('sidebar-logo-mark'); if(_mk) _mk.style.display='';
   const _cb = document.getElementById('sidebar-cabanha'); if(_cb) _cb.textContent='';
   _aplicarCorPrimaria(null);
   document.title = 'Mimba — Gestão Crioulos';
