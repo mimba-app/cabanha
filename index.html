@@ -3234,7 +3234,7 @@ function renderAnimais(){
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${a.rp}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -3263,6 +3263,7 @@ function renderAnimais(){
         ${a.ciclo ? `<span class="badge bgr">${a.ciclo}</span>` : ''}
         ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
+        ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
       </div>
       <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
@@ -5102,8 +5103,10 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Situação</label>
           <select id="ed-sit" style="width:100%;font-size:12px">${SITS.map(s=>`<option value="${s.v}"${a.situacao===s.v?' selected':''}>${s.l}</option>`).join('')}</select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Estágio</label>
-          <input id="ed-estagio" value="${a.estagio||''}" list="ed-estagio-list" style="width:100%;font-size:12px">
-          <datalist id="ed-estagio-list">${ETAGS.map(e=>`<option value="${e}">`).join('')}</datalist></div>
+          <select id="ed-estagio" style="width:100%;font-size:12px">
+            <option value="">— selecione —</option>
+            ${ETAGS.map(e=>`<option value="${e}"${a.estagio===e?' selected':''}>${e}</option>`).join('')}
+          </select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Mãe</label>
           <input id="ed-mae" value="${a.mae||''}" style="width:100%;font-size:12px" placeholder="Nome da mãe"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pai</label>
@@ -5139,6 +5142,7 @@ function _renderDetCorpo(i, editando) {
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
       ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
+      ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 18px">
       ${[['RP',a.rp||'—'],['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
