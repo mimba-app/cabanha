@@ -29,9 +29,31 @@
     --gray-l: #F1EFE8; --gray-d: #5F5E5A;
     --card-neutral: #F3F4F6; --card-neutral-border: #E5E7EB;
     --radius: 8px; --radius-lg: 12px;
+    --radius-badge: 4px 4px 4px 2px; /* forma discreta e distinta do pill genérico, usada em badges/tags */
     --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
     --serif: 'Playfair Display', Georgia, serif;
+    /* Chrome de marca (sidebar, login) — preto/cinza neutro com acento verde-oliva
+       (mesmo par que já existe no dark mode do app: --bg/--green-d).
+       Só usado em chrome, nunca nas telas de trabalho (tabelas/kanban/cards/formulários,
+       que continuam no fundo claro --bg). Dourado (--ouro) fica reservado só pro
+       wordmark "Mimba." — nunca em fundo/UI/hover, como já valia antes desta mudança. */
+    --chrome-bg: #1a1a18;
+    --chrome-bg2: #232320;
+    --chrome-border: rgba(255,255,255,0.1);
+    --chrome-text: #f0efe9;
+    --chrome-text2: #a8a69e;
+    --chrome-text3: #6b6963;
+    --chrome-accent: #9fcc56;
+    --chrome-accent-d: #7fae3c;
+    /* Escala tipográfica — 6 degraus, razão ~1.2, base 14px (--fs-base = body) */
+    --fs-caption: 10px;
+    --fs-sm: 12px;
+    --fs-base: 14px;
+    --fs-md: 17px;
+    --fs-lg: 20px;
+    --fs-xl: 24px;
+    --fs-2xl: 29px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -54,12 +76,13 @@
   html, body { overflow-x: hidden; max-width: 100vw; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
   .sidebar {
-    width: 230px; background: var(--bg2); border-right: 0.5px solid var(--border);
+    width: 230px; background: var(--chrome-bg); border-right: 0.5px solid var(--chrome-border);
     padding: 1.25rem 1rem; position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
     overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
+    color: var(--chrome-text);
   }
-  .logo { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
+  .logo { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--chrome-border); }
   .logo img { max-width:100%; max-height:72px; mix-blend-mode:screen; filter:brightness(1.1); }
   .logo-monogram {
     width:56px; height:56px; border-radius:12px; flex-shrink:0; overflow:hidden;
@@ -68,21 +91,21 @@
   }
   .logo-monogram span { font-family:var(--serif); font-weight:700; font-size:24px; color:#fff; line-height:1; }
   .logo-badge {
-    display:block; font-family:var(--serif); font-size:17px; font-weight:700; color:var(--text);
+    display:block; font-family:var(--serif); font-size:var(--fs-md); font-weight:700; color:var(--chrome-text);
     margin-top:10px; line-height:1.2; overflow-wrap:break-word;
   }
   .powered-by { font-family:var(--serif); color:var(--ouro); letter-spacing:.02em; }
   .nav-btn {
     display:flex; align-items:center; gap:10px; padding:8px 10px 8px 12px; border-radius:var(--radius);
-    cursor:pointer; font-size:13px; color:var(--text2); border:none; background:none; width:100%;
+    cursor:pointer; font-size:13px; color:var(--chrome-text2); border:none; background:none; width:100%;
     text-align:left; transition:background 0.15s, color 0.15s; position:relative;
   }
   .nav-btn::before {
     content:''; position:absolute; left:-1px; top:50%; transform:translateY(-50%);
-    width:3px; height:0; border-radius:0 3px 3px 0; background:var(--green); transition:height 0.15s;
+    width:3px; height:0; border-radius:0 3px 3px 0; background:var(--chrome-accent); transition:height 0.15s;
   }
-  .nav-btn:hover { background:var(--bg3); color:var(--text); }
-  .nav-btn.active { background:var(--green-l); color:var(--green-d); font-weight:600; }
+  .nav-btn:hover { background:rgba(255,255,255,0.06); color:var(--chrome-text); }
+  .nav-btn.active { background:rgba(159,204,86,0.16); color:var(--chrome-accent); font-weight:600; }
   .nav-btn.active::before { height:18px; }
   .nav-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .nav-icon svg { width:19px; height:19px; }
@@ -90,7 +113,7 @@
   .page { display:none; }
   .page.active { display:block; }
   .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:8px; }
-  .page-title { font-family:var(--serif); font-size:23px; font-weight:700; color:var(--text); letter-spacing:-0.01em; }
+  .page-title { font-family:var(--serif); font-size:var(--fs-2xl); font-weight:800; color:var(--text); letter-spacing:-0.01em; }
   .page-sub { font-size:12px; color:var(--text2); margin-top:3px; }
   .btn { padding:7px 14px; border-radius:var(--radius); border:0.5px solid var(--border2); background:var(--bg2); font-size:12px; cursor:pointer; color:var(--text); font-family:var(--font); transition:background 0.12s; }
   .btn:hover { background:var(--bg3); }
@@ -99,12 +122,13 @@
   .btn-sm { padding:4px 10px; font-size:11px; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
+  .sidebar .sidebar-icon-btn:hover { background:rgba(255,255,255,0.1); color:var(--chrome-text); }
   .sidebar-logout-btn { width:100%; margin-top:8px; background:var(--red); color:#fff; border:none; padding:9px; border-radius:var(--radius); cursor:pointer; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
   .sidebar-logout-btn:hover { background:var(--red-d); }
   .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.25rem; }
   .metric { background:var(--bg3); border-radius:var(--radius); padding:1rem; }
   .metric-label { font-size:11px; color:var(--text2); margin-bottom:5px; }
-  .metric-value { font-size:22px; font-weight:700; color:var(--text); }
+  .metric-value { font-size:var(--fs-xl); font-weight:700; color:var(--text); font-family:var(--mono); }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:3px; }
   /* Skeleton de carregamento — shimmer animado, usado no dashboard enquanto os
      dados reais não chegam (evita o "flash" de zero/traço parado). */
@@ -115,13 +139,13 @@
   .skel-line { width:100%; height:12px; margin:3px 0; }
   .skel-line.w60 { width:60%; } .skel-line.w80 { width:80%; } .skel-line.w40 { width:40%; }
   .card { background:var(--bg2); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:1.1rem; margin-bottom:1rem; }
-  .card-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:0.9rem; }
+  .card-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); margin-bottom:0.9rem; }
   .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
   th { text-align:left; font-weight:600; font-size:11px; color:var(--text2); padding:0 10px 8px 0; border-bottom:0.5px solid var(--border); }
   td { padding:8px 10px 8px 0; border-bottom:0.5px solid var(--border); color:var(--text); vertical-align:middle; }
   tr:last-child td { border-bottom:none; }
-  .badge { display:inline-block; font-size:10px; padding:2px 7px; border-radius:99px; font-weight:600; white-space:nowrap; }
+  .badge { display:inline-block; font-size:var(--fs-caption); padding:2px 7px; border-radius:var(--radius-badge); font-weight:600; white-space:nowrap; }
   .bg { background:var(--green-l); color:var(--green-d); }
   .ba { background:var(--amber-l); color:var(--amber-d); }
   .br { background:var(--red-l); color:var(--red-d); }
@@ -156,7 +180,7 @@
   .modal-bg.open { display:flex; }
   .modal { background:var(--bg2); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:1.4rem; width:620px; max-width:95vw; max-height:90vh; overflow-y:auto; }
   .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.1rem; }
-  .modal-title { font-size:16px; font-weight:600; color:var(--text); }
+  .modal-title { font-size:var(--fs-md); font-weight:700; color:var(--text); font-family:var(--serif); }
   .modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--text2); padding:0 4px; }
   .modal-footer { margin-top:1.1rem; display:flex; justify-content:flex-end; gap:8px; }
   .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -165,8 +189,8 @@
   .form-group input, .form-group select { width:100%; }
   .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
   .detail-item { padding:8px 10px; background:var(--bg3); border-radius:var(--radius); }
-  .detail-label { font-size:10px; color:var(--text2); margin-bottom:3px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
-  .detail-val { font-size:12px; font-weight:500; color:var(--text); }
+  .detail-label { font-size:var(--fs-caption); color:var(--text2); margin-bottom:3px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
+  .detail-val { font-size:var(--fs-sm); font-weight:500; color:var(--text); }
   .info-banner { background:var(--blue-l); border:0.5px solid var(--blue); border-radius:var(--radius); padding:10px 14px; font-size:12px; color:var(--blue-d); margin-bottom:1rem; }
   .estagio-grid { display:flex; gap:6px; flex-wrap:wrap; }
   .estagio-pill { display:flex; align-items:center; gap:6px; background:var(--bg3); border-radius:var(--radius); padding:6px 10px; flex:1; min-width:110px; }
@@ -174,12 +198,12 @@
   .nut-animal-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); margin-bottom:1rem; overflow:hidden; }
   .nut-animal-header { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.1rem; cursor:pointer; gap:12px; }
   .nut-animal-header:hover { background:var(--bg3); }
-  .nut-animal-name { font-size:13px; font-weight:700; color:var(--text); }
+  .nut-animal-name { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
   .nut-animal-sub { font-size:11px; color:var(--text2); margin-top:2px; }
   .nut-animal-body { padding:0 1.1rem 1.1rem; border-top:0.5px solid var(--border); display:none; }
   .nut-animal-body.open { display:block; }
   .nut-section { margin-top:1rem; }
-  .nut-section-title { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
+  .nut-section-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
   .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .nut-item:last-child { border-bottom:none; }
   .nut-item-label { font-weight:600; color:var(--text); }
@@ -194,7 +218,7 @@
   .nut-add-btn { font-size:11px; color:var(--green-d); background:var(--green-l); border:none; padding:4px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; margin-top:6px; }
   .nut-add-btn:hover { background:#C0DD97; }
   .template-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
-  .template-card-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
+  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
   .compra-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .compra-item:last-child { border-bottom:none; }
   .compra-qty { font-weight:700; color:var(--green-d); font-size:13px; }
@@ -202,8 +226,8 @@
   /* PROJETO NUTRICIONAL: datas */
   .nut-proj-header { display:flex; gap:12px; align-items:center; padding:0.75rem 0 0.9rem; border-bottom:0.5px solid var(--border); margin-bottom:0.5rem; flex-wrap:wrap; }
   .nut-proj-date { display:flex; flex-direction:column; gap:3px; }
-  .nut-proj-date label { font-size:10px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; }
-  .nut-proj-status { padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; }
+  .nut-proj-date label { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; }
+  .nut-proj-status { padding:3px 10px; border-radius:var(--radius-badge); font-size:11px; font-weight:700; }
   .nut-proj-ativo { background:var(--green-l); color:var(--green-d); }
   .nut-proj-vencendo { background:var(--amber-l); color:var(--amber-d); }
   .nut-proj-vencido { background:var(--red-l); color:var(--red-d); }
@@ -212,9 +236,9 @@
   /* EVENTOS */
   .evt-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
   .evt-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:12px; }
-  .evt-title { font-size:14px; font-weight:700; color:var(--text); }
-  .evt-meta { font-size:11px; color:var(--text2); margin-top:2px; }
-  .evt-result-badge { font-size:12px; font-weight:700; padding:4px 12px; border-radius:99px; }
+  .evt-title { font-size:var(--fs-base); font-weight:700; color:var(--text); }
+  .evt-meta { font-size:var(--fs-caption); color:var(--text2); margin-top:2px; }
+  .evt-result-badge { font-size:12px; font-weight:700; padding:4px 12px; border-radius:var(--radius-badge); }
   .evt-1 { background:var(--green-l); color:var(--green-d); }
   .evt-2 { background:var(--blue-l); color:var(--blue-d); }
   .evt-3 { background:var(--amber-l); color:var(--amber-d); }
@@ -230,7 +254,7 @@
   /* ESTOQUE */
   .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .est-row:last-child { border-bottom:none; }
-  .est-row-header { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; padding:6px 0 8px; border-bottom:0.5px solid var(--border); }
+  .est-row-header { font-size:var(--fs-caption); font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; padding:6px 0 8px; border-bottom:0.5px solid var(--border); }
   .est-low { color:var(--red-d); font-weight:700; }
   .est-ok { color:var(--green-d); }
   .est-med { color:var(--amber-d); }
@@ -239,15 +263,15 @@
   .agenda-item:last-child { border-bottom:none; }
   .agenda-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:3px; }
   .agenda-content { flex:1; }
-  .agenda-title { font-size:13px; font-weight:600; color:var(--text); }
+  .agenda-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
   .agenda-sub { font-size:11px; color:var(--text2); margin-top:2px; }
-  .agenda-data { font-size:11px; color:var(--text3); white-space:nowrap; }
+  .agenda-data { font-size:var(--fs-caption); color:var(--text3); white-space:nowrap; font-family:var(--mono); }
   /* SAVE BADGE */
   .save-badge { position:fixed; bottom:1rem; right:1rem; background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .save-badge.show { opacity:1; }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
-  .san-panel-title { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
+  .san-panel-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
   .san-ok    { background:var(--green-l); border:0.5px solid #97C459; border-radius:var(--radius); padding:6px 10px; font-size:11px; color:var(--green-d); display:flex; align-items:center; gap:6px; margin-bottom:4px; }
   .san-warn  { background:var(--amber-l); border:0.5px solid #EF9F27; border-radius:var(--radius); padding:6px 10px; font-size:11px; color:var(--amber-d); display:flex; align-items:center; gap:6px; margin-bottom:4px; }
   .san-erro  { background:var(--red-l);   border:0.5px solid #E24B4A; border-radius:var(--radius); padding:6px 10px; font-size:11px; color:var(--red-d);   display:flex; align-items:center; gap:6px; margin-bottom:4px; }
@@ -257,19 +281,20 @@
   /* PENDÊNCIAS */
   .pend-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
   .pend-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-  .pend-title { font-size:13px; font-weight:700; color:var(--text); }
+  .pend-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
   .pend-sub { font-size:11px; color:var(--text2); margin-top:2px; }
   .pend-resolvida { opacity:0.5; }
   .pend-resolvida .pend-title { text-decoration:line-through; }
   /* FICHA COMPLETA */
   .ficha-section { margin-bottom:1.4rem; }
-  .ficha-section-title { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.7rem; display:flex; align-items:center; gap:6px; padding-bottom:5px; border-bottom:0.5px solid var(--border); }
+  .ficha-section-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.7rem; display:flex; align-items:center; gap:6px; padding-bottom:5px; border-bottom:0.5px solid var(--border); }
   .ficha-row { display:flex; justify-content:space-between; align-items:flex-start; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; gap:8px; }
   .ficha-row:last-child { border-bottom:none; }
   .ficha-label { color:var(--text2); flex-shrink:0; width:130px; }
   .ficha-val { color:var(--text); text-align:right; flex:1; }
-  .ficha-field-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
+  .ficha-field-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
   .ficha-field-val { font-size:13px; color:var(--text); font-weight:600; word-break:break-word; }
+  .ficha-field-val.mono { font-family:var(--mono); font-weight:500; } /* dado de registro oficial: RP/SBB/data */
   /* HISTÓRICO SAÚDE */
   .hist-row { display:grid; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .hist-vac { grid-template-columns:90px 90px 1fr 1fr 80px; }
@@ -277,19 +302,19 @@
   .hist-row:last-child { border-bottom:none; }
   /* MEDIDAS */
   .med-card { background:var(--bg3); border-radius:var(--radius); padding:10px 12px; margin-bottom:8px; }
-  .med-card-date { font-size:10px; color:var(--text3); margin-bottom:6px; }
+  .med-card-date { font-size:var(--fs-caption); color:var(--text3); margin-bottom:6px; }
   .med-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:12px; }
   .med-item { text-align:center; background:var(--bg); border-radius:var(--radius); padding:10px 6px; }
   .med-icon { font-size:16px; margin-bottom:4px; }
   .med-val { font-size:15px; font-weight:700; color:var(--text); }
-  .med-val-pill { display:inline-block; font-size:14px; font-weight:700; padding:4px 12px; border-radius:99px; background:var(--bg3); color:var(--text); }
+  .med-val-pill { display:inline-block; font-size:14px; font-weight:700; padding:4px 12px; border-radius:var(--radius-badge); background:var(--bg3); color:var(--text); }
   .med-status-ok  { color:var(--green-d); }
   .med-status-low { color:var(--red-d); }
   .med-status-hi  { color:var(--amber-d); }
   .med-val-pill.med-status-ok  { background:var(--green-l); color:var(--green-d); }
   .med-val-pill.med-status-low { background:var(--red-l);   color:var(--red-d); }
   .med-val-pill.med-status-hi  { background:var(--amber-l); color:var(--amber-d); }
-  .med-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-top:5px; }
+  .med-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-top:5px; }
   .med-padrão { font-size:9px; color:var(--text3); margin-top:2px; }
   /* Menu mobile: botão hamburger fixo, escondido em desktop. */
   #mobile-menu-btn {
@@ -324,7 +349,7 @@
   @media(max-width:900px){ .kanban-board { grid-template-columns:1fr; } }
   .kanban-col { border-radius:var(--radius-lg); overflow:hidden; }
   .kanban-col-header { padding:10px 14px; font-size:12px; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
-  .kanban-col-header .kanban-count { font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; }
+  .kanban-col-header .kanban-count { font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--radius-badge); }
   .kanban-col-vencida  { background:var(--red-l); }
   .kanban-col-vencida .kanban-col-header  { background:var(--red-l);   color:var(--red-d); border-bottom:2px solid var(--red); }
   .kanban-col-vencida .kanban-count       { background:var(--red);    color:white; }
@@ -337,7 +362,7 @@
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
   .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
-  .kanban-card-nome { font-size:12px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
   .kanban-card-data { font-size:11px; font-weight:600; margin-top:4px; }
   .kanban-card-data.vencida { color:var(--red-d); }
@@ -356,7 +381,7 @@
   .laudo-preview-nome { font-size:12px; font-weight:600; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .laudo-preview-size { font-size:10px; color:var(--text3); white-space:nowrap; }
   .laudo-preview-rm { cursor:pointer; color:var(--red-d); font-size:16px; flex-shrink:0; }
-  .laudo-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:99px; background:var(--blue-l); color:var(--blue-d); font-size:10px; font-weight:700; cursor:pointer; border:none; font-family:var(--font); }
+  .laudo-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:var(--radius-badge); background:var(--blue-l); color:var(--blue-d); font-size:10px; font-weight:700; cursor:pointer; border:none; font-family:var(--font); }
   .laudo-badge:hover { background:var(--blue); color:white; }
   .verm-animal-row { display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.1s; }
   .verm-animal-row:last-child { border-bottom:none; }
@@ -365,24 +390,25 @@
   .verm-check { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); background:var(--bg2); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; color:white; }
   .verm-animal-row.selected .verm-check { background:var(--green); border-color:var(--green); }
   .verm-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .verm-sel-count { background:var(--green-l); color:var(--green-d); border-radius:99px; padding:2px 10px; font-size:11px; font-weight:700; }
+  .verm-sel-count { background:var(--green-l); color:var(--green-d); border-radius:var(--radius-badge); padding:2px 10px; font-size:11px; font-weight:700; }
   .verm-grupo-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
   .verm-grupo-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
-  .login-screen { position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center; }
-  .login-box { background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:380px;max-width:95vw; }
+  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:999;display:flex;align-items:center;justify-content:center; }
+  .login-box { background:var(--chrome-bg2);border:0.5px solid var(--chrome-border);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:380px;max-width:95vw; }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
-  .login-logo-title { font-family:var(--serif);font-size:40px;font-weight:900;color:var(--ouro);letter-spacing:-0.01em;line-height:1; }
-  .login-logo-sub { font-size:12px;color:var(--text2);margin-top:8px;letter-spacing:.02em; }
+  .login-logo-title { font-family:var(--serif);font-size:48px;font-weight:900;color:var(--ouro);letter-spacing:-0.01em;line-height:1; }
+  .login-logo-sub { font-size:12px;color:var(--chrome-text2);margin-top:8px;letter-spacing:.02em; }
   .login-field { margin-bottom:1rem; }
-  .login-field label { display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px; }
-  .login-field input { width:100%;padding:10px 12px;font-size:14px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-family:var(--font); }
-  .login-field input:focus { outline:none;border-color:var(--green); }
+  .login-field label { display:block;font-size:11px;font-weight:700;color:var(--chrome-text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px; }
+  .login-field input { width:100%;padding:10px 12px;font-size:14px;border-radius:var(--radius);border:0.5px solid var(--chrome-border);background:rgba(255,255,255,0.04);color:var(--chrome-text);font-family:var(--font); }
+  .login-field input::placeholder { color:var(--chrome-text3); }
+  .login-field input:focus { outline:none;border-color:var(--chrome-accent); }
   .login-btn { width:100%;padding:11px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:0.5rem; }
   .login-btn:hover { background:var(--green-d); }
   .login-error { background:var(--red-l);color:var(--red-d);border-radius:var(--radius);padding:8px 10px;font-size:12px;margin-top:8px;display:none; }
-  .perfil-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase; }
+  .perfil-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--radius-badge);font-size:var(--fs-caption);font-weight:700;text-transform:uppercase; }
   .perfil-adm, .perfil-admin       { background:var(--purple-l);color:var(--purple-d); }
   .perfil-cab, .perfil-cabanheiro  { background:var(--green-l);color:var(--green-d); }
   .perfil-vet, .perfil-veterinario { background:var(--blue-l);color:var(--blue-d); }
@@ -393,7 +419,7 @@
   .drill-row { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.1s; }
   .drill-row:hover { background:var(--bg3); }
   .drill-row:last-child { border-bottom:none; }
-  .drill-nome { font-size:12px; font-weight:700; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .drill-nome { font-size:var(--fs-sm); font-weight:700; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .drill-info { font-size:11px; color:var(--text2); white-space:nowrap; }
   .drill-badge { font-size:10px; }
   .drill-empty { padding:1.5rem; text-align:center; font-size:12px; color:var(--text3); }
@@ -417,7 +443,7 @@
 
   /* ── LINHA DO TEMPO ──────────────────────────────────────────────── */
   .tl-wrap { padding:0.5rem 0; }
-  .tl-year { font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:8px 0 4px;margin-top:4px; }
+  .tl-year { font-size:var(--fs-caption);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:8px 0 4px;margin-top:4px; }
   .tl-item { display:flex;gap:12px;padding:10px 0;position:relative; }
   .tl-item::before { content:'';position:absolute;left:17px;top:38px;bottom:-10px;width:1.5px;background:var(--border); }
   .tl-item:last-child::before { display:none; }
@@ -516,7 +542,7 @@
       <div class="login-error" id="login-error" style="display:none"></div>
       <div id="login-seletor" style="display:none;margin-top:10px"></div>
       <div style="margin-top:10px;text-align:center">
-        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--text2)">Tenho um código de acesso</a>
+        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">Tenho um código de acesso</a>
       </div>
     </div>
     <div id="login-codigo-box" style="display:none">
@@ -531,7 +557,7 @@
       <button class="login-btn" onclick="confirmarCodigoAcesso()">Confirmar código</button>
       <div class="login-error" id="cod-error" style="display:none"></div>
       <div style="margin-top:10px;text-align:center">
-        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--text2)">← Voltar para login normal</a>
+        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
       </div>
     </div>
   </div>
@@ -549,12 +575,12 @@
       <div class="login-logo-title">Mimba.</div>
       <div class="login-logo-sub" style="color:var(--red-d)">Acesso temporariamente bloqueado</div>
     </div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin:12px 0 18px">
+    <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
       Não conseguimos confirmar o pagamento de <strong id="bloqueado-nome-cabanha"></strong> ao final do
       período de teste. Entre em contato com a gente pra regularizar e liberar o acesso de novo.
     </div>
     <a class="login-btn" style="display:block;text-decoration:none;box-sizing:border-box" href="mailto:app.mimba@gmail.com">Falar com a Mimba</a>
-    <div style="margin-top:12px"><a href="#" onclick="fazerLogout();return false;" style="font-size:12px;color:var(--text2)">← Voltar ao login</a></div>
+    <div style="margin-top:12px"><a href="#" onclick="fazerLogout();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar ao login</a></div>
   </div>
   <!-- V1.5 (Fase 2, complemento): trial cancelado pelo próprio admin antes da cobrança. -->
   <div class="login-box" id="login-cancelado" style="display:none;text-align:center">
@@ -562,12 +588,12 @@
       <div class="login-logo-title">Mimba.</div>
       <div class="login-logo-sub">Teste cancelado</div>
     </div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin:12px 0 18px">
+    <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
       O período de teste de <strong id="cancelado-nome-cabanha"></strong> foi cancelado — nenhuma cobrança
       será feita. Se mudar de ideia, fale com a gente pra reativar.
     </div>
     <a class="login-btn" style="display:block;text-decoration:none;box-sizing:border-box" href="mailto:app.mimba@gmail.com">Falar com a Mimba</a>
-    <div style="margin-top:12px"><a href="#" onclick="fazerLogout();return false;" style="font-size:12px;color:var(--text2)">← Voltar ao login</a></div>
+    <div style="margin-top:12px"><a href="#" onclick="fazerLogout();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar ao login</a></div>
   </div>
   <div class="login-box" id="definir-senha-box" style="display:none">
     <div class="login-logo">
@@ -611,19 +637,19 @@
   <button class="nav-btn" onclick="showPage('sangues')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c0 6 12 6 12 12"/><path d="M18 21c0-6-12-6-12-12"/><line x1="7.5" y1="6" x2="16.5" y2="6"/><line x1="8.5" y1="9.5" x2="15.5" y2="9.5"/><line x1="8.5" y1="14.5" x2="15.5" y2="14.5"/><line x1="7.5" y1="18" x2="16.5" y2="18"/></svg></span><span>Sangues</span></button>
   <!-- V1.5 (Fase 4): Relatórios em PDF — só aparece se o plano permitir (features.relatorios). -->
   <button class="nav-btn" id="nav-btn-relatorios" onclick="showPage('relatorios')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span><span>Relatórios</span></button>
-  <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border)">
+  <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--chrome-border)">
     <!-- V1.5 (Fase 3): só aparece pra quem está em public.mimba_staff (checado no login). -->
-    <button id="sidebar-btn-painel-mimba" onclick="abrirPainelMimba()" style="display:none;width:100%;margin-bottom:8px;padding:7px 8px;border-radius:var(--radius);background:var(--purple-l);color:var(--purple-d);border:0.5px solid var(--purple);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+    <button id="sidebar-btn-painel-mimba" onclick="abrirPainelMimba()" style="display:none;width:100%;margin-bottom:8px;padding:7px 8px;border-radius:var(--radius);background:rgba(159,204,86,0.14);color:var(--chrome-accent);border:0.5px solid var(--chrome-accent);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
       Painel Mimba
     </button>
-    <div id="sidebar-account-card" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:var(--card-neutral);border:0.5px solid var(--card-neutral-border)">
-      <div id="sidebar-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">?</div>
+    <div id="sidebar-account-card" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:rgba(255,255,255,0.05);border:0.5px solid var(--chrome-border)">
+      <div id="sidebar-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--chrome-accent);color:var(--chrome-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">?</div>
       <div style="flex:1;min-width:0">
-        <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--chrome-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="sidebar-perfil-badge" style="margin-top:2px"></div>
       </div>
-      <button class="sidebar-icon-btn" onclick="abrirTelaConta()" title="Configurações da conta" aria-label="Configurações da conta">
+      <button class="sidebar-icon-btn" onclick="abrirTelaConta()" title="Configurações da conta" aria-label="Configurações da conta" style="color:var(--chrome-text3)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
@@ -3271,7 +3297,7 @@ function renderAnimais(){
       <td>${sexm(a.sexo)}</td>
       <td style="font-size:11px">${a.pelagem||'<span style="color:var(--text3)">—</span>'}</td>
       <td>${a.ciclo?`<span class="badge bgr">${a.ciclo}</span>`:'—'}</td>
-      <td style="font-size:11px;color:var(--text2)">${fd(a.nasc)}</td>
+      <td style="font-size:11px;color:var(--text2);font-family:var(--mono)">${fd(a.nasc)}</td>
       <td>${sitb(a.situacao)}</td>
       <td>${estb(a.estagio)}</td>
       <td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="verDetalhe(${i})">ver</button><button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button></td>
@@ -5179,7 +5205,7 @@ function _renderDetCorpo(i, editando) {
       ${[['RP',a.rp||'—'],['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
          ['Sexo',a.sexo||'—'],['Pelagem',a.pelagem||'—'],['Nascimento',fd(a.nasc)||'—'],['Ciclo',a.ciclo||'—'],
          ['Situação',sitLabel(a.situacao)],['Estágio',a.estagio||'—'],['Mãe',a.mae||'—'],['Pai',a.pai||'—']]
-        .map(([l,v])=>`<div><div class="ficha-field-label">${l}</div><div class="ficha-field-val">${v}</div></div>`).join('')}
+        .map(([l,v])=>`<div><div class="ficha-field-label">${l}</div><div class="ficha-field-val${['RP','SBB ABCCC','Nascimento'].includes(l)?' mono':''}">${v}</div></div>`).join('')}
       </div>${a.obs?`<div style="margin-top:12px;font-size:12px;color:var(--text2)">Obs: ${a.obs}</div>`:''}</div>`;
   }
 
@@ -5224,7 +5250,7 @@ function _renderDetCorpo(i, editando) {
     ${!hm.length?'<div class="nut-empty">Nenhuma medição registrada.</div>'
     :hm.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(m=>{
       const stC=checaMedida(m.cernelha,pad.cernelha_min,pad.cernelha_max),stT=checaMedida(m.torax,pad.torax_min,null),stCan=checaMedida(m.canela,pad.canela_min,null);
-      return`<div class="med-card"><div class="med-card-date">${fd(m.data)} · <span class="badge bgr">${m.contexto||'Rotina'}</span>${m.resp?' · '+m.resp:''}</div>
+      return`<div class="med-card"><div class="med-card-date"><span style="font-family:var(--mono)">${fd(m.data)}</span> · <span class="badge bgr">${m.contexto||'Rotina'}</span>${m.resp?' · '+m.resp:''}</div>
         <div class="med-grid">
           ${m.cernelha?`<div class="med-item"><div class="med-val ${stC}">${m.cernelha}m</div><div class="med-label">Cernelha</div></div>`:''}
           ${m.torax?`<div class="med-item"><div class="med-val ${stT}">${m.torax}m</div><div class="med-label">Tórax</div></div>`:''}
@@ -7500,7 +7526,7 @@ function renderEventos() {
       <div class="evt-header">
         <div style="flex:1">
           <div class="evt-title">${e.nome}</div>
-          <div class="evt-meta">${e.tipo} · ${fd(e.data)} · ${e.local||'—'} ${e.nucleo?'· '+e.nucleo:''}</div>
+          <div class="evt-meta">${e.tipo} · <span style="font-family:var(--mono)">${fd(e.data)}</span> · ${e.local||'—'} ${e.nucleo?'· '+e.nucleo:''}</div>
           ${destaque.length>0?`<div style="margin-top:4px;font-size:11px;color:var(--green-d)">${_iconTrofeu(12)} ${destaque.map(p=>`${p.nome}: ${p.resultado}`).join(' · ')}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end">
@@ -9885,7 +9911,7 @@ function renderDashboard(){
     if(als.length===0){
       alertasEl.innerHTML='<div class="alert alert-g">✅ Nenhum alerta crítico no momento.</div>';
     } else {
-      alertasEl.innerHTML=als.slice(0,12).map(a=>`<div class="alert alert-${a.t}" style="${a.fn?'cursor:pointer;':''}display:flex;justify-content:space-between;align-items:center" ${a.fn?`onclick="${a.fn}"`:''}><span>${a.m}</span>${a.fn?'<span style="font-size:10px;background:rgba(0,0,0,0.07);padding:2px 7px;border-radius:99px;white-space:nowrap;margin-left:6px">ver →</span>':''}</div>`).join('');
+      alertasEl.innerHTML=als.slice(0,12).map(a=>`<div class="alert alert-${a.t}" style="${a.fn?'cursor:pointer;':''}display:flex;justify-content:space-between;align-items:center" ${a.fn?`onclick="${a.fn}"`:''}><span>${a.m}</span>${a.fn?'<span style="font-size:10px;background:rgba(0,0,0,0.07);padding:2px 7px;border-radius:var(--radius-badge);white-space:nowrap;margin-left:6px">ver →</span>':''}</div>`).join('');
     }
   }
 
@@ -11072,7 +11098,7 @@ function _midiaBadgeHTML(cat){
   const s={registro:'background:var(--bg3);color:var(--text3)',evento:'background:rgba(52,211,153,0.12);color:var(--green-d)',
     nutricao_inicio:'background:rgba(251,191,36,0.12);color:var(--amber-d)',nutricao_acomp:'background:rgba(251,191,36,0.12);color:var(--amber-d)',
     nutricao_fim:'background:rgba(251,191,36,0.12);color:var(--amber-d)',saude:'background:rgba(252,165,165,0.12);color:var(--red-d)'}[cat]||'background:var(--bg3);color:var(--text3)';
-  return '<span style="font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600;'+s+'">'+_midiaCategLabel(cat)+'</span>';
+  return '<span style="font-size:10px;padding:2px 8px;border-radius:var(--radius-badge);font-weight:600;'+s+'">'+_midiaCategLabel(cat)+'</span>';
 }
 
 function abrirModalFoto(animalId, animalNome, animalNasc) {
