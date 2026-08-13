@@ -764,9 +764,16 @@
     <select id="f-sit" onchange="filtrar()"><option value="">Todas situações</option><option value="ativo" selected>Ativos (Cabanha + Empréstimo)</option><option value="NA CABANHA">Na Cabanha</option><option value="EMPRESTIMO">Empréstimo</option><option value="VENDIDO">Vendido(a)</option><option value="TRANSFERIDO">Transferido/Doado</option><option value="MORTO">Morto(a)</option><option value="rascunho">Rascunhos (aguardando SBB)</option></select>
     <select id="f-sexo" onchange="filtrar()"><option value="">Todos sexos</option><option>Fêmea</option><option>Macho</option></select>
     <select id="f-ciclo" onchange="filtrar()"><option value="">Ciclos</option></select>
+    <!-- Reprodutivo v4, Fase 7 (spec Menu Animais): grid/swimlane como alternativa à tabela densa —
+         toggle, não substituição, pra não tirar quem prefere a lista compacta. -->
+    <div style="margin-left:auto;display:flex;gap:4px">
+      <button class="btn btn-sm" id="an-view-btn-grade" onclick="_animaisSetView('grade')">▦ Grade</button>
+      <button class="btn btn-sm" id="an-view-btn-lista" onclick="_animaisSetView('lista')">☰ Lista</button>
+    </div>
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
-  <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+  <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
+  <div class="card" id="animais-tabela-wrap" style="padding:0;overflow:hidden;overflow-x:auto;display:none">
     <table>
       <thead><tr>
         <th style="padding:9px 10px">Nome</th>
@@ -2552,6 +2559,15 @@
   <div class="modal">
     <div class="modal-header"><span class="modal-title">Cadastrar animal</span><button class="modal-close" onclick="closeModal('modal-novo')">×</button></div>
     <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Foto <span style="font-weight:400;font-size:10px;color:var(--text3)"> — opcional, até 5MB</span></label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <img id="nfoto-preview" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:none;border:0.5px solid var(--border)">
+          <label class="btn btn-sm" style="cursor:pointer">📷 Escolher foto<input type="file" accept="image/*" style="display:none" onchange="_animalFotoSelect(event,'nfoto-preview','nfoto-b64')"></label>
+          <button class="btn btn-sm" id="nfoto-remover" style="display:none" onclick="_animalFotoRemover('nfoto-preview','nfoto-b64')">Remover</button>
+        </div>
+        <input type="hidden" id="nfoto-b64" value="">
+      </div>
       <div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="nn" placeholder="Nome completo em maiúsculas"></div>
       <div class="form-group"><label>RP</label><input type="text" id="nrp"></div>
       <div class="form-group" style="grid-column:1/-1"><label>SBB (ABCCC)
@@ -3189,6 +3205,22 @@ let fB='',fS='ativo',fSx='',fC='';
 function filtrar(){fB=document.getElementById('busca').value.toLowerCase();fS=document.getElementById('f-sit').value;fSx=document.getElementById('f-sexo').value;fC=document.getElementById('f-ciclo').value;renderAnimais();}
 
 // ─── RENDER ANIMAIS ───────────────────────────────────────────────────────────
+// Reprodutivo v4, Fase 7 (spec Menu Animais): grid/swimlane como visão padrão, tabela densa como
+// alternativa (toggle) — persiste em localStorage pra não voltar pra lista sempre que reabrir.
+let _animaisView = localStorage.getItem('mimba_animais_view') || 'grade';
+
+function _animaisSetView(view) {
+  _animaisView = view;
+  try { localStorage.setItem('mimba_animais_view', view); } catch(e) {}
+  renderAnimais();
+}
+
+function _animalAvatarHtml(a) {
+  if (a.foto_url) return `<img src="${a.foto_url}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">`;
+  const inicial = (a.nome||'?').trim().charAt(0).toUpperCase();
+  return `<div style="width:44px;height:44px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${inicial}</div>`;
+}
+
 function renderAnimais(){
   const lista=animais.filter(a=>{
     const isRascunho = a.status_cadastro === 'rascunho';
@@ -3198,6 +3230,7 @@ function renderAnimais(){
     const sOk=!fS||(fS==='ativo'?isNaCabanha(a):a.situacao===fS);
     return nOk&&sOk&&(!fSx||a.sexo===fSx)&&(!fC||a.ciclo===fC);
   });
+
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
@@ -3213,11 +3246,43 @@ function renderAnimais(){
       <td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="verDetalhe(${i})">ver</button><button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button></td>
     </tr>`;
   }).join('');
+
+  document.getElementById('animais-grade-wrap').innerHTML = lista.map(a => {
+    const i = animais.indexOf(a);
+    return `<div class="card" style="padding:12px">
+      <div style="display:flex;gap:10px;align-items:center">
+        ${_animalAvatarHtml(a)}
+        <div style="min-width:0;flex:1">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.nome}">${a.nome}</div>
+          <div style="font-size:11px;color:var(--text2)">${sexm(a.sexo)} · ${sbbL(a.sbb)||'sem SBB'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">
+        ${sitb(a.situacao)}
+        ${a.estagio ? estb(a.estagio) : ''}
+        ${a.ciclo ? `<span class="badge bgr">${a.ciclo}</span>` : ''}
+        ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
+        ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
+        <div>Pelagem: ${a.pelagem||'—'}</div>
+        <div>Nasc.: ${fd(a.nasc)||'—'}</div>
+        <div style="grid-column:1/-1">RP: ${a.rp||'—'}</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn btn-sm" style="flex:1" onclick="verDetalhe(${i})">Ver</button>
+        <button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button>
+      </div>
+    </div>`;
+  }).join('');
+
   const vazio = lista.length===0;
-  const cardTabela = document.getElementById('tbody-animais').closest('.card');
-  const emptyEl = document.getElementById('animais-empty');
-  if(cardTabela) cardTabela.style.display = vazio ? 'none' : '';
-  if(emptyEl) emptyEl.style.display = vazio ? '' : 'none';
+  document.getElementById('animais-tabela-wrap').style.display = (vazio || _animaisView!=='lista') ? 'none' : '';
+  document.getElementById('animais-grade-wrap').style.display = (vazio || _animaisView!=='grade') ? 'none' : 'grid';
+  document.getElementById('animais-empty').style.display = vazio ? '' : 'none';
+  const btnGrade = document.getElementById('an-view-btn-grade'), btnLista = document.getElementById('an-view-btn-lista');
+  if(btnGrade) btnGrade.className = 'btn btn-sm' + (_animaisView==='grade' ? ' btn-primary' : '');
+  if(btnLista) btnLista.className = 'btn btn-sm' + (_animaisView==='lista' ? ' btn-primary' : '');
   _atualizarMetricasAnimais();
 }
 
@@ -5010,6 +5075,15 @@ function _renderDetCorpo(i, editando) {
       </div>
       <div id="abccc-status" style="font-size:11px;color:var(--text2);margin-bottom:6px;display:none"></div>
       <input type="hidden" id="ed-status-cadastro" value="${a.status_cadastro||'ativo'}">
+      <div class="form-group" style="margin-bottom:8px">
+        <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Foto</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <img id="ed-foto-preview" src="${a.foto_url||''}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:${a.foto_url?'':'none'};border:0.5px solid var(--border)">
+          <label class="btn btn-sm" style="cursor:pointer">📷 Escolher foto<input type="file" accept="image/*" style="display:none" onchange="_animalFotoSelect(event,'ed-foto-preview','ed-foto-b64')"></label>
+          <button class="btn btn-sm" id="ed-foto-remover" style="display:${a.foto_url?'':'none'}" onclick="_animalFotoRemover('ed-foto-preview','ed-foto-b64')">Remover</button>
+        </div>
+        <input type="hidden" id="ed-foto-b64" value="${a.foto_url||''}">
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nome</label>
           <input id="ed-nome" value="${a.nome||''}" style="width:100%;font-size:12px" placeholder="Nome em maiúsculas"></div>
@@ -5246,6 +5320,7 @@ function salvarEdicaoAnimal() {
   a.castrado = !!document.getElementById('ed-castrado')?.checked;
   a.qtd_coberturas_padrao = parseInt(document.getElementById('ed-qtdcob')?.value || '120');
   a.receptora = receptoraChecked;
+  a.foto_url = document.getElementById('ed-foto-b64')?.value || null;
   a.status_cadastro = document.getElementById('ed-status-cadastro')?.value || a.status_cadastro || 'ativo';
   // Persistir no banco
   _dbSalvarAnimal(a, i);
@@ -5789,6 +5864,7 @@ function salvarAnimal(){
     castrado:document.getElementById('ncastrado').checked,
     qtd_coberturas_padrao:parseInt(document.getElementById('nqtdcob').value||'120'),
     receptora,
+    foto_url:document.getElementById('nfoto-b64').value||null,
     ult_vac:'',prox_vac:document.getElementById('npvac').value,
     ult_verm:'',val_exame:document.getElementById('npexame').value,
   });
@@ -5814,6 +5890,30 @@ function _limparFormNovoAnimal() {
   const recEl = document.getElementById('nreceptora'); if (recEl) recEl.checked = false;
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
+  _animalFotoRemover('nfoto-preview','nfoto-b64');
+}
+
+// Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
+// pros anexos de laudo (FileReader → data URI base64, limite 5MB no client, sem bucket de Storage).
+function _animalFotoSelect(event, previewId, hiddenId) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { alert(`"${file.name}" maior que 5MB — escolha uma foto menor.`); event.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result;
+    document.getElementById(hiddenId).value = b64;
+    const img = document.getElementById(previewId);
+    img.src = b64; img.style.display = '';
+    const remEl = document.getElementById(previewId.replace('-preview','-remover'));
+    if (remEl) remEl.style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function _animalFotoRemover(previewId, hiddenId) {
+  const hiddenEl = document.getElementById(hiddenId); if (hiddenEl) hiddenEl.value = '';
+  const img = document.getElementById(previewId); if (img) { img.src=''; img.style.display='none'; }
+  const remEl = document.getElementById(previewId.replace('-preview','-remover')); if (remEl) remEl.style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -11123,6 +11223,7 @@ async function _sincronizarAoLogin() {
         castrado: !!a.castrado,
         qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         receptora: !!a.receptora,
+        foto_url: a.foto_url || null,
         status_cadastro: a.status_cadastro || 'ativo',
         ativo: a.ativo
       }));
@@ -11529,6 +11630,7 @@ async function _dbSalvarAnimal(a, idx) {
     castrado: !!a.castrado,
     qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
     receptora: !!a.receptora,
+    foto_url: a.foto_url || null,
     status_cadastro: a.status_cadastro || 'ativo',
     criado_por: usuarioAtual?.db_id || null
   };

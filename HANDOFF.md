@@ -256,6 +256,17 @@ cabanhas), mais as abas herdadas da Gestação.
   mas não era chamada de lugar nenhum. Corrigido; sem isso, o mesmo bug teria sido replicado nas funções
   novas. Mudança de fluxo/UI + tabela já criada na Fase 0 — não precisou de `revisor-isolamento`. Detalhe
   completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 6).
+- **Fase 7 — aplicada em staging (2026-08-13), última fase da spec** — 🎉 **Reprodutivo v4 completo,
+  todas as 8 fases (Fase 0 → Fase 7) em staging**: achado ao começar — "importação em lote por SBB" já
+  estava construída de antes (`modal-import-sbb`, Prioridade 3 do ROADMAP antigo), nada pra fazer aí.
+  Foto do animal (`animais.foto_url`, mesmo padrão de `laudo_url` — base64 direto, sem bucket de
+  Storage) nos dois modais de cadastro/edição. Listagem de Animais ganhou visão em grade (cards com
+  avatar/foto ou iniciais, badges) como padrão, com toggle pra tabela densa (persiste em localStorage).
+  Mudança de fluxo/UI + coluna nova de baixo risco (mesmo padrão já existente) — não precisou de
+  `revisor-isolamento`. Detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 7).
+  **Falta**: QA em staging real com dado/login de verdade, e a promoção `staging`→`main` (Fase 0 do
+  roadmap geral, deliberadamente adiada até aqui) — nada disso foi feito ainda, só construção + teste
+  local em todas as 8 fases.
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.

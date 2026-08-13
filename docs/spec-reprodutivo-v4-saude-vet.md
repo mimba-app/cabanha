@@ -1,9 +1,12 @@
 # Spec — Reprodutivo v4 + Saúde & Vacinas (revisão pós-reunião com o sócio)
 
-> **Status: spec fechada, pronta pra desenvolvimento.** Revisada por Pedro, Thiago e Luciano em 2026-08-12.
-> Todas as perguntas em aberto foram respondidas — as duas últimas ("Fontes de Cobertura" renomeada pra
-> **"Garanhões e Coberturas"**; corte de perda de cria **reaproveita** a regra de corte de ciclo já
-> existente) foram confirmadas por Pedro em 2026-08-12 e estão incorporadas abaixo.
+> **Status: ✅ TODAS AS 8 FASES APLICADAS EM STAGING (2026-08-13).** Revisada por Pedro, Thiago e Luciano
+> em 2026-08-12, fechada com plano de fases no mesmo dia, e implementada inteira (Fase 0 → Fase 7) em
+> 2026-08-13 — sem precisar dividir a Fase 5 (Kanban do veterinário) em sub-fases, como a spec original
+> cogitava. **Falta QA em staging real** com dado/login de verdade (todo o trabalho até aqui foi
+> construção + teste local via servidor estático + sessão injetada, mesmo padrão usado no Reprodutivo
+> v3) e a promoção `staging` → `main` (Fase 0 do roadmap geral, deliberadamente adiada). Detalhe de cada
+> fase, achados e decisões de design ficam registrados nas seções de cada uma, abaixo.
 
 ## Contexto
 
@@ -471,9 +474,23 @@ Implementada inteira, sem dividir em sub-fases — o desenho ficou direto o sufi
   pra cada animal selecionado; vermifugação em lote agora também persiste (`POST vermifugacoes`,
   confirmado que antes não chamava nada); tratamento novo salva, aparece na lista, e edita/exclui.
 
-### Fase 7 — Menu Animais
+### Fase 7 — Menu Animais ✅ APLICADA (2026-08-13) — última fase da spec
 
-- Foto do animal no cadastro, visível na listagem.
-- Redesenho da listagem pra grid/swimlane (menos "cara de planilha", mais detalhe por card/linha).
-- Importação em lote por SBB (colar lista, ou subir `.txt`/`.csv`) — a variante "puxar lista completa do
-  proprietário via ABCCC" fica de fora por ora (seção 6, fora de escopo).
+- **Achado ao começar**: "Importação em lote por SBB (colar lista, ou subir `.txt`/`.csv`)" **já estava
+  construída** — `modal-import-sbb`/`abrirModalImportarSBB()` (Prioridade 3 do `ROADMAP.md` antigo),
+  com os dois caminhos (colar lista ou upload de arquivo), busca em lote na ABCCC, preview antes de
+  confirmar e barra de progresso. Nada pra fazer aqui, só confirmar que já cobre o pedido — a variante
+  "puxar lista completa do proprietário via ABCCC" segue fora de escopo (seção 6), não investigada.
+- **Foto do animal** (`animais.foto_url`, migration
+  `docs/migrations/2026-08-13-reprodutivo-v4-fase7-foto-animal.sql`) — mesmo padrão já usado pros laudos
+  de vacina/exame (`vacinacoes.laudo_url`/`exames.laudo_url`): data URI base64 direto num campo `text`,
+  lido via `FileReader` no navegador, limite de 5MB no client, **sem bucket de Storage novo**. Upload nos
+  dois modais de animal (cadastro e edição), com preview circular e botão de remover.
+- **Redesenho pra grid/swimlane**: `renderAnimais()` passou a montar as duas visões — grade (cards com
+  avatar/foto, badges de situação/estágio/ciclo/confirmado, pelagem/nascimento/RP) e a tabela densa que
+  já existia — com um **toggle** (`_animaisSetView()`, persistido em `localStorage`) em vez de substituir
+  a tabela de vez. Grade é o padrão. Sem foto cadastrada, o avatar cai pra um círculo com a inicial do
+  nome (mesmo padrão do avatar da sidebar).
+- Testado via servidor estático local: grade renderiza com avatar/iniciais e badges corretos; toggle
+  troca de visão e persiste em localStorage; upload de foto lê o arquivo como data URI e mostra o
+  preview.
