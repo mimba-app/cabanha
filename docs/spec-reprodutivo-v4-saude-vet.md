@@ -1,10 +1,10 @@
 # Spec — Reprodutivo v4 + Saúde & Vacinas (revisão pós-reunião com o sócio)
 
-> **Status: rascunho, aguardando revisão do sócio (Thiago).** Este documento organiza as anotações da
-> reunião de 2026-08-12 entre Pedro e Thiago, revendo o módulo Reprodutivo (v3, recém lançado —
-> `docs/spec-reprodutivo-v3.md`) e a tela de Saúde & Vacinas. **Não é uma spec fechada** — várias decisões
-> ficaram em aberto ou incompletas na anotação original (marcadas com ❓) e precisam da revisão do Thiago
-> antes de virar plano de fases. Depois de revisado, quebrar em fases seguindo o padrão da v3.
+> **Status: revisado pelo Pedro e pelo Thiago (2026-08-12) — pronto para virar plano de fases.** Este
+> documento organiza as anotações da reunião entre Pedro e Thiago revendo o módulo Reprodutivo (v3, recém
+> lançado — `docs/spec-reprodutivo-v3.md`) e a tela de Saúde & Vacinas, e incorpora as respostas às
+> perguntas que ficaram em aberto na primeira rodada. Restam só 2 pontos secundários sem decisão final (❓,
+> seção "Perguntas em aberto") — não bloqueiam o início do trabalho.
 
 ## Contexto
 
@@ -29,11 +29,11 @@ funil de acompanhamento reprodutivo do veterinário (hoje esse acompanhamento n�
 
 ## 2. Animais × Reprodutivo (cadastro)
 
-- **Campo "castrado"** no cadastro de machos. Quando marcado, o animal **não aparece** como opção no
-  planejador de ciclo do Reprodutivo.
-  - ❓ **A definir com o sócio:** o campo bloqueia só a entrada em *novos* planejamentos, ou também esconde
-    o animal de telas de histórico reprodutivo? (assumir "só bloqueia novo planejamento" até confirmação —
-    dado histórico não deveria sumir).
+- **Campo "castrado"** no cadastro de machos. Quando marcado, o animal:
+  - **some** das telas de Plantel disponível (seção 3.2) e de qualquer tela de uso em ciclos/planejamentos
+    novos (não aparece como opção pra selecionar);
+  - **permanece visível** em históricos passados — coberturas/acasalamentos já registrados antes da
+    castração não somem nem ficam órfãos.
 
 ## 3. Reprodutivo — reordenação e reestruturação das abas
 
@@ -52,26 +52,28 @@ A visão do criador deve abrir sempre no que **já está em andamento**, não no
 3. **Acasalamentos / funil enviado ao veterinário** — acompanhamento do que já foi liberado, desde a
    confirmação de envio até a confirmação de gestação/cria.
 
-**Regra de bloqueio (importante):** uma gestação ativa do ciclo atual que ainda não teve a cria
-informada (nem nascimento, nem perda) **impede** o criador de finalizar/enviar o planejamento do próximo
-ciclo pro veterinário — mesmo que ele tente. Só libera depois que a gestação correspondente for encerrada
-(sinalizando cria nascida ou perdida).
+**Regra de bloqueio — revisada em 2026-08-12:** a versão original desta spec bloqueava o criador de
+fechar/enviar o planejamento do próximo ciclo enquanto houvesse gestação ativa sem cria informada. **Essa
+regra foi revista e invertida**: o criador **pode** fechar o ciclo e enviar pro funil do veterinário
+normalmente, mesmo com gestações ainda ativas em aberto. O bloqueio acontece **do lado do veterinário**: no
+Kanban de Saúde & Vacinas (seção 4), a égua com gestação ativa aparece na coluna **Controle** já sinalizada
+como **bloqueada** — visível, mas **sem poder ser movida** pro próximo estágio do funil até a gestação
+daquela égua ser encerrada (cria nascida ou perdida). Ver seção 4.1.
 
-- ❓ A anotação original menciona "ter uma visão do criador com apelo gráfico magnífico" pra gestações — não
-  ficou claro se isso é só o estilo de card da aba 1, ou uma tela/dashboard extra separada. Confirmar com o
-  Thiago.
+**"Apelo gráfico" (resolvido):** é só o estilo visual do card/linha de cada gestação na aba 1 (mesma
+referência da tela "Legado" já mencionada acima) — não é uma tela ou dashboard separado.
 
-### 3.2 Aba "Plantel disponível" (posição ainda em aberto)
+### 3.2 Aba "Plantel disponível" — resolvido: aba própria, por ciclo
 
-Lista tudo disponível pra uso no ciclo: garanhões, éguas de cria, cotas de cobertura, embriões etc.
-
-- ❓ **A definir:** vira uma aba própria (3ª/4ª posição) ou fica fundida dentro da aba de Planejador (3.1,
-  item 2)? A anotação original registra as duas possibilidades sem decidir.
+Fica como **aba separada** (não funde com o Planejador). Lista tudo disponível pra uso **naquele ciclo**:
+garanhões, éguas de cria, cotas de cobertura, embriões, receptoras (seção 3.5) etc. — sempre escopado ao
+ciclo selecionado, do mesmo jeito que o Planejador já é por ciclo hoje.
 
 ### 3.3 Fontes de Cobertura → renomear e reestruturar
 
 - **Falta um tipo de fonte**: hoje só existe Próprio / Cota / Direito de uso — falta **"Cobertura"** como
-  tipo (cobertura comprada avulsa, sem ser cota nem direito de uso recorrente).
+  tipo (cobertura comprada avulsa, sem ser cota nem direito de uso recorrente). Também falta **"Embrião"**
+  (próprio ou comprado de outra cabanha) — ver detalhamento completo na seção 3.5 (Receptoras).
 - **Renomear** o conceito/aba "Fontes de Cobertura" para algo como **"Garanhões e Coberturas"** (nome exato
   a validar).
 - **Fluxo quando a fonte é "Próprio"** — hoje abre o mesmo modal genérico de "Nova fonte", pedindo pra
@@ -95,16 +97,37 @@ Lista tudo disponível pra uso no ciclo: garanhões, éguas de cria, cotas de co
   de cotas/coberturas disponíveis no momento da criação (não antes).
 - Éguas com **gestação ativa** também devem poder entrar no planejamento do **próximo** ciclo normalmente.
   E podem ser reaproveitadas até no **mesmo** ciclo, desde que a gestação atual já tenha sido encerrada
-  (cria nascida ou gestação perdida — ver regra de corte na seção 4.4).
+  (cria nascida ou gestação perdida — ver regra de corte na seção 4.3).
 
-### 3.5 Receptoras — revisar fluxo (pouco detalhado, precisa de esclarecimento)
+### 3.5 Receptoras (transferência de embrião) — detalhado pelo Luciano
 
-- Rever: (a) adicionar égua de **outra cabanha** como receptora, e (b) definir uma égua **própria** como
-  receptora.
-- ❓ **A anotação não detalha o que exatamente está errado.** Um dos prints da reunião mostra um cadastro de
-  animal com "Receptora (TE)" digitado livremente no campo de Observações — sugere que hoje isso é tratado
-  como texto solto em vez de um conceito estruturado (campo/flag própria), mas isso é inferência, não foi
-  dito explicitamente. **Marcar como pendente de esclarecimento direto com o Thiago antes de especificar.**
+Duas situações distintas, ambas envolvendo **transferência de embrião (TE)**:
+
+1. **Embrião — próprio ou comprado**, implantado numa égua do próprio plantel (que atua como receptora).
+   O embrião pode ser de uma égua da própria cabanha, ou **adquirido de outra cabanha** — mesma lógica
+   comercial já usada pra comprar cobertura de um garanhão (ver seção 3.3: seria mais um tipo de "fonte",
+   ao lado de Próprio/Cota/Direito de uso/Cobertura).
+2. **Receptora emprestada/alugada** — uma égua que **não é do plantel**, obtida especificamente pra
+   receber o embrião naquele ciclo. Depois do período de campo e desmame do potro, a cabanha normalmente
+   **inativa** essa receptora (ela deixa de ser usada, mas o registro histórico permanece).
+
+**Requisito obrigatório**: pra poder receber um embrião, a receptora — própria ou emprestada — **precisa
+ter SBB válido na ABCCC**. No cadastro, ela deve ficar **claramente identificada como receptora** (campo/
+flag estruturado, não texto livre em Observações como acontece hoje).
+
+**Regra de parentesco (importante, afeta o registro do produto)**: o potro nascido de uma TE é sempre
+registrado tendo como **mãe a doadora do embrião** (a "produtora" genética) — **nunca a receptora**. A
+receptora não entra como mãe em nenhum registro de descendência.
+
+**Como aparece no acompanhamento de gestações ativas**: a gestação é sempre exibida vinculada à **dona do
+embrião** (a doadora), com uma sinalização adicional de qual receptora está gestando fisicamente. Exemplo
+do formato esperado:
+
+> Gestação **TURUMBAMBA CHARRUA** na receptora **NEVADA DE SANTA ENOEMA (B565012)** — TE (Transferência de
+> Embrião)
+
+Ou seja: card/linha da gestação nomeia a doadora (é o animal que "está prenha" do ponto de vista do
+plantel/produção), com um sub-rótulo indicando a receptora física e o SBB dela.
 
 ### 3.6 Bug confirmado (não é mudança de escopo, é correção)
 
@@ -126,6 +149,11 @@ libera o planejamento fechado (seção 3.1).
    artificial, monta natural, TE — transferência de embrião etc.). Esse campo hoje aparece (de forma
    incorreta, segundo a reunião) na aba "Acasalamentos" do menu Reprodutivo do criador — precisa migrar
    pra cá, pro momento em que o veterinário realmente decide isso.
+   - **Cards bloqueados (regra revisada, seção 3.1)**: como o criador agora pode enviar o ciclo pro funil
+     mesmo com gestações do ciclo atual ainda ativas, essas éguas aparecem aqui na coluna Controle já
+     **sinalizadas como bloqueadas** (indicação visual clara, ex.: cadeado/badge) — visíveis, mas **sem
+     poder ser movidas** pro estágio 2 até a gestação em curso daquela égua ser encerrada (cria nascida ou
+     perdida, seção 4.3).
 2. **Inseminação/Cruzamento** — execução do método definido no estágio 1. Janela de acompanhamento de
    **~3 a 7 dias**; o sistema deve **alertar visualmente essa contagem** de forma clara. O veterinário
    sinaliza se a égua ovulou:
@@ -178,22 +206,25 @@ Se, depois de um DG positivo (gestação ativa), o veterinário registra que a �
 
 ---
 
-## Perguntas em aberto (revisar com o Thiago antes de especificar fases)
+## Perguntas em aberto (secundárias — não bloqueiam início do trabalho)
 
-1. Campo "castrado" (seção 2) — bloqueia só planejamento novo, ou esconde de tudo?
-2. "Visão do criador com apelo gráfico" (seção 3.1) — é o estilo de card da aba 1, ou uma tela extra?
-3. Aba "Plantel disponível" (seção 3.2) — aba própria ou fundida no Planejador?
-4. Nome final pra "Fontes de Cobertura" renomeada (seção 3.3) — sugestão "Garanhões e Coberturas", confirmar.
-5. Receptoras (seção 3.5) — a anotação não diz o que está errado no fluxo atual; pedir pro Thiago detalhar
-   com um exemplo concreto do que tentou fazer e não funcionou/fez sentido.
-6. Corte 30/06→01/07 (seção 4.3) — confirmar se reaproveita a regra de corte de ciclo já existente.
+1. Nome final pra "Fontes de Cobertura" renomeada (seção 3.3) — sugestão "Garanhões e Coberturas",
+   confirmar antes de nomear telas/campos na implementação.
+2. Corte 30/06→01/07 (seção 4.3) — confirmar, ao especificar a fase, se reaproveita a regra de corte de
+   ciclo já existente (Fase 0 do Reprodutivo v3) ou precisa de lógica própria.
+
+Todas as demais perguntas da rodada anterior foram respondidas por Pedro/Thiago/Luciano em 2026-08-12 e
+incorporadas nas seções correspondentes (castrado, apelo gráfico, regra de bloqueio, Plantel disponível,
+receptoras).
 
 ## Próximos passos
 
-1. Thiago revisa este documento e responde as perguntas em aberto (acima).
-2. Com as respostas, quebrar em fases de implementação — separando o que é **mudança de fluxo/UI** (baixo
-   risco, reaproveita schema existente: reordenar abas, renomear campos, remover "marcar como reprodutora",
-   corrigir o bug do formulário) do que precisa de **schema novo** (estágios do Kanban veterinário,
-   categoria "Tratamentos", quantidade-padrão de coberturas no cadastro de animal).
-3. Seguir o formato de fases de `docs/spec-reprodutivo-v3.md` (spec fechada → fases numeradas → cada fase
+1. Quebrar esta spec em fases de implementação — separando o que é **mudança de fluxo/UI** (baixo risco,
+   reaproveita schema existente: reordenar abas, renomear campos, remover "marcar como reprodutora",
+   corrigir o bug do formulário) do que precisa de **schema novo** (estágios do Kanban veterinário, flag de
+   receptora + fonte "embrião", categoria "Tratamentos", quantidade-padrão de coberturas no cadastro de
+   animal, flag "castrado").
+2. Seguir o formato de fases de `docs/spec-reprodutivo-v3.md` (spec fechada → fases numeradas → cada fase
    testada isoladamente antes da próxima).
+3. As 2 perguntas secundárias acima podem ser resolvidas durante a especificação da fase correspondente,
+   sem precisar de nova rodada de revisão com o sócio.
