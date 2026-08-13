@@ -137,6 +137,12 @@ cabanhas), mais as abas herdadas da Gestação.
   completo)" pra deixar claro que complementa o Planejador (que só mostra ciclo atual+próximo) com o
   histórico de todos os ciclos. `renderGestAgenda()` e os divs/ids órfãos (`gest-agenda`, `gest-nascimentos`,
   `tab-reprod`, `tab-cob-hist` como tab separada) foram removidos do código, não só escondidos.
+- **Reprodutivo v4 + funil do veterinário (rascunho, 2026-08-12)**: reunião Pedro+Thiago levantou uma
+  reestruturação maior — reordenar as abas do criador (gestações ativas primeiro, planejamento depois),
+  remover "marcar como reprodutora", reformular fontes de cobertura, e criar um Kanban de acompanhamento
+  reprodutivo pro veterinário dentro de Saúde & Vacinas (hoje isso não existe como fluxo). Spec organizada
+  em `docs/spec-reprodutivo-v4-saude-vet.md` — **ainda é rascunho aguardando revisão do Thiago**, várias
+  decisões ficaram em aberto (marcadas ❓ no documento). Não começar a implementar antes da revisão dele.
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
