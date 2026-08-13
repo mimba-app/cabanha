@@ -494,3 +494,92 @@ Implementada inteira, sem dividir em sub-fases — o desenho ficou direto o sufi
 - Testado via servidor estático local: grade renderiza com avatar/iniciais e badges corretos; toggle
   troca de visão e persiste em localStorage; upload de foto lê o arquivo como data URI e mostra o
   preview.
+
+### Fase 8 — revisão pós-feedback (retrabalho pontual, 2026-08-13)
+
+Depois das 8 fases originais em staging, o dono do produto usou o fluxo e trouxe 2 pontos de feedback
+(decididos direto com ele, sem nova reunião): tipo de cobertura no fluxo errado + UX de acasalamento
+ruim (ponto 3), e Plantel disponível/Garanhões e Coberturas/Nova fonte com atrito (ponto 4).
+
+**Ponto 3 — Tipo de cobertura sai do fluxo do criador + UX "Tinder" de acasalamento**
+
+- **3a**: removido o `<select id="ac-tipo">` do modal do criador (`modal-acasalamento`) — decidir
+  IA/Natural/TE virou 100% trabalho do veterinário no estágio Controle do Kanban
+  (`_reproAtualizarTipoCobertura()`, sem mudança). `acasalamentos.tipo_cobertura` agora nasce sempre
+  `null` em `salvarAcasalamento()` (já era nullable desde a Fase 0). O gatilho do campo Receptora
+  (`ac-grp-receptora`) deixou de depender do tipo de cobertura e passou a depender da **fonte
+  selecionada ser do tipo "embriao"** (`_toggleCamposAcasalamento()`, chamado tanto no `onchange` de
+  `ac-fonte` quanto na abertura do modal). O select `repro-tipo-*` no Controle do Kanban (vet) ganhou
+  uma opção "Selecione..." vazia, já que agora sempre começa sem valor.
+- **3b**: nova tela "duas colunas + clique pra ligar" dentro da própria aba **Acasalamentos**
+  (`gest-acasalamentos`) — coluna esquerda com garanhões/fontes do ciclo do Planejador, coluna
+  direita com éguas de cria, `renderAcasalamentosMatch()`. Clicar numa fonte seleciona (destaque
+  visual + resumo no topo), clicar numa égua com fonte já selecionada abre o modal antigo
+  (`modal-acasalamento`) já em **modo confirmação** — égua/fonte ocultas (só um resumo em texto),
+  restando Ciclo (readonly)/Observações/Receptora (se embrião), via nova função
+  `abrirModalAcasalamentoMatch()`. O botão "+ Novo acasalamento" do topo da página passou a levar pra
+  essa aba (`switchTab` pro `gest-acasalamentos`) em vez de abrir o modal de formulário direto — o
+  modal completo (`abrirModalAcasalamento()`, com os selects visíveis) continua existindo como
+  fallback interno, sem ponto de entrada padrão apontando pra ele. Fonte sem saldo e égua já com
+  match no ciclo aparecem esmaecidas (opacidade), sem sumir da lista, sem `onclick`. Lista de
+  acasalamentos do ciclo (kanban por status) continua logo abaixo, reaproveitando `_acCard()` sem
+  mudança.
+- Testado via servidor estático local: sintaxe do `<script>` extraído (`node -e "new
+  Function(...)"`); seleção de fonte → clique em égua abre o modal em modo confirmação com o resumo
+  certo; campo Receptora só aparece pra fonte tipo Embrião (não mais por tipo de cobertura, que nem
+  existe mais no criador); modal de fallback completo ainda funciona igual a antes.
+- **Pendência de QA real**: não foi possível rodar o navegador com sessão injetada nesta rodada
+  (ferramenta de browser não disponível neste subagente) — validação visual completa (destaque do
+  card selecionado, layout responsivo das duas colunas) fica pendente de um passe com
+  `mcp__Claude_Browser__*`, como as fases anteriores fizeram.
+
+**Ponto 4 — Garanhões e Coberturas / Plantel disponível / Nova fonte**
+
+- **4a**: "Plantel disponível" (`tab-plantel-disponivel`) fundida em "Garanhões e Coberturas"
+  (`gest-fontes`) — aba/botão duplicados removidos do `tab-row` e do array `all` do `switchTab()`. A
+  aba única abre sempre na visão de leitura rápida (o antigo conteúdo de Plantel disponível, sempre
+  visível no topo); a lista editável (antigo `gest-fontes-content` + filtros + histórico de
+  negociações) foi movida pra dentro de um bloco colapsável (`gest-fontes-edit-wrap`, fechado por
+  padrão), com um cabeçalho clicável "✏️ Editar Garanhões e Coberturas"
+  (`_toggleEdicaoFontesCobertura()`, mesmo padrão de `_toggleHistoricoNegociacoes()`). `switchTab`
+  (patch) e o carregamento inicial da página Reprodutivo passaram a chamar
+  `renderPlantelDisponivel()` junto de `renderFontesCobertura()`.
+- **4b**: fonte tipo "Cota" trocou o campo de nome livre (`fc-garanhao-nome`) por um
+  `<select id="fc-garanhao-animal">` dos machos cadastrados em Animais (`_fcPopularSelectAnimaisCota()`,
+  `_fcGaranhaoAnimalChange()` preenche nome/SBB por trás pra manter compatibilidade com o resto do
+  fluxo, incluindo edição). `salvarFonteCobertura()` agora bloqueia salvar sem selecionar o animal
+  quando `tipo==='cota'`. Percentual da cota (`fc-cota-pct`) ganhou `onchange="_fcSugerirQtdPorCota()"`
+  — calcula `Math.round(120 * pct / 100)` e pré-preenche `fc-qtd` (continua editável depois, sem trava
+  de "só diminuir" — é sugestão inicial, não teto).
+- **4c**: nova coluna `fontes_cobertura.recorrente boolean not null default false` — migration
+  `docs/migrations/2026-08-13-reprodutivo-v4-fase8-garanhoes.sql`. Checkbox "Recorrente" no modal de
+  fonte, visível só pra tipo "Direito de uso" (`fc-grp-recorrente`, toggle em
+  `_toggleCamposFonteCobertura()`). `renderPlanejadorReprodutivo()` ganhou a lógica de persistência
+  automática: ao selecionar o **próximo ciclo** nas pills, clona qualquer fonte `direito_uso` marcada
+  `recorrente` do ciclo atual que ainda não exista no próximo (mesma quantidade, `db_id` novo) — mesmo
+  princípio do "Próprio" da Fase 2, mas usando o valor da própria fonte recorrente como "padrão", em
+  vez de `qtd_coberturas_padrao` do animal. Fonte "Cobertura" **não mudou** — continua sempre
+  relançada manualmente por ciclo, como já era.
+  - **Migration não aplicada nesta sessão**: a ferramenta `mcp__supabase__apply_migration` não estava
+    disponível neste subagente — o SQL está pronto em
+    `docs/migrations/2026-08-13-reprodutivo-v4-fase8-garanhoes.sql` (mesmo padrão da Fase 7: `alter
+    table` no `public` + loop nos `cab_*` já provisionados) pra ser aplicado depois via MCP ou SQL
+    Editor. **Enquanto não for aplicada, o checkbox "Recorrente" salva no objeto em memória e tenta
+    persistir `recorrente` no PATCH/POST de `fontes_cobertura` — vai ser ignorado/rejeitado pelo
+    PostgREST até a coluna existir** (checar `get_advisors`/logs depois de aplicar).
+  - **Decisão de isolamento**: não passou pelo `revisor-isolamento` — é coluna simples numa tabela já
+    coberta pelas policies existentes (`tem_acesso_tenant`), sem grant novo nem mudança de shape de
+    acesso, mesmo padrão de `qtd_coberturas_padrao`/`castrado` (Fase 0). Documentado, não revisado à
+    parte.
+- **4d**: confirmado — não há nenhum ponto do código hoje que tente linkar/exibir fontes tipo
+  `direito_uso`/`cobertura` dentro do menu Animais (`renderAnimais()`, `salvarAnimal()`,
+  `salvarEdicaoAnimal()`); são sempre `fontes_cobertura` solto, nunca viram linha em `animais`. Nenhum
+  código mudou por causa deste item.
+- Testado via servidor estático local: sintaxe do `<script>` extraído; aba fundida abre com leitura
+  rápida e o bloco de edição continua fechado até clicar; modal de nova fonte com tipo Cota mostra o
+  select de animais em vez do campo de texto e bloqueia salvar sem selecionar; percentual de cota
+  pré-preenche a quantidade sugerida; checkbox Recorrente só aparece pra Direito de uso.
+- **Pendência de QA real**: mesma limitação do ponto 3 — sem `mcp__Claude_Browser__*` disponível nesta
+  sessão, não deu pra confirmar visualmente a lógica de clonagem automática do "Direito de uso
+  recorrente" ao trocar de ciclo (a lógica foi conferida lendo o código, não rodando o app com dado
+  de verdade) nem a coluna no banco (migration ainda não aplicada).

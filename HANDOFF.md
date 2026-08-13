@@ -267,6 +267,25 @@ cabanhas), mais as abas herdadas da Gestação.
   **Falta**: QA em staging real com dado/login de verdade, e a promoção `staging`→`main` (Fase 0 do
   roadmap geral, deliberadamente adiada até aqui) — nada disso foi feito ainda, só construção + teste
   local em todas as 8 fases.
+- **Fase 8 — revisão pós-feedback (2026-08-13)**, construída em staging depois que o dono do produto
+  usou o fluxo: (3a) `tipo_cobertura` saiu do modal do criador — nasce `null`, só o veterinário
+  decide no Controle do Kanban; o gatilho do campo Receptora virou "fonte é Embrião" em vez de "tipo
+  é TE". (3b) aba Acasalamentos virou uma tela "Tinder" — duas colunas (fontes × éguas do ciclo),
+  clique-clique liga e abre o modal antigo só como confirmação (ciclo/obs/receptora); "+ Novo
+  acasalamento" agora leva pra essa aba em vez de abrir modal direto. (4a) "Plantel disponível" foi
+  fundida em "Garanhões e Coberturas" — uma aba só, leitura rápida no topo + edição num bloco
+  colapsável. (4b) fonte "Cota" exige selecionar um animal cadastrado (não mais nome livre) e o
+  percentual sugere a quantidade automaticamente (`120 × %`). (4c) "Direito de uso" ganhou checkbox
+  "Recorrente" que persiste a fonte sozinha pro próximo ciclo — precisa da coluna nova
+  `fontes_cobertura.recorrente`. (4d) confirmado que Animais nunca linkou Direito de uso/Cobertura,
+  nada mudou aí. Detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 8).
+  **⚠️ Migration pendente de aplicação**: `docs/migrations/2026-08-13-reprodutivo-v4-fase8-garanhoes.sql`
+  (coluna `recorrente`) não foi aplicada nesta sessão — `mcp__supabase__apply_migration` não estava
+  disponível no subagente que fez o trabalho. Aplicar antes de usar o checkbox "Recorrente" em
+  produção/staging real (sem a coluna, o PATCH/POST de `fontes_cobertura` com esse campo vai falhar
+  ou ser ignorado). **Falta também QA visual real** (browser com sessão injetada) — só validação por
+  leitura de código + checagem de sintaxe do `<script>` nesta rodada, a ferramenta de browser não
+  estava disponível no subagente.
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.

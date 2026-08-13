@@ -1040,15 +1040,14 @@
     <div><div class="page-title">Reprodutivo</div><div class="page-sub">Planejamento por ciclo reprodutivo · acasalamentos, gestações e plantel</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="abrirModalFonteCobertura()">+ Nova fonte</button>
-      <button class="btn btn-primary" onclick="abrirModalAcasalamento()">+ Novo acasalamento</button>
+      <button class="btn btn-primary" onclick="switchTab(document.getElementById('tab-btn-acasalamentos'),'gest-acasalamentos')">+ Novo acasalamento</button>
       <button class="btn btn-primary" onclick="abrirModalProtocolo()">+ Novo protocolo</button>
     </div>
   </div>
   <div class="tab-row">
     <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações</button>
     <button class="tab" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
-    <button class="tab" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
-    <button class="tab" onclick="switchTab(this,'tab-plantel-disponivel')">Plantel disponível</button>
+    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
     <button class="tab" onclick="switchTab(this,'gest-fontes')">Garanhões e Coberturas</button>
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
@@ -1087,48 +1086,75 @@
   <!-- Abaixo: abas herdadas da antiga página "Gestação", fundida aqui na Fase 5 da spec
        docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
        lugar, só o menu. -->
+  <!-- Reprodutivo v4, Fase 8 (spec 4a): "Plantel disponível" e "Garanhões e Coberturas" fundidas
+       numa aba só — visão padrão é a leitura rápida (plantel disponível no ciclo), edição
+       (lista com editar/excluir/+ Nova fonte) fica acessível logo abaixo, não em aba separada. -->
   <div id="gest-fontes" style="display:none">
-    <div class="filter-row">
-      <select id="fc-f-ciclo" onchange="renderFontesCobertura()" style="width:160px">
-        <option value="">Todos os ciclos</option>
-      </select>
-      <select id="fc-f-status" onchange="renderFontesCobertura()" style="width:160px">
-        <option value="">Todos os status</option>
-        <option value="ativa">Ativa</option>
-        <option value="vencida">Vencida</option>
-        <option value="esgotada">Esgotada</option>
-        <option value="cancelada">Cancelada</option>
-      </select>
-    </div>
-    <div id="gest-fontes-content"></div>
-    <div class="card" style="margin-top:1rem;cursor:pointer" onclick="_toggleHistoricoNegociacoes()">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:var(--text2)">Histórico de negociações (<span id="ng-hist-count">0</span>)</span>
-        <span id="ng-hist-toggle" style="font-size:12px;color:var(--text3)">▾ mostrar</span>
-      </div>
-    </div>
-    <div id="ng-hist-wrap" style="display:none;margin-top:0.5rem">
-      <div class="filter-row">
-        <select id="ng-hist-f-status" onchange="renderHistoricoNegociacoes()" style="width:160px">
-          <option value="">Todos os status</option>
-          <option value="pendente">Pendente</option>
-          <option value="aceito">Aceito</option>
-          <option value="quitado">Quitado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
-        <table><thead><tr>
-          <th style="padding:9px 10px">Fonte / Garanhão</th><th>Tipo</th><th>Qtd</th><th>Comprador</th><th>Valor</th><th>Status</th><th>Data</th>
-        </tr></thead><tbody id="tbody-ng-hist"></tbody></table>
-      </div>
-    </div>
-  </div>
-  <div id="tab-plantel-disponivel" style="display:none">
     <div class="page-sub" style="margin:-6px 0 14px">Tudo disponível pra uso no ciclo selecionado no Planejador de ciclo — garanhões com saldo, éguas de cria sem acasalamento ainda, cotas/direitos de uso/coberturas avulsas, embriões e receptoras.</div>
     <div id="plantel-disponivel-content"></div>
+
+    <div class="card" style="margin-top:1.25rem;cursor:pointer" onclick="_toggleEdicaoFontesCobertura()">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--text2)">✏️ Editar Garanhões e Coberturas</span>
+        <span id="gest-fontes-edit-toggle" style="font-size:12px;color:var(--text3)">▾ mostrar</span>
+      </div>
+    </div>
+    <div id="gest-fontes-edit-wrap" style="display:none;margin-top:0.75rem">
+      <div class="filter-row">
+        <select id="fc-f-ciclo" onchange="renderFontesCobertura()" style="width:160px">
+          <option value="">Todos os ciclos</option>
+        </select>
+        <select id="fc-f-status" onchange="renderFontesCobertura()" style="width:160px">
+          <option value="">Todos os status</option>
+          <option value="ativa">Ativa</option>
+          <option value="vencida">Vencida</option>
+          <option value="esgotada">Esgotada</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
+      </div>
+      <div id="gest-fontes-content"></div>
+      <div class="card" style="margin-top:1rem;cursor:pointer" onclick="_toggleHistoricoNegociacoes()">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">Histórico de negociações (<span id="ng-hist-count">0</span>)</span>
+          <span id="ng-hist-toggle" style="font-size:12px;color:var(--text3)">▾ mostrar</span>
+        </div>
+      </div>
+      <div id="ng-hist-wrap" style="display:none;margin-top:0.5rem">
+        <div class="filter-row">
+          <select id="ng-hist-f-status" onchange="renderHistoricoNegociacoes()" style="width:160px">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="aceito">Aceito</option>
+            <option value="quitado">Quitado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+          <table><thead><tr>
+            <th style="padding:9px 10px">Fonte / Garanhão</th><th>Tipo</th><th>Qtd</th><th>Comprador</th><th>Valor</th><th>Status</th><th>Data</th>
+          </tr></thead><tbody id="tbody-ng-hist"></tbody></table>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="gest-acasalamentos" style="display:none">
+    <!-- Reprodutivo v4, Fase 8 (spec 3b): entrada padrão do "Acasalar" — duas colunas lado a
+         lado (garanhões/fontes × éguas), clique-clique pra ligar, sem drag-and-drop. Substitui o
+         modal de formulário como ponto de entrada principal; o modal antigo (modal-acasalamento)
+         vira só a confirmação do match (ciclo/observações) e continua existindo por dentro. -->
+    <div class="page-sub" style="margin:-6px 0 10px">Clique num garanhão/fonte à esquerda, depois numa égua à direita, pra criar o acasalamento deste ciclo (<span id="ac-match-ciclo-label">—</span>).</div>
+    <div id="ac-match-resumo-sel" style="display:none;margin-bottom:10px"></div>
+    <div class="kanban-board" style="grid-template-columns:1fr 1fr;gap:14px">
+      <div class="kanban-col kanban-col-emdia">
+        <div class="kanban-col-header"><span>Garanhões / Fontes</span></div>
+        <div id="ac-match-fontes" class="kanban-cards"></div>
+      </div>
+      <div class="kanban-col kanban-col-emdia">
+        <div class="kanban-col-header"><span>Éguas</span></div>
+        <div id="ac-match-eguas" class="kanban-cards"></div>
+      </div>
+    </div>
+    <div class="card-title" style="margin:22px 0 8px">Acasalamentos deste ciclo</div>
     <div id="ac-kanban-content"></div>
     <div id="ac-cancelados-wrap" style="margin-top:1rem">
       <div class="card" style="cursor:pointer" onclick="_toggleCanceladosAcasalamentos()">
@@ -2702,8 +2728,12 @@
           <option value="embriao">Embrião</option>
         </select>
       </div>
-      <div class="form-group"><label>Garanhão</label><input type="text" id="fc-garanhao-nome" placeholder="Nome do garanhão"></div>
-      <div class="form-group"><label>SBB
+      <div class="form-group" id="fc-grp-garanhao-nome"><label>Garanhão</label><input type="text" id="fc-garanhao-nome" placeholder="Nome do garanhão"></div>
+      <div class="form-group" id="fc-grp-garanhao-animal" style="display:none"><label>Garanhão (cadastro)
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — Cota exige vínculo com um animal cadastrado</span></label>
+        <select id="fc-garanhao-animal" onchange="_fcGaranhaoAnimalChange()"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group" id="fc-grp-sbb"><label>SBB
         <span style="font-weight:400;font-size:10px;color:var(--text3)"> — informe pra buscar o nome automaticamente</span></label>
         <input type="text" id="fc-garanhao-sbb" placeholder="Código SBB" onblur="_buscarAbcccParaFonte()" oninput="this.value=this.value.toUpperCase()">
         <div id="fc-abccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
@@ -2716,12 +2746,19 @@
           <input type="checkbox" id="fc-demerito" style="width:auto"> Registrado como Demérito (ABCCC)
         </label>
       </div>
+      <div class="form-group" id="fc-grp-recorrente" style="display:none"><label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
+          <input type="checkbox" id="fc-recorrente" style="width:auto"> Recorrente — repete automaticamente no próximo ciclo
+        </label>
+      </div>
       <div class="form-group"><label>Quantidade disponível</label><input type="number" id="fc-qtd" min="1" step="1" placeholder="ex: 5"></div>
       <div class="form-group"><label>Ciclo</label><input type="text" id="fc-ciclo" placeholder="ex: 26/27"></div>
       <div class="form-group" id="fc-grp-vig-ini"><label>Vigência início</label><input type="date" id="fc-vig-ini"></div>
       <div class="form-group" id="fc-grp-vig-fim"><label>Vigência fim</label><input type="date" id="fc-vig-fim"></div>
       <div class="form-group" id="fc-grp-cota-prop"><label>Proprietário da cota</label><input type="text" id="fc-cota-prop" placeholder="Nome do proprietário"></div>
-      <div class="form-group" id="fc-grp-cota-pct"><label>Percentual da cota (%)</label><input type="number" id="fc-cota-pct" min="0" max="100" step="0.01"></div>
+      <div class="form-group" id="fc-grp-cota-pct"><label>Percentual da cota (%)
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — sugere a quantidade (120 × %)</span></label>
+        <input type="number" id="fc-cota-pct" min="0" max="100" step="0.01" onchange="_fcSugerirQtdPorCota()"></div>
       <div class="form-group"><label>Valor da cobertura (opcional)</label><input type="number" id="fc-valor" min="0" step="0.01" placeholder="R$"></div>
       <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="fc-obs"></div>
     </div>
@@ -2780,7 +2817,8 @@
 <div class="modal-bg" id="modal-acasalamento">
   <div class="modal">
     <div class="modal-header"><span class="modal-title">Novo acasalamento</span><button class="modal-close" onclick="closeModal('modal-acasalamento')">×</button></div>
-    <div class="form-grid">
+    <div id="ac-modal-match-resumo" style="display:none;margin-bottom:10px;font-size:13px"></div>
+    <div class="form-grid" id="ac-grp-selects">
       <div class="form-group"><label>Égua
         <span style="font-weight:400;font-size:10px;color:var(--text3)"> — se for TE, é a doadora do embrião</span></label>
         <select id="ac-egua" onchange="_renderSimulacaoAcasalamento()"><option value="">Selecione...</option></select>
@@ -2788,15 +2826,8 @@
       <div class="form-group"><label>Fonte de cobertura</label>
         <select id="ac-fonte" onchange="_acFonteChange()"><option value="">Selecione...</option></select>
       </div>
-      <div class="form-group"><label>Tipo de cobertura</label>
-        <select id="ac-tipo" onchange="_toggleCamposAcasalamento()">
-          <option value="Natural">Natural</option>
-          <option value="IA">IA</option>
-          <option value="IATF">IATF</option>
-          <option value="TE">TE</option>
-          <option value="PIV">PIV</option>
-        </select>
-      </div>
+    </div>
+    <div class="form-grid">
       <div class="form-group"><label>Ciclo</label><input type="text" id="ac-ciclo" readonly></div>
       <div class="form-group" id="ac-grp-receptora" style="display:none;grid-column:1/-1"><label>Receptora
         <span style="font-weight:400;font-size:10px;color:var(--text3)"> — a égua acima (doadora) segue sendo a mãe registrada da cria; a receptora só gesta fisicamente</span></label>
@@ -5534,6 +5565,23 @@ function renderPlanejadorReprodutivo() {
   renderEguasCriaPlanejador(); // seção independente — roda mesmo sem garanhão cadastrado
   renderMarketplacePlanejador();
 
+  // Reprodutivo v4, Fase 8 (spec 4c): "Direito de uso" marcado como recorrente persiste sozinho
+  // pro próximo ciclo, com a mesma quantidade — análogo ao "Próprio" (Fase 2), mas o "padrão" é
+  // o próprio valor da fonte recorrente no ciclo anterior. Só os dois ciclos oferecidos pelas
+  // pills (atual/próximo) são considerados — ao selecionar o próximo, clona o que for recorrente
+  // do atual e ainda não existir lá.
+  if (ciclo === cProximo) {
+    fontesCobertura.filter(f => f.tipo === 'direito_uso' && f.recorrente && f.ciclo === cAtual).forEach(f => {
+      const jaTem = fontesCobertura.some(x => x.tipo === 'direito_uso' && x.ciclo === cProximo &&
+        x.garanhao_nome === f.garanhao_nome && (f.garanhao_sbb ? x.garanhao_sbb === f.garanhao_sbb : true));
+      if (jaTem) return;
+      const nova = {...f, ciclo: cProximo, status: 'ativa'};
+      delete nova.db_id;
+      fontesCobertura.push(nova);
+      _dbSalvarFonteCobertura(nova, fontesCobertura.length - 1);
+    });
+  }
+
   const garanhoes = animais.filter(a => a.sexo === 'Macho' && !a.castrado && isNaCabanha(a) && (_idadeAnos(a.nasc) === null || _idadeAnos(a.nasc) >= 20 / 12));
 
   if (!garanhoes.length) {
@@ -6116,7 +6164,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-plantel-disponivel','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -7888,11 +7936,49 @@ function _toggleCamposFonteCobertura() {
   const grpVigFim = document.getElementById('fc-grp-vig-fim');
   const grpProp   = document.getElementById('fc-grp-cota-prop');
   const grpPct    = document.getElementById('fc-grp-cota-pct');
+  const grpNomeLivre = document.getElementById('fc-grp-garanhao-nome');
+  const grpAnimal = document.getElementById('fc-grp-garanhao-animal');
+  const grpRecorrente = document.getElementById('fc-grp-recorrente');
   grpRm.style.display = tipo === 'proprio' ? '' : 'none';
   grpVigIni.style.display = tipo === 'proprio' ? 'none' : '';
   grpVigFim.style.display = tipo === 'proprio' ? 'none' : '';
   grpProp.style.display = tipo === 'cota' ? '' : 'none';
   grpPct.style.display  = tipo === 'cota' ? '' : 'none';
+  // Reprodutivo v4, Fase 8 (spec 4b): Cota passa a exigir vínculo com um animal cadastrado —
+  // troca o campo de nome livre por um select de animais.
+  const ehCota = tipo === 'cota';
+  grpNomeLivre.style.display = ehCota ? 'none' : '';
+  grpAnimal.style.display = ehCota ? '' : 'none';
+  if (ehCota) _fcPopularSelectAnimaisCota();
+  // Reprodutivo v4, Fase 8 (spec 4c): flag "recorrente" só faz sentido pra Direito de uso.
+  grpRecorrente.style.display = tipo === 'direito_uso' ? '' : 'none';
+}
+
+function _fcPopularSelectAnimaisCota() {
+  const sel = document.getElementById('fc-garanhao-animal');
+  if (!sel) return;
+  const atual = sel.value;
+  const machos = animais.filter(a => a.sexo === 'Macho').sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    machos.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
+  if (machos.some(a => String(a.db_id) === String(atual))) sel.value = atual;
+}
+
+function _fcGaranhaoAnimalChange() {
+  const sel = document.getElementById('fc-garanhao-animal');
+  const a = animais.find(x => String(x.db_id) === String(sel.value));
+  document.getElementById('fc-garanhao-nome').value = a ? a.nome : '';
+  document.getElementById('fc-garanhao-sbb').value = a ? (a.sbb || '') : '';
+}
+
+// Reprodutivo v4, Fase 8 (spec 4b): percentual da cota calcula automaticamente a quantidade
+// sugerida (120 × %/100, arredondado) — pré-preenche o campo de quantidade, que continua editável
+// depois (mesma trava de "só diminuir" do tipo Próprio não se aplica aqui, é só sugestão inicial).
+function _fcSugerirQtdPorCota() {
+  const pct = parseFloat(document.getElementById('fc-cota-pct').value || '0');
+  if (!pct || pct <= 0) return;
+  const sugestao = Math.round(120 * pct / 100);
+  document.getElementById('fc-qtd').value = sugestao;
 }
 
 function abrirModalFonteCobertura() {
@@ -7904,9 +7990,11 @@ function abrirModalFonteCobertura() {
   document.getElementById('fc-tipo').value = 'cota';
   document.getElementById('fc-garanhao-nome').value = '';
   document.getElementById('fc-garanhao-sbb').value = '';
+  document.getElementById('fc-garanhao-animal').value = '';
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = false;
   document.getElementById('fc-demerito').checked = false;
+  document.getElementById('fc-recorrente').checked = false;
   document.getElementById('fc-qtd').value = '';
   document.getElementById('fc-ciclo').value = window._cicloPlanejador || _cicloAtualTexto();
   document.getElementById('fc-vig-ini').value = '';
@@ -7930,6 +8018,7 @@ function editFonteCobertura(i) {
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = !!f.tem_rm;
   document.getElementById('fc-demerito').checked = !!f.demerito;
+  document.getElementById('fc-recorrente').checked = !!f.recorrente;
   document.getElementById('fc-qtd').value = f.quantidade_adquirida ?? '';
   document.getElementById('fc-ciclo').value = f.ciclo || '';
   document.getElementById('fc-vig-ini').value = f.vigencia_inicio || '';
@@ -7939,11 +8028,22 @@ function editFonteCobertura(i) {
   document.getElementById('fc-valor').value = f.valor_cobertura ?? '';
   document.getElementById('fc-obs').value = f.obs || '';
   _toggleCamposFonteCobertura();
+  if (f.tipo === 'cota') {
+    const a = animais.find(x => (f.garanhao_sbb && x.sbb === f.garanhao_sbb) || x.nome === f.garanhao_nome);
+    document.getElementById('fc-garanhao-animal').value = a ? a.db_id : '';
+  }
   openModal('modal-fonte-cobertura');
 }
 
 function salvarFonteCobertura() {
   const tipo = document.getElementById('fc-tipo').value;
+  // Reprodutivo v4, Fase 8 (spec 4b): Cota exige vínculo com um animal cadastrado — nome/SBB vêm
+  // do select, não são mais texto livre.
+  if(tipo === 'cota') {
+    const animalId = document.getElementById('fc-garanhao-animal').value;
+    if(!animalId) return alert('Selecione o garanhão cadastrado (Cota exige vínculo com um animal).');
+    _fcGaranhaoAnimalChange();
+  }
   const garanhao_nome = document.getElementById('fc-garanhao-nome').value.trim();
   if(!garanhao_nome) return alert('Informe o nome do garanhão.');
   const quantidade_adquirida = parseInt(document.getElementById('fc-qtd').value || '0');
@@ -7975,6 +8075,9 @@ function salvarFonteCobertura() {
     valor_cobertura: document.getElementById('fc-valor').value || '',
     status: idx >= 0 ? (fontesCobertura[idx]?.status || 'ativa') : 'ativa',
     obs: document.getElementById('fc-obs').value,
+    // Reprodutivo v4, Fase 8 (spec 4c): só faz sentido pra Direito de uso — persiste sozinha pro
+    // próximo ciclo quando marcada (ver renderPlanejadorReprodutivo).
+    recorrente: tipo === 'direito_uso' ? document.getElementById('fc-recorrente').checked : false,
   };
   if(idx >= 0) { fontesCobertura[idx] = {...fontesCobertura[idx], ...obj}; _dbSalvarFonteCobertura(fontesCobertura[idx], idx); }
   else { fontesCobertura.push(obj); _dbSalvarFonteCobertura(obj, fontesCobertura.length - 1); }
@@ -8293,6 +8396,18 @@ async function _recarregarFontesCobertura() {
   } catch(e) { console.warn('Erro ao recarregar fontes_cobertura', e); }
 }
 
+// Reprodutivo v4, Fase 8 (spec 4a): a lista editável (antes aba própria) agora fica escondida
+// por padrão dentro de "Garanhões e Coberturas" — a visão padrão da aba é a leitura rápida
+// (plantel disponível do ciclo).
+function _toggleEdicaoFontesCobertura() {
+  const wrap = document.getElementById('gest-fontes-edit-wrap');
+  const toggle = document.getElementById('gest-fontes-edit-toggle');
+  const abrir = wrap.style.display === 'none';
+  wrap.style.display = abrir ? '' : 'none';
+  toggle.textContent = abrir ? '▴ ocultar' : '▾ mostrar';
+  if(abrir) renderFontesCobertura();
+}
+
 function _toggleHistoricoNegociacoes() {
   const wrap = document.getElementById('ng-hist-wrap');
   const toggle = document.getElementById('ng-hist-toggle');
@@ -8352,6 +8467,10 @@ function _acFontesAtivas() {
   return fontesCobertura.filter(f => f.status === 'ativa' && _saldoFonteCobertura(f).disponivel > 0);
 }
 
+// Reprodutivo v4, Fase 8 (spec 3b): entrada padrão passou a ser a tela de duas colunas
+// (renderAcasalamentosMatch/_acMatchEscolherEgua, abaixo) — este modal de formulário completo
+// (com selects de Égua/Fonte visíveis) fica como fallback interno, chamado só se algo pedir
+// diretamente (ex.: nenhum ponto de entrada novo usa mais isso como padrão).
 function abrirModalAcasalamento() {
   const selEgua = document.getElementById('ac-egua');
   const eguas = _acEguasAtivas();
@@ -8370,23 +8489,64 @@ function abrirModalAcasalamento() {
   selReceptora.innerHTML = '<option value="">Nenhuma selecionada ainda...</option>' +
     receptoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
 
-  document.getElementById('ac-tipo').value = 'Natural';
   document.getElementById('ac-ciclo').value = '';
   document.getElementById('ac-obs').value = '';
   document.getElementById('ac-simulacao').innerHTML = '';
+  document.getElementById('ac-grp-selects').style.display = '';
+  document.getElementById('ac-modal-match-resumo').style.display = 'none';
+  document.querySelector('#modal-acasalamento .modal-title').textContent = 'Novo acasalamento';
   _toggleCamposAcasalamento();
   openModal('modal-acasalamento');
 }
 
+// Reprodutivo v4, Fase 8 (spec 3b): abre o modal já com égua e fonte definidas pelo clique-clique
+// da tela de duas colunas — vira só a confirmação (ciclo/observações/receptora), sem os selects.
+function abrirModalAcasalamentoMatch(fonteId, eguaDbId, ciclo) {
+  const fonte = fontesCobertura.find(f => String(f.db_id) === String(fonteId));
+  const egua = animais.find(a => String(a.db_id) === String(eguaDbId));
+  if (!fonte || !egua) return;
+
+  const selEgua = document.getElementById('ac-egua');
+  selEgua.innerHTML = `<option value="${egua.db_id}">${egua.nome}</option>`;
+  selEgua.value = egua.db_id;
+  const selFonte = document.getElementById('ac-fonte');
+  selFonte.innerHTML = `<option value="${fonte.db_id}">${fonte.garanhao_nome} · ciclo ${fonte.ciclo}</option>`;
+  selFonte.value = fonte.db_id;
+
+  const selReceptora = document.getElementById('ac-receptora');
+  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && a.receptora && isNaCabanha(a));
+  selReceptora.innerHTML = '<option value="">Nenhuma selecionada ainda...</option>' +
+    receptoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
+
+  document.getElementById('ac-ciclo').value = ciclo || fonte.ciclo || '';
+  document.getElementById('ac-obs').value = '';
+  document.getElementById('ac-grp-selects').style.display = 'none';
+  const resumo = document.getElementById('ac-modal-match-resumo');
+  resumo.style.display = '';
+  resumo.innerHTML = `<b>${fonte.garanhao_nome}</b> (${FC_TIPO_LABEL[fonte.tipo] || fonte.tipo}) × <b>${egua.nome}</b>`;
+  document.querySelector('#modal-acasalamento .modal-title').textContent = 'Confirmar acasalamento';
+  _toggleCamposAcasalamento();
+  _renderSimulacaoAcasalamento();
+  openModal('modal-acasalamento');
+}
+
+// Reprodutivo v4, Fase 8 (spec 3a): o gatilho pra mostrar o campo Receptora deixou de ser o
+// select "Tipo de cobertura" (removido do modal do criador — quem decide o tipo agora é o
+// veterinário, no estágio Controle do Kanban, ver _reproAtualizarTipoCobertura). Agora é a
+// fonte selecionada ser do tipo "embriao" (FC_TIPO_LABEL, Fase 4).
 function _toggleCamposAcasalamento() {
   const grp = document.getElementById('ac-grp-receptora');
-  if (grp) grp.style.display = document.getElementById('ac-tipo').value === 'TE' ? '' : 'none';
+  if (!grp) return;
+  const fId = document.getElementById('ac-fonte')?.value;
+  const f = fontesCobertura.find(x => String(x.db_id) === String(fId));
+  grp.style.display = (f && f.tipo === 'embriao') ? '' : 'none';
 }
 
 function _acFonteChange() {
   const fId = document.getElementById('ac-fonte').value;
   const f = fontesCobertura.find(x => String(x.db_id) === String(fId));
   document.getElementById('ac-ciclo').value = f ? (f.ciclo || '') : '';
+  _toggleCamposAcasalamento();
   _renderSimulacaoAcasalamento();
 }
 
@@ -8473,15 +8633,16 @@ function salvarAcasalamento() {
     return;
   }
 
-  const tipoCobertura = document.getElementById('ac-tipo').value;
-  // Reprodutivo v4, Fase 4 (spec 3.5): receptora só faz sentido em TE — a égua selecionada acima
+  // Reprodutivo v4, Fase 8 (spec 3a): tipo_cobertura nasce null — decidir IA/Natural/TE é
+  // trabalho do veterinário, no estágio Controle do Kanban (_reproAtualizarTipoCobertura).
+  // Receptora só faz sentido quando a fonte é do tipo Embrião — a égua selecionada acima
   // continua sendo a doadora (dona do registro/gestação), a receptora só identifica quem gesta
   // fisicamente. Opcional na criação (o vet pode definir depois, no funil da Fase 5).
-  const receptoraId = tipoCobertura === 'TE' ? (document.getElementById('ac-receptora').value || null) : null;
+  const receptoraId = fonte.tipo === 'embriao' ? (document.getElementById('ac-receptora').value || null) : null;
   const obj = {
     egua_id: egua.db_id, egua_nome: egua.nome,
     fonte_cobertura_id: fonte.db_id, garanhao_nome: fonte.garanhao_nome,
-    tipo_cobertura: tipoCobertura,
+    tipo_cobertura: null,
     receptora_animal_id: receptoraId,
     ciclo,
     obs_planejamento: document.getElementById('ac-obs').value || '',
@@ -8491,6 +8652,7 @@ function salvarAcasalamento() {
   acasalamentos.push(obj);
   _dbSalvarAcasalamento(obj, acasalamentos.length - 1);
   closeModal('modal-acasalamento');
+  window._acMatchFonteId = null;
   renderAcasalamentos();
   renderEguasCriaPlanejador();
 }
@@ -8704,7 +8866,7 @@ function _acCard(a, i) {
     <div class="kanban-card-nome">${a.egua_nome}</div>
     <div class="kanban-card-info">
       Garanhão: ${a.garanhao_nome || '—'}<br>
-      ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura} · Ciclo ${a.ciclo || '—'}<br>
+      ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || 'Tipo: a definir pelo vet'} · Ciclo ${a.ciclo || '—'}<br>
       Tentativas: ${tts.length}
       ${a.veterinario_nome ? '<br>Vet: ' + a.veterinario_nome : ''}
       ${a.status === 'cancelado' && a.motivo_cancelamento ? '<br>Motivo: ' + a.motivo_cancelamento : ''}
@@ -8719,7 +8881,65 @@ function _acCard(a, i) {
   </div>`;
 }
 
+// Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
+// éguas disponíveis no ciclo do Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem
+// remover) fonte sem saldo ou égua já com match feito nesse ciclo, em vez de escondê-las.
+function renderAcasalamentosMatch() {
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  const cicloLabel = document.getElementById('ac-match-ciclo-label');
+  if (cicloLabel) cicloLabel.textContent = ciclo;
+
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const elF = document.getElementById('ac-match-fontes');
+  if (elF) {
+    elF.innerHTML = fontes.length ? fontes.map(f => {
+      const saldo = _saldoFonteCobertura(f);
+      const semSaldo = saldo.disponivel <= 0;
+      const sel = window._acMatchFonteId && String(window._acMatchFonteId) === String(f.db_id);
+      return `<div class="kanban-card" style="cursor:${semSaldo ? 'default' : 'pointer'};opacity:${semSaldo ? 0.45 : 1};${sel ? 'outline:2px solid var(--green-d)' : ''}" ${semSaldo ? '' : `onclick="_acMatchSelecionarFonte('${f.db_id}')"`}>
+        <div class="kanban-card-nome">${f.garanhao_nome}${sel ? ' <span class="badge bg" style="font-size:9px">Selecionado</span>' : ''}</div>
+        <div class="kanban-card-info">${FC_TIPO_LABEL[f.tipo] || f.tipo} · ${saldo.disponivel} de ${saldo.total} disponível${semSaldo ? ' <span class="badge br" style="font-size:9px">Sem saldo</span>' : ''}</div>
+      </div>`;
+    }).join('') : '<div class="kanban-empty">Nenhuma fonte neste ciclo. Cadastre em "Garanhões e Coberturas".</div>';
+  }
+
+  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && (a.estagio || '').toUpperCase() === 'CRIA');
+  const elE = document.getElementById('ac-match-eguas');
+  if (elE) {
+    elE.innerHTML = eguas.length ? eguas.map(a => {
+      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_acMatchSelecionarEgua('${a.db_id}')"`}>
+        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
+        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+      </div>`;
+    }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
+  }
+
+  _acMatchAtualizarResumoSel();
+}
+
+function _acMatchSelecionarFonte(fonteId) {
+  window._acMatchFonteId = fonteId || null;
+  renderAcasalamentosMatch();
+}
+
+function _acMatchSelecionarEgua(eguaDbId) {
+  if (!window._acMatchFonteId) return alert('Selecione primeiro um garanhão/fonte à esquerda.');
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  abrirModalAcasalamentoMatch(window._acMatchFonteId, eguaDbId, ciclo);
+}
+
+function _acMatchAtualizarResumoSel() {
+  const el = document.getElementById('ac-match-resumo-sel');
+  if (!el) return;
+  const f = window._acMatchFonteId && fontesCobertura.find(x => String(x.db_id) === String(window._acMatchFonteId));
+  if (!f) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = `<div class="alert alert-b" style="font-size:12px">Selecionado: <b>${f.garanhao_nome}</b> — clique agora numa égua à direita pra criar o acasalamento. <button class="btn btn-sm" style="margin-left:8px" onclick="_acMatchSelecionarFonte(null)">cancelar seleção</button></div>`;
+}
+
 function renderAcasalamentos() {
+  renderAcasalamentosMatch();
   const el = document.getElementById('ac-kanban-content');
   if(!el) return;
 
@@ -9287,6 +9507,7 @@ function _reproVetCard(ei) {
   } else if (e.estagio === 'controle') {
     transicaoHtml = `<div style="margin-top:6px"><label style="font-size:10px;color:var(--text3)">Tipo de cobertura</label>
         <select id="repro-tipo-${ei}" style="width:100%;font-size:11px" onchange="_reproAtualizarTipoCobertura(${ei},this.value)">
+          <option value="" ${!a.tipo_cobertura ? 'selected' : ''}>Selecione...</option>
           ${Object.keys(AC_TIPO_LABEL).map(t => `<option value="${t}" ${a.tipo_cobertura === t ? 'selected' : ''}>${AC_TIPO_LABEL[t]}</option>`).join('')}
         </select></div>
       <button class="btn btn-sm" style="margin-top:6px" onclick="_reproAvancarEstagio(${ei},'inseminacao')">Iniciar inseminação/cruzamento</button>`;
@@ -9569,7 +9790,7 @@ showPage=function(id){
   if(id==='eventos'){renderEventos();renderEvtPorAnimal();renderEvtResultados();}
   // "gestacao" foi fundida em "reprodutivo" na Fase 5 (spec docs/spec-reprodutivo-v3.md) —
   // mesmas funções de render, só a página que mudou.
-  if(id==='reprodutivo'){popularSelectEguas();renderGestacao();renderFontesCobertura();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
+  if(id==='reprodutivo'){popularSelectEguas();renderGestacao();renderFontesCobertura();renderPlantelDisponivel();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
   if(id==='estoque'){renderEstoque();renderMovimentos();}
   if(id==='medidas'){renderMedLista();}
   if(id==='saude'){renderSaude();}
@@ -9584,8 +9805,7 @@ switchTab=function(btn,tid){
   if(tid==='nut-templates')renderTemplatesPage();
   if(tid==='evt-animais')renderEvtPorAnimal();
   if(tid==='evt-resultados')renderEvtResultados();
-  if(tid==='gest-fontes')renderFontesCobertura();
-  if(tid==='tab-plantel-disponivel')renderPlantelDisponivel();
+  if(tid==='gest-fontes'){renderPlantelDisponivel();renderFontesCobertura();}
   if(tid==='est-alertas'||tid==='est-lista')renderEstoque();
   if(tid==='est-movimentos')renderMovimentos();
 };
@@ -11775,6 +11995,7 @@ async function _dbSalvarFonteCobertura(f, idx) {
     valor_cobertura: v(f.valor_cobertura),
     status: f.status || 'ativa',
     obs: v(f.obs),
+    recorrente: !!f.recorrente,
     criado_por: usuarioAtual?.db_id || null,
   };
   if(f.db_id) {
