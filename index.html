@@ -5174,10 +5174,15 @@ function _selecionarCicloPlanejador(ciclo) {
   renderPlanejadorReprodutivo();
 }
 
-// ─── ÉGUAS DE CRIA NO PLANEJADOR (Fase 3 da spec) ─────────────────────────────
+// ─── ÉGUAS DE CRIA NO PLANEJADOR (Fase 3 da spec do Reprodutivo v3) ───────────
 // "Reprodutora neste ciclo" não é um campo próprio — é derivado de existir (ou
 // não) um acasalamento não-cancelado dessa égua nesse ciclo. Evita duplicar
 // estado: a fonte de verdade continua sendo a tabela `acasalamentos`.
+// Reprodutivo v4, Fase 3: confirmado que nunca existiu um toggle/flag de
+// "reprodutora" pra remover de verdade — só o texto/nome da função sugeriam
+// isso ("+ Marcar como reprodutora" virou "+ Acasalar", _marcarEguaReprodutora
+// virou _acasalarEguaPlanejador). O que faltava de verdade: validar saldo e
+// bloquear égua já gestando no mesmo ciclo — feito em salvarAcasalamento().
 function renderEguasCriaPlanejador() {
   const el = document.getElementById('planejador-eguas-content');
   if (!el) return;
@@ -5197,15 +5202,15 @@ function renderEguasCriaPlanejador() {
       if (!ac) {
         return `<div class="card" style="border-style:dashed">
           <div style="font-size:14px;font-weight:700">${a.nome}</div>
-          <div style="font-size:11px;color:var(--text2);margin:4px 0 10px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Não é reprodutora no ciclo ${ciclo}</div>
-          <button class="btn btn-sm btn-primary" onclick="_marcarEguaReprodutora('${a.db_id}','${ciclo}')">+ Marcar como reprodutora</button>
+          <div style="font-size:11px;color:var(--text2);margin:4px 0 10px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Sem acasalamento no ciclo ${ciclo}</div>
+          <button class="btn btn-sm btn-primary" onclick="_acasalarEguaPlanejador('${a.db_id}','${ciclo}')">+ Acasalar</button>
         </div>`;
       }
 
       const statusLabel = AC_STATUS_COLS.find(s => s.status === ac.status)?.label || ac.status;
       return `<div class="card">
         <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">
-          ${a.nome} <span class="badge bg" style="font-size:9px">Reprodutora</span>
+          ${a.nome} <span class="badge bg" style="font-size:9px">Acasalada</span>
         </div>
         <div style="font-size:11px;color:var(--text2);margin:4px 0 8px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
         <div style="font-size:12px"><b>Garanhão:</b> ${ac.garanhao_nome || '—'}</div>
@@ -5215,10 +5220,11 @@ function renderEguasCriaPlanejador() {
     }).join('') + '</div>';
 }
 
-// Abre o modal de acasalamento já existente com a égua pré-selecionada e as
-// fontes de cobertura filtradas pro ciclo do planejador (evita escolher o
-// garanhão errado — ac-ciclo é derivado da fonte escolhida, não digitável).
-function _marcarEguaReprodutora(eguaDbId, ciclo) {
+// Reprodutivo v4, Fase 3 (spec 3.4): renomeada de _marcarEguaReprodutora — nunca marcou flag
+// nenhuma, sempre foi um atalho pro modal de acasalamento já existente, com a égua pré-selecionada
+// e as fontes de cobertura filtradas pro ciclo do planejador (evita escolher o garanhão errado —
+// ac-ciclo é derivado da fonte escolhida, não digitável).
+function _acasalarEguaPlanejador(eguaDbId, ciclo) {
   abrirModalAcasalamento();
   const selEgua = document.getElementById('ac-egua');
   if (selEgua) selEgua.value = eguaDbId;
@@ -7873,6 +7879,18 @@ async function _renderSimulacaoAcasalamento() {
   el.innerHTML = '<div class="card">' + htmlAnteriores + htmlConsang + htmlSaldo + '</div>';
 }
 
+// Reprodutivo v4, Fase 3 (spec 3.1/3.4): uma égua não pode ter dois acasalamentos não-cancelados
+// no mesmo ciclo — se já está gestando nesse ciclo, só libera de novo depois que a gestação for
+// encerrada (nasceu/perdeu). Não bloqueia ciclos diferentes (ex.: planejar o próximo ciclo com uma
+// égua que está gestando no ciclo atual é sempre permitido).
+function _eguaGestandoNoCiclo(eguaDbId, ciclo) {
+  return gestacoes.some(g => {
+    if (String(g.egua_id) !== String(eguaDbId) || g.status !== 'gestando') return false;
+    const ac = acasalamentos.find(a => String(a.db_id) === String(g.acasalamento_id));
+    return ac && ac.ciclo === ciclo;
+  });
+}
+
 function salvarAcasalamento() {
   const eguaId = document.getElementById('ac-egua').value;
   const fonteId = document.getElementById('ac-fonte').value;
@@ -7882,11 +7900,20 @@ function salvarAcasalamento() {
   const fonte = fontesCobertura.find(f => String(f.db_id) === String(fonteId));
   if(!egua || !fonte) return alert('Égua ou fonte inválida.');
 
+  const ciclo = document.getElementById('ac-ciclo').value || fonte.ciclo || '';
+  if(_eguaGestandoNoCiclo(egua.db_id, ciclo)) {
+    return alert(`${egua.nome} já está gestando no ciclo ${ciclo} — não dá pra acasalar de novo nesse ciclo. Espere a gestação encerrar (nasceu/perdeu) ou planeje pro próximo ciclo.`);
+  }
+  const {disponivel} = _saldoFonteCobertura(fonte);
+  if(disponivel <= 0 && !confirm(`O saldo de ${fonte.garanhao_nome} pro ciclo ${fonte.ciclo} já está esgotado. Quer lançar mesmo assim?`)) {
+    return;
+  }
+
   const obj = {
     egua_id: egua.db_id, egua_nome: egua.nome,
     fonte_cobertura_id: fonte.db_id, garanhao_nome: fonte.garanhao_nome,
     tipo_cobertura: document.getElementById('ac-tipo').value,
-    ciclo: document.getElementById('ac-ciclo').value || fonte.ciclo || '',
+    ciclo,
     obs_planejamento: document.getElementById('ac-obs').value || '',
     veterinario_id: null, veterinario_nome: '',
     status: 'rascunho', motivo_cancelamento: '',

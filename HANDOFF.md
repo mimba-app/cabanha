@@ -212,6 +212,14 @@ cabanhas), mais as abas herdadas da Gestação.
   do Planejador pré-preenchido, nunca mais solto. Mesma mudança de fluxo/UI da Fase 1, sem schema/RLS
   novo (a coluna já tinha vindo pronta da Fase 0) — não precisou de `revisor-isolamento`. Detalhe completo
   em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 2).
+- **Fase 3 — aplicada em staging (2026-08-13)**: achado ao investigar — nunca existiu toggle/flag
+  "reprodutora" de verdade, já era derivado da existência de um acasalamento no ciclo desde o
+  Reprodutivo v3. Só faltava renomear ("+ Marcar como reprodutora" → "+ Acasalar") e validar duas coisas
+  que faltavam de verdade: saldo esgotado (aviso, não bloqueia) e égua já gestando no **mesmo** ciclo
+  (bloqueia de verdade — nova `_eguaGestandoNoCiclo()`). Égua com gestação ativa entrando no planejamento
+  do próximo ciclo já funcionava de graça (escopo por ciclo já existente). Mudança de fluxo/UI, sem
+  schema/RLS — não precisou de `revisor-isolamento`. Detalhe completo em
+  `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 3).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.

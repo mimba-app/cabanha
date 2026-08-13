@@ -329,12 +329,30 @@ fazer sentido sozinha.
   genérico abre com tipo "Cota" e ciclo do planejador pré-preenchido, opção "Cobertura" disponível no
   select.
 
-### Fase 3 — Remover "Marcar como reprodutora" + simplificar Acasalar
+### Fase 3 — Remover "Marcar como reprodutora" + simplificar Acasalar ✅ APLICADA (2026-08-13)
 
-- Remove o toggle "reprodutora neste ciclo" — égua em estágio "Cria" já é elegível automaticamente.
-- Fluxo "Acasalar" simplificado: seleciona garanhão + égua → gera acasalamento, validando saldo na hora.
-- Égua com gestação ativa pode entrar no planejamento do **próximo** ciclo sempre; no **mesmo** ciclo, só
-  depois que a gestação atual for encerrada (nasceu ou perdeu).
+- **Achado ao investigar**: nunca existiu um toggle/flag "reprodutora" de verdade — `renderEguasCriaPlanejador()`
+  já derivava isso de existir (ou não) um `acasalamento` não-cancelado da égua naquele ciclo desde o
+  Reprodutivo v3. O que precisava mudar era só nome/rótulo (soava como um passo extra artificial) e duas
+  validações que realmente faltavam. Renomeado: botão "+ Marcar como reprodutora" → **"+ Acasalar"**,
+  função `_marcarEguaReprodutora` → `_acasalarEguaPlanejador`, badge "Reprodutora" → "Acasalada".
+- Fluxo "Acasalar" já era "seleciona garanhão (fonte) + égua → gera acasalamento" (modal único,
+  `abrirModalAcasalamento`/`salvarAcasalamento`) — o que faltava era validar na hora de salvar:
+  - **Saldo esgotado**: `_saldoFonteCobertura(fonte).disponivel <= 0` agora mostra `confirm()` antes de
+    lançar (nunca bloqueia sozinho, só avisa — mesmo padrão já usado no resto do app). Na prática também
+    já é coberto uma camada antes: `_acFontesAtivas()` só lista no dropdown fontes com saldo > 0.
+  - **Gestação ativa no mesmo ciclo** (bloqueio de verdade, não só aviso): nova função
+    `_eguaGestandoNoCiclo(eguaDbId, ciclo)` — junta `gestacoes` (status `gestando`) com o `ciclo` do
+    `acasalamento` vinculado. Se a égua já está gestando nesse ciclo, `salvarAcasalamento()` recusa com
+    mensagem explicando que precisa esperar a gestação encerrar (nasceu/perdeu) ou planejar pro próximo
+    ciclo.
+- Égua com gestação ativa entrando no planejamento do **próximo** ciclo: já funcionava de graça, sem
+  precisar de código novo — o card da égua em `renderEguasCriaPlanejador()` já é escopado por ciclo
+  (`ac.ciclo === ciclo` do planejador selecionado), então uma égua gestando no ciclo atual aparece como
+  "sem acasalamento" ao trocar pro próximo ciclo, exatamente como devia.
+- Testado via servidor estático local: `_eguaGestandoNoCiclo` retorna `true` só pro ciclo da gestação
+  ativa e `false` pra outro ciclo; `salvarAcasalamento()` bloqueia (sem criar linha) a égua gestando no
+  mesmo ciclo e permite normalmente pro próximo ciclo.
 
 ### Fase 4 — Receptoras / Transferência de Embrião + Plantel disponível
 
