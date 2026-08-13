@@ -231,6 +231,22 @@ cabanhas), mais as abas herdadas da Gestação.
   com 5 seções (garanhões, éguas de cria, cotas/direito de uso/cobertura, embriões, receptoras). Mudança
   de fluxo/UI + uso de colunas já criadas na Fase 0 — não precisou de `revisor-isolamento`. Detalhe
   completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 4).
+- **Fase 5 — aplicada em staging (2026-08-13), a maior da spec, sem precisar dividir em sub-fases**:
+  nova aba "Reprodutivo" dentro de Saúde & Vacinas — Kanban de 4 estágios (Controle → Inseminação/
+  Cruzamento → Ovuladas → DG precoce), nascendo sozinho quando o criador aprova o acasalamento. Tipo de
+  cobertura ganhou um segundo ponto de decisão no Controle (o veterinário confirma/troca). Alertas de
+  janela (3-7d/15-20d/~45d), bloqueio visual pra égua já gestando no mesmo ciclo, "devolver pro
+  planejamento", atividades soltas, e "Confirmar DG definitivo" que cria a gestação real e oferece
+  aplicar protocolo na hora. Última etapa do funil reaproveita o card de progresso da tela do criador —
+  perda/nascimento já registráveis dos dois lados sem código duplicado.
+  ⚠️ **Achado real, corrigido**: `carregar_dados_cabanha()` (bootstrap de login) não trazia as 3 tabelas
+  novas da Fase 0 — corrigido em `docs/migrations/2026-08-13-reprodutivo-v4-fase5-bootstrap.sql`,
+  aplicado e revisado pelo `revisor-isolamento` (aprovado, mudança mecânica). Removido o antigo "+
+  Registrar tentativa" do card do criador (duplicava o que o Kanban novo faz). **Achado de graça**: a
+  regra de corte 30/06→01/07 pra perda de cria não precisou de código novo — os ciclos oferecidos no
+  Planejador já recalculam dinamicamente a partir de hoje, então o ciclo antigo simplesmente some das
+  opções depois do corte, sem precisar de lógica de bloqueio dedicada. Detalhe completo em
+  `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 5).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.

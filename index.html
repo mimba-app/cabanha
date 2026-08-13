@@ -813,6 +813,7 @@
     <button class="tab" onclick="switchTab(this,'tab-hist-vac')">Histórico Vacinas</button>
     <button class="tab" onclick="switchTab(this,'tab-hist-exam')">Histórico Exames</button>
     <button class="tab" onclick="switchTab(this,'tab-pendencias')">Pendências <span id="pend-count-badge"></span></button>
+    <button class="tab" onclick="switchTab(this,'tab-reprodutivo-vet')">Reprodutivo</button>
     <button class="tab" onclick="switchTab(this,'tab-proto-repro')">🧬 Protocolo Reprodutivo</button>
   </div>
 
@@ -1001,6 +1002,15 @@
        de protocolo_aplicado, cruzando gestacoes -> acasalamentos -> animais). -->
   <div id="tab-proto-repro" style="display:none">
     <div class="kanban-board" id="kanban-proto-repro-board"></div>
+  </div>
+  <!-- Reprodutivo v4, Fase 5 (spec 4): funil do veterinário — Controle → Inseminação/Cruzamento →
+       Ovuladas → DG precoce aguardando definitivo. Ao confirmar o DG definitivo, a gestação real
+       nasce e passa a aparecer também na aba Reprodutivo do criador (mesma tabela `gestacoes`). -->
+  <div id="tab-reprodutivo-vet" style="display:none">
+    <div class="page-sub" style="margin:-6px 0 14px">Acompanhamento do que o criador liberou no planejamento — do controle inicial até a confirmação de prenhez, e as gestações ativas em andamento.</div>
+    <div class="kanban-board" id="kanban-reprodutivo-vet-board" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="card-title" style="margin:22px 0 8px">Gestações ativas</div>
+    <div id="reprodutivo-vet-gestacoes-content"></div>
   </div>
 </div>
 
@@ -2718,6 +2728,40 @@
       <div class="form-group"><label>Data do resultado</label><input type="date" id="tvr-data"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-tentativa-resultado')">Cancelar</button><button class="btn btn-primary" onclick="_confirmarResultadoTentativa()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 5: confirmar DG definitivo (fecha o funil do vet, nasce a gestação real) -->
+<div class="modal-bg" id="modal-repro-dg-definitivo">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><span class="modal-title">Confirmar DG definitivo</span><button class="modal-close" onclick="closeModal('modal-repro-dg-definitivo')">×</button></div>
+    <input type="hidden" id="rdg-estagio-idx" value="-1">
+    <div class="form-grid">
+      <div class="form-group"><label>Data da cobertura/inseminação</label><input type="date" id="rdg-data-cobertura"></div>
+      <div class="form-group"><label>Data da confirmação (hoje)</label><input type="date" id="rdg-data-confirmacao"></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-repro-dg-definitivo')">Cancelar</button><button class="btn btn-primary" onclick="_confirmarDGDefinitivo()">Confirmar gestação</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 5: atividade solta do veterinário (medicação/toque/ultrassom/comentário) -->
+<div class="modal-bg" id="modal-repro-atividade">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><span class="modal-title">Registrar atividade</span><button class="modal-close" onclick="closeModal('modal-repro-atividade')">×</button></div>
+    <input type="hidden" id="rat-acasalamento-id" value="">
+    <div class="form-grid">
+      <div class="form-group"><label>Tipo</label>
+        <select id="rat-tipo">
+          <option value="medicacao">Medicação</option>
+          <option value="toque">Toque</option>
+          <option value="ultrassom">Ultrassom</option>
+          <option value="comentario">Comentário</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Data</label><input type="date" id="rat-data"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Observação</label><textarea id="rat-obs" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-repro-atividade')">Cancelar</button><button class="btn btn-primary" onclick="salvarReproducaoAtividade()">Salvar</button></div>
   </div>
 </div>
 
@@ -5667,7 +5711,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-planejador','tab-plantel-disponivel','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-planejador','tab-plantel-disponivel','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -5686,6 +5730,7 @@ function switchTab(btn,tid){
   if(tid==='gest-gestacoes') renderGestacoesNovo();
   if(tid==='gest-protocolos') renderProtocolos();
   if(tid==='tab-proto-repro') renderKanbanProtoRepro();
+  if(tid==='tab-reprodutivo-vet') renderReprodutivoVet();
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -7121,6 +7166,15 @@ let protocolosReproducao = [];
 let protocolosAplicados = [];
 const PROTO_TIPO_ETAPA_LABEL = {vacina:'Vacina', hormonio:'Hormônio', exame:'Exame', retorno:'Retorno', medicamento:'Medicamento', outro:'Outro'};
 
+// Reprodutivo v4, Fase 5 (spec 4): kanban do veterinário — 1:1 com acasalamentos, criado quando
+// o criador aprova o planejamento (libera pro funil). estagio: controle→inseminacao→ovuladas→dg_precoce.
+let reproducaoEstagios = [];
+const REPRO_ESTAGIO_LABEL = {controle:'Controle', inseminacao:'Inseminação/Cruzamento', ovuladas:'Ovuladas', dg_precoce:'DG precoce'};
+// Atividades soltas do veterinário (medicação/toque/ultrassom/comentário) por acasalamento,
+// em qualquer ponto do funil — inclusive depois de virar gestação real.
+let reproducaoAtividades = [];
+const REPRO_ATIVIDADE_LABEL = {medicacao:'Medicação', toque:'Toque', ultrassom:'Ultrassom', comentario:'Comentário'};
+
 // ─── PADRILLO: seletor e busca ABCCC ─────────────────────────────────────────
 function popularSelectEguas() {
   const sel = document.getElementById('cg-egua');
@@ -8066,6 +8120,13 @@ function _confirmarAprovacaoAcasalamento() {
   _dbAtualizarStatusAcasalamento(a, {
     status: 'aprovado', veterinario_id: vetId, aprovado_em: a.aprovado_em, aprovado_por: usuarioAtual?.db_id || null
   });
+  // Reprodutivo v4, Fase 5 (spec 4): aprovar = liberar pro funil do veterinário — nasce o
+  // registro de estágio (Controle), 1:1 com o acasalamento (garantido pelo UNIQUE no banco).
+  if(!reproducaoEstagios.some(e => String(e.acasalamento_id) === String(a.db_id))) {
+    const estagio = { acasalamento_id: a.db_id, estagio: 'controle', data_entrada_estagio: new Date().toISOString() };
+    reproducaoEstagios.push(estagio);
+    _dbSalvarReproducaoEstagio(estagio, reproducaoEstagios.length - 1);
+  }
   closeModal('modal-ac-aprovar');
   renderAcasalamentos();
 }
@@ -8210,8 +8271,12 @@ function _confirmarResultadoTentativa() {
 }
 
 function _acCard(a, i) {
+  // Reprodutivo v4, Fase 5 (spec 4): "+ Registrar tentativa" saiu daqui — o acompanhamento de
+  // inseminação/monta (e a decisão do tipo de cobertura) migrou pro funil do veterinário
+  // (Saúde & Vacinas → aba Reprodutivo), que nasce sozinho quando o acasalamento é aprovado.
+  // O histórico de tentativas antigas (se houver) continua visível abaixo, só não dá mais pra
+  // criar uma nova por aqui.
   const tts = _acTentativas(a);
-  const podeRegistrarTentativa = a.status === 'aprovado' || a.status === 'em_curso';
   const TV_RESULTADO_BADGE = {aguardando: 'ba', prenha: 'bg', vazia: 'br'};
   const TV_RESULTADO_LABEL = {aguardando: 'Aguardando', prenha: 'Prenha', vazia: 'Vazia'};
   const htmlTentativas = tts.length ? `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)">
@@ -8238,7 +8303,6 @@ function _acCard(a, i) {
     <div class="kanban-card-actions">
       ${a.status === 'rascunho' ? `<button class="btn btn-sm" onclick="acasSimular(${i})">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
       ${a.status === 'simulado' ? `<button class="btn btn-sm" onclick="acasAprovar(${i})">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${podeRegistrarTentativa ? `<button class="btn btn-sm" onclick="abrirModalTentativa(${i})">+ Registrar tentativa</button>` : ''}
       ${a.status === 'aprovado' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
       ${a.status === 'em_curso' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
     </div>
@@ -8747,6 +8811,212 @@ function _confirmarEtapaAvulsa() {
   closeModal('modal-proto-etapa-avulsa');
   renderGestacoesNovo();
   renderKanbanProtoRepro();
+}
+
+// ── Reprodutivo v4, Fase 5: funil do veterinário (page-saude) ──────────────
+// Controle → Inseminação/Cruzamento → Ovuladas → DG precoce aguardando definitivo. 1
+// reproducao_estagios por acasalamento (nasce em _confirmarAprovacaoAcasalamento, some ao
+// devolver pro planejamento ou ao confirmar o DG definitivo — vira gestação real).
+const REPRO_ESTAGIOS_ORDEM = ['controle', 'inseminacao', 'ovuladas', 'dg_precoce'];
+
+function renderReprodutivoVet() {
+  const boardEl = document.getElementById('kanban-reprodutivo-vet-board');
+  const gestEl = document.getElementById('reprodutivo-vet-gestacoes-content');
+  if (!boardEl || !gestEl) return;
+
+  boardEl.innerHTML = REPRO_ESTAGIOS_ORDEM.map(estagioKey => {
+    const idxs = reproducaoEstagios.map((e, ei) => ei).filter(ei => reproducaoEstagios[ei].estagio === estagioKey);
+    return `<div class="kanban-col kanban-col-emdia">
+      <div class="kanban-col-header"><span>${REPRO_ESTAGIO_LABEL[estagioKey]}</span><span class="kanban-count">${idxs.length}</span></div>
+      <div class="kanban-cards">${idxs.length ? idxs.map(ei => _reproVetCard(ei)).join('') : '<div class="kanban-empty">Nenhum</div>'}</div>
+    </div>`;
+  }).join('');
+
+  // Última etapa do funil (spec 4.2): gestações ativas em Kanban pro vet continuar
+  // registrando — reaproveita o mesmo card com barra de progresso da tela do criador.
+  const ativas = gestacoes.filter(g => g.status === 'gestando');
+  gestEl.innerHTML = ativas.length
+    ? ativas.map(g => _gestCard(g, gestacoes.indexOf(g))).join('')
+    : '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma gestação ativa.</div>';
+}
+
+function _reproAlertaJanela(estagio, dias) {
+  if (dias === null) return '';
+  const janelas = {
+    inseminacao: { min: 3, max: 7, msg: 'janela do "ovulou?" (3-7d)' },
+    ovuladas: { min: 15, max: 20, msg: 'janela do DG precoce (15-20d)' },
+    dg_precoce: { min: 45, max: 45, msg: '~45d, hora de confirmar o DG definitivo' },
+  };
+  const j = janelas[estagio];
+  if (!j) return '';
+  if (estagio === 'dg_precoce') {
+    return dias < j.max
+      ? `<div class="alert alert-b" style="margin-top:6px;font-size:11px">Dia ${dias} — aguardando ${j.msg}.</div>`
+      : `<div class="alert alert-a" style="margin-top:6px;font-size:11px">Dia ${dias} — já passou de ${j.msg}.</div>`;
+  }
+  if (dias < j.min) return `<div class="alert alert-b" style="margin-top:6px;font-size:11px">Dia ${dias} — aguardando ${j.msg}.</div>`;
+  if (dias <= j.max) return `<div class="alert alert-a" style="margin-top:6px;font-size:11px">Dia ${dias} — dentro da ${j.msg}.</div>`;
+  return `<div class="alert alert-r" style="margin-top:6px;font-size:11px">Dia ${dias} — passou da ${j.msg}.</div>`;
+}
+
+function _reproVetCard(ei) {
+  const e = reproducaoEstagios[ei];
+  const a = acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+  if (!a) return '';
+  const dias = e.data_entrada_estagio ? Math.floor((new Date() - new Date(e.data_entrada_estagio)) / 864e5) : null;
+  const bloqueado = _eguaGestandoNoCiclo(a.egua_id, a.ciclo);
+
+  const atividades = reproducaoAtividades.filter(at => String(at.acasalamento_id) === String(a.db_id));
+  const htmlAtividades = atividades.length ? `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)">
+    ${atividades.map(at => `<div style="font-size:11px;color:var(--text2);margin-top:3px">${fd(at.data)} · ${REPRO_ATIVIDADE_LABEL[at.tipo] || at.tipo}${at.obs ? ' — ' + at.obs : ''}</div>`).join('')}
+  </div>` : '';
+
+  let transicaoHtml = '';
+  if (bloqueado) {
+    transicaoHtml = `<div style="font-size:11px;color:var(--text3);margin-top:6px">🔒 Já tem gestação ativa neste ciclo — não dá pra mover até encerrar.</div>`;
+  } else if (e.estagio === 'controle') {
+    transicaoHtml = `<div style="margin-top:6px"><label style="font-size:10px;color:var(--text3)">Tipo de cobertura</label>
+        <select id="repro-tipo-${ei}" style="width:100%;font-size:11px" onchange="_reproAtualizarTipoCobertura(${ei},this.value)">
+          ${Object.keys(AC_TIPO_LABEL).map(t => `<option value="${t}" ${a.tipo_cobertura === t ? 'selected' : ''}>${AC_TIPO_LABEL[t]}</option>`).join('')}
+        </select></div>
+      <button class="btn btn-sm" style="margin-top:6px" onclick="_reproAvancarEstagio(${ei},'inseminacao')">Iniciar inseminação/cruzamento</button>`;
+  } else if (e.estagio === 'inseminacao') {
+    transicaoHtml = `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="_reproAvancarEstagio(${ei},'ovuladas')">Ovulou</button>
+      <button class="btn btn-sm" onclick="_reproAvancarEstagio(${ei},'controle')">Não ovulou (voltar)</button>
+    </div>`;
+  } else if (e.estagio === 'ovuladas') {
+    transicaoHtml = `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="_reproAvancarEstagio(${ei},'dg_precoce')">DG precoce positivo</button>
+      <button class="btn btn-sm" onclick="_reproAvancarEstagio(${ei},'controle')">DG precoce negativo (voltar)</button>
+    </div>`;
+  } else if (e.estagio === 'dg_precoce') {
+    transicaoHtml = `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-sm btn-primary" onclick="_abrirModalDGDefinitivo(${ei})">Confirmar DG definitivo</button>
+      <button class="btn btn-sm" onclick="_reproAvancarEstagio(${ei},'controle')">Negativo (voltar)</button>
+    </div>`;
+  }
+
+  return `<div class="kanban-card">
+    <div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
+    <div class="kanban-card-info">
+      Garanhão: ${a.garanhao_nome || '—'} · Ciclo ${a.ciclo || '—'}<br>
+      ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || '—'}${dias !== null ? ' · ' + dias + 'd no estágio' : ''}
+    </div>
+    ${_reproAlertaJanela(e.estagio, dias)}
+    ${transicaoHtml}
+    ${htmlAtividades}
+    <div class="kanban-card-actions">
+      <button class="btn btn-sm" onclick="_abrirModalReproAtividade('${a.db_id}')">+ Atividade</button>
+      <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="_reproDevolverPlanejamento(${ei})">Devolver pro planejamento</button>
+    </div>
+  </div>`;
+}
+
+function _reproAtualizarTipoCobertura(ei, tipo) {
+  const e = reproducaoEstagios[ei];
+  const a = e && acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+  if (!a) return;
+  a.tipo_cobertura = tipo;
+  _dbSalvarAcasalamento(a, acasalamentos.indexOf(a));
+}
+
+function _reproAvancarEstagio(ei, novoEstagio) {
+  const e = reproducaoEstagios[ei];
+  if (!e) return;
+  const a = acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+  // Primeira saída do Controle: acasalamento passa a "em_curso" (estava "aprovado").
+  if (a && a.status === 'aprovado' && novoEstagio !== 'controle') {
+    a.status = 'em_curso';
+    _dbAtualizarStatusAcasalamento(a, { status: 'em_curso' });
+  }
+  e.estagio = novoEstagio;
+  e.data_entrada_estagio = new Date().toISOString();
+  _dbSalvarReproducaoEstagio(e, ei);
+  renderReprodutivoVet();
+}
+
+function _reproDevolverPlanejamento(ei) {
+  const e = reproducaoEstagios[ei];
+  if (!e) return;
+  if (!confirm('Devolver este acasalamento pro planejamento do criador? Ele volta pro rascunho e sai do funil do veterinário.')) return;
+  const a = acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+  if (a) {
+    a.status = 'rascunho';
+    _dbAtualizarStatusAcasalamento(a, { status: 'rascunho' });
+  }
+  _dbExcluirReproducaoEstagio(e.db_id);
+  reproducaoEstagios.splice(ei, 1);
+  renderReprodutivoVet();
+  renderAcasalamentos();
+}
+
+function _abrirModalReproAtividade(acasalamentoId) {
+  document.getElementById('rat-acasalamento-id').value = acasalamentoId;
+  document.getElementById('rat-tipo').value = 'comentario';
+  document.getElementById('rat-data').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('rat-obs').value = '';
+  openModal('modal-repro-atividade');
+}
+
+function salvarReproducaoAtividade() {
+  const acasalamento_id = document.getElementById('rat-acasalamento-id').value;
+  const tipo = document.getElementById('rat-tipo').value;
+  const data = document.getElementById('rat-data').value;
+  if (!data) return alert('Informe a data.');
+  const obs = document.getElementById('rat-obs').value || '';
+  const obj = { acasalamento_id, tipo, data, obs };
+  reproducaoAtividades.push(obj);
+  _dbSalvarReproducaoAtividade(obj, reproducaoAtividades.length - 1);
+  closeModal('modal-repro-atividade');
+  renderReprodutivoVet();
+}
+
+function _abrirModalDGDefinitivo(ei) {
+  document.getElementById('rdg-estagio-idx').value = ei;
+  document.getElementById('rdg-data-cobertura').value = '';
+  document.getElementById('rdg-data-confirmacao').value = new Date().toISOString().slice(0, 10);
+  openModal('modal-repro-dg-definitivo');
+}
+
+// Fecha o funil do veterinário: confirma a gestação de verdade (tabela `gestacoes`), igual ao
+// gatilho que já existia em _confirmarResultadoTentativa (mesmo formato de linha) — só que
+// disparado pelo estágio "DG precoce" em vez de uma tentativa de IA/monta natural.
+function _confirmarDGDefinitivo() {
+  const ei = parseInt(document.getElementById('rdg-estagio-idx').value || '-1');
+  const e = reproducaoEstagios[ei];
+  if (!e) return;
+  const dataCobertura = document.getElementById('rdg-data-cobertura').value;
+  const dataConfirmacao = document.getElementById('rdg-data-confirmacao').value;
+  if (!dataCobertura) return alert('Informe a data da cobertura/inseminação.');
+  if (!dataConfirmacao) return alert('Informe a data da confirmação.');
+  const a = acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+  if (!a) return;
+
+  a.status = 'confirmado';
+  _dbAtualizarStatusAcasalamento(a, { status: 'confirmado' });
+
+  if (!gestacoes.some(g => String(g.acasalamento_id) === String(a.db_id))) {
+    const gest = {
+      acasalamento_id: a.db_id, egua_id: a.egua_id, egua_nome: a.egua_nome,
+      garanhao_nome: a.garanhao_nome, data_cobertura: dataCobertura, data_confirmacao: dataConfirmacao,
+      parto_previsto: null, parto_real: null, status: 'gestando', obs: '',
+    };
+    gestacoes.push(gest);
+    _dbSalvarGestacao(gest, gestacoes.length - 1);
+  }
+
+  _dbExcluirReproducaoEstagio(e.db_id);
+  reproducaoEstagios.splice(ei, 1);
+
+  closeModal('modal-repro-dg-definitivo');
+  renderReprodutivoVet();
+  renderAcasalamentos();
+  renderGestacoesNovo();
+
+  if (confirm('Gestação confirmada! Quer aplicar um protocolo gestacional agora?')) {
+    abrirModalAplicarProtocolo(gestacoes.length - 1);
+  }
 }
 
 // ── Kanban "Protocolo Reprodutivo" (page-saude) ─────────────────────────────
@@ -10766,6 +11036,38 @@ async function _sincronizarAoLogin() {
       });
     }
 
+    // 5h. Reprodutivo v4, Fase 5: kanban do veterinário (reproducao_estagios) + atividades
+    // soltas (reproducao_atividades). Mesmo padrão defensivo das demais tabelas novas.
+    reproducaoEstagios.length = 0;
+    let dbEstagios = bootstrap.reproducao_estagios;
+    if(!dbEstagios) {
+      try { dbEstagios = await _supa('GET', 'reproducao_estagios', null, '?order=criado_em.desc'); }
+      catch(e) { dbEstagios = null; }
+    }
+    if(dbEstagios) {
+      dbEstagios.forEach(e => {
+        reproducaoEstagios.push({
+          db_id: e.id, acasalamento_id: e.acasalamento_id, estagio: e.estagio || 'controle',
+          data_entrada_estagio: e.data_entrada_estagio,
+        });
+      });
+    }
+
+    reproducaoAtividades.length = 0;
+    let dbAtividades = bootstrap.reproducao_atividades;
+    if(!dbAtividades) {
+      try { dbAtividades = await _supa('GET', 'reproducao_atividades', null, '?order=data.desc'); }
+      catch(e) { dbAtividades = null; }
+    }
+    if(dbAtividades) {
+      dbAtividades.forEach(at => {
+        reproducaoAtividades.push({
+          db_id: at.id, acasalamento_id: at.acasalamento_id, tipo: at.tipo,
+          data: at.data, obs: at.obs || '',
+        });
+      });
+    }
+
     // 6. Medidas
     if(dbMed) {
       Object.keys(medidas).forEach(k => delete medidas[k]);
@@ -11139,6 +11441,32 @@ async function _dbAtualizarGestacao(g, patch) {
   await _supa('PATCH', 'gestacoes', patch, '?id=eq.' + g.db_id);
 }
 
+// ── Reprodutivo v4, Fase 5: kanban do veterinário ─────────────────────────
+async function _dbSalvarReproducaoEstagio(e, idx) {
+  const payload = {
+    acasalamento_id: e.acasalamento_id, estagio: e.estagio,
+    data_entrada_estagio: e.data_entrada_estagio, criado_por: usuarioAtual?.db_id || null,
+  };
+  if(e.db_id) {
+    await _supa('PATCH', 'reproducao_estagios', payload, '?id=eq.' + e.db_id);
+  } else {
+    const res = await _supa('POST', 'reproducao_estagios', payload);
+    if(res?.[0]?.id) reproducaoEstagios[idx].db_id = res[0].id;
+  }
+}
+async function _dbExcluirReproducaoEstagio(dbId) {
+  if(!dbId) return;
+  await _supa('DELETE', 'reproducao_estagios', null, '?id=eq.' + dbId);
+}
+async function _dbSalvarReproducaoAtividade(at, idx) {
+  const payload = {
+    acasalamento_id: at.acasalamento_id, tipo: at.tipo, data: at.data,
+    obs: at.obs || null, criado_por: usuarioAtual?.db_id || null,
+  };
+  const res = await _supa('POST', 'reproducao_atividades', payload);
+  if(res?.[0]?.id) reproducaoAtividades[idx].db_id = res[0].id;
+}
+
 // ── Protocolos reprodutivos (Fase 5) ──────────────────────────────────────
 async function _dbSalvarProtocolo(p, idx) {
   const payload = {
@@ -11452,7 +11780,8 @@ function _limparEstadoLocal() {
   // Planejador antes do sync terminar mostrava dado de negociação (nome/contato de outra cabanha)
   // da cabanha ANTERIOR. Achado na revisão de isolamento antes do corte final da Fase 5.
   [animais, coberturas2, coberturas, eventosEsp, estoque, movimentos, lancamentos, pendencias, USUARIOS,
-   fontesCobertura, acasalamentos, coberturasNegociadas, gestacoes, tentativas]
+   fontesCobertura, acasalamentos, coberturasNegociadas, gestacoes, tentativas,
+   reproducaoEstagios, reproducaoAtividades]
     .forEach(a => { if (Array.isArray(a)) a.length = 0; });
   [histVacinas, histExames, medidas, histVermifugacoes]
     .forEach(o => Object.keys(o).forEach(k => delete o[k]));

@@ -387,29 +387,68 @@ fazer sentido sozinha.
   saldo consumido e receptora já ocupada (não aparece como disponível); aviso explícito de "mãe = doadora"
   no modal de registrar parto quando é TE.
 
-### Fase 5 — Kanban do veterinário (Saúde & Vacinas → aba Reprodutivo)
+### Fase 5 — Kanban do veterinário (Saúde & Vacinas → aba Reprodutivo) ✅ APLICADA (2026-08-13)
 
-A fase mais complexa da spec — avaliar, ao especificar em detalhe, se vale dividir em sub-fases (ex.:
-5a — estágios 1-2, 5b — estágios 3-4 + regra de corte, 5c — atividades soltas + protocolo automático).
+Implementada inteira, sem dividir em sub-fases — o desenho ficou direto o suficiente pra não precisar.
 
-- 4 estágios do Kanban: Controle → Inseminação/Cruzamento → Ovuladas → DG precoce aguardando definitivo
-  (seção 4.1), com transições de avanço/retorno conforme sinalização do veterinário.
-- Migrar o campo "tipo de acasalamento" (IA/monta natural/TE) da aba Acasalamentos do criador pro estágio
-  Controle do Kanban.
-- Alertas visuais de janela: 3-7 dias (estágio 2), 15-20 dias (estágio 3), ~45 dias (estágio 4).
-- Cards de égua com gestação ativa do ciclo atual aparecem **bloqueados** na coluna Controle (não movem até
-  a gestação encerrar) — regra revisada da seção 3.1/4.1.
-- Ação "devolver pro planejamento do criador", disponível em qualquer estágio.
-- Registro de atividades soltas (medicação, toque, ultrassom, comentário) por acasalamento, em qualquer
-  ponto do funil (tabela `reproducao_atividades`, Fase 0).
-- Ao confirmar prenhez (fim do estágio 4): criar protocolo gestacional, reaproveitando "Protocolos" já
-  existente em Saúde & Vacinas.
-- Última etapa do funil: visão "Gestações ativas" em formato Kanban pro veterinário, pra continuar
-  registrando atividades durante a gestação.
-- Perda/nascimento de cria registrável a qualquer momento, por criador ou veterinário.
-- Regra de corte 30/06→01/07 pra perda de cria (seção 4.3), **reaproveitando** `_calc_ciclo_texto`/
-  `_cicloAtualTexto` já existente — perda antes do corte volta pro Controle (com opção de devolver ao
-  planejamento); perda depois do corte só libera pro planejamento do próximo ciclo.
+- Nova aba **"Reprodutivo"** dentro de Saúde & Vacinas (`tab-reprodutivo-vet`), ao lado de "🧬 Protocolo
+  Reprodutivo" (que é outra coisa — acompanha etapas de protocolo gestacional, não o funil de
+  acasalamento; sem sobreposição).
+- 4 estágios do Kanban (`reproducao_estagios.estagio`, tabela da Fase 0): Controle → Inseminação/
+  Cruzamento → Ovuladas → DG precoce, com botões de avanço/retorno em cada card
+  (`_reproAvancarEstagio()`). O registro de estágio **nasce sozinho** quando o criador aprova o
+  acasalamento (`_confirmarAprovacaoAcasalamento()`) — 1:1 garantido pelo UNIQUE em
+  `acasalamento_id`. `acasalamentos.status` acompanha por fora: `aprovado` (aguardando entrar no
+  funil) → `em_curso` (na primeira saída do Controle) → `confirmado` (DG definitivo).
+- **Campo "tipo de cobertura" migrado pro Controle**: o select continua existindo no modal de
+  acasalamento do criador (decisão de design — precisa dele pra saber se mostra o campo Receptora,
+  Fase 4), mas agora é só uma intenção inicial; o **ponto de decisão final** é um select equivalente
+  dentro do card do estágio Controle, que o veterinário pode confirmar ou trocar
+  (`_reproAtualizarTipoCobertura()`).
+- Alertas visuais de janela (`_reproAlertaJanela()`): azul = ainda esperando, âmbar = dentro da janela,
+  vermelho = passou do esperado. Inseminação 3-7d, Ovuladas 15-20d (DG precoce), DG precoce ~45d
+  (DG definitivo).
+- **Bloqueio (regra revisada 3.1/4.1)**: card de égua com gestação ativa no **mesmo ciclo**
+  (`_eguaGestandoNoCiclo()`, já existente desde a Fase 3) aparece com badge "Bloqueada" e sem os botões
+  de transição — só "+ Atividade" e "Devolver pro planejamento" continuam disponíveis.
+- **"Devolver pro planejamento"** (`_reproDevolverPlanejamento()`), em qualquer estágio: acasalamento
+  volta pro `status='rascunho'`, o registro de estágio é apagado (sai do funil).
+- **Atividades soltas** (`reproducao_atividades`, Fase 0): modal simples (tipo/data/obs), disponível em
+  qualquer estágio, histórico visível no próprio card.
+- **Confirmar DG definitivo** (`_confirmarDGDefinitivo()`): pede data de cobertura/inseminação + data de
+  confirmação (não dava pra inferir automaticamente — o funil novo não tem um campo "data" próprio até
+  aqui, diferente do fluxo antigo de tentativas), cria a gestação real (mesmo formato de linha que
+  `_confirmarResultadoTentativa()` já usava), marca o acasalamento `confirmado`, remove o registro de
+  estágio, e **oferece aplicar um protocolo gestacional na hora** (reaproveita
+  `abrirModalAplicarProtocolo()`, já existente).
+- **Última etapa do funil**: seção "Gestações ativas" logo abaixo do Kanban, reaproveitando o mesmo card
+  com barra de progresso da tela do criador (`_gestCard()`, Fase 1) — mesmos botões de aplicar protocolo/
+  registrar parto/aborto/perda, então **perda e nascimento já são registráveis por criador ou
+  veterinário de graça**, sem código duplicado (é o mesmo componente nas duas telas).
+- **Regra de corte 30/06→01/07 — nenhum código novo precisou ser escrito.** Verificado que
+  `_cicloAtualTexto()`/`_cicloProximoTexto()` já recalculam os 2 ciclos oferecidos no Planejador
+  dinamicamente a partir de `HOJE`, com o mesmo corte de julho do banco (`_calc_ciclo_texto`). Antes do
+  corte: perda de cria muda `gestacoes.status`, `_eguaGestandoNoCiclo()` passa a retornar `false`, e a
+  égua fica automaticamente replanjável no **mesmo** ciclo (ainda oferecido nas pills). Depois do corte:
+  o ciclo antigo simplesmente some das pills — não tem como planejar nele de novo, em nenhuma
+  circunstância, sem precisar de uma regra de bloqueio dedicada.
+- **Achado no caminho**: o antigo botão "+ Registrar tentativa" (aba Acasalamentos do criador) fazia
+  parte exatamente do que esta fase substitui — rastreava tentativa de IA/monta + resultado
+  prenha/vazia, criando a gestação por conta própria. Removido do card do criador (`_acCard()`) pra não
+  coexistir com o funil novo rastreando a mesma coisa duas vezes; o histórico de tentativas antigas (se
+  houver) continua visível, só não dá mais pra criar uma nova por ali — esse trabalho agora é feito no
+  Controle/Inseminação do Kanban do veterinário.
+- **Banco**: `carregar_dados_cabanha()` (RPC de bootstrap) não trazia `reproducao_estagios`/
+  `reproducao_atividades`/`tratamentos` (criadas na Fase 0, mas nunca incluídas no SELECT do bootstrap)
+  — corrigido em `docs/migrations/2026-08-13-reprodutivo-v4-fase5-bootstrap.sql`, aplicado e revisado
+  pelo `revisor-isolamento` (aprovado — mudança mecânica, mesmo padrão das ~19 tabelas já lidas ali,
+  sem vazamento cross-tenant).
+- Testado via servidor estático local: aprovar acasalamento cria o estágio Controle sozinho; avançar
+  pelos 4 estágios funciona e `status` do acasalamento vira `em_curso` na primeira saída do Controle;
+  confirmar DG definitivo cria a gestação, zera o estágio e a gestação aparece em "Gestações ativas"
+  com o card de progresso; bloqueio visual funciona pra égua com gestação ativa no mesmo ciclo; atividade
+  solta persiste e aparece no card; devolver pro planejamento reseta o acasalamento e remove o estágio;
+  botão de tentativa removido do lado do criador sem quebrar o resto do card.
 
 ### Fase 6 — Saúde & Vacinas: Tratamentos + registro em lote
 
