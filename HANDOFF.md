@@ -220,6 +220,17 @@ cabanhas), mais as abas herdadas da Gestação.
   do próximo ciclo já funcionava de graça (escopo por ciclo já existente). Mudança de fluxo/UI, sem
   schema/RLS — não precisou de `revisor-isolamento`. Detalhe completo em
   `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 3).
+- **Fase 4 — aplicada em staging (2026-08-13)**: tipo de fonte "Embrião" adicionado. Flag `receptora`
+  estruturada no cadastro de Animais substitui o texto livre "Receptora (TE)" que existia em
+  Observações — exige SBB preenchido. **Achado ao investigar a regra de parentesco**: o bug que a spec
+  temia (registrar a receptora como mãe da cria) nunca existiu — `gestacoes.egua_id` sempre foi a doadora,
+  nunca a receptora (que é um campo separado novo, `acasalamentos.receptora_animal_id`); só faltava deixar
+  isso visível, então o modal "Registrar parto" ganhou um aviso explícito quando é TE. Modal de
+  acasalamento ganhou select de receptora (só aparece em TE). Card de gestação ganhou o sub-rótulo "na
+  receptora X (SBB) — TE", no formato exato da spec. Nova aba "Plantel disponível", escopada por ciclo,
+  com 5 seções (garanhões, éguas de cria, cotas/direito de uso/cobertura, embriões, receptoras). Mudança
+  de fluxo/UI + uso de colunas já criadas na Fase 0 — não precisou de `revisor-isolamento`. Detalhe
+  completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 4).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.

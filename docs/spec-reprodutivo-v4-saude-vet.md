@@ -354,18 +354,38 @@ fazer sentido sozinha.
   ativa e `false` pra outro ciclo; `salvarAcasalamento()` bloqueia (sem criar linha) a égua gestando no
   mesmo ciclo e permite normalmente pro próximo ciclo.
 
-### Fase 4 — Receptoras / Transferência de Embrião + Plantel disponível
+### Fase 4 — Receptoras / Transferência de Embrião + Plantel disponível ✅ APLICADA (2026-08-13)
 
-- Tipo de fonte **"Embrião"** (próprio ou comprado de outra cabanha), ao lado de Próprio/Cota/Direito de
-  uso/Cobertura.
-- Flag `receptora` (Fase 0) substitui o texto livre em Observações — exigir SBB válido antes de permitir
-  marcar.
-- Regra de parentesco: ao registrar nascimento de um produto de TE, a **mãe gravada é sempre a doadora**
-  (nunca a receptora) — ajustar a tela/fluxo de registro de cria pra pedir explicitamente "doadora do
-  embrião" nesse caso, em vez de assumir a receptora como mãe.
-- Exibição da gestação vinculada à doadora, com sub-rótulo da receptora + SBB (formato exato: seção 3.5).
-- Nova aba **"Plantel disponível"**, separada, escopada por ciclo — garanhões, éguas de cria, cotas,
-  embriões e receptoras disponíveis naquele ciclo (seção 3.2).
+- Tipo de fonte **"Embrião"** adicionado ao select (`fc-tipo`) e ao `FC_TIPO_LABEL`, ao lado de
+  Próprio/Cota/Direito de uso/Cobertura — mesmo comportamento de campos que Direito de uso/Cobertura.
+- Flag `receptora` (checkbox estruturado, cadastro/edição de Animais) substitui o texto livre "Receptora
+  (TE)" que `_abrirReceptoraViaSBB()` escrevia em Observações. Exige SBB preenchido antes de permitir
+  marcar — validado em `salvarAnimal()` e `salvarEdicaoAnimal()` (bloqueia salvar, antes de qualquer
+  mutação, mesmo padrão da validação de nome já existente).
+- **Achado ao investigar a "regra de parentesco"**: o bug que a spec antecipava (registrar a receptora
+  como mãe) **nunca existiu** — `gestacoes.egua_id` sempre foi a égua do `acasalamento` (`ac-egua` no
+  modal), e essa sempre foi tratada como a doadora, nunca a receptora (que é um campo novo,
+  `acasalamentos.receptora_animal_id`, adicionado agora, separado). `_criarAnimalDeParto()` já usa
+  `g.egua_id` pra definir a mãe da cria — sempre a doadora, sem mudança de código necessária ali. O que
+  faltava era só **deixar isso visível**: modal "Registrar parto" ganhou um aviso explícito quando é TE
+  ("Mãe registrada no cadastro da cria: X (doadora do embrião) — não a receptora Y"), pra confirmar pro
+  usuário o que já acontecia por trás.
+- Modal de acasalamento ganhou um select "Receptora" (`ac-receptora`), visível só quando o tipo de
+  cobertura é TE (`_toggleCamposAcasalamento()`), listando éguas com `receptora=true` na cabanha —
+  opcional na criação (pode ficar em aberto pro veterinário decidir depois, na Fase 5). Persistido em
+  `acasalamentos.receptora_animal_id`.
+- Exibição da gestação: `_gestCard()` nomeia a doadora no título (como já fazia) e ganhou um sub-rótulo
+  "na receptora **X** (SBB) — TE (Transferência de Embrião)" quando há receptora vinculada — formato
+  exato pedido na seção 3.5, testado e conferido pixel a pixel contra o exemplo da spec.
+- Nova aba **"Plantel disponível"** (`tab-plantel-disponivel`), entre Acasalamentos e Garanhões e
+  Coberturas, escopada pelo ciclo selecionado no Planejador — 5 seções somente-leitura: Garanhões (saldo
+  > 0), Éguas de cria (sem acasalamento ainda nesse ciclo), Cotas/Direito de uso/Cobertura ativas,
+  Embriões, Receptoras (com `receptora=true` e ainda não vinculadas a um acasalamento TE nesse ciclo).
+- Testado via servidor estático local: sub-rótulo da gestação bate com o formato exato do exemplo da
+  spec; toggle do campo Receptora no modal de acasalamento (aparece só em TE, popula corretamente);
+  bloqueio de SBB vazio pra marcar receptora (cadastro novo); Plantel disponível reflete corretamente
+  saldo consumido e receptora já ocupada (não aparece como disponível); aviso explícito de "mãe = doadora"
+  no modal de registrar parto quando é TE.
 
 ### Fase 5 — Kanban do veterinário (Saúde & Vacinas → aba Reprodutivo)
 
