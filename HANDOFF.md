@@ -170,8 +170,24 @@ cabanhas), mais as abas herdadas da Gestação.
   reaproveita a regra de corte de ciclo já existente, sem lógica nova). Spec fechada em
   `docs/spec-reprodutivo-v4-saude-vet.md`, com plano de 8 fases (Fase 0 = schema; Fases 1-4 = tela do
   criador; Fase 5 = Kanban do veterinário, a maior/mais arriscada; Fases 6-7 = Tratamentos/lote e Menu
-  Animais, independentes, podem rodar em paralelo). **Ainda não começado** — próximo passo é iniciar pela
-  Fase 0.
+  Animais, independentes, podem rodar em paralelo).
+- **Fase 0 — migration escrita (2026-08-13), aguardando o Pedro rodar no SQL Editor**:
+  `docs/migrations/2026-08-13-reprodutivo-v4-fase0.sql`. Cobre `animais.castrado`/
+  `qtd_coberturas_padrao`/`receptora`, `fontes_cobertura.tipo` (+`cobertura`/`embriao`),
+  `acasalamentos.receptora_animal_id` (+ `tipo_cobertura` virou nullable — decidido pelo veterinário, não
+  mais pelo criador), e as tabelas novas `reproducao_estagios`/`reproducao_atividades`/`tratamentos`.
+  Resolve o ❓ que ficava em aberto na spec: `reproducao_estagios` referencia `acasalamentos` (não
+  `gestacoes` — o funil do vet roda todo antes de existir gestação confirmada). Revisão de isolamento
+  rodada, sem vazamento — detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 0).
+  ⚠️ **Achado fora de escopo, registrado pra depois**: a RPC `provisionar_schema_cabanha` não recria os
+  FKs "antigos" de `acasalamentos` (egua_id, fonte_cobertura_id, veterinario_id, aprovado_por,
+  criado_por) pra cabanhas provisionadas a partir de agora — só existem nos tenants já provisionados por
+  uma correção manual de algum momento do Reprodutivo v2/v3 que nunca voltou pra RPC. `LIKE ... INCLUDING
+  ALL` não copia FK entre schemas; a RPC só corrigia isso manualmente pra 1 caso
+  (`gestacoes_protocolo_aplicado_id_fkey`) até esta migration, que adiciona a correção pros 4 FKs novos
+  que introduz, mas não retroage nos FKs antigos que já estavam faltando. Vale uma sessão dedicada pra
+  auditar TODAS as tabelas do `v_tabelas` da RPC e comparar com os FKs reais de um tenant provisionado,
+  corrigindo de vez.
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.

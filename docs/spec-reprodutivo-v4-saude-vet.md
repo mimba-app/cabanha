@@ -223,36 +223,46 @@ Se, depois de um DG positivo (gestação ativa), o veterinário registra que a �
 
 ## 8. Fases de implementação
 
-### Fase 0 — Fundação de banco
+### Fase 0 — Fundação de banco ✅ MIGRATION ESCRITA (2026-08-13), aguardando o Pedro rodar no SQL Editor
 
-Migration única cobrindo todas as colunas/tabelas novas identificadas nesta spec, aplicada e refletida em
-todos os schemas `cab_*` existentes (skill `nova-migration-tenant`) + template `public`. Revisão de
-isolamento (`revisor-isolamento`) obrigatória — mexe no template e em tabelas novas cross-tenant-schema.
+Migration em `docs/migrations/2026-08-13-reprodutivo-v4-fase0.sql`. MCP do Supabase é read-only pra
+writes — não foi aplicada por aqui, precisa ser rodada manualmente.
 
-- `animais`: nova coluna `castrado boolean not null default false` (seção 2).
-- `animais`: nova coluna `qtd_coberturas_padrao integer not null default 120` — quantidade máxima padrão
-  de coberturas por ciclo pra garanhão próprio (seção 3.3). Segue valendo o teto de 240 pra Demérito, já
-  existente desde a Fase 0 do Reprodutivo v3 — essa coluna é só o *padrão sugerido*, não substitui o teto
-  regulatório.
-- `animais`: nova coluna `receptora boolean not null default false` — flag estruturada substituindo o texto
-  livre em Observações (seção 3.5). Exigir SBB preenchido como pré-condição de UI ao marcar (não
-  necessariamente constraint de banco).
-- `fontes_cobertura.tipo`: adicionar os valores `cobertura` e `embriao` ao enum/check existente
-  (hoje `proprio`/`cota`/`direito_uso`) — seção 3.3 e 3.5.
-- `acasalamentos` (ou `gestacoes`, avaliar qual tabela é a dona do relacionamento na hora de especificar):
-  nova coluna `receptora_animal_id uuid null references animais(id)` — vincula a gestação à receptora
-  física quando o tipo for TE, mantendo a doadora como a "dona" do registro principal (seção 3.5).
-- Nova tabela **`reproducao_estagios`** (kanban do veterinário, seção 4): acasalamento/gestação de
-  referência, estágio (`controle`/`inseminacao`/`ovuladas`/`dg_precoce`), tipo de acasalamento (IA/monta
-  natural/TE), data de entrada no estágio atual (base pros alertas de janela), flag `bloqueado` (regra da
-  seção 3.1/4.1).
-- Nova tabela **`reproducao_atividades`** (seção 4.2): atividades soltas do veterinário por acasalamento —
-  tipo (medicação/toque/ultrassom/comentário), data, texto/observação, autor.
-- Nova tabela **`tratamentos`** (seção 5), mesmo formato de `vermifugacoes` (animal, data, descrição,
-  período/duração, responsável, observações) — categoria nova em Saúde & Vacinas.
-- ❓ **Único ponto técnico a decidir na hora de escrever a migration** (não bloqueia começar a fase): se
-  `reproducao_estagios` referencia `acasalamentos` ou `gestacoes` como chave estrangeira principal — decidir
-  olhando o schema real das duas tabelas nesse momento, não antecipar aqui.
+- `animais`: novas colunas `castrado boolean not null default false`, `qtd_coberturas_padrao integer not
+  null default 120` (padrão sugerido pra fonte "Próprio" por ciclo — não substitui o teto de 240 pra
+  Demérito, já existente desde a Fase 0 do Reprodutivo v3) e `receptora boolean not null default false`.
+- `fontes_cobertura.tipo`: CHECK ampliado de `proprio`/`cota`/`direito_uso` pra incluir `cobertura` e
+  `embriao`.
+- `acasalamentos`: nova coluna `receptora_animal_id uuid null references animais(id)`; `tipo_cobertura`
+  virou nullable (deixa de ser preenchido pelo criador na criação — passa a ser decidido pelo veterinário
+  no estágio Controle do Kanban, seção 4.1).
+- **Resolvido o ❓ que estava em aberto**: `reproducao_estagios` referencia `acasalamentos`, não
+  `gestacoes` — o funil do veterinário (Controle→Inseminação→Ovuladas→DG precoce) acontece todo **antes**
+  de existir uma linha em `gestacoes` (que só nasce já confirmada, `data_confirmacao not null`).
+  `acasalamentos` já tinha `status` (rascunho/simulado/aprovado/em_curso/confirmado/cancelado) e
+  `tipo_cobertura` — o Kanban vive ao lado desses campos, não duplica.
+- Nova tabela **`reproducao_estagios`**: 1:1 com `acasalamentos` (`acasalamento_id uuid unique`), campo
+  `estagio` (controle/inseminacao/ovuladas/dg_precoce), `data_entrada_estagio` (base dos alertas de
+  janela). **Sem coluna `bloqueado`** — decisão tomada na hora de escrever a migration: o bloqueio visual
+  de éguas com gestação ativa (seção 3.1/4.1) é calculado em tempo de leitura (join com `gestacoes`
+  abertas), não guardado como flag — evita o risco de ficar dessincronizado.
+- Nova tabela **`reproducao_atividades`**: `acasalamento_id`, `tipo` (medicacao/toque/ultrassom/
+  comentario), `data`, `obs`.
+- Nova tabela **`tratamentos`**: `animal_id`, `data_inicio`, `data_fim`, `descricao`, `resp`, `obs`.
+- **Achado no caminho**: `create table (like public.X including all)` não copia foreign keys entre
+  schemas — a RPC `provisionar_schema_cabanha` só corrigia isso manualmente pra 1 caso
+  (`gestacoes_protocolo_aplicado_id_fkey`). A migration atualiza a RPC (`v_tabelas` + 4 `alter table add
+  constraint` novos) pra que cabanhas provisionadas a partir de agora ganhem as 3 tabelas novas **com**
+  FK. ⚠️ Achado também, fora do escopo desta fase: os FKs "antigos" de `acasalamentos` (egua_id,
+  fonte_cobertura_id, veterinario_id, aprovado_por, criado_por) **já não** são recriados pela RPC hoje —
+  só existem nos tenants já provisionados por uma correção manual anterior que nunca voltou pra RPC. Não
+  é regressão desta fase; registrado no `HANDOFF.md` pra alguém revisar depois.
+- Revisão de isolamento (`revisor-isolamento`) rodada — sem vazamento cross-tenant encontrado. Achado de
+  estilo (não bloqueante): o passo que replica pra tenants já provisionados usa 4 policies por tabela
+  (select/insert/update/delete via `tem_acesso_tenant` por `schema_name`), confirmado ao vivo no banco
+  como o padrão real hoje em `fontes_cobertura`/`acasalamentos`/`gestacoes`/`tentativas` (tabelas
+  "antigas" tipo `animais`/`vacinacoes` ainda usam 1 policy `memb_all`, herdada de antes do Reprodutivo
+  v3) — mantido como está por ser o padrão vigente do domínio reprodutivo, não uma invenção.
 
 ### Fase 1 — Reprodutivo do criador: reordenar, renomear, corrigir
 
