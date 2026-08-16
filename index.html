@@ -2626,7 +2626,7 @@
         <input type="text" id="nsbb" placeholder="Ex: B649459" style="width:100%" onblur="_buscarAbccc('novo')" oninput="this.value=this.value.toUpperCase()">
         <div id="nabccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
       </div>
-      <div class="form-group"><label>Sexo</label><select id="nsex"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
+      <div class="form-group"><label>Sexo</label><select id="nsex" onchange="_toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob')"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
       <div class="form-group"><label>Pelagem</label><input type="text" id="npel" placeholder="Ex: Gateada"></div>
       <div class="form-group"><label>Ciclo</label><input type="text" id="nciclo" placeholder="Ex: 24/25"></div>
       <div class="form-group"><label>Nascimento</label><input type="date" id="nnasc" onchange="_autoCiclo(this.value,'nciclo')"></div>
@@ -2641,14 +2641,14 @@
           ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
         </div>
       </div>
-      <div class="form-group" style="justify-content:flex-end">
+      <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
           <input type="checkbox" id="ncastrado" style="width:auto"> Castrado
         </label>
+        <div id="ngrp-qtdcob" style="display:none;align-items:center;gap:6px">
+          <label style="white-space:nowrap">Coberturas por ciclo (padrão)</label>
+          <input type="number" id="nqtdcob" min="0" step="1" value="120" style="width:80px"></div>
       </div>
-      <div class="form-group"><label>Coberturas por ciclo (padrão)
-        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — só pra garanhões, usado no Planejador</span></label>
-        <input type="number" id="nqtdcob" min="0" step="1" value="120"></div>
       <div class="form-group"><label>Estágio / atividade</label><select id="nest">
         <option value="">— selecione —</option>
         <option value="CAMPO">CAMPO</option>
@@ -5143,7 +5143,7 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">SBB ABCCC</label>
           <input id="ed-sbb" value="${a.sbb||''}" style="width:100%;font-size:12px" placeholder="Ex: B649459" onblur="_buscarAbccc('edit')" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Sexo</label>
-          <select id="ed-sexo" style="width:100%;font-size:12px"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
+          <select id="ed-sexo" style="width:100%;font-size:12px" onchange="_toggleQtdCoberturasPadrao('ed-sexo','ed-grp-qtdcob')"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pelagem</label>
           <input id="ed-pelagem" value="${a.pelagem||''}" style="width:100%;font-size:12px" placeholder="Ex: Gateada"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nascimento</label>
@@ -5171,13 +5171,14 @@ function _renderDetCorpo(i, editando) {
             ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
           </div>
         </div>
-        <div class="form-group" style="justify-content:flex-end">
+        <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
             <input type="checkbox" id="ed-castrado" style="width:auto" ${a.castrado?'checked':''}> Castrado
           </label>
+          <div id="ed-grp-qtdcob" style="display:${a.sexo==='Macho'?'flex':'none'};align-items:center;gap:6px">
+            <label style="font-size:12px;white-space:nowrap">Coberturas por ciclo (padrão)</label>
+            <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:80px;font-size:12px"></div>
         </div>
-        <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Coberturas por ciclo (padrão)</label>
-          <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:100%;font-size:12px"></div>
       </div>
     </div>`;
   } else {
@@ -5949,6 +5950,15 @@ function _limparFormNovoAnimal() {
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
+  _toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob');
+}
+
+// "Coberturas por ciclo (padrão)" só faz sentido pra garanhões — campo fica escondido até
+// selecionar Sexo=Macho, em vez de aparecer sempre com um texto explicando "só pra garanhões".
+function _toggleQtdCoberturasPadrao(sexoId, grpId) {
+  const sexo = document.getElementById(sexoId)?.value;
+  const grp = document.getElementById(grpId);
+  if (grp) grp.style.display = sexo === 'Macho' ? 'flex' : 'none';
 }
 
 // Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
