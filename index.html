@@ -33,19 +33,18 @@
     --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
     --serif: 'Playfair Display', Georgia, serif;
-    /* Chrome de marca (sidebar, login) — preto/cinza neutro com acento verde-oliva
-       (mesmo par que já existe no dark mode do app: --bg/--green-d).
-       Só usado em chrome, nunca nas telas de trabalho (tabelas/kanban/cards/formulários,
-       que continuam no fundo claro --bg). Dourado (--ouro) fica reservado só pro
-       wordmark "Mimba." — nunca em fundo/UI/hover, como já valia antes desta mudança. */
-    --chrome-bg: #1a1a18;
-    --chrome-bg2: #232320;
-    --chrome-border: rgba(255,255,255,0.1);
-    --chrome-text: #f0efe9;
-    --chrome-text2: #a8a69e;
-    --chrome-text3: #6b6963;
-    --chrome-accent: #9fcc56;
-    --chrome-accent-d: #7fae3c;
+    /* Chrome de marca (sidebar, login) — alias dos tokens de tema, para seguir
+       claro/escuro junto com o resto do app via prefers-color-scheme (não fica
+       mais sempre escuro). Dourado (--ouro) continua reservado só pro
+       wordmark "Mimba." — nunca em fundo/UI/hover. */
+    --chrome-bg: var(--bg2);
+    --chrome-bg2: var(--bg3);
+    --chrome-border: var(--border);
+    --chrome-text: var(--text);
+    --chrome-text2: var(--text2);
+    --chrome-text3: var(--text3);
+    --chrome-accent: var(--green-d);
+    --chrome-accent-d: var(--green);
     /* Escala tipográfica — 6 degraus, razão ~1.2, base 14px (--fs-base = body) */
     --fs-caption: 10px;
     --fs-sm: 12px;
@@ -104,8 +103,8 @@
     content:''; position:absolute; left:-1px; top:50%; transform:translateY(-50%);
     width:3px; height:0; border-radius:0 3px 3px 0; background:var(--chrome-accent); transition:height 0.15s;
   }
-  .nav-btn:hover { background:rgba(255,255,255,0.06); color:var(--chrome-text); }
-  .nav-btn.active { background:rgba(159,204,86,0.16); color:var(--chrome-accent); font-weight:600; }
+  .nav-btn:hover { background:var(--bg3); color:var(--chrome-text); }
+  .nav-btn.active { background:var(--green-l); color:var(--green-d); font-weight:600; }
   .nav-btn.active::before { height:18px; }
   .nav-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .nav-icon svg { width:19px; height:19px; }
@@ -122,7 +121,7 @@
   .btn-sm { padding:4px 10px; font-size:11px; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
-  .sidebar .sidebar-icon-btn:hover { background:rgba(255,255,255,0.1); color:var(--chrome-text); }
+  .sidebar .sidebar-icon-btn:hover { background:var(--border); color:var(--chrome-text); }
   .sidebar-logout-btn { width:100%; margin-top:8px; background:var(--red); color:#fff; border:none; padding:9px; border-radius:var(--radius); cursor:pointer; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
   .sidebar-logout-btn:hover { background:var(--red-d); }
   .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.25rem; }
@@ -402,7 +401,7 @@
   .login-logo-sub { font-size:12px;color:var(--chrome-text2);margin-top:8px;letter-spacing:.02em; }
   .login-field { margin-bottom:1rem; }
   .login-field label { display:block;font-size:11px;font-weight:700;color:var(--chrome-text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px; }
-  .login-field input { width:100%;padding:10px 12px;font-size:14px;border-radius:var(--radius);border:0.5px solid var(--chrome-border);background:rgba(255,255,255,0.04);color:var(--chrome-text);font-family:var(--font); }
+  .login-field input { width:100%;padding:10px 12px;font-size:14px;border-radius:var(--radius);border:0.5px solid var(--chrome-border);background:var(--bg);color:var(--chrome-text);font-family:var(--font); }
   .login-field input::placeholder { color:var(--chrome-text3); }
   .login-field input:focus { outline:none;border-color:var(--chrome-accent); }
   .login-btn { width:100%;padding:11px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:0.5rem; }
@@ -643,7 +642,7 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
       Painel Mimba
     </button>
-    <div id="sidebar-account-card" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:rgba(255,255,255,0.05);border:0.5px solid var(--chrome-border)">
+    <div id="sidebar-account-card" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:var(--bg3);border:0.5px solid var(--chrome-border)">
       <div id="sidebar-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--chrome-accent);color:var(--chrome-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">?</div>
       <div style="flex:1;min-width:0">
         <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--chrome-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
