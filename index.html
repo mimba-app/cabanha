@@ -2761,9 +2761,6 @@
         <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
           <input type="checkbox" id="fc-tem-rm" style="width:auto"> Reserva de material (RM)
         </label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px;margin-top:4px">
-          <input type="checkbox" id="fc-demerito" style="width:auto"> Registrado como Demérito (ABCCC)
-        </label>
       </div>
       <div class="form-group" id="fc-grp-recorrente" style="display:none"><label>&nbsp;</label>
         <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
@@ -5646,7 +5643,6 @@ function renderPlanejadorReprodutivo() {
           </label>
           <button class="btn btn-sm" onclick="_ajustarSaldoCicloProprio(${fIdx},'fc-inline-qtd-${fIdx}')">Salvar</button>
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-rm-${fIdx}" style="width:auto" ${f.tem_rm ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'tem_rm',this.checked)"> RM</label>
-          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-demerito-${fIdx}" style="width:auto" ${f.demerito ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'demerito',this.checked)"> Demérito</label>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px">Máx. ${padrao} — padrão do cadastro do animal. Pra aumentar, edite o padrão em Animais.</div>
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -8009,7 +8005,6 @@ function abrirModalFonteCobertura() {
   document.getElementById('fc-garanhao-animal').value = '';
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = false;
-  document.getElementById('fc-demerito').checked = false;
   document.getElementById('fc-recorrente').checked = false;
   document.getElementById('fc-qtd').value = '';
   document.getElementById('fc-ciclo').value = window._cicloPlanejador || _cicloAtualTexto();
@@ -8033,7 +8028,6 @@ function editFonteCobertura(i) {
   document.getElementById('fc-garanhao-sbb').value = f.garanhao_sbb || '';
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = !!f.tem_rm;
-  document.getElementById('fc-demerito').checked = !!f.demerito;
   document.getElementById('fc-recorrente').checked = !!f.recorrente;
   document.getElementById('fc-qtd').value = f.quantidade_adquirida ?? '';
   document.getElementById('fc-ciclo').value = f.ciclo || '';
@@ -8081,7 +8075,6 @@ function salvarFonteCobertura() {
     garanhao_nome,
     garanhao_sbb: document.getElementById('fc-garanhao-sbb').value.trim() || '',
     tem_rm: tipo === 'proprio' ? document.getElementById('fc-tem-rm').checked : false,
-    demerito: tipo === 'proprio' ? document.getElementById('fc-demerito').checked : false,
     quantidade_adquirida,
     ciclo,
     vigencia_inicio: tipo !== 'proprio' ? vigencia_inicio : '',
@@ -8170,7 +8163,6 @@ function renderFontesCobertura() {
             <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">
               ${f.garanhao_nome}
               ${f.tem_rm ? '<span class="badge ba" style="font-size:9px">RM</span>' : ''}
-              ${f.demerito ? '<span class="badge bb" style="font-size:9px">Demérito</span>' : ''}
             </div>
             <div style="font-size:11px;color:var(--text2);margin-top:2px">
               ${f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : ''}Ciclo ${f.ciclo}
