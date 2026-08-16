@@ -1,12 +1,12 @@
 # Spec — Reprodutivo v4 + Saúde & Vacinas (revisão pós-reunião com o sócio)
 
-> **Status: ✅ TODAS AS 8 FASES APLICADAS EM STAGING (2026-08-13).** Revisada por Pedro, Thiago e Luciano
-> em 2026-08-12, fechada com plano de fases no mesmo dia, e implementada inteira (Fase 0 → Fase 7) em
-> 2026-08-13 — sem precisar dividir a Fase 5 (Kanban do veterinário) em sub-fases, como a spec original
-> cogitava. **Falta QA em staging real** com dado/login de verdade (todo o trabalho até aqui foi
-> construção + teste local via servidor estático + sessão injetada, mesmo padrão usado no Reprodutivo
-> v3) e a promoção `staging` → `main` (Fase 0 do roadmap geral, deliberadamente adiada). Detalhe de cada
-> fase, achados e decisões de design ficam registrados nas seções de cada uma, abaixo.
+> **Status: ✅ TODAS AS 8 FASES + FASE 8b APLICADAS, MIGRATIONS RODADAS, PROMOVIDO PRA `main` (2026-08-13).**
+> Revisada por Pedro, Thiago e Luciano em 2026-08-12, fechada com plano de fases no mesmo dia, e
+> implementada inteira (Fase 0 → 8) em 2026-08-13. QA visual real (browser + sessão injetada) feita
+> depois da Fase 8, e `staging` promovida pra `main` (PR #2, merge `fb578da`) no mesmo dia. Fase 8b
+> (correção de layout + remoção do flag "Receptora" do cadastro) é retrabalho pontual pós-promoção,
+> ainda só em `staging`. Detalhe de cada fase, achados e decisões de design ficam registrados nas
+> seções de cada uma, abaixo.
 
 ## Contexto
 
@@ -528,10 +528,10 @@ ruim (ponto 3), e Plantel disponível/Garanhões e Coberturas/Nova fonte com atr
   Function(...)"`); seleção de fonte → clique em égua abre o modal em modo confirmação com o resumo
   certo; campo Receptora só aparece pra fonte tipo Embrião (não mais por tipo de cobertura, que nem
   existe mais no criador); modal de fallback completo ainda funciona igual a antes.
-- **Pendência de QA real**: não foi possível rodar o navegador com sessão injetada nesta rodada
-  (ferramenta de browser não disponível neste subagente) — validação visual completa (destaque do
-  card selecionado, layout responsivo das duas colunas) fica pendente de um passe com
-  `mcp__Claude_Browser__*`, como as fases anteriores fizeram.
+- **✅ QA real feita logo em seguida** (mesma sessão, com `mcp__Claude_Browser__*` disponível): match
+  fonte→égua testado ponta a ponta (seleção com destaque, abertura do modal de confirmação com resumo
+  certo, `tipo_cobertura` chegando `null` no payload salvo), campo Receptora confirmado aparecendo só
+  pra fonte tipo Embrião e populando a partir das éguas elegíveis.
 
 **Ponto 4 — Garanhões e Coberturas / Plantel disponível / Nova fonte**
 
@@ -560,13 +560,8 @@ ruim (ponto 3), e Plantel disponível/Garanhões e Coberturas/Nova fonte com atr
   princípio do "Próprio" da Fase 2, mas usando o valor da própria fonte recorrente como "padrão", em
   vez de `qtd_coberturas_padrao` do animal. Fonte "Cobertura" **não mudou** — continua sempre
   relançada manualmente por ciclo, como já era.
-  - **Migration não aplicada nesta sessão**: a ferramenta `mcp__supabase__apply_migration` não estava
-    disponível neste subagente — o SQL está pronto em
-    `docs/migrations/2026-08-13-reprodutivo-v4-fase8-garanhoes.sql` (mesmo padrão da Fase 7: `alter
-    table` no `public` + loop nos `cab_*` já provisionados) pra ser aplicado depois via MCP ou SQL
-    Editor. **Enquanto não for aplicada, o checkbox "Recorrente" salva no objeto em memória e tenta
-    persistir `recorrente` no PATCH/POST de `fontes_cobertura` — vai ser ignorado/rejeitado pelo
-    PostgREST até a coluna existir** (checar `get_advisors`/logs depois de aplicar).
+  - **✅ Migration aplicada logo em seguida** via `mcp__supabase__apply_migration`, confirmada por
+    `information_schema.columns` nos 7 tenants (`cab_*`) + `public`.
   - **Decisão de isolamento**: não passou pelo `revisor-isolamento` — é coluna simples numa tabela já
     coberta pelas policies existentes (`tem_acesso_tenant`), sem grant novo nem mudança de shape de
     acesso, mesmo padrão de `qtd_coberturas_padrao`/`castrado` (Fase 0). Documentado, não revisado à
@@ -579,7 +574,37 @@ ruim (ponto 3), e Plantel disponível/Garanhões e Coberturas/Nova fonte com atr
   rápida e o bloco de edição continua fechado até clicar; modal de nova fonte com tipo Cota mostra o
   select de animais em vez do campo de texto e bloqueia salvar sem selecionar; percentual de cota
   pré-preenche a quantidade sugerida; checkbox Recorrente só aparece pra Direito de uso.
-- **Pendência de QA real**: mesma limitação do ponto 3 — sem `mcp__Claude_Browser__*` disponível nesta
-  sessão, não deu pra confirmar visualmente a lógica de clonagem automática do "Direito de uso
-  recorrente" ao trocar de ciclo (a lógica foi conferida lendo o código, não rodando o app com dado
-  de verdade) nem a coluna no banco (migration ainda não aplicada).
+- **✅ QA real e migration feitas logo em seguida** (mesma sessão): coluna `recorrente` confirmada no
+  banco (7 tenants + `public`); fluxo de match, seleção de fonte tipo Cota (select de animal + sugestão
+  de quantidade por %) e checkbox Recorrente testados no browser com sessão injetada.
+
+### Fase 8b — correção de layout do cadastro + remoção do flag "Receptora" (2026-08-13)
+
+Dono do produto usou o cadastro de animal recém-promovido e reportou dois problemas.
+
+- **Bug de layout**: no grid de 2 colunas do modal (novo e editar), a célula do checkbox "Castrado"
+  era mais curta que a da célula vizinha "Coberturas por ciclo (padrão)" (label de 2 linhas + input) —
+  como `.form-group` é `display:flex;flex-direction:column` dentro de uma célula de `.form-grid` que
+  estica pra altura da linha (grid `align-items` padrão `stretch`), o checkbox ficava "flutuando" no
+  topo da célula em vez de alinhado com o input ao lado. Corrigido com `justify-content:flex-end` na
+  célula do Castrado (`modal-novo` e ficha de edição), alinhando pela base — mesma altura visual do
+  input vizinho.
+- **Removido o checkbox "Receptora (transferência de embrião)" do cadastro de Animais** (`nreceptora`/
+  `ed-receptora`, ambos os modais). Reavaliação de design: a Fase 4 tratou "receptora" como atributo
+  permanente do animal (`animais.receptora boolean`), mas na prática de uso uma égua pode ser
+  receptora só num ciclo específico — nos demais ciclos pode ser reprodutora normal ou não participar
+  de nada reprodutivo. Não fazia sentido gravar isso como flag fixo no cadastro. Os dois pontos que
+  antes filtravam candidatas por esse flag —
+  `renderPlantelDisponivel()` (seção "Receptoras" do Plantel/Garanhões e Coberturas) e o select
+  `ac-receptora` do modal de acasalamento — passaram a usar a regra de negócio real: **qualquer fêmea
+  "Na Cabanha" com SBB preenchido** é candidata a receptora naquele ciclo, sem pré-marcação nenhuma
+  (SBB continua obrigatório pra ABCCC, só que verificado no momento de oferecer a candidata, não mais
+  no cadastro). `_abrirReceptoraViaSBB()` ("+ Adicionar receptora via SBB") continua existindo como
+  atalho de cadastro rápido, só sem marcar mais flag nenhuma. **Coluna `animais.receptora` no banco
+  não foi removida** — sem migration nesta rodada, o campo só fica morto (sempre `false` a partir de
+  agora, nunca mais lido pra decidir elegibilidade); dado histórico de quem já tinha `true` fica
+  intacto mas sem efeito nenhum na UI.
+- Testado via servidor estático local + `mcp__Claude_Browser__*`: checkbox "Receptora" sumiu dos dois
+  modais; "Castrado" alinha visualmente com o input "Coberturas por ciclo" ao lado; select de
+  Receptora no modal de acasalamento lista só fêmeas "Na Cabanha" com SBB preenchido (égua sem SBB
+  fica de fora, confirmado com dado de teste).

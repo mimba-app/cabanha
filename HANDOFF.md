@@ -279,13 +279,30 @@ cabanhas), mais as abas herdadas da Gestação.
   "Recorrente" que persiste a fonte sozinha pro próximo ciclo — precisa da coluna nova
   `fontes_cobertura.recorrente`. (4d) confirmado que Animais nunca linkou Direito de uso/Cobertura,
   nada mudou aí. Detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 8).
-  **⚠️ Migration pendente de aplicação**: `docs/migrations/2026-08-13-reprodutivo-v4-fase8-garanhoes.sql`
-  (coluna `recorrente`) não foi aplicada nesta sessão — `mcp__supabase__apply_migration` não estava
-  disponível no subagente que fez o trabalho. Aplicar antes de usar o checkbox "Recorrente" em
-  produção/staging real (sem a coluna, o PATCH/POST de `fontes_cobertura` com esse campo vai falhar
-  ou ser ignorado). **Falta também QA visual real** (browser com sessão injetada) — só validação por
-  leitura de código + checagem de sintaxe do `<script>` nesta rodada, a ferramenta de browser não
-  estava disponível no subagente.
+  **✅ Migration aplicada e QA visual feita** logo em seguida (mesma sessão, com acesso ao MCP do
+  Supabase e ao browser tooling): coluna `recorrente` confirmada nos 7 tenants + `public`; fluxo de
+  match testado ponta a ponta (seleção fonte→égua, modal de confirmação sem `tipo_cobertura`, campo
+  Receptora aparecendo só para fonte tipo Embrião, sugestão de quantidade por % de cota, checkbox
+  Recorrente visível só para Direito de uso). **`staging` promovida pra `main`** no mesmo dia (PR #2,
+  merge `fb578da`) — no caminho, um hotfix isolado de `main` (tabela `coberturas` renomeada, nunca
+  chegou na staging) foi incorporado no merge sem perda de nada.
+- **Fase 8b — correção de layout + remoção do flag "Receptora" do cadastro (2026-08-13)**: dono do
+  produto reportou dois problemas no modal de novo/editar animal: (1) os campos "Castrado" e
+  "Coberturas por ciclo (padrão)" ficavam desalinhados verticalmente (grid de 2 colunas — a célula
+  do checkbox "Castrado" era mais curta que a do label+input ao lado, então o checkbox ficava
+  "flutuando" no topo da linha); corrigido com `justify-content:flex-end` na célula do checkbox, pra
+  alinhar pela base com o input vizinho. (2) Reavaliado (e removido) o checkbox "Receptora
+  (transferência de embrião)" do cadastro do animal — decisão original da Fase 4 tratava receptora
+  como atributo permanente do animal, mas na prática uma égua pode ser receptora só num ciclo
+  específico e reprodutora normal (ou nada) nos demais; não faz sentido gravar isso como flag fixo.
+  Removido `animais.receptora` de ambos os modais (novo/editar) e de toda validação de SBB associada;
+  os pontos que antes filtravam candidatas a receptora por esse flag (`renderPlantelDisponivel`,
+  select "Receptora" do modal de acasalamento) passaram a usar a regra real: qualquer fêmea "Na
+  Cabanha" com SBB preenchido é candidata naquele ciclo, sem pré-marcação. Coluna `animais.receptora`
+  no banco não foi removida (sem migration — ficou como campo morto, sempre `false` daqui pra frente,
+  sem risco). Testado via servidor estático local + browser: checkbox some dos dois modais, layout do
+  Castrado alinha com o input ao lado, Plantel/modal de acasalamento listam corretamente só fêmeas com
+  SBB como candidatas a receptora (égua sem SBB fica de fora).
 
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
