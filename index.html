@@ -10374,6 +10374,16 @@ let TENANT_INFO = null;   // cabanha ativa { schema_name, nome_cabanha, perfil }
 
 // ── Helper base — suporta schema por tenant via Accept-Profile ────────────────
 async function _supa(method, table, body=null, query='') {
+  // Achado real (Cabanha Mãe de Deus, 2026-08-19): _garantirTokenValido() só era chamada antes
+  // de invocar a edge function de convite de usuário — todo o resto do app (toda leitura/escrita
+  // via REST, inclusive salvar uma fonte de cobertura nova) usava o AUTH_TOKEN em memória direto,
+  // sem checar validade. Sessão aberta há mais de ~1h sem reload = JWT expirado = todo POST/PATCH
+  // falha com 401 daqui pra frente — e _supa() propositalmente não loga 401 no console (linha
+  // abaixo), então isso falhava 100% em silêncio, sem nenhum aviso na tela. É exatamente o que
+  // causava "tentei com todos os garanhões e deu problema": não era um garanhão específico, era
+  // a sessão inteira sem conseguir mais gravar nada. Renovar aqui, antes de toda chamada, cobre
+  // qualquer call site de uma vez.
+  await _garantirTokenValido();
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
     method,
     headers: {
@@ -10388,7 +10398,11 @@ async function _supa(method, table, body=null, query='') {
   });
   if(!r.ok) {
     const e=await r.text();
-    if(r.status !== 403 && r.status !== 401) console.error('Supabase error',r.status,e);
+    // 401 aqui já passou pela renovação de token acima e mesmo assim falhou — é sessão de
+    // verdade inválida (refresh_token também vencido/revogado), não ruído esperado como o 403
+    // (RLS negando por falta de acesso, situação normal). Vale logar pra não voltar a ficar
+    // invisível como antes.
+    if(r.status !== 403) console.error('Supabase error',r.status,e);
     return null;
   }
   if(method==='GET' || method==='POST') { try{ return await r.json(); }catch(e){ return []; } }
