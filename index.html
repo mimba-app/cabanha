@@ -789,6 +789,13 @@
     <select id="f-sit" onchange="filtrar()"><option value="">Todas situações</option><option value="ativo" selected>Ativos (Cabanha + Empréstimo)</option><option value="NA CABANHA">Na Cabanha</option><option value="EMPRESTIMO">Empréstimo</option><option value="VENDIDO">Vendido(a)</option><option value="TRANSFERIDO">Transferido/Doado</option><option value="MORTO">Morto(a)</option><option value="rascunho">Rascunhos (aguardando SBB)</option></select>
     <select id="f-sexo" onchange="filtrar()"><option value="">Todos sexos</option><option>Fêmea</option><option>Macho</option></select>
     <select id="f-ciclo" onchange="filtrar()"><option value="">Ciclos</option></select>
+    <select id="f-confirm" onchange="filtrar()">
+      <option value="">Confirmação ABCCC</option>
+      <option value="nao_confirmados">Não marcados</option>
+      <option value="em_risco">Em risco</option>
+      <option value="apto_confirmacao">Aptos para confirmação</option>
+      <option value="aguardando_confirmacao">Aguardando confirmação</option>
+    </select>
     <!-- Reprodutivo v4, Fase 7 (spec Menu Animais): grid/swimlane como alternativa à tabela densa —
          toggle, não substituição, pra não tirar quem prefere a lista compacta. -->
     <div style="margin-left:auto;display:flex;gap:4px">
@@ -2561,7 +2568,7 @@
           <label style="white-space:nowrap">Coberturas por ciclo (padrão)</label>
           <input type="number" id="nqtdcob" min="0" step="1" value="120" style="width:80px"></div>
       </div>
-      <div class="form-group"><label>Estágio / atividade</label><select id="nest">
+      <div class="form-group"><label>Estágio / atividade</label><select id="nest" onchange="_toggleCampoPiquete('nest','piquete-wrap-novo')">
         <option value="">— selecione —</option>
         <option value="CAMPO">CAMPO</option>
         <option value="PISTA MORFOLOGIA">PISTA MORFOLOGIA</option>
@@ -3243,13 +3250,20 @@ function renderAnimais(){
     if(fS==='rascunho') return nOk&&isRascunho&&(!fSx||a.sexo===fSx)&&(!fC||a.ciclo===fC);
     if(isRascunho) return false; // rascunhos só aparecem no filtro dedicado
     const sOk=!fS||(fS==='ativo'?isNaCabanha(a):a.situacao===fS);
-    return nOk&&sOk&&(!fSx||a.sexo===fSx)&&(!fC||a.ciclo===fC);
+    let confOk = true;
+    if (fConf) {
+      if (fConf === 'nao_confirmados') confOk = !a.confirmado && a.confirmacao_status !== 'nao_confirmado';
+      else if (fConf === 'em_risco') confOk = _calcStatusConfirmacao(a) === 'em_risco';
+      else if (fConf === 'apto_confirmacao') confOk = _calcStatusConfirmacao(a) === 'apto_confirmacao';
+      else if (fConf === 'aguardando_confirmacao') confOk = a.confirmacao_status === 'aguardando_confirmacao';
+    }
+    return nOk&&sOk&&confOk&&(!fSx||a.sexo===fSx)&&(!fC||a.ciclo===fC);
   });
 
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':_badgeConfirmacao(a)}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${a.rp}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -3276,7 +3290,7 @@ function renderAnimais(){
         ${sitb(a.situacao)}
         ${a.estagio ? estb(a.estagio) : ''}
         ${a.ciclo ? `<span class="badge bgr">${a.ciclo}</span>` : ''}
-        ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
+        ${!a.confirmado && a.confirmacao_status !== 'nao_confirmado' ? _badgeConfirmacao(a) : ''}${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
         ${a.receptora_externa ? '<span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
@@ -3919,8 +3933,68 @@ function abrirLaudo(b64, nome, tipo) {
   const isPdf = tipo==='application/pdf' || nome?.toLowerCase().endsWith('.pdf');
   win.document.write(isPdf
     ? `<html><head><title>${nome||'Laudo'}</title></head><body style="margin:0;background:#333"><iframe src="${b64}" style="width:100%;height:100vh;border:none"></iframe><div id="sync-status" style="display:none;position:fixed;bottom:4rem;right:1rem;padding:8px 16px;border-radius:99px;font-size:12px;font-weight:700;z-index:200"></div>
+
+<div class="modal-bg" id="modal-nao-confirmar">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><span class="modal-title">Não confirmar animal</span><button class="modal-close" onclick="closeModal('modal-nao-confirmar')">×</button></div>
+    <div style="padding:16px">
+      <div style="font-size:13px;margin-bottom:12px">Animal: <strong id="nc-animal-nome"></strong></div>
+      <div class="form-group">
+        <label>Motivo</label>
+        <select id="nc-motivo">
+          <option value="">— selecione —</option>
+          <option value="Medidas insuficientes">Medidas insuficientes</option>
+          <option value="Venda sem confirmação">Venda sem confirmação</option>
+          <option value="Lesão / problema físico">Lesão / problema físico</option>
+          <option value="Decisão estratégica">Decisão estratégica</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Observação (opcional)</label>
+        <input type="text" id="nc-obs" placeholder="Detalhes adicionais...">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Este animal sairá do controle de confirmação ABCCC e não gerará mais alertas.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-nao-confirmar')">Cancelar</button>
+      <button class="btn btn-primary" style="background:var(--red-d);border-color:var(--red-d)" onclick="_confirmarNaoConfirmacao()">Confirmar decisão</button>
+    </div>
+  </div>
+</div>
+
 </body></html>`
-    : `<html><head><title>${nome||'Laudo'}</title><style>body{margin:0;background:#222;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${b64}" alt="${nome||'Laudo'}"></body></html>`
+    : `<html><head><title>${nome||'Laudo'}</title><style>body{margin:0;background:#222;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${b64}" alt="${nome||'Laudo'}">
+<div class="modal-bg" id="modal-nao-confirmar">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><span class="modal-title">Não confirmar animal</span><button class="modal-close" onclick="closeModal('modal-nao-confirmar')">×</button></div>
+    <div style="padding:16px">
+      <div style="font-size:13px;margin-bottom:12px">Animal: <strong id="nc-animal-nome"></strong></div>
+      <div class="form-group">
+        <label>Motivo</label>
+        <select id="nc-motivo">
+          <option value="">— selecione —</option>
+          <option value="Medidas insuficientes">Medidas insuficientes</option>
+          <option value="Venda sem confirmação">Venda sem confirmação</option>
+          <option value="Lesão / problema físico">Lesão / problema físico</option>
+          <option value="Decisão estratégica">Decisão estratégica</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Observação (opcional)</label>
+        <input type="text" id="nc-obs" placeholder="Detalhes adicionais...">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Este animal sairá do controle de confirmação ABCCC e não gerará mais alertas.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-nao-confirmar')">Cancelar</button>
+      <button class="btn btn-primary" style="background:var(--red-d);border-color:var(--red-d)" onclick="_confirmarNaoConfirmacao()">Confirmar decisão</button>
+    </div>
+  </div>
+</div>
+
+</body></html>`
   );
   win.document.close();
 }
@@ -5130,9 +5204,14 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Situação</label>
           <select id="ed-sit" style="width:100%;font-size:12px">${SITS.map(s=>`<option value="${s.v}"${a.situacao===s.v?' selected':''}>${s.l}</option>`).join('')}</select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Estágio</label>
-          <select id="ed-estagio" style="width:100%;font-size:12px">
+          <select id="ed-estagio" style="width:100%;font-size:12px" onchange="_toggleCampoPiquete('ed-estagio','piquete-wrap-edit')">
             <option value="">— selecione —</option>
             ${ETAGS.map(e=>`<option value="${e}"${a.estagio===e?' selected':''}>${e}</option>`).join('')}
+          </select></div>
+        <div class="form-group" id="piquete-wrap-edit" style="display:${['CAMPO','CRIA'].includes(a.estagio)?'':'none'}"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Piquete</label>
+          <select id="ed-piquete" class="select-piquete" style="width:100%;font-size:12px">
+            <option value="">— sem piquete —</option>
+            ${piquetes.filter(p=>p.ativo).map(p=>'<option value="'+p.db_id+'"'+(a.piquete_id===p.db_id?' selected':'')+'>'+p.nome+'</option>').join('')}
           </select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Mãe</label>
           <input id="ed-mae" value="${a.mae||''}" style="width:100%;font-size:12px" placeholder="Nome da mãe"></div>
@@ -5170,7 +5249,7 @@ function _renderDetCorpo(i, editando) {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 18px">
       ${[['RP',a.rp||'—'],['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
          ['Sexo',a.sexo||'—'],['Pelagem',a.pelagem||'—'],['Nascimento',fd(a.nasc)||'—'],['Ciclo',a.ciclo||'—'],
-         ['Situação',sitLabel(a.situacao)],['Estágio',a.estagio||'—'],['Mãe',a.mae||'—'],['Pai',a.pai||'—']]
+         ['Situação',sitLabel(a.situacao)],['Estágio',a.estagio||'—'],['Piquete',_nomePiquete(a.piquete_id)||'—'],['Mãe',a.mae||'—'],['Pai',a.pai||'—']]
         .map(([l,v])=>`<div><div class="ficha-field-label">${l}</div><div class="ficha-field-val${['RP','SBB ABCCC','Nascimento'].includes(l)?' mono':''}">${v}</div></div>`).join('')}
       </div>${a.obs?`<div style="margin-top:12px;font-size:12px;color:var(--text2)">Obs: ${a.obs}</div>`:''}</div>`;
   }
@@ -6086,6 +6165,8 @@ async function salvarAnimal(){
     castrado:document.getElementById('ncastrado').checked,
     qtd_coberturas_padrao:parseInt(document.getElementById('nqtdcob').value||'120'),
     foto_url:document.getElementById('nfoto-b64').value||null,
+    piquete_id:document.getElementById('npiquete')?.value||null,
+    confirmacao_status:'em_desenvolvimento',confirmacao_obs:'',confirmado_em:'',marcacao_rp_em:'',
     ult_vac:'',prox_vac:document.getElementById('npvac').value,
     ult_verm:'',val_exame:document.getElementById('npexame').value,
   });
@@ -7812,6 +7893,7 @@ function renderEvtResultados() {
 
 // ─── GESTAÇÃO ─────────────────────────────────────────────────────────────────
 let fontesCobertura = [];
+let piquetes = []; // {db_id, nome, ativo}
 // Fase 7: negociações de saldo de fonte (venda/doação, dentro da cabanha ou
 // para outra cabanha Mimba). Cross-tenant só via RPC — nunca _supa() direto
 // contra o schema de outra cabanha.
@@ -8423,6 +8505,273 @@ function renderHistoricoNegociacoes() {
   }).join('');
 }
 
+
+// ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
+
+// Percentuais de desenvolvimento por faixa de idade (meses) — curva Crioulo UFPEL
+// Cernelha é mais rápida; tórax e canela seguem curva similar mas mais conservadora
+const _CURVA_CERNELHA = [[0,0.65],[3,0.74],[6,0.82],[9,0.87],[12,0.91],[15,0.94],[18,0.96],[21,0.98],[24,1.0]];
+const _CURVA_TORAX    = [[0,0.60],[3,0.70],[6,0.79],[9,0.85],[12,0.90],[15,0.93],[18,0.95],[21,0.97],[24,1.0]];
+const _CURVA_CANELA   = [[0,0.62],[3,0.72],[6,0.80],[9,0.86],[12,0.90],[15,0.93],[18,0.95],[21,0.97],[24,1.0]];
+
+function _interpolarCurva(curva, meses) {
+  if (meses >= 24) return 1.0;
+  if (meses <= 0)  return curva[0][1];
+  for (let i = 0; i < curva.length - 1; i++) {
+    const [m0, p0] = curva[i], [m1, p1] = curva[i+1];
+    if (meses >= m0 && meses <= m1) {
+      const t = (meses - m0) / (m1 - m0);
+      return p0 + t * (p1 - p0);
+    }
+  }
+  return 1.0;
+}
+
+function _idadeMeses(nasc) {
+  if (!nasc) return null;
+  const n = new Date(nasc + 'T12:00:00'), hoje = new Date();
+  return Math.max(0, (hoje.getFullYear() - n.getFullYear()) * 12 + (hoje.getMonth() - n.getMonth()));
+}
+
+// Retorna projeção adulta de uma medida dado a idade em meses e a curva
+function _projetarMedida(valorAtual, meses, curva) {
+  if (!valorAtual || meses === null) return null;
+  const pct = _interpolarCurva(curva, meses);
+  if (pct <= 0) return null;
+  return Math.round((valorAtual / pct) * 1000) / 1000; // 3 casas
+}
+
+// Calcula status de confirmação automático baseado em medidas e idade
+function _calcStatusConfirmacao(animal) {
+  // Se criador já decidiu manualmente, respeitar
+  const manual = animal.confirmacao_status;
+  if (manual === 'confirmado' || manual === 'nao_confirmado' || manual === 'aguardando_confirmacao') return manual;
+
+  const meses = _idadeMeses(animal.nasc);
+  if (meses === null) return 'em_desenvolvimento';
+
+  const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+  const i = animais.indexOf(animal);
+  const hist = getMedidas(i);
+  const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+
+  if (!ult) return 'em_desenvolvimento';
+
+  // >= 24 meses: verificar se medidas atingidas
+  if (meses >= 24) {
+    const cOk = !ult.cernelha || (ult.cernelha >= pad.cernelha_min && ult.cernelha <= pad.cernelha_max);
+    const tOk = !ult.torax   || ult.torax   >= pad.torax_min;
+    const caN = !ult.canela  || ult.canela  >= pad.canela_min;
+    return (cOk && tOk && caN) ? 'apto_confirmacao' : 'em_risco';
+  }
+
+  // < 24 meses: projeção
+  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _CURVA_CERNELHA) : null;
+  const projT  = ult.torax    ? _projetarMedida(ult.torax,    meses, _CURVA_TORAX)    : null;
+  const projCa = ult.canela   ? _projetarMedida(ult.canela,   meses, _CURVA_CANELA)   : null;
+
+  const emRisco = (projC  !== null && (projC  < pad.cernelha_min || projC  > pad.cernelha_max + 0.02))
+               || (projT  !== null && projT  < pad.torax_min)
+               || (projCa !== null && projCa < pad.canela_min);
+
+  return emRisco ? 'em_risco' : 'em_desenvolvimento';
+}
+
+// Badge HTML do status de confirmação (para grade e lista)
+function _badgeConfirmacao(animal) {
+  if (animal.confirmado) return ''; // já confirmado — usa badge existente
+  const status = _calcStatusConfirmacao(animal);
+  const meses = _idadeMeses(animal.nasc);
+  if (status === 'nao_confirmado') return ''; // sai do controle
+  if (status === 'confirmado') return '';
+  if (status === 'aguardando_confirmacao')
+    return '<span class="badge" style="background:var(--green-d);color:#fff" title="Aguardando confirmação com técnico ABCCC">Confirmação marcada</span>';
+  if (status === 'em_risco')
+    return '<span class="badge" style="background:var(--red-d);color:#fff" title="Projeção indica risco de não atingir medidas mínimas ABCCC">⚠ Em risco</span>';
+  if (status === 'apto_confirmacao')
+    return '<span class="badge" style="background:var(--green-d);color:#fff" title="Medidas atingidas — pronto para confirmação">Apto — confirmar</span>';
+  // em_desenvolvimento
+  const mesesLabel = meses !== null ? ` · ${meses}m` : '';
+  return `<span class="badge ba" title="Em desenvolvimento${mesesLabel}">Em desenv.${mesesLabel}</span>`;
+}
+
+// HTML do painel de projeção de confirmação (usado no card do animal e na aba medidas)
+function _htmlPainelConfirmacao(animal, modoCompacto) {
+  if (animal.confirmado) return '';
+  const status = _calcStatusConfirmacao(animal);
+  if (status === 'nao_confirmado') return '';
+
+  const meses = _idadeMeses(animal.nasc);
+  const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+  const i = animais.indexOf(animal);
+  const hist = getMedidas(i);
+  const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+
+  const corBorda = status === 'em_risco' ? 'var(--red-d)' : status === 'apto_confirmacao' ? 'var(--green-d)' : 'var(--blue-d)';
+  const labelStatus = {
+    'em_desenvolvimento': '📏 Em desenvolvimento',
+    'em_risco': '⚠️ Em risco',
+    'apto_confirmacao': '✓ Apto para confirmação',
+    'aguardando_confirmacao': '📋 Marcado para confirmação',
+  }[status] || status;
+
+  const linhasMedidas = (() => {
+    if (!ult) return '<div style="font-size:12px;color:var(--text3)">Sem medidas registradas. Registre a primeira medida para ver a projeção.</div>';
+    const medidas = [
+      { label:'Cernelha', val:ult.cernelha, min:pad.cernelha_min, max:pad.cernelha_max, curva:_CURVA_CERNELHA },
+      { label:'Tórax',    val:ult.torax,    min:pad.torax_min,    max:null,              curva:_CURVA_TORAX },
+      { label:'Canela',   val:ult.canela,   min:pad.canela_min,   max:null,              curva:_CURVA_CANELA },
+    ];
+    return medidas.filter(m => m.val).map(m => {
+      const proj = meses < 24 ? _projetarMedida(m.val, meses, m.curva) : m.val;
+      const ok   = proj !== null && proj >= m.min && (m.max === null || proj <= m.max + 0.02);
+      const margem = proj !== null ? Math.round((proj - m.min) * 100) / 100 : null;
+      const cor  = ok ? 'var(--green-d)' : 'var(--red-d)';
+      const margemStr = margem !== null ? (margem >= 0 ? `+${margem}m` : `${margem}m`) : '';
+      const limStr = m.max ? `${m.min}–${m.max}m` : `≥${m.min}m`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">${m.label}</span>
+        <span style="font-family:var(--mono)">${m.val}m${meses < 24 ? ` → <b>${proj}m</b>` : ''}</span>
+        <span style="color:${cor};font-weight:700;font-family:var(--mono)">${margemStr} <span style="font-size:10px;font-weight:400">${limStr}</span></span>
+      </div>`;
+    }).join('');
+  })();
+
+  const idxAnimal = animais.indexOf(animal);
+  const botoesAcao = modoCompacto ? '' : `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      ${!animal.marcacao_rp_em ? `<button class="btn btn-sm" onclick="_registrarMarcacaoRP(${idxAnimal})" title="Registrar data da marcação física do RP no animal">📌 Registrar marcação RP</button>` : `<span style="font-size:11px;color:var(--text3)">RP marcado em ${fd(animal.marcacao_rp_em)}</span>`}
+      ${status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : ''}
+      <button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>
+    </div>`;
+
+  return `<div style="border-left:3px solid ${corBorda};padding:10px 12px;margin-top:10px;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:700;color:${corBorda}">CONFIRMAÇÃO ABCCC ${labelStatus}</span>
+      ${meses !== null ? `<span style="font-size:11px;color:var(--text3)">${meses} meses${meses < 24 ? ' · projeção adulta' : ''}</span>` : ''}
+    </div>
+    ${linhasMedidas}
+    ${botoesAcao}
+  </div>`;
+}
+
+async function _registrarMarcacaoRP(i) {
+  const a = animais[i];
+  const data = prompt('Data da marcação RP (AAAA-MM-DD):', new Date().toISOString().slice(0,10));
+  if (!data) return;
+  await _supa('PATCH','animais',{marcacao_rp_em:data},`?id=eq.${a.db_id}`);
+  a.marcacao_rp_em = data;
+  // Registrar como evento na linha do tempo
+  await _supa('POST','eventos',{
+    animal_id: a.db_id,
+    data: data,
+    tipo: 'MARCACAO_RP',
+    descricao: `Marcação RP realizada (RP: ${a.rp||'—'})`,
+    criado_por: usuarioAtual?.id
+  });
+  _renderDetCorpo(i, false);
+  toast('Marcação RP registrada na linha do tempo.');
+}
+
+async function _marcarParaConfirmacao(i) {
+  const a = animais[i];
+  if (!confirm('Marcar este animal para confirmação com técnico ABCCC?')) return;
+  await _supa('PATCH','animais',{confirmacao_status:'aguardando_confirmacao'},`?id=eq.${a.db_id}`);
+  a.confirmacao_status = 'aguardando_confirmacao';
+  _renderDetCorpo(i, false);
+  renderAnimais();
+  toast('Animal marcado para confirmação.');
+}
+
+function _abrirModalNaoConfirmar(i) {
+  const a = animais[i];
+  window._naoConfirmarIdx = i;
+  document.getElementById('nc-animal-nome').textContent = a.nome;
+  document.getElementById('nc-motivo').value = '';
+  document.getElementById('nc-obs').value = '';
+  openModal('modal-nao-confirmar');
+}
+
+async function _confirmarNaoConfirmacao() {
+  const i = window._naoConfirmarIdx;
+  const a = animais[i];
+  const motivo = document.getElementById('nc-motivo').value;
+  const obs    = document.getElementById('nc-obs').value;
+  if (!motivo) { alert('Selecione um motivo.'); return; }
+  const obsCompleta = [motivo, obs].filter(Boolean).join(' — ');
+  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta},`?id=eq.${a.db_id}`);
+  a.confirmacao_status = 'nao_confirmado';
+  a.confirmacao_obs = obsCompleta;
+  closeModal('modal-nao-confirmar');
+  _renderDetCorpo(i, false);
+  renderAnimais();
+  toast('Animal marcado como não confirmado — removido do controle de confirmação.');
+}
+
+// ─── PIQUETES ─────────────────────────────────────────────────────────────────
+
+async function salvarPiquete(nome) {
+  if (!nome?.trim()) return null;
+  const r = await _supa('POST','piquetes',{nome:nome.trim(),ativo:true});
+  if (r && r[0]) {
+    piquetes.push({db_id:r[0].id, nome:r[0].nome, ativo:r[0].ativo});
+    return r[0].id;
+  }
+  return null;
+}
+
+async function renderPiquetes() {
+  const el = document.getElementById('piquetes-lista');
+  if (!el) return;
+  el.innerHTML = piquetes.length
+    ? piquetes.map(p => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="flex:1;font-size:13px">${p.nome}</span>
+        <span class="badge ${p.ativo ? 'bg' : ''}" style="${p.ativo ? '' : 'background:var(--border);color:var(--text3)'}">${p.ativo ? 'Ativo' : 'Inativo'}</span>
+        <button class="btn btn-sm" onclick="_togglePiquete('${p.db_id}','${(p.nome||'').replace(/'/g,"\'")}',${!p.ativo})">${p.ativo ? 'Desativar' : 'Ativar'}</button>
+      </div>`).join('')
+    : '<div style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum piquete cadastrado.</div>';
+}
+
+async function _togglePiquete(id, nome, novoAtivo) {
+  await _supa('PATCH','piquetes',{ativo:novoAtivo},`?id=eq.${id}`);
+  const p = piquetes.find(x => x.db_id === id);
+  if (p) p.ativo = novoAtivo;
+  renderPiquetes();
+}
+
+async function _addPiquete() {
+  const inp = document.getElementById('piquete-novo-nome');
+  const nome = inp?.value?.trim();
+  if (!nome) return;
+  await salvarPiquete(nome);
+  if (inp) inp.value = '';
+  renderPiquetes();
+  // Atualizar selects de piquete nos modais abertos
+  _atualizarSelectPiquetes();
+}
+
+function _atualizarSelectPiquetes() {
+  const opts = '<option value="">— sem piquete —</option>' +
+    piquetes.filter(p => p.ativo).map(p => `<option value="${p.db_id}">${p.nome}</option>`).join('');
+  document.querySelectorAll('.select-piquete').forEach(sel => {
+    const val = sel.value;
+    sel.innerHTML = opts;
+    sel.value = val;
+  });
+}
+
+async function _salvarPiqueteAnimal(i, piqueteId) {
+  const a = animais[i];
+  await _supa('PATCH','animais',{piquete_id: piqueteId || null},`?id=eq.${a.db_id}`);
+  a.piquete_id = piqueteId || null;
+}
+
+function _nomePiquete(id) {
+  if (!id) return '';
+  const p = piquetes.find(x => x.db_id === id);
+  return p ? p.nome : '';
+}
+
 // ─── ACASALAMENTOS (Fase 2 — planejamento + simulação genética básica) ────────
 // Fluxo de status: rascunho -> simulado -> aprovado -> em_curso -> confirmado
 // em_curso: disparado automaticamente ao salvar a 1ª tentativa de um
@@ -8561,27 +8910,93 @@ async function _renderSimulacaoAcasalamento() {
       '</div>'
     : '<div style="font-size:12px;color:var(--text3);margin-bottom:6px">Nenhum cruzamento anterior entre esta égua e este garanhão.</div>';
 
-  // b) Alerta de consanguinidade (raso — compara ancestrais até geração 3)
-  let htmlConsang = '<div class="alert alert-b" style="font-size:12px">Sem dados de linhagem suficientes para verificar consanguinidade.</div>';
-  const sbbEgua = (egua.sbb || '').trim().toUpperCase();
-  const sbbGar  = (fonte.garanhao_sbb || '').trim().toUpperCase();
-  if(sbbEgua && sbbGar) {
-    try {
-      const rows = await _supa('GET', 'sangues_linhagem', null,
-        '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-      const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-      const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
-      if(rEgua && rGar && rEgua.ancestrais_pos && rGar.ancestrais_pos) {
-        const nomesEgua = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
-        const comuns = rGar.ancestrais_pos.filter(x => x.gen <= 3 && x.nome && nomesEgua.has(x.nome));
-        if(comuns.length) {
-          const nomesComuns = [...new Set(comuns.map(x => x.nome))];
-          htmlConsang = `<div class="alert alert-r" style="font-size:12px">⚠️ Possível consanguinidade: ancestral(is) comum(ns) até a 3ª geração — ${nomesComuns.join(', ')}.</div>`;
-        } else {
-          htmlConsang = '<div class="alert alert-g" style="font-size:12px">Sem ancestrais comuns até a 3ª geração nos dados disponíveis.</div>';
+  // b) Consanguinidade — 3 níveis
+  // Nível 1 CRÍTICO: relação de 1º grau (pai/filha, mãe/filho, irmãos completos)
+  // Nível 2 ALERTA: meio-irmãos, avô/neta — via ancestrais gen 1-2
+  // Nível 3 ATENÇÃO: IC estimado > 6,25% via ancestrais comuns gen 3-5
+  let htmlConsang = '<div class="alert alert-b" style="font-size:12px">Sem dados suficientes para verificar consanguinidade.</div>';
+
+  // Nível 1 — detecção direta pelos campos pai/mae (sem consulta extra)
+  const nomeEgua = egua.nome?.toUpperCase() || '';
+  const nomeGar  = (fonte.garanhao_nome || '').toUpperCase();
+  const paiEgua  = (egua.pai || '').toUpperCase();
+  const maeEgua  = (egua.mae || '').toUpperCase();
+
+  // Buscar se garanhão existe nos animais (para pegar pai/mae dele)
+  const animalGar = animais.find(a => a.nome?.toUpperCase() === nomeGar && (a.sexo||'').toLowerCase().includes('macho'));
+  const paiGar = (animalGar?.pai || '').toUpperCase();
+  const maeGar = (animalGar?.mae || '').toUpperCase();
+
+  let nivel1 = null;
+  // Pai/filha: garanhão é pai da égua
+  if (nomeGar && paiEgua && nomeGar === paiEgua)
+    nivel1 = `🚫 CRUZAMENTO PROIBIDO: ${nomeGar} é o pai de ${egua.nome}. Cruzamento pai × filha.`;
+  // Mãe/filho: égua é mãe do garanhão
+  else if (nomeEgua && maeGar && nomeEgua === maeGar)
+    nivel1 = `🚫 CRUZAMENTO PROIBIDO: ${egua.nome} é a mãe de ${nomeGar}. Cruzamento mãe × filho.`;
+  // Irmãos completos: mesmo pai E mesma mãe
+  else if (paiEgua && maeEgua && paiGar && maeGar && paiEgua === paiGar && maeEgua === maeGar)
+    nivel1 = `🚫 CRUZAMENTO CRÍTICO: ${egua.nome} e ${nomeGar} são irmãos completos (mesmo pai e mesma mãe).`;
+
+  if (nivel1) {
+    htmlConsang = `<div class="alert alert-r" style="font-size:12px;font-weight:700;border:2px solid var(--red-d)">${nivel1}<br><span style="font-weight:400">Este cruzamento gera alta consanguinidade e pode comprometer o registro do produto na ABCCC.</span></div>`;
+  } else {
+    // Nível 2 e 3 — via sangues_linhagem
+    const sbbEgua = (egua.sbb || '').trim().toUpperCase();
+    const sbbGar  = (fonte.garanhao_sbb || '').trim().toUpperCase();
+
+    // Verificação de meio-irmãos por campos pai/mae (sem consulta)
+    let nivel2 = null;
+    if (paiEgua && paiGar && paiEgua === paiGar)
+      nivel2 = `⚠️ Meio-irmãos pelo pai: ambos têm ${paiEgua} como pai.`;
+    else if (maeEgua && maeGar && maeEgua === maeGar)
+      nivel2 = `⚠️ Meio-irmãos pela mãe: ambos têm ${maeEgua} como mãe.`;
+
+    if (nivel2) {
+      htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
+    } else if (sbbEgua && sbbGar) {
+      try {
+        const rows = await _supa('GET', 'sangues_linhagem', null,
+          '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
+        const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
+        const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
+        if (rEgua?.ancestrais_pos && rGar?.ancestrais_pos) {
+          // Nível 2: ancestrais comuns nas gerações 1-2
+          const anc2Egua = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
+          const comuns2  = rGar.ancestrais_pos.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
+          // Nível 3: IC estimado via ancestrais comuns gen 3-5
+          // IC ≈ Σ (0.5)^(gen_egua + gen_gar + 1) para cada ancestral comum
+          const anc5Egua = {};
+          rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+            if (!anc5Egua[x.nome]) anc5Egua[x.nome] = x.gen;
+          });
+          let icEstimado = 0;
+          const anc5Gar = rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome);
+          const comunsNomes5 = new Set();
+          anc5Gar.forEach(x => {
+            if (anc5Egua[x.nome] !== undefined) {
+              icEstimado += Math.pow(0.5, anc5Egua[x.nome] + x.gen + 1);
+              comunsNomes5.add(x.nome);
+            }
+          });
+          icEstimado = Math.round(icEstimado * 10000) / 100; // em %
+
+          if (comuns2.length) {
+            const nomes2 = [...new Set(comuns2.map(x => x.nome))];
+            htmlConsang = `<div class="alert alert-r" style="font-size:12px">⚠️ Consanguinidade de 2º grau: ancestral(is) comum(ns) nas 2 primeiras gerações — ${nomes2.join(', ')}.<br><span style="color:var(--text2)">IC estimado: ≈${icEstimado}%. Risco elevado.</span></div>`;
+          } else if (icEstimado > 6.25) {
+            htmlConsang = `<div class="alert alert-y" style="font-size:12px">⚠ Consanguinidade moderada: IC estimado ≈${icEstimado}% (limite recomendado: 6,25%).<br><span style="color:var(--text2)">Ancestrais comuns: ${[...comunsNomes5].slice(0,3).join(', ')}${comunsNomes5.size > 3 ? ` +${comunsNomes5.size-3}` : ''}.</span></div>`;
+          } else if (icEstimado > 0) {
+            htmlConsang = `<div class="alert alert-g" style="font-size:12px">✓ IC estimado: ${icEstimado}% — dentro do limite recomendado (≤6,25%).</div>`;
+          } else {
+            htmlConsang = '<div class="alert alert-g" style="font-size:12px">✓ Sem ancestrais comuns detectados até a 5ª geração.</div>';
+          }
         }
-      }
-    } catch(e) { /* mantém mensagem neutra */ }
+      } catch(e) { /* mantém mensagem neutra */ }
+    } else if (!nivel2) {
+      // Sem SBB — verificar pelo menos os campos locais
+      htmlConsang = '<div class="alert alert-b" style="font-size:12px">SBB do garanhão não cadastrado — análise de consanguinidade limitada aos dados locais. Sem parentesco direto detectado.</div>';
+    }
   }
 
   // c) Saldo da fonte (real — Fase 3: consumido = acasalamentos confirmados)
@@ -10344,6 +10759,7 @@ Esta ação não pode ser desfeita.`)) return;
 // O card só mostra info (avatar/nome/perfil); "Sair" é um link direto e os
 // três-pontinhos (⋮) abrem a Tela de Conta — sem menu intermediário.
 function abrirTelaConta() {
+  renderPiquetes();
   document.getElementById('conta-nome-exibicao').value = TENANT_INFO?.nome_exibicao || TENANT_INFO?.nome_cabanha || '';
   const logoImg = document.getElementById('conta-logo-preview');
   const logoPh  = document.getElementById('conta-logo-placeholder');
@@ -11456,7 +11872,12 @@ async function _sincronizarAoLogin() {
         receptora_externa: !!a.receptora_externa,
         foto_url: a.foto_url || null,
         status_cadastro: a.status_cadastro || 'ativo',
-        ativo: a.ativo
+        ativo: a.ativo,
+        confirmacao_status: a.confirmacao_status || 'em_desenvolvimento',
+        confirmacao_obs: a.confirmacao_obs || '',
+        confirmado_em: a.confirmado_em || '',
+        marcacao_rp_em: a.marcacao_rp_em || '',
+        piquete_id: a.piquete_id || null
       }));
     }
 
@@ -11465,6 +11886,13 @@ async function _sincronizarAoLogin() {
           dbEst = bootstrap.estoque_itens, dbMov = bootstrap.estoque_movimentos,
           dbLanc = bootstrap.lancamentos, dbPend = bootstrap.pendencias,
           dbUsr = usuarioAtual?.perfil === 'adm' ? bootstrap.usuarios : null;
+
+    // 1b. Piquetes
+    try {
+      const dbPiq = await _supa('GET','piquetes',null,'?order=nome');
+      piquetes.length = 0;
+      (dbPiq||[]).forEach(p => piquetes.push({db_id:p.id, nome:p.nome, ativo:p.ativo}));
+    } catch(e) { /* piquetes não críticos */ }
 
     // 2. Vacinações por animal
     if(dbVac) {
@@ -11851,6 +12279,11 @@ async function _dbSalvarAnimal(a, idx) {
     receptora_externa: !!a.receptora_externa,
     foto_url: a.foto_url || null,
     status_cadastro: a.status_cadastro || 'ativo',
+    piquete_id: a.piquete_id || null,
+    confirmacao_status: a.confirmacao_status || 'em_desenvolvimento',
+    confirmacao_obs: a.confirmacao_obs || null,
+    confirmado_em: a.confirmado_em || null,
+    marcacao_rp_em: a.marcacao_rp_em || null,
     criado_por: usuarioAtual?.db_id || null
   };
   if(a.db_id) {
@@ -13118,5 +13551,35 @@ if(!_checkRecovery()){
 
 </script>
 <div id="sync-status" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+
+<div class="modal-bg" id="modal-nao-confirmar">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><span class="modal-title">Não confirmar animal</span><button class="modal-close" onclick="closeModal('modal-nao-confirmar')">×</button></div>
+    <div style="padding:16px">
+      <div style="font-size:13px;margin-bottom:12px">Animal: <strong id="nc-animal-nome"></strong></div>
+      <div class="form-group">
+        <label>Motivo</label>
+        <select id="nc-motivo">
+          <option value="">— selecione —</option>
+          <option value="Medidas insuficientes">Medidas insuficientes</option>
+          <option value="Venda sem confirmação">Venda sem confirmação</option>
+          <option value="Lesão / problema físico">Lesão / problema físico</option>
+          <option value="Decisão estratégica">Decisão estratégica</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Observação (opcional)</label>
+        <input type="text" id="nc-obs" placeholder="Detalhes adicionais...">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Este animal sairá do controle de confirmação ABCCC e não gerará mais alertas.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-nao-confirmar')">Cancelar</button>
+      <button class="btn btn-primary" style="background:var(--red-d);border-color:var(--red-d)" onclick="_confirmarNaoConfirmacao()">Confirmar decisão</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
