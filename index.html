@@ -3223,8 +3223,8 @@ function abrirAbccc(sbb) {
 function brl(v){return'R$ '+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2});}
 
 // ─── FILTROS ──────────────────────────────────────────────────────────────────
-let fB='',fS='ativo',fSx='',fC='';
-function filtrar(){fB=document.getElementById('busca').value.toLowerCase();fS=document.getElementById('f-sit').value;fSx=document.getElementById('f-sexo').value;fC=document.getElementById('f-ciclo').value;renderAnimais();}
+let fB='',fS='ativo',fSx='',fC='',fConf='';
+function filtrar(){fB=document.getElementById('busca').value.toLowerCase();fS=document.getElementById('f-sit').value;fSx=document.getElementById('f-sexo').value;fC=document.getElementById('f-ciclo').value;fConf=document.getElementById('f-confirm')?.value||'';renderAnimais();}
 
 // ─── RENDER ANIMAIS ───────────────────────────────────────────────────────────
 // Reprodutivo v4, Fase 7 (spec Menu Animais): grid/swimlane como visão padrão, tabela densa como
