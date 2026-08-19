@@ -9217,7 +9217,7 @@ async function _renderSimulacaoAcasalamento() {
   }
 
   // c) Saldo da fonte (real — Fase 3: consumido = acasalamentos confirmados)
-  const {disponivel, total} = _saldoFonteCobertura(fonte);
+  const {disponivel, total, reservado} = _saldoFonteCobertura(fonte);
   const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível${reservado > 0 ? " (" + reservado + " reservada(s) em acasalamentos ativos)" : ""}</div>`;
 
   el.innerHTML = '<div class="card">' + htmlAnteriores + htmlConsang + htmlSaldo + '</div>';
