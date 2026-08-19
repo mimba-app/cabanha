@@ -5346,7 +5346,8 @@ function _renderDetCorpo(i, editando) {
     </div>
     ${!hm.length ? '<div class="nut-empty">Nenhuma medição registrada.</div>' : `
       <div style="display:flex;gap:3px;background:var(--bg3);border-radius:var(--radius);padding:2px;margin-bottom:10px;width:fit-content" id="${toggleId}">
-        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','cernelha',${i})" class="btn-med-toggle btn-med-active" data-k="cernelha" style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:var(--green-d);color:var(--bg);cursor:pointer;font-family:var(--font)">Cernelha</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','todos',${i})"    class="btn-med-toggle" data-k="todos"    style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Todas</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','cernelha',${i})" class="btn-med-toggle" data-k="cernelha" style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Cernelha</button>
         <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','torax',${i})"    class="btn-med-toggle" data-k="torax"    style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Tórax</button>
         <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','canela',${i})"   class="btn-med-toggle" data-k="canela"   style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Canela</button>
         <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','peso',${i})"     class="btn-med-toggle" data-k="peso"     style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Peso</button>
@@ -5753,7 +5754,7 @@ function renderPlanejadorReprodutivo() {
 
   const cardOutraFonte = (f) => {
     const fIdx = fontesCobertura.indexOf(f);
-    const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
+    const { disponivel, total, pct, usado, reservado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
     const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
@@ -5793,7 +5794,7 @@ function renderPlanejadorReprodutivo() {
     const f = fontesCobertura[fIdx];
     const padrao = a.qtd_coberturas_padrao || 120;
 
-    const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
+    const { disponivel, total, pct, usado, reservado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
     const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
@@ -8266,7 +8267,7 @@ function renderFontesCobertura() {
   el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">' +
     lista.map(f => {
       const i = fontesCobertura.indexOf(f);
-      const {disponivel, total, pct, estourado, excedente} = _saldoFonteCobertura(f);
+      const {reservado, disponivel, total, pct, estourado, excedente} = _saldoFonteCobertura(f);
       const statusCor = estourado ? 'var(--red-d)' : f.status === 'ativa' ? 'var(--green)' : f.status === 'esgotada' ? 'var(--red-d)' : 'var(--text3)';
       const statusBadge = f.status === 'ativa' ? 'bg' : f.status === 'esgotada' ? 'br' : 'ba';
       const opacidade = f.status === 'cancelada' ? 'opacity:0.55' : '';
@@ -8571,6 +8572,7 @@ function renderHistoricoNegociacoes() {
 const _medCharts = {};
 
 function _medChartSel(chartId, legendId, toggleId, medida, animalIdx) {
+  // Atualizar botões toggle
   const wrap = document.getElementById(toggleId);
   if (wrap) wrap.querySelectorAll('.btn-med-toggle').forEach(b => {
     const isAtivo = b.dataset.k === medida;
@@ -8583,84 +8585,118 @@ function _medChartSel(chartId, legendId, toggleId, medida, animalIdx) {
 function _medChartDraw(chartId, legendId, medida, animalIdx) {
   const a   = animais[animalIdx];
   const hm  = getMedidas(animalIdx).slice().sort((x,y) => x.data.localeCompare(y.data));
+  if (!hm.length) return;
   const pad = (a.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
-  const cfg = {
-    cernelha: { key:'cernelha', label:'Cernelha', unit:'m', min:pad.cernelha_min, max:pad.cernelha_max, dec:3 },
-    torax:    { key:'torax',    label:'Tórax',    unit:'m', min:pad.torax_min,    max:null,              dec:3 },
-    canela:   { key:'canela',   label:'Canela',   unit:'m', min:pad.canela_min,   max:null,              dec:3 },
-    peso:     { key:'peso',     label:'Peso',     unit:'kg',min:null,             max:null,              dec:0 },
-  }[medida];
+
+  const cs = getComputedStyle(document.documentElement);
+  const clrGreen  = cs.getPropertyValue('--green').trim()  || '#4caf50';
+  const clrGreenD = cs.getPropertyValue('--green-d').trim() || '#2e7d32';
+  const clrRed    = cs.getPropertyValue('--red').trim()    || '#e53935';
+  const clrBlue   = cs.getPropertyValue('--blue').trim()   || '#1976d2';
+  const clrAmber  = cs.getPropertyValue('--amber').trim()  || '#f59e0b';
+  const clrText3  = cs.getPropertyValue('--text3').trim()  || '#888';
+
+  const CFGS = {
+    cernelha: { key:'cernelha', label:'Cernelha', unit:'m', min:pad.cernelha_min, max:pad.cernelha_max, dec:3, cor:clrBlue },
+    torax:    { key:'torax',    label:'Tórax',    unit:'m', min:pad.torax_min,    max:null,              dec:3, cor:clrGreenD },
+    canela:   { key:'canela',   label:'Canela',   unit:'m', min:pad.canela_min,   max:null,              dec:3, cor:clrAmber },
+    peso:     { key:'peso',     label:'Peso',     unit:'kg',min:null,             max:null,              dec:0, cor:'#9e9e9e' },
+  };
+
+  if (_medCharts[chartId]) { _medCharts[chartId].destroy(); delete _medCharts[chartId]; }
+  const canvas = document.getElementById(chartId);
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  // Visão combinada: mostrar todas as medidas métricas juntas (exceto peso)
+  if (medida === 'todos') {
+    const labels = [...new Set(hm.filter(m => m.cernelha||m.torax||m.canela).map(m => fd(m.data)))];
+    const datasets = [];
+    ['cernelha','torax','canela'].forEach(k => {
+      const cfg = CFGS[k];
+      const pts = hm.filter(m => m[k]);
+      if (!pts.length) return;
+      const ptVals = pts.map(m => m[k]);
+      const ptLabels = pts.map(m => fd(m.data));
+      datasets.push({
+        label: cfg.label + ' (m)',
+        data: labels.map(l => { const i = ptLabels.indexOf(l); return i >= 0 ? ptVals[i] : null; }),
+        borderColor: cfg.cor, borderWidth: 2,
+        pointBackgroundColor: ptVals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor),
+        pointBorderColor: ptVals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor),
+        pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: false, spanGaps: false,
+      });
+    });
+    const allVals = ['cernelha','torax','canela'].flatMap(k => hm.filter(m=>m[k]).map(m=>m[k]));
+    const yMin = allVals.length ? Math.min(...allVals) * 0.975 : 0;
+    const yMax = allVals.length ? Math.max(...allVals) * 1.025 : 2;
+    _medCharts[chartId] = new Chart(canvas, {
+      type:'line', data:{labels, datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx => ctx.parsed.y != null ? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(3)+'m' : null}}},
+        scales:{
+          y:{min:yMin,max:yMax,grid:{color:'rgba(128,128,128,0.08)'},ticks:{font:{size:10},color:clrText3,callback:v=>v.toFixed(3)+'m'}},
+          x:{grid:{display:false},ticks:{font:{size:10},color:clrText3}}
+        }
+      }
+    });
+    const legEl = document.getElementById(legendId);
+    if (legEl) legEl.innerHTML = datasets.map(ds =>
+      `<span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:3px;background:${ds.borderColor};border-radius:2px;display:inline-block;vertical-align:middle"></span><span style="color:var(--text3)">${ds.label}</span></span>`
+    ).join('');
+    return;
+  }
+
+  // Visão individual
+  const cfg = CFGS[medida];
+  if (!cfg) return;
   const pts = hm.filter(m => m[cfg.key]);
   if (!pts.length) return;
   const vals   = pts.map(m => m[cfg.key]);
   const labels = pts.map(m => fd(m.data));
-  const cs = getComputedStyle(document.documentElement);
-  const clrGreen  = cs.getPropertyValue('--green').trim();
-  const clrGreenD = cs.getPropertyValue('--green-d').trim();
-  const clrRed    = cs.getPropertyValue('--red').trim();
-  const clrBlue   = cs.getPropertyValue('--blue').trim();
-  const clrText3  = cs.getPropertyValue('--text3').trim();
-  const resolvedPtCor = vals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : clrBlue);
+  const ptCor  = vals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor);
   const datasets = [{
     label: cfg.label, data: vals,
-    borderColor: cfg.min ? clrGreenD : clrBlue,
-    borderWidth: 2,
-    pointBackgroundColor: resolvedPtCor,
-    pointBorderColor: resolvedPtCor,
-    pointRadius: 5, pointHoverRadius: 7,
-    tension: 0.35, fill: false, order: 1,
+    borderColor: cfg.min ? clrGreenD : cfg.cor,
+    borderWidth: 2, pointBackgroundColor: ptCor, pointBorderColor: ptCor,
+    pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: false, order: 1,
   }];
   if (cfg.min) datasets.push({
-    label: 'Min. ' + cfg.min + cfg.unit,
-    data: labels.map(() => cfg.min),
-    borderColor: clrRed, borderWidth: 1.5, borderDash: [5,4],
-    pointRadius: 0, fill: false, tension: 0, order: 2,
+    label:'Mín. '+cfg.min+cfg.unit, data:labels.map(()=>cfg.min),
+    borderColor:clrRed, borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0, order:2,
   });
   if (cfg.max) datasets.push({
-    label: 'Max. ' + cfg.max + cfg.unit,
-    data: labels.map(() => cfg.max),
-    borderColor: clrText3, borderWidth: 1, borderDash: [3,4],
-    pointRadius: 0, fill: false, tension: 0, order: 3,
+    label:'Máx. '+cfg.max+cfg.unit, data:labels.map(()=>cfg.max),
+    borderColor:clrText3, borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false, tension:0, order:3,
   });
-  const allVals = [...vals, cfg.min, cfg.max].filter(v => v != null);
+  const allVals = [...vals, cfg.min, cfg.max].filter(v=>v!=null);
   const yMin = Math.min(...allVals) * (cfg.unit==='kg' ? 0.90 : 0.978);
   const yMax = Math.max(...allVals) * (cfg.unit==='kg' ? 1.05 : 1.015);
-  if (_medCharts[chartId]) { _medCharts[chartId].destroy(); delete _medCharts[chartId]; }
-  const canvas = document.getElementById(chartId);
-  if (!canvas || typeof Chart === 'undefined') return;
   _medCharts[chartId] = new Chart(canvas, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => {
-          if (ctx.datasetIndex > 0) return null;
-          const v = ctx.parsed.y;
-          const ok = cfg.min ? (v >= cfg.min ? ' ok' : ' abaixo do minimo') : '';
-          return ' ' + cfg.label + ': ' + v.toFixed(cfg.dec) + cfg.unit + ok;
-        }}}
-      },
-      scales: {
-        y: { min: yMin, max: yMax,
-          grid: { color: 'rgba(128,128,128,0.08)' },
-          ticks: { font: { size: 10 }, color: clrText3, callback: v => v.toFixed(cfg.dec) + cfg.unit }
-        },
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: clrText3 } }
+    type:'line', data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        if(ctx.datasetIndex>0)return null;
+        const v=ctx.parsed.y;
+        const ok=cfg.min?(v>=cfg.min?' ok':' abaixo do minimo'):'';
+        return ' '+cfg.label+': '+v.toFixed(cfg.dec)+cfg.unit+ok;
+      }}}},
+      scales:{
+        y:{min:yMin,max:yMax,grid:{color:'rgba(128,128,128,0.08)'},ticks:{font:{size:10},color:clrText3,callback:v=>v.toFixed(cfg.dec)+cfg.unit}},
+        x:{grid:{display:false},ticks:{font:{size:10},color:clrText3}}
       }
     }
   });
   const legEl = document.getElementById(legendId);
-  if (legEl) {
-    legEl.innerHTML = datasets.map(ds => {
-      const style = ds.borderDash
-        ? 'width:20px;height:0;border-top:2px dashed '+ds.borderColor+';display:inline-block;vertical-align:middle'
-        : 'width:20px;height:3px;background:'+ds.borderColor+';border-radius:2px;display:inline-block;vertical-align:middle';
-      return '<span style="display:flex;align-items:center;gap:5px"><span style="'+style+'"></span><span style="color:var(--text3)">'+ds.label+'</span></span>';
-    }).join('');
-  }
+  if (legEl) legEl.innerHTML = datasets.map(ds => {
+    const style = ds.borderDash
+      ? 'width:20px;height:0;border-top:2px dashed '+ds.borderColor+';display:inline-block;vertical-align:middle'
+      : 'width:20px;height:3px;background:'+ds.borderColor+';border-radius:2px;display:inline-block;vertical-align:middle';
+    return '<span style="display:flex;align-items:center;gap:5px"><span style="'+style+'"></span><span style="color:var(--text3)">'+ds.label+'</span></span>';
+  }).join('');
 }
 
 function _initMedChart(animalIdx) {
@@ -8668,10 +8704,13 @@ function _initMedChart(animalIdx) {
   if (!a) return;
   const chartId  = 'med-chart-'  + a.db_id;
   const legendId = 'med-legend-' + a.db_id;
+  const toggleId = 'med-toggle-' + a.db_id;
   const hm = getMedidas(animalIdx);
   if (!hm.length) return;
-  const primeira = ['cernelha','torax','canela','peso'].find(k => hm.some(m => m[k])) || 'cernelha';
-  _medChartDraw(chartId, legendId, primeira, animalIdx);
+  // Iniciar na visão combinada se houver mais de uma medida métrica
+  const temC = hm.some(m=>m.cernelha), temT = hm.some(m=>m.torax), temCa = hm.some(m=>m.canela);
+  const inicial = (temC && (temT || temCa)) ? 'todos' : (['cernelha','torax','canela','peso'].find(k=>hm.some(m=>m[k]))||'cernelha');
+  _medChartSel(chartId, legendId, toggleId, inicial, animalIdx);
 }
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
