@@ -1066,7 +1066,7 @@
   <div class="page-header">
     <div><div class="page-title">Reprodutivo</div><div class="page-sub">Planejamento por ciclo reprodutivo · acasalamentos, gestações e plantel</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="abrirModalFonteCobertura()">+ Nova fonte</button>
+      <button class="btn btn-primary" onclick="abrirModalFonteCobertura()">+ Nova cota / cobertura</button>
       <button class="btn btn-primary" onclick="switchTab(document.getElementById('tab-btn-acasalamentos'),'gest-acasalamentos')">+ Novo acasalamento</button>
       <button class="btn btn-primary" onclick="abrirModalProtocolo()">+ Novo protocolo</button>
     </div>
@@ -2671,18 +2671,13 @@
         <input type="text" id="fc-garanhao-sbb" placeholder="Código SBB" onblur="_buscarAbcccParaFonte()" oninput="this.value=this.value.toUpperCase()">
         <div id="fc-abccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
       </div>
-      <div class="form-group" id="fc-grp-rm"><label>&nbsp;</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
-          <input type="checkbox" id="fc-tem-rm" style="width:auto"> Reserva de material (RM)
-        </label>
-      </div>
       <div class="form-group" id="fc-grp-recorrente" style="display:none"><label>&nbsp;</label>
         <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
           <input type="checkbox" id="fc-recorrente" style="width:auto"> Recorrente — repete automaticamente no próximo ciclo
         </label>
       </div>
       <div class="form-group"><label>Quantidade disponível</label><input type="number" id="fc-qtd" min="1" step="1" placeholder="ex: 5"></div>
-      <div class="form-group"><label>Ciclo</label><input type="text" id="fc-ciclo" placeholder="ex: 26/27"></div>
+      <div class="form-group"><label>Ciclo</label><select id="fc-ciclo" onchange="_fcCicloChange()"></select></div>
       <div class="form-group" id="fc-grp-vig-ini"><label>Vigência início</label><input type="date" id="fc-vig-ini"></div>
       <div class="form-group" id="fc-grp-vig-fim"><label>Vigência fim</label><input type="date" id="fc-vig-fim"></div>
       <div class="form-group" id="fc-grp-cota-prop"><label>Proprietário da cota</label><input type="text" id="fc-cota-prop" placeholder="Nome do proprietário"></div>
@@ -5525,7 +5520,7 @@ function renderPlanejadorReprodutivo() {
     }
     const novaFonte = {
       tipo: 'proprio', garanhao_nome: a.nome, garanhao_sbb: a.sbb || '',
-      tem_rm: false, demerito: false,
+      demerito: false,
       quantidade_adquirida: a.qtd_coberturas_padrao || 120,
       ciclo, vigencia_inicio: '', vigencia_fim: '',
       proprietario_cota: '', percentual_cota: '', valor_cobertura: '',
@@ -5561,7 +5556,6 @@ function renderPlanejadorReprodutivo() {
             <input type="number" id="fc-inline-qtd-${fIdx}" value="${f.quantidade_adquirida}" min="0" max="${padrao}" step="1" style="width:64px">
           </label>
           <button class="btn btn-sm" onclick="_ajustarSaldoCicloProprio(${fIdx},'fc-inline-qtd-${fIdx}')">Salvar</button>
-          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-rm-${fIdx}" style="width:auto" ${f.tem_rm ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'tem_rm',this.checked)"> RM</label>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px">Máx. ${padrao} — padrão do cadastro do animal. Pra aumentar, edite o padrão em Animais.</div>
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -5584,14 +5578,6 @@ function _ajustarSaldoCicloProprio(fIdx, inputId) {
   _dbSalvarFonteCobertura(f, fIdx);
   renderPlanejadorReprodutivo();
   _mostrarStatusSync('✅ Saldo do ciclo atualizado', 'green');
-}
-
-function _ajustarFlagFonteCobertura(fIdx, campo, valor) {
-  const f = fontesCobertura[fIdx];
-  if (!f) return;
-  f[campo] = valor;
-  _dbSalvarFonteCobertura(f, fIdx);
-  renderPlanejadorReprodutivo();
 }
 
 // Reprodutivo v4, Fase 4 (spec 3.2): aba nova, separada, escopada pelo mesmo ciclo selecionado no
@@ -7610,7 +7596,6 @@ const FC_STATUS_LABEL = {ativa:'Ativa', vencida:'Vencida', esgotada:'Esgotada', 
 
 function _toggleCamposFonteCobertura() {
   const tipo = document.getElementById('fc-tipo').value;
-  const grpRm     = document.getElementById('fc-grp-rm');
   const grpVigIni = document.getElementById('fc-grp-vig-ini');
   const grpVigFim = document.getElementById('fc-grp-vig-fim');
   const grpProp   = document.getElementById('fc-grp-cota-prop');
@@ -7618,7 +7603,6 @@ function _toggleCamposFonteCobertura() {
   const grpNomeLivre = document.getElementById('fc-grp-garanhao-nome');
   const grpAnimal = document.getElementById('fc-grp-garanhao-animal');
   const grpRecorrente = document.getElementById('fc-grp-recorrente');
-  grpRm.style.display = tipo === 'proprio' ? '' : 'none';
   grpVigIni.style.display = tipo === 'proprio' ? 'none' : '';
   grpVigFim.style.display = tipo === 'proprio' ? 'none' : '';
   grpProp.style.display = tipo === 'cota' ? '' : 'none';
@@ -7660,23 +7644,54 @@ function _fcSugerirQtdPorCota() {
   document.getElementById('fc-qtd').value = sugestao;
 }
 
+// Ciclo reprodutivo sempre 01/07 a 30/06 do ano seguinte (regra ABCCC) — a partir do texto
+// "26/27" dá pra derivar as datas de vigência direto, sem depender do usuário digitar certo.
+function _cicloVigenciaDatas(cicloTexto) {
+  const m = /^(\d{2})\/(\d{2})$/.exec(cicloTexto || '');
+  if (!m) return { inicio: '', fim: '' };
+  const anoIni = 2000 + parseInt(m[1], 10);
+  const anoFim = 2000 + parseInt(m[2], 10);
+  return { inicio: `${anoIni}-07-01`, fim: `${anoFim}-06-30` };
+}
+
+// Select de Ciclo (nunca mais texto livre): sempre ciclo atual + próximo — únicos ciclos que
+// fazem sentido pra planejar. Se o valor sendo editado for de um ciclo mais antigo (fonte
+// histórica), inclui ele também pra não perder a informação ao abrir pra editar.
+function _fcPopularSelectCiclo(valorSelecionado) {
+  const sel = document.getElementById('fc-ciclo');
+  if (!sel) return;
+  const atual = _cicloAtualTexto(), proximo = _cicloProximoTexto();
+  const opcoes = [atual, proximo];
+  if (valorSelecionado && !opcoes.includes(valorSelecionado)) opcoes.unshift(valorSelecionado);
+  sel.innerHTML = opcoes.map(c => `<option value="${c}">${c}${c === atual ? ' (ciclo atual)' : c === proximo ? ' (próximo ciclo)' : ''}</option>`).join('');
+  sel.value = valorSelecionado || window._cicloPlanejador || atual;
+}
+
+// Ao trocar o ciclo, pré-preenche a vigência com as datas reais do ciclo (01/07 a 30/06) —
+// nunca fica sem data por padrão; o usuário ainda pode ajustar se a vigência real for diferente.
+function _fcCicloChange() {
+  const { inicio, fim } = _cicloVigenciaDatas(document.getElementById('fc-ciclo').value);
+  const vigIniEl = document.getElementById('fc-vig-ini');
+  const vigFimEl = document.getElementById('fc-vig-fim');
+  if (vigIniEl) vigIniEl.value = inicio;
+  if (vigFimEl) vigFimEl.value = fim;
+}
+
 function abrirModalFonteCobertura() {
   document.getElementById('fc-titulo').textContent = 'Nova fonte de cobertura';
   document.getElementById('fc-edit-idx').value = '-1';
   // Reprodutivo v4, Fase 2 (spec 3.3): "Próprio" nasce automático no Planejador — este modal (botão
-  // "+ Nova fonte" do topo) agora é pra Cota/Direito de uso/Cobertura, sempre já dentro do ciclo
-  // selecionado no planejador (nunca solto, sem ciclo).
+  // "+ Nova cota / cobertura" do topo) agora é pra Cota/Direito de uso/Cobertura, sempre já dentro
+  // do ciclo selecionado no planejador (nunca solto, sem ciclo).
   document.getElementById('fc-tipo').value = 'cota';
   document.getElementById('fc-garanhao-nome').value = '';
   document.getElementById('fc-garanhao-sbb').value = '';
   document.getElementById('fc-garanhao-animal').value = '';
   document.getElementById('fc-abccc-status').style.display = 'none';
-  document.getElementById('fc-tem-rm').checked = false;
   document.getElementById('fc-recorrente').checked = false;
   document.getElementById('fc-qtd').value = '';
-  document.getElementById('fc-ciclo').value = window._cicloPlanejador || _cicloAtualTexto();
-  document.getElementById('fc-vig-ini').value = '';
-  document.getElementById('fc-vig-fim').value = '';
+  _fcPopularSelectCiclo(window._cicloPlanejador || _cicloAtualTexto());
+  _fcCicloChange();
   document.getElementById('fc-cota-prop').value = '';
   document.getElementById('fc-cota-pct').value = '';
   document.getElementById('fc-valor').value = '';
@@ -7694,10 +7709,9 @@ function editFonteCobertura(i) {
   document.getElementById('fc-garanhao-nome').value = f.garanhao_nome || '';
   document.getElementById('fc-garanhao-sbb').value = f.garanhao_sbb || '';
   document.getElementById('fc-abccc-status').style.display = 'none';
-  document.getElementById('fc-tem-rm').checked = !!f.tem_rm;
   document.getElementById('fc-recorrente').checked = !!f.recorrente;
   document.getElementById('fc-qtd').value = f.quantidade_adquirida ?? '';
-  document.getElementById('fc-ciclo').value = f.ciclo || '';
+  _fcPopularSelectCiclo(f.ciclo || '');
   document.getElementById('fc-vig-ini').value = f.vigencia_inicio || '';
   document.getElementById('fc-vig-fim').value = f.vigencia_fim || '';
   document.getElementById('fc-cota-prop').value = f.proprietario_cota || '';
@@ -7741,7 +7755,6 @@ function salvarFonteCobertura() {
     tipo,
     garanhao_nome,
     garanhao_sbb: document.getElementById('fc-garanhao-sbb').value.trim() || '',
-    tem_rm: tipo === 'proprio' ? document.getElementById('fc-tem-rm').checked : false,
     quantidade_adquirida,
     ciclo,
     vigencia_inicio: tipo !== 'proprio' ? vigencia_inicio : '',
@@ -7833,7 +7846,7 @@ function renderFontesCobertura() {
   const lista = fontesCobertura.filter(f => (!fCiclo || f.ciclo === fCiclo) && (!fStatus || f.status === fStatus));
 
   if(lista.length === 0) {
-    el.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma fonte de cobertura cadastrada. Clique em "+ Nova fonte".</div>';
+    el.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma fonte de cobertura cadastrada. Clique em "+ Nova cota / cobertura".</div>';
     return;
   }
 
@@ -7849,7 +7862,6 @@ function renderFontesCobertura() {
           <div>
             <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">
               ${f.garanhao_nome}
-              ${f.tem_rm ? '<span class="badge ba" style="font-size:9px">RM</span>' : ''}
             </div>
             <div style="font-size:11px;color:var(--text2);margin-top:2px">
               ${f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : ''}Ciclo ${f.ciclo}
