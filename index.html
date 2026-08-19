@@ -3963,6 +3963,7 @@ function abrirLaudo(b64, nome, tipo) {
   </div>
 </div>
 
+
 </body></html>`
     : `<html><head><title>${nome||'Laudo'}</title><style>body{margin:0;background:#222;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${b64}" alt="${nome||'Laudo'}">
 <div class="modal-bg" id="modal-nao-confirmar">
@@ -3993,6 +3994,7 @@ function abrirLaudo(b64, nome, tipo) {
     </div>
   </div>
 </div>
+
 
 </body></html>`
   );
@@ -5289,21 +5291,73 @@ function _renderDetCorpo(i, editando) {
   // ── MEDIDAS ───────────────────────────────────────────────────────
   const hm=getMedidas(i);
   const pad=a.sexo?.toLowerCase().includes('macho')?PADRÃO_ABCCC.macho:PADRÃO_ABCCC.femea;
-  const S4=`<div class="ficha-section"><div class="ficha-section-title">${_iconRegua(14)} Medidas Biométricas
-    <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalMedida(${i})">+ Medir</button></div>
-    <div style="font-size:10px;color:var(--blue-d);margin-bottom:6px">Padrão ABCCC: cernelha ${pad.cernelha_min}–${pad.cernelha_max}m · tórax ≥${pad.torax_min}m · canela ≥${pad.canela_min}m</div>
-    ${!hm.length?'<div class="nut-empty">Nenhuma medição registrada.</div>'
-    :hm.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(m=>{
-      const stC=checaMedida(m.cernelha,pad.cernelha_min,pad.cernelha_max),stT=checaMedida(m.torax,pad.torax_min,null),stCan=checaMedida(m.canela,pad.canela_min,null);
-      return`<div class="med-card"><div class="med-card-date"><span style="font-family:var(--mono)">${fd(m.data)}</span> · <span class="badge bgr">${m.contexto||'Rotina'}</span>${m.resp?' · '+m.resp:''}</div>
-        <div class="med-grid">
-          ${m.cernelha?`<div class="med-item"><div class="med-val ${stC}">${m.cernelha}m</div><div class="med-label">Cernelha</div></div>`:''}
-          ${m.torax?`<div class="med-item"><div class="med-val ${stT}">${m.torax}m</div><div class="med-label">Tórax</div></div>`:''}
-          ${m.canela?`<div class="med-item"><div class="med-val ${stCan}">${m.canela}m</div><div class="med-label">Canela</div></div>`:''}
-          ${m.peso?`<div class="med-item"><div class="med-val">${m.peso}kg</div><div class="med-label">Peso</div></div>`:''}
-          ${m.escore?`<div class="med-item"><div class="med-val">${m.escore}/9</div><div class="med-label">Escore</div></div>`:''}
-        </div></div>`;
-    }).join('')}</div>`;
+
+  // Painel de confirmação ABCCC (só para não confirmados)
+  const S4conf = (!a.confirmado && a.confirmacao_status !== 'nao_confirmado')
+    ? _htmlPainelConfirmacao(a, false)
+    : '';
+
+  // Gráfico de linha de medidas
+  const chartId = 'med-chart-' + a.db_id;
+  const legendId = 'med-legend-' + a.db_id;
+  const toggleId = 'med-toggle-' + a.db_id;
+
+  // Cards de resumo com última medida
+  const ult = hm.length ? hm.slice().sort((x,y)=>y.data.localeCompare(x.data))[0] : null;
+  const stC   = ult?.cernelha ? checaMedida(ult.cernelha, pad.cernelha_min, pad.cernelha_max) : '';
+  const stT   = ult?.torax    ? checaMedida(ult.torax,    pad.torax_min,    null)              : '';
+  const stCan = ult?.canela   ? checaMedida(ult.canela,   pad.canela_min,   null)              : '';
+
+  const _cardMed = (label, val, unit, status, delta) => {
+    const bg  = status==='med-status-low' ? 'var(--red-l)'   : status==='med-status-ok' ? 'var(--green-l)' : 'var(--bg3)';
+    const clr = status==='med-status-low' ? 'var(--red-d)'   : status==='med-status-ok' ? 'var(--green-d)' : 'var(--text)';
+    const sub = delta !== null ? `<div style="font-size:10px;color:${clr}">${delta}</div>` : '';
+    return val ? `<div style="flex:1;background:${bg};border-radius:var(--radius);padding:8px 10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${label}</div>
+      <div style="font-size:16px;font-weight:700;color:${clr};font-family:var(--mono)">${val}${unit}</div>
+      ${sub}
+    </div>` : '';
+  };
+
+  const deltaC = ult?.cernelha ? (ult.cernelha >= pad.cernelha_min
+    ? `+${((ult.cernelha-pad.cernelha_min)*100).toFixed(1)}cm do mín.`
+    : `${((ult.cernelha-pad.cernelha_min)*100).toFixed(1)}cm do mín.`) : null;
+  const deltaT = ult?.torax    ? (ult.torax >= pad.torax_min
+    ? `+${((ult.torax-pad.torax_min)*100).toFixed(1)}cm do mín.`
+    : `${((ult.torax-pad.torax_min)*100).toFixed(1)}cm do mín.`) : null;
+  const deltaCa = ult?.canela  ? (ult.canela >= pad.canela_min
+    ? `+${((ult.canela-pad.canela_min)*100).toFixed(1)}cm do mín.`
+    : `${((ult.canela-pad.canela_min)*100).toFixed(1)}cm do mín.`) : null;
+
+  const cardsResumo = (ult?.cernelha || ult?.torax || ult?.canela || ult?.peso) ? `
+    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      ${_cardMed('Cernelha', ult?.cernelha, 'm', stC, deltaC)}
+      ${_cardMed('Tórax', ult?.torax, 'm', stT, deltaT)}
+      ${_cardMed('Canela', ult?.canela, 'm', stCan, deltaCa)}
+      ${ult?.peso ? `<div style="flex:1;background:var(--bg3);border-radius:var(--radius);padding:8px 10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Peso</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);font-family:var(--mono)">${ult.peso}kg</div>
+      </div>` : ''}
+    </div>` : '';
+
+  const S4=`${S4conf}<div class="ficha-section">
+    <div class="ficha-section-title">${_iconRegua(14)} Medidas Biométricas
+      <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalMedida(${i})">+ Medir</button>
+    </div>
+    ${!hm.length ? '<div class="nut-empty">Nenhuma medição registrada.</div>' : `
+      <div style="display:flex;gap:3px;background:var(--bg3);border-radius:var(--radius);padding:2px;margin-bottom:10px;width:fit-content" id="${toggleId}">
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','cernelha',${i})" class="btn-med-toggle btn-med-active" data-k="cernelha" style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:var(--green-d);color:var(--bg);cursor:pointer;font-family:var(--font)">Cernelha</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','torax',${i})"    class="btn-med-toggle" data-k="torax"    style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Tórax</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','canela',${i})"   class="btn-med-toggle" data-k="canela"   style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Canela</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','peso',${i})"     class="btn-med-toggle" data-k="peso"     style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Peso</button>
+      </div>
+      <div id="${legendId}" style="display:flex;gap:14px;font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+      <div style="position:relative;height:200px">
+        <canvas id="${chartId}" role="img" aria-label="Evolução de medidas biométricas do animal"></canvas>
+      </div>
+      ${cardsResumo}
+    `}
+  </div>`;
 
   // ── NUTRIÇÃO ──────────────────────────────────────────────────────
   const n=getNut(i); const ps=projStatus(n);
@@ -5370,8 +5424,9 @@ function _renderDetCorpo(i, editando) {
 
   document.getElementById('det-corpo').innerHTML = S1+S2+S3+S4+S5+S6+S7+S8+S9;
 
-  // Carregar linha do tempo após render
+  // Carregar linha do tempo e gráfico de medidas após render
   if(a.db_id) _carregarLinhaTempo(a.db_id, a.nome, a.nasc||'');
+  setTimeout(() => _initMedChart(i), 50);
 }
 
 function alternarEdicaoAnimal() {
@@ -8505,6 +8560,114 @@ function renderHistoricoNegociacoes() {
   }).join('');
 }
 
+
+// ─── GRÁFICO DE MEDIDAS ───────────────────────────────────────────────────────
+
+const _medCharts = {};
+
+function _medChartSel(chartId, legendId, toggleId, medida, animalIdx) {
+  const wrap = document.getElementById(toggleId);
+  if (wrap) wrap.querySelectorAll('.btn-med-toggle').forEach(b => {
+    const isAtivo = b.dataset.k === medida;
+    b.style.background = isAtivo ? 'var(--green-d)' : 'transparent';
+    b.style.color      = isAtivo ? 'var(--bg)'      : 'var(--text2)';
+  });
+  _medChartDraw(chartId, legendId, medida, animalIdx);
+}
+
+function _medChartDraw(chartId, legendId, medida, animalIdx) {
+  const a   = animais[animalIdx];
+  const hm  = getMedidas(animalIdx).slice().sort((x,y) => x.data.localeCompare(y.data));
+  const pad = (a.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+  const cfg = {
+    cernelha: { key:'cernelha', label:'Cernelha', unit:'m', min:pad.cernelha_min, max:pad.cernelha_max, dec:3 },
+    torax:    { key:'torax',    label:'Tórax',    unit:'m', min:pad.torax_min,    max:null,              dec:3 },
+    canela:   { key:'canela',   label:'Canela',   unit:'m', min:pad.canela_min,   max:null,              dec:3 },
+    peso:     { key:'peso',     label:'Peso',     unit:'kg',min:null,             max:null,              dec:0 },
+  }[medida];
+  const pts = hm.filter(m => m[cfg.key]);
+  if (!pts.length) return;
+  const vals   = pts.map(m => m[cfg.key]);
+  const labels = pts.map(m => fd(m.data));
+  const cs = getComputedStyle(document.documentElement);
+  const clrGreen  = cs.getPropertyValue('--green').trim();
+  const clrGreenD = cs.getPropertyValue('--green-d').trim();
+  const clrRed    = cs.getPropertyValue('--red').trim();
+  const clrBlue   = cs.getPropertyValue('--blue').trim();
+  const clrText3  = cs.getPropertyValue('--text3').trim();
+  const resolvedPtCor = vals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : clrBlue);
+  const datasets = [{
+    label: cfg.label, data: vals,
+    borderColor: cfg.min ? clrGreenD : clrBlue,
+    borderWidth: 2,
+    pointBackgroundColor: resolvedPtCor,
+    pointBorderColor: resolvedPtCor,
+    pointRadius: 5, pointHoverRadius: 7,
+    tension: 0.35, fill: false, order: 1,
+  }];
+  if (cfg.min) datasets.push({
+    label: 'Min. ' + cfg.min + cfg.unit,
+    data: labels.map(() => cfg.min),
+    borderColor: clrRed, borderWidth: 1.5, borderDash: [5,4],
+    pointRadius: 0, fill: false, tension: 0, order: 2,
+  });
+  if (cfg.max) datasets.push({
+    label: 'Max. ' + cfg.max + cfg.unit,
+    data: labels.map(() => cfg.max),
+    borderColor: clrText3, borderWidth: 1, borderDash: [3,4],
+    pointRadius: 0, fill: false, tension: 0, order: 3,
+  });
+  const allVals = [...vals, cfg.min, cfg.max].filter(v => v != null);
+  const yMin = Math.min(...allVals) * (cfg.unit==='kg' ? 0.90 : 0.978);
+  const yMax = Math.max(...allVals) * (cfg.unit==='kg' ? 1.05 : 1.015);
+  if (_medCharts[chartId]) { _medCharts[chartId].destroy(); delete _medCharts[chartId]; }
+  const canvas = document.getElementById(chartId);
+  if (!canvas || typeof Chart === 'undefined') return;
+  _medCharts[chartId] = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          if (ctx.datasetIndex > 0) return null;
+          const v = ctx.parsed.y;
+          const ok = cfg.min ? (v >= cfg.min ? ' ok' : ' abaixo do minimo') : '';
+          return ' ' + cfg.label + ': ' + v.toFixed(cfg.dec) + cfg.unit + ok;
+        }}}
+      },
+      scales: {
+        y: { min: yMin, max: yMax,
+          grid: { color: 'rgba(128,128,128,0.08)' },
+          ticks: { font: { size: 10 }, color: clrText3, callback: v => v.toFixed(cfg.dec) + cfg.unit }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: clrText3 } }
+      }
+    }
+  });
+  const legEl = document.getElementById(legendId);
+  if (legEl) {
+    legEl.innerHTML = datasets.map(ds => {
+      const style = ds.borderDash
+        ? 'width:20px;height:0;border-top:2px dashed '+ds.borderColor+';display:inline-block;vertical-align:middle'
+        : 'width:20px;height:3px;background:'+ds.borderColor+';border-radius:2px;display:inline-block;vertical-align:middle';
+      return '<span style="display:flex;align-items:center;gap:5px"><span style="'+style+'"></span><span style="color:var(--text3)">'+ds.label+'</span></span>';
+    }).join('');
+  }
+}
+
+function _initMedChart(animalIdx) {
+  const a = animais[animalIdx];
+  if (!a) return;
+  const chartId  = 'med-chart-'  + a.db_id;
+  const legendId = 'med-legend-' + a.db_id;
+  const hm = getMedidas(animalIdx);
+  if (!hm.length) return;
+  const primeira = ['cernelha','torax','canela','peso'].find(k => hm.some(m => m[k])) || 'cernelha';
+  _medChartDraw(chartId, legendId, primeira, animalIdx);
+}
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
 
@@ -13581,5 +13744,7 @@ if(!_checkRecovery()){
   </div>
 </div>
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
