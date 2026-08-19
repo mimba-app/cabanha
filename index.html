@@ -9157,9 +9157,11 @@ async function _renderSimulacaoAcasalamento() {
           }
         }
       } catch(e) { /* mantém mensagem neutra */ }
-    } else if (!nivel2) {
-      // Sem SBB — verificar pelo menos os campos locais
-      htmlConsang = '<div class="alert alert-b" style="font-size:12px">SBB do garanhão não cadastrado — análise de consanguinidade limitada aos dados locais. Sem parentesco direto detectado.</div>';
+    } else {
+      // Sem SBB do garanhão — passou Nível 1 e 2 sem problemas = sem parentesco direto
+      htmlConsang = !sbbGar
+        ? '<div class="alert alert-g" style="font-size:12px">\u2713 Sem parentesco direto detectado. SBB do garanhão não informado — análise de linhagem completa indisponível.</div>'
+        : '<div class="alert alert-g" style="font-size:12px">\u2713 Sem parentesco direto detectado nos dados disponíveis.</div>';
     }
   }
 
