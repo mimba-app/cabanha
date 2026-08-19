@@ -184,7 +184,7 @@
   .sidebar-logout-btn:hover { background:var(--red-d); }
   .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:1.4rem; }
   .metric { background:var(--bg2); border-radius:var(--r-md); padding:18px 20px; border:var(--card-border); box-shadow:var(--sh-sm); transition:transform .16s ease, box-shadow .16s ease; cursor:pointer; }
-  .metric:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .metric:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .metric-label { font-size:11.5px; color:var(--text2); margin-bottom:8px; }
   .metric-value { font-size:26px; font-weight:500; color:var(--text); font-family:var(--mono); line-height:1.1; }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:3px; }
@@ -200,9 +200,9 @@
      sombra (var(--sh-sm) em repouso, var(--sh-md) no hover), como no protótipo.
      Borda dura + sombra fraca era o que deixava tudo com cara de desenho 2D. */
   .card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:22px 24px; margin-bottom:1rem; box-shadow:var(--sh-sm); transition:transform .16s ease, box-shadow .16s ease; }
-  .card:hover { box-shadow:var(--sh-md); }
+  .card:hover { box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .card[onclick] { cursor:pointer; }
-  .card[onclick]:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .card[onclick]:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   /* ── Selo de registro — círculo com anel pontilhado, glyph central, label mono.
      Substitui badge/pill de status crítico em pontos-chave: vacina/exame
      vencido, alertas prioritários do dashboard, timeline da ficha. ── */
@@ -235,7 +235,7 @@
     mask-image: radial-gradient(circle 3.5px at 8px 50%, transparent 4px, black 4.5px);
     transition:transform .14s ease, box-shadow .14s ease;
   }
-  .etq-brinco:hover { transform:translateY(-1px); box-shadow:inset 0 0 0 2em var(--tint-hover); }
+  .etq-brinco:hover { transform:translateY(-1px); box-shadow:inset 0 0 0 2em var(--tint-hover), 0 0 0 1px var(--border2); }
   .etq-brinco.terracota { background:var(--terracota-soft); color:var(--terracota-ink); }
   .etq-brinco.neutro { background:var(--ink-08); color:var(--text2); }
   .etq-brinco.critico { background:var(--critico-soft); color:var(--critico); }
@@ -254,7 +254,7 @@
   tbody tr:hover td:last-child { border-top-right-radius:var(--r-sm); border-bottom-right-radius:var(--r-sm); }
   .badge { display:inline-block; font-size:var(--fs-caption); padding:2px 7px; border-radius:var(--radius-badge); font-weight:600; white-space:nowrap;
     transition:transform .14s ease, box-shadow .14s ease; }
-  .badge:hover { transform:translateY(-1px); box-shadow:inset 0 0 0 2em var(--tint-hover), 0 2px 4px rgba(43,36,25,.13); }
+  .badge:hover { transform:translateY(-1px); box-shadow:inset 0 0 0 2em var(--tint-hover), 0 2px 4px rgba(43,36,25,.13), 0 0 0 1px var(--border2); }
   .bg { background:var(--green-l); color:var(--green-d); }
   .ba { background:var(--amber-l); color:var(--amber-d); }
   .br { background:var(--red-l); color:var(--red-d); }
@@ -309,7 +309,7 @@
   .estagio-pill { display:flex; align-items:center; gap:6px; background:var(--bg3); border-radius:var(--radius); padding:6px 10px; flex:1; min-width:110px; }
   /* NUTRIÇÃO */
   .nut-animal-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); margin-bottom:1rem; overflow:hidden; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
-  .nut-animal-card:hover { box-shadow:var(--sh-md); }
+  .nut-animal-card:hover { box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .nut-animal-header { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.1rem; cursor:pointer; gap:12px; }
   .nut-animal-header:hover { background:var(--bg3); }
   .nut-animal-name { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
@@ -332,7 +332,7 @@
   .nut-add-btn { font-size:11px; color:var(--green-d); background:var(--green-l); border:none; padding:4px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; margin-top:6px; }
   .nut-add-btn:hover { background:#C0DD97; }
   .template-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
-  .template-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .template-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
   .compra-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .compra-item:last-child { border-bottom:none; }
@@ -350,7 +350,7 @@
   .nut-proj-finalizado { background:var(--gray-l); color:var(--gray-d); }
   /* EVENTOS */
   .evt-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
-  .evt-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .evt-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .evt-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:12px; }
   .evt-title { font-size:var(--fs-base); font-weight:700; color:var(--text); }
   .evt-meta { font-size:var(--fs-caption); color:var(--text2); margin-top:2px; }
@@ -364,7 +364,7 @@
   .evt-animal-row:last-child { border-bottom:none; }
   /* GESTAÇÃO */
   .gest-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
-  .gest-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .gest-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .gest-prog { height:8px; border-radius:99px; background:var(--bg3); margin:8px 0 4px; overflow:hidden; }
   .gest-prog-fill { height:8px; border-radius:99px; transition:width 0.3s; }
   .gest-dias { font-size:11px; color:var(--text2); display:flex; justify-content:space-between; }
@@ -397,7 +397,7 @@
   .san-empty { font-size:12px; color:var(--text3); font-style:italic; }
   /* PENDÊNCIAS */
   .pend-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
-  .pend-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .pend-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .pend-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
   .pend-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
   .pend-sub { font-size:11px; color:var(--text2); margin-top:2px; }
@@ -429,7 +429,7 @@
   }
   .ficha-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
   .ficha-avatar[onclick] { cursor:pointer; }
-  .ficha-avatar[onclick]:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .ficha-avatar[onclick]:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .ficha-header-info { flex:1 1 260px; min-width:200px; }
   .ficha-header-nome { font-family:var(--serif); font-size:var(--fs-2xl); font-weight:800; color:var(--text); letter-spacing:-0.01em; line-height:1.15; }
   .ficha-header-sbb { font-family:var(--mono); font-size:12px; color:var(--text3); margin-top:4px; }
@@ -511,7 +511,7 @@
   .kanban-cards { padding:12px; display:flex; flex-direction:column; gap:10px; min-height:60px; }
   .kanban-card { background:var(--pergaminho); border-radius:var(--r-md); padding:13px 14px; border:var(--card-border); cursor:default;
     box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease, background .16s ease; }
-  .kanban-card:hover { box-shadow:var(--sh-md); transform:translateY(-3px); }
+  .kanban-card:hover { box-shadow:var(--sh-md), 0 0 0 1px var(--border2); transform:translateY(-3px); }
   .kanban-card-nome { font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-family:var(--mono); font-size:10.5px; color:var(--text2); line-height:1.5; }
   .kanban-card-data { font-family:var(--mono); font-size:11px; font-weight:600; margin-top:5px; }
@@ -542,7 +542,7 @@
   .verm-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .verm-sel-count { background:var(--green-l); color:var(--green-d); border-radius:var(--radius-badge); padding:2px 10px; font-size:11px; font-weight:700; }
   .verm-grupo-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
-  .verm-grupo-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .verm-grupo-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .verm-grupo-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
   .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:999;display:flex;align-items:center;justify-content:center; }
   .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
@@ -659,7 +659,7 @@
   .tl-conector { width:2px; height:14px; background:var(--ink-15); flex-shrink:0; }
   .tl-content { width:100%; background:var(--pergaminho); border:var(--card-border); border-radius:14px; box-shadow:var(--sh-sm); padding:12px 13px; min-height:76px;
     transition:box-shadow .16s ease, transform .16s ease; }
-  .tl-item:hover .tl-content { transform:translateY(-2px); box-shadow:var(--sh-md); }
+  .tl-item:hover .tl-content { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .tl-dot { transition:transform .16s ease, box-shadow .16s ease; }
   .tl-item:hover .tl-dot { transform:scale(1.06); box-shadow:var(--sh-md); }
   .tl-date { font-family:var(--mono); font-size:10px; color:var(--text3); margin-bottom:2px; }
@@ -702,7 +702,7 @@
   .tab:hover { color:var(--text); background:var(--bg3); }
   .alert { transition:transform .14s ease, box-shadow .14s ease; }
   .alert[onclick] { cursor:pointer; }
-  .alert[onclick]:hover { transform:translateX(2px); box-shadow:var(--sh-sm); }
+  .alert[onclick]:hover { transform:translateX(2px); box-shadow:var(--sh-sm), 0 0 0 1px var(--border2); }
 
   /* V1.5 (Fase 4): Relatórios em PDF via impressão nativa do navegador. #print-area fica
      fora da tela normal; ao imprimir, ela vira a única coisa visível na página. */
@@ -6631,6 +6631,10 @@ function showPage(id){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes(id))b.classList.add('active');});
+  // Trocar de página sempre volta ao topo — sem isso, a página nova abre com
+  // o scroll que a anterior tinha, cortando o início do conteúdo (ex.: abrir
+  // a ficha de um animal a partir do meio da grade de Animais).
+  window.scrollTo(0, 0);
   if(id==='animais')renderAnimais();
   if(id==='saude')renderSaude();
   if(id==='reprodutivo'){renderReprodutivo();renderPlanejadorReprodutivo();}
