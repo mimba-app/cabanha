@@ -1072,7 +1072,7 @@
     </div>
   </div>
   <div class="tab-row">
-    <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações</button>
+    <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações ativas</button>
     <button class="tab" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
     <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
     <button class="tab" onclick="switchTab(this,'gest-fontes')">Garanhões e Coberturas</button>
@@ -8669,10 +8669,16 @@ function renderAcasalamentos() {
   const el = document.getElementById('ac-kanban-content');
   if(!el) return;
 
-  const ativos = acasalamentos.filter(a => a.status !== 'cancelado');
-  const cancelados = acasalamentos.filter(a => a.status === 'cancelado');
+  // Achado real: o kanban abaixo nunca filtrou por ciclo — misturava acasalamentos de anos
+  // anteriores (já confirmados/virados gestação/cancelados) com o ciclo selecionado no
+  // Planejador, mesmo o subtítulo da página dizendo "deste ciclo". Escopado igual ao match
+  // acima de agora em diante.
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  const doCiclo = acasalamentos.filter(a => a.ciclo === ciclo);
+  const ativos = doCiclo.filter(a => a.status !== 'cancelado');
+  const cancelados = doCiclo.filter(a => a.status === 'cancelado');
 
-  if(acasalamentos.length === 0) {
+  if(doCiclo.length === 0) {
     el.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum acasalamento planejado. Clique em "+ Novo acasalamento".</div>';
   } else {
     el.innerHTML = '<div class="kanban-board" style="grid-template-columns:repeat(5,1fr)">' +
@@ -8822,7 +8828,7 @@ function renderGestacoesNovo() {
   const historico = gestacoes.filter(g => g.status !== 'gestando');
 
   el.innerHTML = ativas.length
-    ? '<div class="kanban-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">' +
+    ? '<div style="display:flex;flex-direction:column;gap:10px">' +
       ativas.map(g => _gestCard(g, gestacoes.indexOf(g))).join('') + '</div>'
     : '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma gestação ativa. Gestações nascem automaticamente quando uma tentativa é confirmada como "prenha" em Acasalamentos.</div>';
 
