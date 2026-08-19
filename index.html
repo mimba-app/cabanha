@@ -1126,10 +1126,10 @@
     </div>
     <div id="gest-fontes-edit-wrap" style="display:none;margin-top:0.75rem">
       <div class="filter-row">
-        <select id="fc-f-ciclo" onchange="renderFontesCobertura()" style="width:160px">
+        <select id="fc-f-ciclo" onchange="window._fcFiltroTocado=true;renderFontesCobertura()" style="width:160px">
           <option value="">Todos os ciclos</option>
         </select>
-        <select id="fc-f-status" onchange="renderFontesCobertura()" style="width:160px">
+        <select id="fc-f-status" onchange="window._fcFiltroTocado=true;renderFontesCobertura()" style="width:160px">
           <option value="">Todos os status</option>
           <option value="ativa">Ativa</option>
           <option value="vencida">Vencida</option>
@@ -5509,9 +5509,15 @@ function renderPlanejadorReprodutivo() {
   // default 120), editável direto no card (só pra diminuir em relação ao padrão) ou no cadastro do
   // animal (muda o padrão pra valer nos próximos ciclos).
   garanhoes.forEach(a => {
-    const jaTem = fontesCobertura.some(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
+    const existente = fontesCobertura.find(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
       ((a.sbb && f.garanhao_sbb && f.garanhao_sbb === a.sbb) || f.garanhao_nome === a.nome));
-    if (jaTem) return;
+    if (existente) {
+      // Achado real: se um POST anterior falhou silenciosamente (rede, sessão expirada),
+      // a fonte fica presa sem db_id pra sempre — tenta salvar de novo a cada render em vez
+      // de desistir, senão ela nunca aparece disponível pra virar acasalamento de verdade.
+      if (!existente.db_id) _dbSalvarFonteCobertura(existente, fontesCobertura.indexOf(existente));
+      return;
+    }
     const novaFonte = {
       tipo: 'proprio', garanhao_nome: a.nome, garanhao_sbb: a.sbb || '',
       tem_rm: false, demerito: false,
@@ -7719,6 +7725,17 @@ function excluirFonteCobertura(i) {
   renderFontesCobertura();
 }
 
+// Chave estável de identidade pra uma fonte, mesmo antes dela ter sido persistida no banco
+// (db_id só chega depois do POST assíncrono terminar — usar db_id direto pra comparação de
+// seleção falha se duas fontes novas ainda não persistidas ficarem com db_id undefined ao
+// mesmo tempo, fazendo qualquer clique selecionar as duas juntas). Cacheada no próprio objeto,
+// que é a mesma referência reaproveitada em toda re-renderização.
+function _fonteKey(f) {
+  if (f.db_id) return String(f.db_id);
+  if (!f._localId) f._localId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  return f._localId;
+}
+
 // Saldo disponível da fonte (Fase 3): consumo real = acasalamentos
 // confirmados (prenhez confirmada) vinculados a esta fonte. Um acasalamento
 // cancelado nunca chega a 'confirmado', então a devolução de saldo é
@@ -7748,14 +7765,23 @@ function renderFontesCobertura() {
   const el = document.getElementById('gest-fontes-content');
   if(!el) return;
 
-  // Popular select de ciclos dinamicamente
+  // Popular select de ciclos dinamicamente. Achado real (Mãe de Deus, anos de fontes
+  // acumuladas): sem filtro nenhum aplicado por padrão, a lista virava uma bagunça de fontes
+  // vencidas/esgotadas de ciclos antigos misturadas com as do ciclo atual. Pra primeira
+  // abertura da tela (sessão ainda não mexeu nos filtros), já entra filtrado no ciclo do
+  // Planejador + status "Ativa" — "Todos" continua disponível pra quem quiser ver o histórico.
   const selCiclo = document.getElementById('fc-f-ciclo');
+  const selStatus = document.getElementById('fc-f-status');
+  const primeiraAbertura = !window._fcFiltroTocado;
   if(selCiclo) {
     const atual = selCiclo.value;
     const ciclos = [...new Set(fontesCobertura.map(f=>f.ciclo).filter(Boolean))].sort();
     selCiclo.innerHTML = '<option value="">Todos os ciclos</option>' + ciclos.map(c=>`<option value="${c}">${c}</option>`).join('');
-    selCiclo.value = ciclos.includes(atual) ? atual : '';
+    const cicloPadrao = window._cicloPlanejador || _cicloAtualTexto();
+    selCiclo.value = ciclos.includes(atual) ? atual
+      : (primeiraAbertura && ciclos.includes(cicloPadrao)) ? cicloPadrao : '';
   }
+  if(selStatus && primeiraAbertura && !selStatus.value) selStatus.value = 'ativa';
 
   const fCiclo = (document.getElementById('fc-f-ciclo')||{value:''}).value;
   const fStatus = (document.getElementById('fc-f-status')||{value:''}).value;
@@ -8127,10 +8153,11 @@ function abrirModalAcasalamento() {
 
 // Reprodutivo v4, Fase 8 (spec 3b): abre o modal já com égua e fonte definidas pelo clique-clique
 // da tela de duas colunas — vira só a confirmação (ciclo/observações/receptora), sem os selects.
-function abrirModalAcasalamentoMatch(fonteId, eguaDbId, ciclo) {
-  const fonte = fontesCobertura.find(f => String(f.db_id) === String(fonteId));
+function abrirModalAcasalamentoMatch(fonteKey, eguaDbId, ciclo) {
+  const fonte = fontesCobertura.find(f => _fonteKey(f) === fonteKey);
   const egua = animais.find(a => String(a.db_id) === String(eguaDbId));
   if (!fonte || !egua) return;
+  if (!fonte.db_id) return alert('Essa fonte ainda não terminou de salvar no banco — aguarde um instante e tente de novo.');
 
   const selEgua = document.getElementById('ac-egua');
   selEgua.innerHTML = `<option value="${egua.db_id}">${egua.nome}</option>`;
@@ -8528,8 +8555,9 @@ function renderAcasalamentosMatch() {
     elF.innerHTML = fontes.length ? fontes.map(f => {
       const saldo = _saldoFonteCobertura(f);
       const semSaldo = saldo.disponivel <= 0;
-      const sel = window._acMatchFonteId && String(window._acMatchFonteId) === String(f.db_id);
-      return `<div class="kanban-card" style="cursor:${semSaldo ? 'default' : 'pointer'};opacity:${semSaldo ? 0.45 : 1};${sel ? 'outline:2px solid var(--green-d)' : ''}" ${semSaldo ? '' : `onclick="_acMatchSelecionarFonte('${f.db_id}')"`}>
+      const key = _fonteKey(f);
+      const sel = window._acMatchFonteId && window._acMatchFonteId === key;
+      return `<div class="kanban-card" style="cursor:${semSaldo ? 'default' : 'pointer'};opacity:${semSaldo ? 0.45 : 1};${sel ? 'outline:2px solid var(--green-d)' : ''}" ${semSaldo ? '' : `onclick="_acMatchSelecionarFonte('${key}')"`}>
         <div class="kanban-card-nome">${f.garanhao_nome}${sel ? ' <span class="badge bg" style="font-size:9px">Selecionado</span>' : ''}</div>
         <div class="kanban-card-info">${FC_TIPO_LABEL[f.tipo] || f.tipo} · ${saldo.disponivel} de ${saldo.total} disponível${semSaldo ? ' <span class="badge br" style="font-size:9px">Sem saldo</span>' : ''}</div>
       </div>`;
@@ -8551,8 +8579,16 @@ function renderAcasalamentosMatch() {
   _acMatchAtualizarResumoSel();
 }
 
-function _acMatchSelecionarFonte(fonteId) {
-  window._acMatchFonteId = fonteId || null;
+async function _acMatchSelecionarFonte(fonteKey) {
+  if (!fonteKey) { window._acMatchFonteId = null; renderAcasalamentosMatch(); return; }
+  const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
+  const f = fontesCobertura[idx];
+  if (!f) return;
+  // Fonte recém-criada automaticamente (ex.: "Próprio" do ciclo) cujo POST ainda não
+  // terminou — tenta persistir agora antes de deixar selecionar, pra nunca fechar um
+  // acasalamento com uma fonte sem id real no banco.
+  if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
+  window._acMatchFonteId = _fonteKey(f);
   renderAcasalamentosMatch();
 }
 
@@ -8565,7 +8601,7 @@ function _acMatchSelecionarEgua(eguaDbId) {
 function _acMatchAtualizarResumoSel() {
   const el = document.getElementById('ac-match-resumo-sel');
   if (!el) return;
-  const f = window._acMatchFonteId && fontesCobertura.find(x => String(x.db_id) === String(window._acMatchFonteId));
+  const f = window._acMatchFonteId && fontesCobertura.find(x => _fonteKey(x) === window._acMatchFonteId);
   if (!f) { el.style.display = 'none'; return; }
   el.style.display = '';
   el.innerHTML = `<div class="alert alert-b" style="font-size:12px">Selecionado: <b>${f.garanhao_nome}</b> — clique agora numa égua à direita pra criar o acasalamento. <button class="btn btn-sm" style="margin-left:8px" onclick="_acMatchSelecionarFonte(null)">cancelar seleção</button></div>`;

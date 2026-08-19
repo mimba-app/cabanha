@@ -660,3 +660,41 @@ a funcionalidade inteira — frontend e banco, "clean".
   parto calculados certos a partir da data de cobertura real); Dashboard, ficha de detalhe do animal,
   calendário de eventos e Planejador de ciclo renderizam sem erro; nenhum resquício textual ou
   funcional de "Legado" restante em nenhuma tela.
+
+### Fase 10 — garanhões "fantasma" em Acasalamentos + bug de seleção múltipla (2026-08-19)
+
+Pedro reportou, na Cabanha Mãe de Deus (ciclo 26/27): (1) a aba Acasalamentos listava garanhões nunca
+cadastrados como animal da cabanha, como se fossem fonte "Próprio" disponível; (2) na tela de match
+(Fase 8, ponto 3b), clicar num garanhão específico selecionava ele **junto com outros 3** ao mesmo
+tempo.
+
+- **Causa raiz do garanhão fantasma**: `pg_cron` `encerramento-ciclo-reproducao` (`0 3 1 8 *`, chama
+  `public.encerrar_ciclo_reproducao()`) tinha um passo clonando qualquer fonte `proprio` do ciclo
+  anterior pro novo só por nome/SBB baterem, sem validar contra o cadastro de Animais — redundante
+  desde a Fase 2 (2026-08-13), que já faz isso no client de forma validada. Corrigido removendo esse
+  passo da função (`docs/migrations/2026-08-19-fix-cron-fontes-fantasma.sql`), mantendo os outros 3
+  passos legítimos (vencer fontes com saldo, cancelar acasalamentos travados, vencer cota/direito de
+  uso expirados). Limpas as 7 linhas fantasma já existentes na Mãe de Deus — sem acasalamento vinculado
+  a nenhuma, DELETE direto. Confirmado que as outras 6 cabanhas provisionadas estavam limpas.
+- **Causa raiz da seleção múltipla**: `_acMatchSelecionarFonte()`/`renderAcasalamentosMatch()`
+  comparavam fontes por `db_id` — mas uma fonte "Próprio" recém-auto-criada só ganha `db_id` depois do
+  POST assíncrono terminar. Achado real: o POST pra 4 garanhões reais da Mãe de Deus estava falhando
+  silenciosamente (`_supa()` engole erro HTTP e retorna `null` sem avisar ninguém), então ficavam pra
+  sempre com `db_id` `undefined` — e `String(undefined) === String(undefined)` fazia clicar em
+  qualquer uma delas selecionar todas.
+- Nova função `_fonteKey(f)` dá identidade estável a qualquer fonte mesmo sem `db_id` (id local gerado
+  na hora, cacheado no objeto). `_acMatchSelecionarFonte()` agora tenta persistir de novo a fonte no
+  clique se ainda não tem `db_id`; `renderPlanejadorReprodutivo()` também retenta a cada render em vez
+  de desistir após uma falha; `abrirModalAcasalamentoMatch()` bloqueia com aviso claro em vez de deixar
+  criar um acasalamento com id inválido.
+- **Bônus**: aba "Garanhões e Coberturas" (`renderFontesCobertura`) não tinha filtro padrão — virava
+  lista longa e confusa em cabanhas com anos de fontes acumuladas. Primeira abertura da sessão agora já
+  entra filtrada em ciclo atual do Planejador + status "Ativa" (limpar os filtros mostra tudo).
+- Revisão de isolamento (`revisor-isolamento`) rodada — **aprovada**, condicionada a 2 verificações que
+  o subagente não conseguiu rodar sem MCP (texto atual da função + agendamento do cron), confirmadas
+  manualmente depois: `security definer`/`search_path`/loop cross-tenant/`%I` intactos, nenhum resíduo
+  de `v_recriadas`, cron com mesmo `schedule`/`command` de antes (só o corpo da função chamada mudou).
+- Testado via servidor estático local + browser: reproduzido o bug de verdade (rede falhando de
+  propósito nos 4 POSTs de auto-criação), confirmado 1 card só marcado "Selecionado" por vez mesmo sem
+  `db_id`; restaurada a rede, clicar de novo persiste e o `db_id` real assume a identidade; filtro
+  padrão da aba Garanhões e Coberturas testado escondendo fonte de ciclo antigo e mostrando ao limpar.
