@@ -769,3 +769,33 @@ só direitos de cobertura sobre um garanhão de fora.
   fonte "Próprio" do ciclo ajustar sozinha no próximo render (120→90 testado), sem sobrescrever um valor
   já editado manualmente abaixo do padrão (50 permaneceu 50); botões editar/excluir presentes nos cards
   de Cota/Direito de uso/Cobertura.
+
+### Fase 13 — "+ Adicionar receptora" escolhe entre existente ou nova, com selo visual (2026-08-19)
+
+Pedro reportou que "+ Adicionar receptora" ia direto pro cadastro de animal genérico, sem dar a opção de
+escolher uma égua já cadastrada na cabanha — e pediu que, quando for de fato uma receptora nova (de fora),
+ela tenha um selo bem claro que a diferencie do resto do plantel, e que suma sozinha quando a gestação em
+que ela é receptora terminar (parto ou aborto/perda).
+
+- **Novo modal de escolha** (`modal-escolha-receptora`): "+ Adicionar receptora" agora pergunta primeiro
+  se é uma égua já cadastrada (nesse caso, fecha o modal e aponta pro botão "Atribuir embrião" que já
+  existe no card dela, na lista de Éguas de cria — Fase 11) ou uma nova, de fora da cabanha.
+- **Nova flag permanente `animais.receptora_externa`** (migration
+  `docs/migrations/2026-08-19-receptora-externa.sql`) — diferente do papel "receptora" ephemeral por
+  ciclo (Fase 8b, derivado de `acasalamentos.receptora_animal_id`, nunca persistiu no cadastro), esta é
+  uma flag de origem/propósito do CADASTRO em si: marca que aquele animal não é do plantel da cabanha, só
+  existe pra receber embrião via TE, sob cuidado temporário. Setada automaticamente
+  (`_escolherReceptoraNova()`) quando o cadastro é aberto por esse caminho — o formulário mostra um aviso
+  roxo explicando isso antes mesmo de salvar.
+- **Selo visual roxo "Receptora externa"** em todo lugar que mostra badges de animal — tabela, grade e
+  ficha de detalhe — pra nunca confundir com um animal de verdade do plantel.
+- **Sai sozinha quando a gestação encerra**: `_confirmarEncerramentoGestacao()` agora checa, ao registrar
+  parto/aborto/perda, se o acasalamento tem `receptora_animal_id` e se aquele animal é
+  `receptora_externa` — se for, muda a situação dela pra `TRANSFERIDO` automaticamente e persiste,
+  tirando-a da listagem padrão de "Na Cabanha" sem precisar de ação manual. Uma receptora "de dentro"
+  (égua de verdade do plantel que emprestou o útero) não é afetada — continua normalmente, ela é um
+  animal real da cabanha.
+- Testado via servidor estático local + browser: modal de escolha abre e direciona corretamente pros
+  dois caminhos; cadastro novo com a flag mostra o aviso e salva `receptora_externa: true`; badge roxo
+  aparece na grade; encerrar a gestação (testado com status "perdida") muda a situação da receptora pra
+  Transferido e ela some da listagem padrão de animais ativos.

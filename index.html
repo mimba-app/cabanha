@@ -1133,7 +1133,7 @@
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 6px">
       <div class="card-title" style="margin:0">Éguas de cria</div>
-      <button class="btn btn-sm" onclick="_abrirReceptoraViaSBB()">+ Adicionar receptora (via SBB)</button>
+      <button class="btn btn-sm" onclick="_abrirEscolhaReceptora()">+ Adicionar receptora</button>
     </div>
     <div class="page-sub" style="margin:-4px 0 14px">Éguas cadastradas em Animais com estágio "Cria". Qualquer uma com SBB
       pode ser usada como receptora de embrião neste ciclo (destacada em roxo) — a seleção é sempre por ciclo, nunca
@@ -2517,6 +2517,9 @@
 <div class="modal-bg" id="modal-novo">
   <div class="modal">
     <div class="modal-header"><span class="modal-title">Cadastrar animal</span><button class="modal-close" onclick="closeModal('modal-novo')">×</button></div>
+    <div id="n-receptora-externa-aviso" style="display:none;margin:-4px 0 10px;padding:8px 10px;background:var(--purple-l);color:var(--purple-d);border-radius:var(--radius);font-size:12px">
+      🐴 Receptora de fora da cabanha — fica sob cuidado só enquanto estiver gestante. Assim que a gestação encerrar (parto, aborto ou perda), ela sai sozinha da lista de animais ativos.
+    </div>
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1">
         <label>Foto <span style="font-weight:400;font-size:10px;color:var(--text3)"> — opcional, até 5MB</span></label>
@@ -2695,6 +2698,20 @@
       </div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-atribuir-embriao')">Cancelar</button><button class="btn btn-primary" onclick="_confirmarAtribuirEmbriao()">Continuar</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 13: primeiro passo de "+ Adicionar receptora" — escolher entre uma
+     égua já cadastrada na cabanha ou uma nova, de fora, que fica sob cuidado só enquanto
+     gestante. Antes ia direto pro cadastro de animal, sem essa opção. -->
+<div class="modal-bg" id="modal-escolha-receptora">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><span class="modal-title">Adicionar receptora</span><button class="modal-close" onclick="closeModal('modal-escolha-receptora')">×</button></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">A receptora pode ser uma égua já cadastrada na cabanha, ou uma nova — de fora, que fica sob cuidado da cabanha só enquanto estiver gestante.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn" onclick="_escolherReceptoraExistente()">Selecionar égua já cadastrada</button>
+      <button class="btn btn-primary" onclick="_escolherReceptoraNova()">Cadastrar nova (de fora da cabanha)</button>
+    </div>
   </div>
 </div>
 
@@ -3196,7 +3213,7 @@ function renderAnimais(){
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${a.rp}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -3226,6 +3243,7 @@ function renderAnimais(){
         ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
+        ${a.receptora_externa ? '<span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
       <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
@@ -5111,6 +5129,7 @@ function _renderDetCorpo(i, editando) {
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
       ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
+      ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 18px">
       ${[['RP',a.rp||'—'],['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
@@ -5789,18 +5808,37 @@ async function _buscarAbcccParaFonte() {
   }
 }
 
-// Receptora (TE): égua "de fora" que recebe embrião — cadastrada via SBB, mesma
-// integração já usada no cadastro normal de animal (_buscarAbccc('novo')). Vira
-// uma égua de cria comum ao salvar, elegível como candidata a receptora em qualquer
-// ciclo (ver renderEguasCriaPlanejador/_abrirAtribuirEmbriao) por ser "Na Cabanha" com SBB —
-// não existe mais um flag permanente "receptora" no cadastro (Fase 8, revisão pós-feedback:
-// ser receptora é um papel de um ciclo específico, não um atributo fixo do animal).
-function _abrirReceptoraViaSBB() {
+// Reprodutivo v4, Fase 13: "+ Adicionar receptora" agora pergunta primeiro se é uma égua já
+// cadastrada (aí é só usar "Atribuir embrião" no card dela) ou uma nova, de fora — antes ia
+// direto pro cadastro de animal, sem dar essa opção.
+function _abrirEscolhaReceptora() {
+  openModal('modal-escolha-receptora');
+}
+
+function _escolherReceptoraExistente() {
+  closeModal('modal-escolha-receptora');
+  document.getElementById('planejador-eguas-content')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  _mostrarStatusSync('Clique em "Atribuir embrião" na égua desejada, na lista abaixo', 'amber');
+}
+
+// Receptora nova (TE): égua "de fora" que recebe embrião — cadastrada via SBB, mesma
+// integração já usada no cadastro normal de animal (_buscarAbccc('novo')). Vira uma égua de
+// cria elegível como candidata a receptora em qualquer ciclo (ver
+// renderEguasCriaPlanejador/_abrirAtribuirEmbriao) por ser "Na Cabanha" com SBB — isso não muda
+// (Fase 8b: ser receptora NUM CICLO é um papel derivado de acasalamentos, não um flag fixo).
+// O que é novo (Fase 13): `receptora_externa`, uma flag PERMANENTE marcando que esse cadastro
+// específico não é um animal do plantel — só existe pra receber embrião, sob cuidado temporário
+// — usada pro selo visual em toda listagem e pra tirá-la sozinha da lista quando a gestação
+// em que ela é receptora encerrar (ver _confirmarEncerramentoGestacao).
+function _escolherReceptoraNova() {
+  closeModal('modal-escolha-receptora');
   _limparFormNovoAnimal();
   openModal('modal-novo');
   const sexEl = document.getElementById('nsex'); if (sexEl) sexEl.value = 'Fêmea';
   const estEl = document.getElementById('nest'); if (estEl) estEl.value = 'CRIA';
   const sbbEl = document.getElementById('nsbb'); if (sbbEl) { sbbEl.value = ''; sbbEl.focus(); }
+  window._novoAnimalReceptoraExterna = true;
+  const avisoEl = document.getElementById('n-receptora-externa-aviso'); if (avisoEl) avisoEl.style.display = '';
 }
 
 // ─── MARKETPLACE ENTRE CABANHAS (Fase 4 da spec) ──────────────────────────────
@@ -5893,6 +5931,7 @@ function salvarAnimal(){
     castrado:document.getElementById('ncastrado').checked,
     qtd_coberturas_padrao:parseInt(document.getElementById('nqtdcob').value||'120'),
     foto_url:document.getElementById('nfoto-b64').value||null,
+    receptora_externa: !!window._novoAnimalReceptoraExterna,
     ult_vac:'',prox_vac:document.getElementById('npvac').value,
     ult_verm:'',val_exame:document.getElementById('npexame').value,
   });
@@ -5900,7 +5939,7 @@ function salvarAnimal(){
   closeModal('modal-novo');
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
-  renderPlanejadorReprodutivo(); // se veio de "+ Adicionar receptora (via SBB)", ela já aparece na lista
+  renderPlanejadorReprodutivo(); // se veio de "+ Adicionar receptora", ela já aparece na lista
 }
 
 // Exclui um animal do cadastro (lista/grade e ficha de detalhe chamam esta mesma função).
@@ -5945,6 +5984,8 @@ function _limparFormNovoAnimal() {
   const qtdEl = document.getElementById('nqtdcob'); if (qtdEl) qtdEl.value = '120';
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
+  window._novoAnimalReceptoraExterna = false;
+  const receptoraAvisoEl = document.getElementById('n-receptora-externa-aviso'); if (receptoraAvisoEl) receptoraAvisoEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
   _toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob');
 }
@@ -8921,8 +8962,25 @@ function _confirmarEncerramentoGestacao() {
     _criarAnimalDeParto(g, criaNome, criaSexo, data);
   }
 
+  // Reprodutivo v4, Fase 13: receptora "de fora" (receptora_externa) só fica sob cuidado da
+  // cabanha enquanto está gestante — assim que a gestação em que ela é receptora encerra (parto,
+  // aborto ou perda), ela sai sozinha da lista de animais ativos (situação vira Transferido).
+  // Não mexe em receptora "de dentro" (uma égua de verdade do plantel que emprestou o útero) —
+  // essa continua normalmente, é um animal real da cabanha.
+  const acasEnc = acasalamentos.find(a => String(a.db_id) === String(g.acasalamento_id));
+  if (acasEnc?.receptora_animal_id) {
+    const receptoraIdx = animais.findIndex(a => String(a.db_id) === String(acasEnc.receptora_animal_id));
+    const receptoraAnimal = animais[receptoraIdx];
+    if (receptoraAnimal?.receptora_externa) {
+      receptoraAnimal.situacao = 'TRANSFERIDO';
+      _dbSalvarAnimal(receptoraAnimal, receptoraIdx);
+      _mostrarStatusSync(`📤 ${receptoraAnimal.nome} (receptora externa) saiu da cabanha — gestação encerrada`, 'amber');
+    }
+  }
+
   closeModal('modal-gestacao-encerrar');
   renderGestacoesNovo();
+  renderAnimais();
 }
 
 // Fase 6: cria automaticamente o animal (potro/potranca) a partir de uma
@@ -11165,6 +11223,7 @@ async function _sincronizarAoLogin() {
         castrado: !!a.castrado,
         qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         receptora: !!a.receptora,
+        receptora_externa: !!a.receptora_externa,
         foto_url: a.foto_url || null,
         status_cadastro: a.status_cadastro || 'ativo',
         ativo: a.ativo
@@ -11559,6 +11618,7 @@ async function _dbSalvarAnimal(a, idx) {
     castrado: !!a.castrado,
     qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
     receptora: !!a.receptora,
+    receptora_externa: !!a.receptora_externa,
     foto_url: a.foto_url || null,
     status_cadastro: a.status_cadastro || 'ativo',
     criado_por: usuarioAtual?.db_id || null
