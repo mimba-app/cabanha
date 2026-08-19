@@ -1133,7 +1133,7 @@
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 6px">
       <div class="card-title" style="margin:0">Éguas de cria</div>
-      <button class="btn btn-sm" onclick="_abrirReceptoraViaSBB()">+ Adicionar receptora (via SBB)</button>
+      <button class="btn btn-sm" onclick="_abrirEscolhaReceptora()">+ Adicionar receptora</button>
     </div>
     <div class="page-sub" style="margin:-4px 0 14px">Éguas cadastradas em Animais com estágio "Cria". Qualquer uma com SBB
       pode ser usada como receptora de embrião neste ciclo (destacada em roxo) — a seleção é sempre por ciclo, nunca
@@ -2644,31 +2644,34 @@
 <div class="modal-bg" id="modal-fonte-cobertura">
   <div class="modal">
     <div class="modal-header"><span class="modal-title" id="fc-titulo">Nova fonte de cobertura</span><button class="modal-close" onclick="closeModal('modal-fonte-cobertura')">×</button></div>
+    <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Não é um animal cadastrado na cabanha — é um direito de cobertura sobre um garanhão de fora.
+      <b>Cota/Direito de uso</b> persistem sozinhos ciclo após ciclo, até você cancelar. <b>Cobertura</b> vale só pra este ciclo — precisa comprar/lançar de novo no próximo.</div>
     <input type="hidden" id="fc-edit-idx" value="-1">
+    <input type="hidden" id="fc-doadora-animal-id" value="">
     <div class="form-grid">
       <div class="form-group"><label>Tipo</label>
         <select id="fc-tipo" onchange="_toggleCamposFonteCobertura()">
-          <option value="proprio">Próprio</option>
           <option value="cota">Cota</option>
           <option value="direito_uso">Direito de uso</option>
           <option value="cobertura">Cobertura</option>
           <option value="embriao">Embrião</option>
         </select>
       </div>
-      <div class="form-group" id="fc-grp-garanhao-nome"><label>Garanhão</label><input type="text" id="fc-garanhao-nome" placeholder="Nome do garanhão"></div>
-      <div class="form-group" id="fc-grp-garanhao-animal" style="display:none"><label>Garanhão (cadastro)
-        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — Cota exige vínculo com um animal cadastrado</span></label>
-        <select id="fc-garanhao-animal" onchange="_fcGaranhaoAnimalChange()"><option value="">Selecione...</option></select>
+      <div class="form-group" id="fc-grp-embriao-origem" style="display:none;grid-column:1/-1"><label>Origem do embrião</label>
+        <div style="display:flex;gap:16px;margin-top:2px">
+          <label style="display:flex;align-items:center;gap:5px;font-weight:400;font-size:12px;cursor:pointer"><input type="radio" name="fc-embriao-origem" value="propria" checked onchange="_toggleEmbriaoOrigem()" style="width:auto"> Égua própria da cabanha</label>
+          <label style="display:flex;align-items:center;gap:5px;font-weight:400;font-size:12px;cursor:pointer"><input type="radio" name="fc-embriao-origem" value="externa" onchange="_toggleEmbriaoOrigem()" style="width:auto"> Adquirido (externo)</label>
+        </div>
       </div>
+      <div class="form-group" id="fc-grp-embriao-doadora" style="display:none;grid-column:1/-1"><label>Égua doadora
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — qualquer animal cadastrado, de qualquer estágio</span></label>
+        <select id="fc-embriao-doadora-animal" onchange="_fcEmbriaoDoadoraChange()"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group" id="fc-grp-garanhao-nome"><label>Garanhão</label><input type="text" id="fc-garanhao-nome" placeholder="Nome do garanhão"></div>
       <div class="form-group" id="fc-grp-sbb"><label>SBB
         <span style="font-weight:400;font-size:10px;color:var(--text3)"> — informe pra buscar o nome automaticamente</span></label>
         <input type="text" id="fc-garanhao-sbb" placeholder="Código SBB" onblur="_buscarAbcccParaFonte()" oninput="this.value=this.value.toUpperCase()">
         <div id="fc-abccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
-      </div>
-      <div class="form-group" id="fc-grp-recorrente" style="display:none"><label>&nbsp;</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
-          <input type="checkbox" id="fc-recorrente" style="width:auto"> Recorrente — repete automaticamente no próximo ciclo
-        </label>
       </div>
       <div class="form-group"><label>Quantidade disponível</label><input type="number" id="fc-qtd" min="1" step="1" placeholder="ex: 5"></div>
       <div class="form-group"><label>Ciclo</label><select id="fc-ciclo" onchange="_fcCicloChange()"></select></div>
@@ -2695,14 +2698,52 @@
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1"><label>Embrião (fonte)
         <span style="font-weight:400;font-size:10px;color:var(--text3)"> — próprio (de uma égua da cabanha) ou adquirido de outra cabanha</span></label>
-        <select id="emb-fonte"><option value="">Selecione...</option></select>
+        <select id="emb-fonte" onchange="_embFonteChange()"><option value="">Selecione...</option></select>
       </div>
-      <div class="form-group" style="grid-column:1/-1"><label>Égua doadora
-        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — dona genética do embrião; é ela quem entra no registro da cria, não a receptora</span></label>
+      <div class="form-group" id="emb-grp-doadora" style="grid-column:1/-1"><label>Égua doadora
+        <span style="font-weight:400;font-size:10px;color:var(--text3)" id="emb-doadora-hint"> — dona genética do embrião; é ela quem entra no registro da cria, não a receptora</span></label>
         <select id="emb-doadora"><option value="">Selecione...</option></select>
       </div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-atribuir-embriao')">Cancelar</button><button class="btn btn-primary" onclick="_confirmarAtribuirEmbriao()">Continuar</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 13: primeiro passo de "+ Adicionar receptora" — escolher entre uma
+     égua já cadastrada na cabanha ou uma nova, de fora, que fica sob cuidado só enquanto
+     gestante. Antes ia direto pro cadastro de animal, sem essa opção. -->
+<div class="modal-bg" id="modal-escolha-receptora">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><span class="modal-title">Adicionar receptora</span><button class="modal-close" onclick="closeModal('modal-escolha-receptora')">×</button></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">A receptora pode ser uma égua já cadastrada na cabanha, ou uma nova — de fora, que fica sob cuidado da cabanha só enquanto estiver gestante.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn" onclick="_escolherReceptoraExistente()">Selecionar égua já cadastrada</button>
+      <button class="btn btn-primary" onclick="_escolherReceptoraNova()">Cadastrar nova (de fora da cabanha)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 14: cadastro dedicado de receptora nova — não reaproveita mais o modal
+     genérico "Cadastrar animal" (tinha campo "Castrado", só faz sentido pra macho, e outros
+     campos de plantel que não fazem sentido pra um animal só sob cuidado temporário). -->
+<div class="modal-bg" id="modal-nova-receptora">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Cadastrar receptora nova</span><button class="modal-close" onclick="closeModal('modal-nova-receptora')">×</button></div>
+    <div style="font-size:12px;color:var(--purple-d);background:var(--purple-l);padding:8px 10px;border-radius:var(--radius);margin-bottom:12px">
+      🐴 Fica sob cuidado da cabanha só enquanto estiver gestante — assim que a gestação encerrar (parto, aborto ou perda), sai sozinha da lista de animais ativos.
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="nr-nome" placeholder="Nome completo em maiúsculas"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>SBB (ABCCC)
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — informe o código para buscar os dados automaticamente</span></label>
+        <input type="text" id="nr-sbb" placeholder="Ex: B649459" style="width:100%" onblur="_buscarAbcccParaReceptora()" oninput="this.value=this.value.toUpperCase()">
+        <div id="nr-abccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
+      </div>
+      <div class="form-group"><label>Pelagem</label><input type="text" id="nr-pel" placeholder="Ex: Gateada"></div>
+      <div class="form-group"><label>Nascimento</label><input type="date" id="nr-nasc"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="nr-obs"></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-nova-receptora')">Cancelar</button><button class="btn btn-primary" onclick="salvarNovaReceptora()">Salvar receptora</button></div>
   </div>
 </div>
 
@@ -3204,7 +3245,7 @@ function renderAnimais(){
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${a.rp}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -3234,6 +3275,7 @@ function renderAnimais(){
         ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
+        ${a.receptora_externa ? '<span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
       <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
@@ -5119,6 +5161,7 @@ function _renderDetCorpo(i, editando) {
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
       ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
+      ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 18px">
       ${[['RP',a.rp||'—'],['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
@@ -5495,14 +5538,15 @@ function renderPlanejadorReprodutivo() {
   renderEguasCriaPlanejador(); // seção independente — roda mesmo sem garanhão cadastrado
   renderMarketplacePlanejador();
 
-  // Reprodutivo v4, Fase 8 (spec 4c): "Direito de uso" marcado como recorrente persiste sozinho
-  // pro próximo ciclo, com a mesma quantidade — análogo ao "Próprio" (Fase 2), mas o "padrão" é
-  // o próprio valor da fonte recorrente no ciclo anterior. Só os dois ciclos oferecidos pelas
-  // pills (atual/próximo) são considerados — ao selecionar o próximo, clona o que for recorrente
-  // do atual e ainda não existir lá.
+  // Revisão pós-feedback: Cota e Direito de uso são, por natureza, algo que persiste entre
+  // ciclos até a cabanha negociar/desfazer (diferente de Cobertura, que é compra avulsa só
+  // pro ciclo em que foi lançada) — não é mais um checkbox opcional "recorrente", é o
+  // comportamento padrão dos dois tipos. Só os dois ciclos oferecidos pelas pills (atual/
+  // próximo) são considerados — ao selecionar o próximo, clona toda Cota/Direito de uso ativa
+  // do atual que ainda não exista lá.
   if (ciclo === cProximo) {
-    fontesCobertura.filter(f => f.tipo === 'direito_uso' && f.recorrente && f.ciclo === cAtual).forEach(f => {
-      const jaTem = fontesCobertura.some(x => x.tipo === 'direito_uso' && x.ciclo === cProximo &&
+    fontesCobertura.filter(f => ['cota', 'direito_uso'].includes(f.tipo) && f.status === 'ativa' && f.ciclo === cAtual).forEach(f => {
+      const jaTem = fontesCobertura.some(x => x.tipo === f.tipo && x.ciclo === cProximo &&
         x.garanhao_nome === f.garanhao_nome && (f.garanhao_sbb ? x.garanhao_sbb === f.garanhao_sbb : true));
       if (jaTem) return;
       const nova = {...f, ciclo: cProximo, status: 'ativa'};
@@ -5526,6 +5570,16 @@ function renderPlanejadorReprodutivo() {
       // a fonte fica presa sem db_id pra sempre — tenta salvar de novo a cada render em vez
       // de desistir, senão ela nunca aparece disponível pra virar acasalamento de verdade.
       if (!existente.db_id) _dbSalvarFonteCobertura(existente, fontesCobertura.indexOf(existente));
+      // Achado real: se o padrão do animal for reduzido em Animais DEPOIS da fonte do ciclo já
+      // ter sido criada, ela ficava presa no valor antigo — sempre acima do que o cadastro
+      // permite agora. O máximo do ciclo nunca pode passar do padrão atual do cadastro; só
+      // reduz sozinho (nunca aumenta — se o padrão subiu, quem decide usar o saldo novo é o
+      // próprio cabanheiro, editando manualmente).
+      const padraoAtual = a.qtd_coberturas_padrao || 120;
+      if (existente.quantidade_adquirida > padraoAtual) {
+        existente.quantidade_adquirida = padraoAtual;
+        _dbSalvarFonteCobertura(existente, fontesCobertura.indexOf(existente));
+      }
       return;
     }
     const novaFonte = {
@@ -5550,7 +5604,10 @@ function renderPlanejadorReprodutivo() {
     return;
   }
 
-  const ORIGEM_COR = {proprio:'bg', cota:'ba', direito_uso:'bb', cobertura:'bgr'};
+  // Achado real: as cores pastéis dos badges genéricos (bg/ba/bb/bgr) ficavam pouco evidentes
+  // pra diferenciar de cara a origem do garanhão — cor sólida + texto branco chama mais atenção.
+  const ORIGEM_COR = {proprio:'var(--green)', cota:'var(--amber)', direito_uso:'var(--blue)', cobertura:'var(--pink)'};
+  const _origemBadge = (tipo, label) => `<span style="display:inline-block;background:${ORIGEM_COR[tipo]};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.2px">${label}</span>`;
 
   const cardProprio = (a) => {
     const fIdx = fontesCobertura.findIndex(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
@@ -5563,7 +5620,7 @@ function renderPlanejadorReprodutivo() {
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
-          <div style="font-size:14px;font-weight:700">${a.nome} <span class="badge ${ORIGEM_COR.proprio}" style="font-size:9px">Próprio</span></div>
+          <div style="font-size:14px;font-weight:700">${a.nome} ${_origemBadge('proprio', 'Próprio')}</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
         </div>
       </div>
@@ -5592,7 +5649,7 @@ function renderPlanejadorReprodutivo() {
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
         <div>
-          <div style="font-size:14px;font-weight:700">${f.garanhao_nome} <span class="badge ${ORIGEM_COR[f.tipo]}" style="font-size:9px">${FC_TIPO_LABEL[f.tipo] || f.tipo}</span></div>
+          <div style="font-size:14px;font-weight:700">${f.garanhao_nome} ${_origemBadge(f.tipo, FC_TIPO_LABEL[f.tipo] || f.tipo)}</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">${f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : ''}Ciclo ${ciclo}</div>
         </div>
       </div>
@@ -5603,6 +5660,7 @@ function renderPlanejadorReprodutivo() {
       <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
       <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="editFonteCobertura(${fIdx})">editar</button>
+        <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirFonteCobertura(${fIdx})">excluir</button>
         ${disponivel > 0 ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${fIdx})">Negociar com outra cabanha</button>` : ''}
       </div>
     </div>`;
@@ -5717,6 +5775,28 @@ function _abrirAtribuirEmbriao(receptoraDbId) {
     doadoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
 
   openModal('modal-atribuir-embriao');
+  document.getElementById('emb-fonte').value = '';
+  _embFonteChange();
+}
+
+// Reprodutivo v4, Fase 14: se o embrião escolhido já tem doadora vinculada (embrião "próprio",
+// cadastrado apontando pra uma égua real da cabanha — ver salvarFonteCobertura), a doadora vem
+// travada sozinha, sem perguntar de novo o que já foi respondido no cadastro do embrião. Só
+// embrião "adquirido" (sem vínculo) continua pedindo a doadora manualmente aqui.
+function _embFonteChange() {
+  const fonteKey = document.getElementById('emb-fonte').value;
+  const fonte = fontesCobertura.find(f => _fonteKey(f) === fonteKey);
+  const selDoadora = document.getElementById('emb-doadora');
+  const hintEl = document.getElementById('emb-doadora-hint');
+  if (fonte?.doadora_animal_id) {
+    selDoadora.value = fonte.doadora_animal_id;
+    selDoadora.disabled = true;
+    hintEl.textContent = ' — já definida no cadastro deste embrião próprio';
+  } else {
+    selDoadora.disabled = false;
+    selDoadora.value = '';
+    hintEl.textContent = ' — dona genética do embrião; é ela quem entra no registro da cria, não a receptora';
+  }
 }
 
 function _confirmarAtribuirEmbriao() {
@@ -5785,18 +5865,90 @@ async function _buscarAbcccParaFonte() {
   }
 }
 
-// Receptora (TE): égua "de fora" que recebe embrião — cadastrada via SBB, mesma
-// integração já usada no cadastro normal de animal (_buscarAbccc('novo')). Vira
-// uma égua de cria comum ao salvar, elegível como candidata a receptora em qualquer
-// ciclo (ver renderEguasCriaPlanejador/_abrirAtribuirEmbriao) por ser "Na Cabanha" com SBB —
-// não existe mais um flag permanente "receptora" no cadastro (Fase 8, revisão pós-feedback:
-// ser receptora é um papel de um ciclo específico, não um atributo fixo do animal).
-function _abrirReceptoraViaSBB() {
-  _limparFormNovoAnimal();
-  openModal('modal-novo');
-  const sexEl = document.getElementById('nsex'); if (sexEl) sexEl.value = 'Fêmea';
-  const estEl = document.getElementById('nest'); if (estEl) estEl.value = 'CRIA';
-  const sbbEl = document.getElementById('nsbb'); if (sbbEl) { sbbEl.value = ''; sbbEl.focus(); }
+// Reprodutivo v4, Fase 13: "+ Adicionar receptora" agora pergunta primeiro se é uma égua já
+// cadastrada (aí é só usar "Atribuir embrião" no card dela) ou uma nova, de fora — antes ia
+// direto pro cadastro de animal, sem dar essa opção.
+function _abrirEscolhaReceptora() {
+  openModal('modal-escolha-receptora');
+}
+
+function _escolherReceptoraExistente() {
+  closeModal('modal-escolha-receptora');
+  document.getElementById('planejador-eguas-content')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  _mostrarStatusSync('Clique em "Atribuir embrião" na égua desejada, na lista abaixo', 'amber');
+}
+
+// Receptora nova (TE): égua "de fora" que recebe embrião. Vira uma égua de cria elegível como
+// candidata a receptora em qualquer ciclo (ver renderEguasCriaPlanejador/_abrirAtribuirEmbriao)
+// por ser "Na Cabanha" com SBB — isso não muda (Fase 8b: ser receptora NUM CICLO é um papel
+// derivado de acasalamentos, não um flag fixo). `receptora_externa` (Fase 13) é uma flag
+// PERMANENTE marcando que esse cadastro específico não é um animal do plantel — só existe pra
+// receber embrião, sob cuidado temporário.
+// Reprodutivo v4, Fase 14: achado real — reaproveitar o modal genérico "Cadastrar animal" pra
+// isso mostrava campos sem nenhum sentido pro caso (Castrado, que só se aplica a macho; padrão
+// de coberturas por ciclo, que é coisa de garanhão). Cadastro dedicado, só com o que interessa.
+function _escolherReceptoraNova() {
+  closeModal('modal-escolha-receptora');
+  document.getElementById('nr-nome').value = '';
+  document.getElementById('nr-sbb').value = '';
+  document.getElementById('nr-pel').value = '';
+  document.getElementById('nr-nasc').value = '';
+  document.getElementById('nr-obs').value = '';
+  document.getElementById('nr-abccc-status').style.display = 'none';
+  openModal('modal-nova-receptora');
+  document.getElementById('nr-sbb').focus();
+}
+
+async function _buscarAbcccParaReceptora() {
+  const sbbEl = document.getElementById('nr-sbb');
+  const statEl = document.getElementById('nr-abccc-status');
+  const sbb = (sbbEl?.value || '').trim().toUpperCase();
+  if (!sbb || sbb.length < 4) return;
+
+  if (statEl) { statEl.style.display = ''; statEl.innerHTML = '<span style="color:var(--text2)">🔄 Buscando no ABCCC...</span>'; }
+  if (sbbEl) sbbEl.disabled = true;
+
+  let dados = null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/buscar-abccc?sbb=${encodeURIComponent(sbb)}`,
+      { headers: { apikey: SUPABASE_KEY }, signal: AbortSignal.timeout(15000) });
+    if (res.ok) dados = await res.json();
+  } catch (e) { console.warn('Edge Function ABCCC error:', e); }
+
+  if (sbbEl) sbbEl.disabled = false;
+
+  if (dados?.encontrado === 'sim') {
+    const nomeEl = document.getElementById('nr-nome');
+    if (nomeEl && !nomeEl.value.trim()) nomeEl.value = dados.nome || '';
+    if (dados.pelagem) document.getElementById('nr-pel').value = dados.pelagem;
+    if (dados.nasc) document.getElementById('nr-nasc').value = dados.nasc;
+    if (statEl) statEl.innerHTML = `<span style="color:var(--green-d)">✅ Encontrada: ${dados.nome || sbb}. Revise e salve.</span>`;
+  } else if (dados?.encontrado === 'nao') {
+    if (statEl) statEl.innerHTML = `<span style="color:var(--amber-d)">⚠️ SBB <strong>${sbb}</strong> não encontrado no registro ABCCC. Preencha o nome manualmente.</span>`;
+  } else if (statEl) {
+    statEl.style.display = 'none';
+  }
+}
+
+function salvarNovaReceptora() {
+  const nome = document.getElementById('nr-nome').value.trim().toUpperCase();
+  if (!nome) return alert('Nome obrigatório.');
+  const sbb = document.getElementById('nr-sbb').value.trim();
+  const sbbDup = _sbbDuplicado(sbb, -1);
+  if (sbbDup) return alert(`Já existe um animal cadastrado com o SBB ${sbb}: "${sbbDup.nome}". Verifique se não é duplicada antes de salvar.`);
+  animais.push({
+    nome, sbb, sexo: 'Fêmea', estagio: 'CRIA', situacao: 'NA CABANHA',
+    pelagem: document.getElementById('nr-pel').value, nasc: document.getElementById('nr-nasc').value,
+    rp: '', ciclo: '', mae: '', pai: '', obs: document.getElementById('nr-obs').value,
+    confirmado: false, castrado: false, qtd_coberturas_padrao: 120, foto_url: null,
+    receptora_externa: true,
+    ult_vac: '', prox_vac: '', ult_verm: '', val_exame: '',
+  });
+  _dbSalvarAnimal(animais[animais.length - 1], animais.length - 1);
+  closeModal('modal-nova-receptora');
+  populaCiclos(); renderDashboard(); renderAnimais();
+  renderPlanejadorReprodutivo();
+  _mostrarStatusSync(`✅ ${nome} cadastrada como receptora`, 'green');
 }
 
 // ─── MARKETPLACE ENTRE CABANHAS (Fase 4 da spec) ──────────────────────────────
@@ -5896,7 +6048,7 @@ function salvarAnimal(){
   closeModal('modal-novo');
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
-  renderPlanejadorReprodutivo(); // se veio de "+ Adicionar receptora (via SBB)", ela já aparece na lista
+  renderPlanejadorReprodutivo(); // se veio de "+ Adicionar receptora", ela já aparece na lista
 }
 
 // Exclui um animal do cadastro (lista/grade e ficha de detalhe chamam esta mesma função).
@@ -7647,42 +7799,53 @@ const FC_STATUS_LABEL = {ativa:'Ativa', vencida:'Vencida', esgotada:'Esgotada', 
 
 function _toggleCamposFonteCobertura() {
   const tipo = document.getElementById('fc-tipo').value;
-  const grpVigIni = document.getElementById('fc-grp-vig-ini');
-  const grpVigFim = document.getElementById('fc-grp-vig-fim');
   const grpProp   = document.getElementById('fc-grp-cota-prop');
   const grpPct    = document.getElementById('fc-grp-cota-pct');
-  const grpNomeLivre = document.getElementById('fc-grp-garanhao-nome');
-  const grpAnimal = document.getElementById('fc-grp-garanhao-animal');
-  const grpRecorrente = document.getElementById('fc-grp-recorrente');
-  grpVigIni.style.display = tipo === 'proprio' ? 'none' : '';
-  grpVigFim.style.display = tipo === 'proprio' ? 'none' : '';
   grpProp.style.display = tipo === 'cota' ? '' : 'none';
   grpPct.style.display  = tipo === 'cota' ? '' : 'none';
-  // Reprodutivo v4, Fase 8 (spec 4b): Cota passa a exigir vínculo com um animal cadastrado —
-  // troca o campo de nome livre por um select de animais.
-  const ehCota = tipo === 'cota';
-  grpNomeLivre.style.display = ehCota ? 'none' : '';
-  grpAnimal.style.display = ehCota ? '' : 'none';
-  if (ehCota) _fcPopularSelectAnimaisCota();
-  // Reprodutivo v4, Fase 8 (spec 4c): flag "recorrente" só faz sentido pra Direito de uso.
-  grpRecorrente.style.display = tipo === 'direito_uso' ? '' : 'none';
+  // Reprodutivo v4, Fase 14: embrião pode vir de uma égua própria da cabanha (qualquer estágio,
+  // não só "Cria") ou ser adquirido de fora — igual coberturas de garanhão. Só esse tipo mostra
+  // a escolha de origem; os outros continuam com nome livre direto.
+  const ehEmbriao = tipo === 'embriao';
+  document.getElementById('fc-grp-embriao-origem').style.display = ehEmbriao ? '' : 'none';
+  if (ehEmbriao) { _toggleEmbriaoOrigem(); } else {
+    document.getElementById('fc-grp-embriao-doadora').style.display = 'none';
+    document.getElementById('fc-grp-garanhao-nome').style.display = '';
+    document.getElementById('fc-grp-sbb').style.display = '';
+  }
 }
 
-function _fcPopularSelectAnimaisCota() {
-  const sel = document.getElementById('fc-garanhao-animal');
+function _toggleEmbriaoOrigem() {
+  const origem = document.querySelector('input[name="fc-embriao-origem"]:checked')?.value || 'propria';
+  const ehPropria = origem === 'propria';
+  document.getElementById('fc-grp-embriao-doadora').style.display = ehPropria ? '' : 'none';
+  document.getElementById('fc-grp-garanhao-nome').style.display = ehPropria ? 'none' : '';
+  document.getElementById('fc-grp-sbb').style.display = ehPropria ? 'none' : '';
+  if (ehPropria) {
+    _fcPopularSelectDoadorasEmbriao();
+  } else {
+    document.getElementById('fc-doadora-animal-id').value = '';
+  }
+}
+
+function _fcPopularSelectDoadorasEmbriao() {
+  const sel = document.getElementById('fc-embriao-doadora-animal');
   if (!sel) return;
   const atual = sel.value;
-  const machos = animais.filter(a => a.sexo === 'Macho').sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
+  // Qualquer fêmea cadastrada na cabanha, de qualquer estágio — a doadora de um embrião não
+  // precisa estar em "Cria" (pode já ter sido desmamada, estar em pista, etc.).
+  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a)).sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
   sel.innerHTML = '<option value="">Selecione...</option>' +
-    machos.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
-  if (machos.some(a => String(a.db_id) === String(atual))) sel.value = atual;
+    eguas.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
+  if (eguas.some(a => String(a.db_id) === String(atual))) sel.value = atual;
 }
 
-function _fcGaranhaoAnimalChange() {
-  const sel = document.getElementById('fc-garanhao-animal');
+function _fcEmbriaoDoadoraChange() {
+  const sel = document.getElementById('fc-embriao-doadora-animal');
   const a = animais.find(x => String(x.db_id) === String(sel.value));
   document.getElementById('fc-garanhao-nome').value = a ? a.nome : '';
   document.getElementById('fc-garanhao-sbb').value = a ? (a.sbb || '') : '';
+  document.getElementById('fc-doadora-animal-id').value = a ? a.db_id : '';
 }
 
 // Reprodutivo v4, Fase 8 (spec 4b): percentual da cota calcula automaticamente a quantidade
@@ -7737,9 +7900,9 @@ function abrirModalFonteCobertura() {
   document.getElementById('fc-tipo').value = 'cota';
   document.getElementById('fc-garanhao-nome').value = '';
   document.getElementById('fc-garanhao-sbb').value = '';
-  document.getElementById('fc-garanhao-animal').value = '';
+  document.getElementById('fc-doadora-animal-id').value = '';
+  document.querySelector('input[name="fc-embriao-origem"][value="propria"]').checked = true;
   document.getElementById('fc-abccc-status').style.display = 'none';
-  document.getElementById('fc-recorrente').checked = false;
   document.getElementById('fc-qtd').value = '';
   _fcPopularSelectCiclo(window._cicloPlanejador || _cicloAtualTexto());
   _fcCicloChange();
@@ -7756,11 +7919,12 @@ function editFonteCobertura(i) {
   if(!f) return;
   document.getElementById('fc-titulo').textContent = 'Editar fonte de cobertura';
   document.getElementById('fc-edit-idx').value = i;
-  document.getElementById('fc-tipo').value = f.tipo || 'proprio';
+  document.getElementById('fc-tipo').value = f.tipo === 'proprio' ? 'cota' : (f.tipo || 'cota');
   document.getElementById('fc-garanhao-nome').value = f.garanhao_nome || '';
   document.getElementById('fc-garanhao-sbb').value = f.garanhao_sbb || '';
+  document.getElementById('fc-doadora-animal-id').value = f.doadora_animal_id || '';
+  document.querySelector(`input[name="fc-embriao-origem"][value="${f.doadora_animal_id ? 'propria' : 'externa'}"]`).checked = true;
   document.getElementById('fc-abccc-status').style.display = 'none';
-  document.getElementById('fc-recorrente').checked = !!f.recorrente;
   document.getElementById('fc-qtd').value = f.quantidade_adquirida ?? '';
   _fcPopularSelectCiclo(f.ciclo || '');
   document.getElementById('fc-vig-ini').value = f.vigencia_inicio || '';
@@ -7770,59 +7934,63 @@ function editFonteCobertura(i) {
   document.getElementById('fc-valor').value = f.valor_cobertura ?? '';
   document.getElementById('fc-obs').value = f.obs || '';
   _toggleCamposFonteCobertura();
-  if (f.tipo === 'cota') {
-    const a = animais.find(x => (f.garanhao_sbb && x.sbb === f.garanhao_sbb) || x.nome === f.garanhao_nome);
-    document.getElementById('fc-garanhao-animal').value = a ? a.db_id : '';
+  if (f.tipo === 'embriao' && f.doadora_animal_id) {
+    document.getElementById('fc-embriao-doadora-animal').value = f.doadora_animal_id;
   }
   openModal('modal-fonte-cobertura');
 }
 
-function salvarFonteCobertura() {
+async function salvarFonteCobertura() {
   const tipo = document.getElementById('fc-tipo').value;
-  // Reprodutivo v4, Fase 8 (spec 4b): Cota exige vínculo com um animal cadastrado — nome/SBB vêm
-  // do select, não são mais texto livre.
-  if(tipo === 'cota') {
-    const animalId = document.getElementById('fc-garanhao-animal').value;
-    if(!animalId) return alert('Selecione o garanhão cadastrado (Cota exige vínculo com um animal).');
-    _fcGaranhaoAnimalChange();
-  }
   const garanhao_nome = document.getElementById('fc-garanhao-nome').value.trim();
   if(!garanhao_nome) return alert('Informe o nome do garanhão.');
   const quantidade_adquirida = parseInt(document.getElementById('fc-qtd').value || '0');
   if(!quantidade_adquirida || quantidade_adquirida <= 0) return alert('Informe a quantidade disponível (maior que zero).');
-  if(tipo === 'proprio') {
-    const sbb = document.getElementById('fc-garanhao-sbb').value.trim();
-    const a = animais.find(x => (sbb && x.sbb === sbb) || x.nome === garanhao_nome);
-    const padrao = a?.qtd_coberturas_padrao || 120;
-    if(quantidade_adquirida > padrao) return alert(`Fonte "Próprio" não pode passar do padrão do cadastro do animal (${padrao}). Pra aumentar, edite o padrão em Animais.`);
-  }
   const ciclo = document.getElementById('fc-ciclo').value.trim();
   if(!ciclo) return alert('Informe o ciclo (ex: 26/27).');
   const vigencia_inicio = document.getElementById('fc-vig-ini').value || '';
-  if(tipo !== 'proprio' && !vigencia_inicio) return alert('Informe a vigência de início.');
+  if(!vigencia_inicio) return alert('Informe a vigência de início.');
+  // Reprodutivo v4, Fase 14: embrião "próprio" exige selecionar de qual égua da cabanha é —
+  // "adquirido" (externo) segue igual Direito de uso/Cobertura, só nome/SBB em texto livre.
+  const embriaoOrigemPropria = tipo === 'embriao' && (document.querySelector('input[name="fc-embriao-origem"]:checked')?.value !== 'externa');
+  if (embriaoOrigemPropria && !document.getElementById('fc-doadora-animal-id').value) return alert('Selecione a égua doadora do embrião.');
 
   const idx = parseInt(document.getElementById('fc-edit-idx').value || '-1');
   const obj = {
     tipo,
     garanhao_nome,
     garanhao_sbb: document.getElementById('fc-garanhao-sbb').value.trim() || '',
+    doadora_animal_id: embriaoOrigemPropria ? document.getElementById('fc-doadora-animal-id').value : null,
     quantidade_adquirida,
     ciclo,
-    vigencia_inicio: tipo !== 'proprio' ? vigencia_inicio : '',
-    vigencia_fim: tipo !== 'proprio' ? (document.getElementById('fc-vig-fim').value || '') : '',
+    vigencia_inicio,
+    vigencia_fim: document.getElementById('fc-vig-fim').value || '',
     proprietario_cota: tipo === 'cota' ? document.getElementById('fc-cota-prop').value.trim() : '',
     percentual_cota: tipo === 'cota' ? (document.getElementById('fc-cota-pct').value || '') : '',
     valor_cobertura: document.getElementById('fc-valor').value || '',
     status: idx >= 0 ? (fontesCobertura[idx]?.status || 'ativa') : 'ativa',
     obs: document.getElementById('fc-obs').value,
-    // Reprodutivo v4, Fase 8 (spec 4c): só faz sentido pra Direito de uso — persiste sozinha pro
-    // próximo ciclo quando marcada (ver renderPlanejadorReprodutivo).
-    recorrente: tipo === 'direito_uso' ? document.getElementById('fc-recorrente').checked : false,
   };
-  if(idx >= 0) { fontesCobertura[idx] = {...fontesCobertura[idx], ...obj}; _dbSalvarFonteCobertura(fontesCobertura[idx], idx); }
-  else { fontesCobertura.push(obj); _dbSalvarFonteCobertura(obj, fontesCobertura.length - 1); }
+  _fcSalvando(true);
+  let ok;
+  if(idx >= 0) { fontesCobertura[idx] = {...fontesCobertura[idx], ...obj}; ok = await _dbSalvarFonteCobertura(fontesCobertura[idx], idx); }
+  else { fontesCobertura.push(obj); ok = await _dbSalvarFonteCobertura(obj, fontesCobertura.length - 1); }
+  _fcSalvando(false);
+  // Achado real: fechar o modal e assumir sucesso sem confirmar a resposta do banco fazia a
+  // fonte "sumir" depois de um F5 — o POST/PATCH podia falhar (sessão, rede, RLS) e ninguém
+  // ficava sabendo, porque a tela já tinha fechado como se tivesse dado certo. Agora só fecha
+  // (e limpa o form) se o banco confirmou; se falhar, mantém o modal aberto com os dados
+  // preenchidos pra tentar de novo.
+  if(!ok) return alert('Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.');
   closeModal('modal-fonte-cobertura');
   renderFontesCobertura();
+}
+
+function _fcSalvando(salvando) {
+  const btn = document.querySelector('#modal-fonte-cobertura .modal-footer .btn-primary');
+  if (!btn) return;
+  btn.disabled = salvando;
+  btn.textContent = salvando ? 'Salvando...' : 'Salvar';
 }
 
 function excluirFonteCobertura(i) {
@@ -8145,7 +8313,7 @@ async function _recarregarFontesCobertura() {
     fontesCobertura.length = 0;
     (dbFontes || []).forEach(f => fontesCobertura.push({
       db_id: f.id, tipo: f.tipo, garanhao_nome: f.garanhao_nome,
-      garanhao_sbb: f.garanhao_sbb || '', tem_rm: !!f.tem_rm, demerito: !!f.demerito,
+      garanhao_sbb: f.garanhao_sbb || '', doadora_animal_id: f.doadora_animal_id || null, tem_rm: !!f.tem_rm, demerito: !!f.demerito,
       quantidade_adquirida: f.quantidade_adquirida, ciclo: f.ciclo || '',
       vigencia_inicio: f.vigencia_inicio || '', vigencia_fim: f.vigencia_fim || '',
       proprietario_cota: f.proprietario_cota || '', percentual_cota: f.percentual_cota ?? '',
@@ -8972,8 +9140,25 @@ function _confirmarEncerramentoGestacao() {
     _criarAnimalDeParto(g, criaNome, criaSexo, data);
   }
 
+  // Reprodutivo v4, Fase 13: receptora "de fora" (receptora_externa) só fica sob cuidado da
+  // cabanha enquanto está gestante — assim que a gestação em que ela é receptora encerra (parto,
+  // aborto ou perda), ela sai sozinha da lista de animais ativos (situação vira Transferido).
+  // Não mexe em receptora "de dentro" (uma égua de verdade do plantel que emprestou o útero) —
+  // essa continua normalmente, é um animal real da cabanha.
+  const acasEnc = acasalamentos.find(a => String(a.db_id) === String(g.acasalamento_id));
+  if (acasEnc?.receptora_animal_id) {
+    const receptoraIdx = animais.findIndex(a => String(a.db_id) === String(acasEnc.receptora_animal_id));
+    const receptoraAnimal = animais[receptoraIdx];
+    if (receptoraAnimal?.receptora_externa) {
+      receptoraAnimal.situacao = 'TRANSFERIDO';
+      _dbSalvarAnimal(receptoraAnimal, receptoraIdx);
+      _mostrarStatusSync(`📤 ${receptoraAnimal.nome} (receptora externa) saiu da cabanha — gestação encerrada`, 'amber');
+    }
+  }
+
   closeModal('modal-gestacao-encerrar');
   renderGestacoesNovo();
+  renderAnimais();
 }
 
 // Fase 6: cria automaticamente o animal (potro/potranca) a partir de uma
@@ -11216,6 +11401,7 @@ async function _sincronizarAoLogin() {
         castrado: !!a.castrado,
         qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         receptora: !!a.receptora,
+        receptora_externa: !!a.receptora_externa,
         foto_url: a.foto_url || null,
         status_cadastro: a.status_cadastro || 'ativo',
         ativo: a.ativo
@@ -11289,7 +11475,7 @@ async function _sincronizarAoLogin() {
     if(dbFontes) {
       dbFontes.forEach(f => fontesCobertura.push({
         db_id: f.id, tipo: f.tipo, garanhao_nome: f.garanhao_nome,
-        garanhao_sbb: f.garanhao_sbb || '', tem_rm: !!f.tem_rm, demerito: !!f.demerito,
+        garanhao_sbb: f.garanhao_sbb || '', doadora_animal_id: f.doadora_animal_id || null, tem_rm: !!f.tem_rm, demerito: !!f.demerito,
         quantidade_adquirida: f.quantidade_adquirida, ciclo: f.ciclo || '',
         vigencia_inicio: f.vigencia_inicio || '', vigencia_fim: f.vigencia_fim || '',
         proprietario_cota: f.proprietario_cota || '', percentual_cota: f.percentual_cota ?? '',
@@ -11610,6 +11796,7 @@ async function _dbSalvarAnimal(a, idx) {
     castrado: !!a.castrado,
     qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
     receptora: !!a.receptora,
+    receptora_externa: !!a.receptora_externa,
     foto_url: a.foto_url || null,
     status_cadastro: a.status_cadastro || 'ativo',
     criado_por: usuarioAtual?.db_id || null
@@ -11716,6 +11903,7 @@ async function _dbSalvarFonteCobertura(f, idx) {
     tipo: f.tipo,
     garanhao_nome: f.garanhao_nome,
     garanhao_sbb: v(f.garanhao_sbb),
+    doadora_animal_id: v(f.doadora_animal_id),
     tem_rm: !!f.tem_rm,
     demerito: !!f.demerito,
     quantidade_adquirida: f.quantidade_adquirida,
@@ -11731,10 +11919,12 @@ async function _dbSalvarFonteCobertura(f, idx) {
     criado_por: usuarioAtual?.db_id || null,
   };
   if(f.db_id) {
-    await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
+    const ok = await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
+    return !!ok;
   } else {
     const res = await _supa('POST','fontes_cobertura', payload);
-    if(res?.[0]?.id) fontesCobertura[idx].db_id = res[0].id;
+    if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
+    return false;
   }
 }
 
