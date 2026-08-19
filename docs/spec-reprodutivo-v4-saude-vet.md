@@ -860,3 +860,25 @@ cadastrada — o que não faz sentido (uma receptora carrega o embrião de outra
 - Testado via servidor estático local + browser: receptora cadastrada some da lista de doadoras próprias;
   simulado POST falhando (401) e depois com sucesso — na falha, o registro é desfeito localmente e o
   modal continua aberto; no sucesso seguinte, persiste com `db_id` real e fecha.
+
+### Fase 16 — seção Embriões sempre visível + atribuição de embrião com retry-persist (2026-08-19)
+
+Pedro reportou o mesmo erro de banco ao tentar atribuir um embrião e ao salvar uma cobertura, mesmo depois
+da Fase 15 — e perguntou onde os embriões cadastrados aparecem na tela, já que sem achar onde editá-los
+tentou cadastrar de novo e duplicou. Investigação confirmou que **nenhuma** cabanha real tinha fonte
+`tipo=embriao` gravada no banco em nenhum schema — o "duplicado" nunca chegou a persistir, era só um
+registro fantasma em memória (mesma causa raiz da Fase 14/15, só que ainda não coberta no fluxo de
+atribuição de embrião em si).
+
+- **Seção "Embriões" sempre visível**: nova seção fixa na aba Planejador de ciclo, logo abaixo de
+  Garanhões (`planejador-embrioes-content`), listando todo `fontes_cobertura` com `tipo=embriao` do
+  ciclo selecionado, com o mesmo card/badge (`cardOutraFonte`, badge teal) e botões editar/excluir —
+  antes só existia escondido dentro do "Editar / ver todas as fontes" recolhido, difícil de achar.
+- **`_confirmarAtribuirEmbriao()` com retry-persist**: virou `async`; se o embrião escolhido ainda não
+  tem `db_id` (falhou de salvar antes, ou é um cadastro recém-feito na mesma tela), tenta salvar de novo
+  na hora (mesmo padrão do `_acMatchSelecionarFonte()`), com botão "Salvando..." desabilitado durante a
+  tentativa — só bloqueia com alerta se essa segunda tentativa também falhar. Isso resolve o erro "ainda
+  não terminou de salvar" de forma automática na maioria dos casos, em vez de só avisar e travar.
+- Testado via servidor estático local + browser: seção Embriões renderiza com badge teal e botões
+  funcionando; fonte de embrião sem `db_id` ganha `db_id` real sozinha ao tentar atribuir (retry-persist
+  confirmado); fluxo completo de `abrirModalAcasalamentoMatch()` abre a modal de confirmação corretamente.
