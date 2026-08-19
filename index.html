@@ -150,10 +150,11 @@
   .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:8px; }
   .page-title { font-family:var(--serif); font-size:var(--fs-2xl); font-weight:800; color:var(--text); letter-spacing:-0.01em; }
   .page-sub { font-size:12px; color:var(--text2); margin-top:3px; }
-  .btn { padding:7px 14px; border-radius:var(--radius); border:0.5px solid var(--border2); background:var(--bg2); font-size:12px; cursor:pointer; color:var(--text); font-family:var(--font); transition:background 0.12s; }
-  .btn:hover { background:var(--bg3); }
+  .btn { padding:7px 14px; border-radius:var(--radius); border:0.5px solid var(--border2); background:var(--bg2); font-size:12px; cursor:pointer; color:var(--text); font-family:var(--font); transition:background 0.12s, transform .15s ease, box-shadow .15s ease; }
+  .btn:hover { background:var(--bg3); transform:translateY(-1px); box-shadow:0 2px 6px rgba(43,36,25,.12); }
+  .btn:active { transform:translateY(0); box-shadow:none; }
   .btn-primary { background:var(--green); color:white; border-color:var(--green); font-weight:600; }
-  .btn-primary:hover { background:var(--green-d); }
+  .btn-primary:hover { background:var(--green-d); box-shadow:0 2px 8px rgba(0,0,0,.18); }
   .btn-sm { padding:4px 10px; font-size:11px; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
@@ -161,7 +162,8 @@
   .sidebar-logout-btn { width:100%; margin-top:8px; background:var(--red); color:#fff; border:none; padding:9px; border-radius:var(--radius); cursor:pointer; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
   .sidebar-logout-btn:hover { background:var(--red-d); }
   .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.25rem; }
-  .metric { background:var(--bg3); border-radius:var(--radius); padding:1rem; }
+  .metric { background:var(--bg3); border-radius:var(--radius); padding:1rem; border:0.5px solid var(--border); box-shadow:var(--sh-sm); transition:transform .15s ease, box-shadow .15s ease; cursor:pointer; }
+  .metric:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(43,36,25,.14); }
   .metric-label { font-size:11px; color:var(--text2); margin-bottom:5px; }
   .metric-value { font-size:var(--fs-xl); font-weight:700; color:var(--text); font-family:var(--mono); }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:3px; }
@@ -174,6 +176,8 @@
   .skel-line { width:100%; height:12px; margin:3px 0; }
   .skel-line.w60 { width:60%; } .skel-line.w80 { width:80%; } .skel-line.w40 { width:40%; }
   .card { background:var(--bg2); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:1.1rem; margin-bottom:1rem; box-shadow:var(--sh-sm); }
+  .card[onclick] { transition:transform .15s ease, box-shadow .15s ease; }
+  .card[onclick]:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(43,36,25,.14); }
   @media (prefers-color-scheme: dark) { .card, .modal, .metric { border-color:var(--ink-08); } }
   /* ── Selo de registro — círculo com anel pontilhado, glyph central, label mono.
      Substitui badge/pill de status crítico em pontos-chave: vacina/exame
@@ -442,8 +446,8 @@
   .kanban-col-emdia .kanban-col-header    { background:var(--green-l); color:var(--green-d); border-bottom:2px solid var(--green); }
   .kanban-col-emdia .kanban-count         { background:var(--green);   color:white; }
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
-  .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
-  .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s, transform 0.15s ease; }
+  .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); transform:translateY(-2px); }
   .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
   .kanban-card-data { font-size:11px; font-weight:600; margin-top:4px; }
@@ -531,11 +535,11 @@
   .perfil-cab, .perfil-cabanheiro  { background:var(--green-l);color:var(--green-d); }
   .perfil-vet, .perfil-veterinario { background:var(--blue-l);color:var(--blue-d); }
   /* DASHBOARD DRILL-DOWN */
-  .stat-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; cursor:pointer; border-radius:var(--radius); padding:3px 4px; transition:background 0.12s; }
-  .stat-row:hover { background:var(--bg3); }
+  .stat-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; cursor:pointer; border-radius:var(--radius); padding:3px 4px; transition:background 0.12s, transform 0.12s ease; }
+  .stat-row:hover { background:var(--bg3); transform:translateX(2px); }
   .drill-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0; }
-  .drill-row { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.1s; }
-  .drill-row:hover { background:var(--bg3); }
+  .drill-row { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.1s, transform 0.12s ease; }
+  .drill-row:hover { background:var(--bg3); transform:translateX(2px); }
   .drill-row:last-child { border-bottom:none; }
   .drill-nome { font-size:var(--fs-sm); font-weight:700; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .drill-info { font-size:11px; color:var(--text2); white-space:nowrap; }
@@ -547,7 +551,9 @@
   /* CALENDÁRIO DASHBOARD */
   .cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:10px; }
   .cal-header { text-align:center;padding:3px;font-weight:700;color:var(--text3);text-transform:uppercase; }
-  .cal-day { text-align:center;padding:3px 2px;border-radius:4px;min-height:26px;cursor:default; }
+  .cal-day { text-align:center;padding:3px 2px;border-radius:4px;min-height:26px;cursor:default; transition:background 0.12s; }
+  .cal-day.has-event { cursor:pointer; }
+  .cal-day.has-event:hover { background:var(--bg3); }
   .cal-day-num { font-size:10px;color:var(--text2); }
   .cal-day.today .cal-day-num { background:var(--green);color:white;border-radius:99px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center; }
   .cal-day.has-event { background:var(--blue-l);cursor:pointer; }
@@ -563,8 +569,10 @@
   /* ── Linha do Tempo — fita horizontal (redesign "Registro Vivo") ──
      Mesma fonte de dados que antes (eventos_tl), só a estrutura visual muda:
      de lista vertical de bolinhas para uma fita horizontal com selo+card. */
-  .tl-wrap { padding:0.75rem 0 0.25rem; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
-  .tl-fita { display:flex; align-items:flex-start; gap:0; min-width:min-content; padding-bottom:6px; }
+  .tl-wrap { padding:0.75rem 0 0.25rem; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; cursor:grab; }
+  .tl-wrap::-webkit-scrollbar { display:none; }
+  .tl-wrap.tl-dragging { cursor:grabbing; }
+  .tl-fita { display:flex; align-items:flex-start; gap:20px; min-width:min-content; padding-bottom:6px; }
   .tl-item { display:flex; flex-direction:column; align-items:center; flex-shrink:0; width:172px; position:relative; }
   .tl-year { font-family:var(--serif); font-weight:700; font-size:15px; color:var(--text); height:20px; display:flex; align-items:center; margin-bottom:4px; }
   .tl-fio-row { position:relative; width:100%; height:44px; display:flex; align-items:center; justify-content:center; }
@@ -774,7 +782,7 @@
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
   </div>
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Dashboard</span></button>
-  <button class="nav-btn" onclick="showPage('animais')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="6" cy="8" r="2.1"/><circle cx="11" cy="5.3" r="2.1"/><circle cx="16" cy="5.3" r="2.1"/><circle cx="19" cy="9" r="2.1"/></svg></span><span>Animais</span></button>
+  <button class="nav-btn" onclick="showPage('animais')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3c1.8 0 2.9 1.6 3.2 3.4.3 1.7 0 2.9 1 3.9.7.7 1.3 1.1 1.3 1.9 0 .9-1 1.2-2 1.2h-1v2.3c0 1-.2 1.7-1 2.5l-1.3 1.3c-.4.4-.4 1-.1 1.5l.5.9c.2.4-.1.9-.6.9h-3.4c-.5 0-.9-.4-.9-.9v-1.8c-1.6.3-3.3.1-4.7-.6L5 21.5c-.2.3-.6.5-1 .5H3.5c-.5 0-.8-.5-.6-.9l1.4-2.9C3.5 16.8 3 15.2 3 13.5 3 8.3 7 3 15.5 3z"/><circle cx="16.3" cy="8.2" r="0.6" fill="currentColor" stroke="none"/><path d="M8 10c-1 .3-2 1.1-2.3 2"/></svg></span><span>Animais</span></button>
   <button class="nav-btn" onclick="showPage('saude')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span>Saúde & Vacinas</span></button>
   <button class="nav-btn" onclick="showPage('reprodutivo')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.9-9C0.7 8.4 2 5 5.3 5c2 0 3.4 1.2 4.2 2.4C10.3 6.2 11.7 5 13.7 5 17 5 18.3 8.4 16.9 12 14.5 16.4 12 21 12 21z"/></svg></span><span>Reprodutivo</span></button>
   <button class="nav-btn" onclick="showPage('financeiro')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.2"/></svg></span><span>Financeiro</span></button>
@@ -11247,6 +11255,33 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
   });
   html+='</div>';
   el.innerHTML=html;
+  _ativarDragScroll(el);
+}
+
+// Arrastar-pra-rolar horizontal na linha do tempo (tipo Google Maps) — puramente
+// de interação/UX, não mexe em nenhum dado. Só ativa o "modo arrasto" depois de
+// >5px de deslocamento, pra não atrapalhar o clique normal nos cards/fotos.
+function _ativarDragScroll(el){
+  if(!el || el._dragScrollAtivo) return;
+  el._dragScrollAtivo = true;
+  let down=false, arrastando=false, startX=0, startScroll=0;
+  el.addEventListener('mousedown', e=>{
+    down=true; arrastando=false; startX=e.pageX; startScroll=el.scrollLeft;
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!down) return;
+    const dx = e.pageX - startX;
+    if(!arrastando && Math.abs(dx) > 5){ arrastando=true; el.classList.add('tl-dragging'); }
+    if(arrastando){ e.preventDefault(); el.scrollLeft = startScroll - dx; }
+  });
+  window.addEventListener('mouseup', ()=>{
+    down=false;
+    if(arrastando){ arrastando=false; el.classList.remove('tl-dragging'); }
+  });
+  el.addEventListener('mouseleave', ()=>{
+    if(down && arrastando){ el.classList.remove('tl-dragging'); }
+    down=false; arrastando=false;
+  });
 }
 
 function _midiaCategLabel(cat){
