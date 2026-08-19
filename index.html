@@ -825,6 +825,7 @@
       <button class="btn btn-sm" id="det-btn-editar" onclick="alternarEdicaoAnimal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar</button>
       <button class="btn btn-sm btn-primary" id="det-btn-salvar" onclick="salvarEdicaoAnimal()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Salvar</button>
       <button class="btn btn-sm" id="det-btn-cancelar" onclick="cancelarEdicaoAnimal()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</button>
+      <button class="btn btn-sm" id="det-btn-excluir" title="Excluir animal" style="color:var(--red-d)" onclick="excluirAnimal(window._detIdx)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
     </div>
   </div>
   <div id="det-corpo" style="max-width:980px"></div>
@@ -3202,7 +3203,7 @@ function renderAnimais(){
       <td style="font-size:11px;color:var(--text2);font-family:var(--mono)">${fd(a.nasc)}</td>
       <td>${sitb(a.situacao)}</td>
       <td>${estb(a.estagio)}</td>
-      <td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="verDetalhe(${i})">ver</button><button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button></td>
+      <td style="display:flex;gap:6px"><button class="btn btn-sm" onclick="verDetalhe(${i})">ver</button><button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button><button class="btn btn-sm" title="Excluir" style="color:var(--red-d)" onclick="excluirAnimal(${i})">${_iconLixeira(14)}</button></td>
     </tr>`;
   }).join('');
 
@@ -3232,6 +3233,7 @@ function renderAnimais(){
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm" style="flex:1" onclick="verDetalhe(${i})">Ver</button>
         <button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button>
+        <button class="btn btn-sm" title="Excluir" style="color:var(--red-d)" onclick="excluirAnimal(${i})">${_iconLixeira(14)}</button>
       </div>
     </div>`;
   }).join('');
@@ -5257,10 +5259,13 @@ function salvarEdicaoAnimal() {
   const a = animais[i];
   const nome = (document.getElementById('ed-nome')?.value||'').trim().toUpperCase();
   if(!nome) { alert('Nome é obrigatório.'); return; }
+  const sbbEdit = (document.getElementById('ed-sbb')?.value||'').trim();
+  const sbbDup = _sbbDuplicado(sbbEdit, i);
+  if (sbbDup) { alert(`Já existe um animal cadastrado com o SBB ${sbbEdit}: "${sbbDup.nome}". Verifique se não é duplicado antes de salvar.`); return; }
   // Aplicar edições
   a.nome     = nome;
   a.rp       = document.getElementById('ed-rp')?.value||a.rp;
-  a.sbb      = (document.getElementById('ed-sbb')?.value||'').trim();
+  a.sbb      = sbbEdit;
   a.sexo     = document.getElementById('ed-sexo')?.value||a.sexo;
   a.pelagem  = document.getElementById('ed-pelagem')?.value||a.pelagem;
   a.nasc     = document.getElementById('ed-nasc')?.value||a.nasc;
@@ -5819,11 +5824,23 @@ function renderFinanceiro(){
 function filtrarLanc(v){filtroLancTipo=v;renderFinanceiro();}
 function excluirLanc(i){if(confirm('Remover este lançamento?')){lancamentos.splice(i,1);renderFinanceiro();}}
 
+// SBB é o código de registro único da ABCCC — dois animais com o mesmo SBB são, na prática,
+// o mesmo animal cadastrado duas vezes. `ignorarIdx` deixa a edição de um animal não se barrar
+// pelo próprio SBB dele mesmo. Vazio nunca conta como duplicado (nem todo animal tem SBB).
+function _sbbDuplicado(sbb, ignorarIdx) {
+  const s = (sbb||'').trim().toUpperCase();
+  if (!s) return null;
+  const idx = animais.findIndex((a,i) => i !== ignorarIdx && (a.sbb||'').trim().toUpperCase() === s);
+  return idx >= 0 ? animais[idx] : null;
+}
+
 // ─── SALVAR ───────────────────────────────────────────────────────────────────
 function salvarAnimal(){
   const nome=document.getElementById('nn').value.trim().toUpperCase();
   if(!nome)return alert('Nome obrigatório.');
   const sbb=document.getElementById('nsbb').value.trim();
+  const sbbDup = _sbbDuplicado(sbb, -1);
+  if (sbbDup) return alert(`Já existe um animal cadastrado com o SBB ${sbb}: "${sbbDup.nome}". Verifique se não é duplicado antes de salvar.`);
   animais.push({
     rp:document.getElementById('nrp').value,sbb,nome,
     ciclo:document.getElementById('nciclo').value,nasc:document.getElementById('nnasc').value,
@@ -5843,6 +5860,34 @@ function salvarAnimal(){
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
   renderPlanejadorReprodutivo(); // se veio de "+ Adicionar receptora (via SBB)", ela já aparece na lista
+}
+
+// Exclui um animal do cadastro (lista/grade e ficha de detalhe chamam esta mesma função).
+// Se o animal já tem histórico real vinculado (gestação, acasalamento, financeiro, tratamento
+// etc.), o banco recusa apagar de verdade (FK sem cascade, de propósito) — oferece marcar como
+// inativo em vez disso, que tira o animal das listagens sem apagar o rastro.
+async function excluirAnimal(i) {
+  const a = animais[i];
+  if (!a) return;
+  if (!confirm(`Excluir o animal "${a.nome}"?\n\nEsta ação não pode ser desfeita.`)) return;
+
+  const res = await _dbExcluirAnimal(a.db_id);
+  if (res.ok) {
+    animais.splice(i, 1);
+    _mostrarStatusSync('🗑️ Animal excluído', 'green');
+  } else if (res.temHistorico) {
+    if (!confirm(`"${a.nome}" tem histórico vinculado (gestação, acasalamento, financeiro ou tratamento) — excluir de vez apagaria esse rastro, então o banco recusou.\n\nMarcar como inativo em vez disso? Ele some das listagens e do Planejador, mas o histórico continua preservado.`)) return;
+    await _supa('PATCH', 'animais', {ativo: false}, `?id=eq.${a.db_id}`);
+    a.ativo = false;
+    animais.splice(i, 1);
+    _mostrarStatusSync('📦 Animal marcado como inativo', 'amber');
+  } else {
+    alert('Não foi possível excluir o animal agora. Tente de novo em instantes.');
+    return;
+  }
+
+  if (window._detIdx === i) showPage('animais');
+  populaCiclos(); renderDashboard(); renderAnimais();
 }
 
 // Reprodutivo v4, Fase 1 (spec 3.6): o modal "Cadastrar animal" não limpava os campos depois de
@@ -11493,6 +11538,29 @@ async function _dbSalvarAnimal(a, idx) {
     const res = await _supa('POST','animais',payload);
     if(res?.[0]?.id) animais[idx].db_id = res[0].id;
   }
+}
+
+// Exclusão de animal: tenta apagar de verdade. Vários históricos (acasalamentos, gestações,
+// tratamentos, lançamentos financeiros, pendências, eventos, estoque) têm FK sem cascade pro
+// animal de propósito — apagar um animal com produção/histórico real apagaria rastro que
+// devia ficar. Nesses casos o banco recusa (23503, foreign_key_violation) e devolvemos isso
+// pro chamador decidir (excluirAnimal() oferece marcar como inativo em vez de excluir).
+async function _dbExcluirAnimal(db_id) {
+  if(!db_id) return {ok:true};
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/animais?id=eq.${db_id}`, {
+    method: 'DELETE',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Accept-Profile':  TENANT_SCHEMA,
+      'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=minimal'
+    }
+  });
+  if(r.ok) return {ok:true};
+  const body = await r.text().catch(()=> '');
+  const temHistorico = r.status === 409 || body.includes('23503') || body.includes('foreign key');
+  return {ok:false, temHistorico, status:r.status, body};
 }
 
 // ── Vacinações ────────────────────────────────────────────────────────────
