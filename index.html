@@ -815,6 +815,7 @@
   <div class="page-header">
     <div style="display:flex;align-items:center;gap:10px;min-width:0">
       <button class="btn btn-sm" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
+      <div id="det-foto-wrap" style="flex-shrink:0"></div>
       <div style="min-width:0">
         <div class="page-title" id="det-titulo" style="font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Animal</div>
         <div class="page-sub">Ficha completa do animal</div>
@@ -5109,6 +5110,16 @@ function verDetalhe(i){
 function _renderDetCorpo(i, editando) {
   const a = animais[i];
   document.getElementById('det-titulo').innerHTML = `${a.nome}${a.sbb ? ` · SBB ${a.sbb}` : ''}${a.status_cadastro==='rascunho' ? ' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>' : ''}`;
+
+  // Foto no cabeçalho da ficha — maior que a miniatura da lista/edição, com expandir em
+  // tela cheia (mesmo lightbox já usado na linha do tempo). Só aparece no modo visualização;
+  // no modo edição o upload já tem seu próprio preview dentro da seção Identificação.
+  const fotoWrap = document.getElementById('det-foto-wrap');
+  if (fotoWrap) {
+    fotoWrap.innerHTML = editando ? '' : (a.foto_url
+      ? `<img src="${a.foto_url}" alt="" title="Clique para ampliar" onclick="verFotoAmpliada('${a.foto_url}','${(a.nome||'').replace(/'/g,"\\'")}','')" style="width:64px;height:64px;border-radius:50%;object-fit:cover;cursor:pointer;border:1.5px solid var(--border)">`
+      : `<div style="width:64px;height:64px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${(a.nome||'?').trim().charAt(0).toUpperCase()}</div>`);
+  }
 
   // ── IDENTIFICAÇÃO ─────────────────────────────────────────────────
   const SITS = [{v:'NA CABANHA',l:'Na Cabanha'},{v:'EMPRESTIMO',l:'Empréstimo'},{v:'VENDIDO',l:'Vendido(a)'},{v:'TRANSFERIDO',l:'Transferido/Doado'},{v:'MORTO',l:'Morto(a)'}];
