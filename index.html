@@ -1075,53 +1075,21 @@
     <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações ativas</button>
     <button class="tab" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
     <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
-    <button class="tab" onclick="switchTab(this,'gest-fontes')">Garanhões e Coberturas</button>
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
     <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
   </div>
   <div id="tab-planejador" style="display:none">
     <div id="planejador-ciclo-pills" style="display:flex;gap:8px;margin-bottom:14px"></div>
-    <div class="page-sub" style="margin:-6px 0 14px">Garanhões (machos ≥20 meses, na cabanha) e o saldo de coberturas
-      disponível para o ciclo selecionado. O saldo herda automaticamente do ciclo anterior — ajuste manualmente
-      se a disponibilidade mudou (ex.: cotas vendidas ou adquiridas).</div>
+    <div class="card-title" style="margin:0 0 6px">Garanhões e coberturas disponíveis</div>
+    <div class="page-sub" style="margin:-4px 0 14px">Todo garanhão/fonte disponível pra uso no ciclo selecionado — próprio,
+      cota, direito de uso ou cobertura avulsa, cada um com sua origem identificada. O saldo do "Próprio" herda
+      automaticamente do ciclo anterior; ajuste manualmente se a disponibilidade mudou.</div>
     <div id="planejador-garanhoes-content"></div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 6px">
-      <div class="card-title" style="margin:0">Éguas de cria</div>
-      <button class="btn btn-sm" onclick="_abrirReceptoraViaSBB()">+ Adicionar receptora (via SBB)</button>
-    </div>
-    <div class="page-sub" style="margin:-4px 0 14px">Éguas cadastradas em Animais com estágio "Cria". Marque quais serão
-      reprodutoras neste ciclo — a seleção é por ciclo, nunca fixa no cadastro do animal.</div>
-    <div id="planejador-eguas-content"></div>
-
-    <div class="card-title" style="margin:22px 0 6px">Marketplace entre cabanhas</div>
-    <div class="page-sub" style="margin:-4px 0 14px">Venda ou receba cotas de cobertura de outras cabanhas do Mimba —
-      use "Negociar com outra cabanha" num garanhão acima para oferecer, ou responda abaixo às ofertas recebidas.</div>
-    <div id="planejador-ofertas-recebidas"></div>
-    <div id="planejador-ofertas-enviadas" style="margin-top:10px"></div>
-  </div>
-  <div id="tab-ciclos" style="display:none"><div id="ciclos-content"></div></div>
-  <div id="tab-matrizes" style="display:none">
-    <div class="card-title" style="margin:0 0 8px">Matrizes</div>
-    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Matriz</th><th>SBB</th><th>Pelagem</th><th>Crias registradas</th><th>Situação</th></tr></thead><tbody id="tbody-matrizes"></tbody></table></div>
-    <div class="card-title" style="margin:22px 0 8px">Reprodutores</div>
-    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Reprodutor</th><th>Crias na cabanha</th></tr></thead><tbody id="tbody-reprod"></tbody></table></div>
-  </div>
-
-  <!-- Abaixo: abas herdadas da antiga página "Gestação", fundida aqui na Fase 5 da spec
-       docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
-       lugar, só o menu. -->
-  <!-- Reprodutivo v4, Fase 8 (spec 4a): "Plantel disponível" e "Garanhões e Coberturas" fundidas
-       numa aba só — visão padrão é a leitura rápida (plantel disponível no ciclo), edição
-       (lista com editar/excluir/+ Nova fonte) fica acessível logo abaixo, não em aba separada. -->
-  <div id="gest-fontes" style="display:none">
-    <div class="page-sub" style="margin:-6px 0 14px">Tudo disponível pra uso no ciclo selecionado no Planejador de ciclo — garanhões com saldo, éguas de cria sem acasalamento ainda, cotas/direitos de uso/coberturas avulsas, embriões e receptoras.</div>
-    <div id="plantel-disponivel-content"></div>
 
     <div class="card" style="margin-top:1.25rem;cursor:pointer" onclick="_toggleEdicaoFontesCobertura()">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:var(--text2)">✏️ Editar Garanhões e Coberturas</span>
+        <span style="font-size:12px;font-weight:700;color:var(--text2)">✏️ Editar / ver todas as fontes (todos os ciclos)</span>
         <span id="gest-fontes-edit-toggle" style="font-size:12px;color:var(--text3)">▾ mostrar</span>
       </div>
     </div>
@@ -1162,7 +1130,33 @@
         </div>
       </div>
     </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 6px">
+      <div class="card-title" style="margin:0">Éguas de cria</div>
+      <button class="btn btn-sm" onclick="_abrirReceptoraViaSBB()">+ Adicionar receptora (via SBB)</button>
+    </div>
+    <div class="page-sub" style="margin:-4px 0 14px">Éguas cadastradas em Animais com estágio "Cria". Qualquer uma com SBB
+      pode ser usada como receptora de embrião neste ciclo (destacada em roxo) — a seleção é sempre por ciclo, nunca
+      fixa no cadastro do animal.</div>
+    <div id="planejador-eguas-content"></div>
+
+    <div class="card-title" style="margin:22px 0 6px">Marketplace entre cabanhas</div>
+    <div class="page-sub" style="margin:-4px 0 14px">Venda ou receba cotas de cobertura de outras cabanhas do Mimba —
+      use "Negociar com outra cabanha" num garanhão acima para oferecer, ou responda abaixo às ofertas recebidas.</div>
+    <div id="planejador-ofertas-recebidas"></div>
+    <div id="planejador-ofertas-enviadas" style="margin-top:10px"></div>
   </div>
+  <div id="tab-ciclos" style="display:none"><div id="ciclos-content"></div></div>
+  <div id="tab-matrizes" style="display:none">
+    <div class="card-title" style="margin:0 0 8px">Matrizes</div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Matriz</th><th>SBB</th><th>Pelagem</th><th>Crias registradas</th><th>Situação</th></tr></thead><tbody id="tbody-matrizes"></tbody></table></div>
+    <div class="card-title" style="margin:22px 0 8px">Reprodutores</div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Reprodutor</th><th>Crias na cabanha</th></tr></thead><tbody id="tbody-reprod"></tbody></table></div>
+  </div>
+
+  <!-- Abaixo: abas herdadas da antiga página "Gestação", fundida aqui na Fase 5 da spec
+       docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
+       lugar, só o menu. -->
   <div id="gest-acasalamentos" style="display:none">
     <!-- Reprodutivo v4, Fase 8 (spec 3b): entrada padrão do "Acasalar" — duas colunas lado a
          lado (garanhões/fontes × éguas), clique-clique pra ligar, sem drag-and-drop. Substitui o
@@ -2688,6 +2682,27 @@
       <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="fc-obs"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-fonte-cobertura')">Cancelar</button><button class="btn btn-primary" onclick="salvarFonteCobertura()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- Reprodutivo v4, Fase 9 (revisão pós-feedback): atribuir embrião a uma receptora, iniciando
+     pelo card dela (em vez de só pelo garanhão/fonte na tela de match). Reaproveita o mesmo
+     modal de confirmação de acasalamento por trás — só pré-seleciona os dois lados. -->
+<div class="modal-bg" id="modal-atribuir-embriao">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><span class="modal-title">Atribuir embrião</span><button class="modal-close" onclick="closeModal('modal-atribuir-embriao')">×</button></div>
+    <input type="hidden" id="emb-receptora-id">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Embrião (fonte)
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — próprio (de uma égua da cabanha) ou adquirido de outra cabanha</span></label>
+        <select id="emb-fonte"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Égua doadora
+        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — dona genética do embrião; é ela quem entra no registro da cria, não a receptora</span></label>
+        <select id="emb-doadora"><option value="">Selecione...</option></select>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-atribuir-embriao')">Cancelar</button><button class="btn btn-primary" onclick="_confirmarAtribuirEmbriao()">Continuar</button></div>
   </div>
 </div>
 
@@ -5499,11 +5514,6 @@ function renderPlanejadorReprodutivo() {
 
   const garanhoes = animais.filter(a => a.sexo === 'Macho' && !a.castrado && isNaCabanha(a) && (_idadeAnos(a.nasc) === null || _idadeAnos(a.nasc) >= 20 / 12));
 
-  if (!garanhoes.length) {
-    contentEl.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum garanhão (macho, na cabanha, ≥20 meses) cadastrado em Animais.</div>';
-    return;
-  }
-
   // Reprodutivo v4, Fase 2 (spec 3.3): garanhão "próprio" não pede mais quantidade por modal —
   // o saldo do ciclo nasce automaticamente do padrão cadastrado no animal (qtd_coberturas_padrao,
   // default 120), editável direto no card (só pra diminuir em relação ao padrão) ou no cadastro do
@@ -5530,39 +5540,76 @@ function renderPlanejadorReprodutivo() {
     _dbSalvarFonteCobertura(novaFonte, fontesCobertura.length - 1);
   });
 
-  contentEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">' +
-    garanhoes.map(a => {
-      const fIdx = fontesCobertura.findIndex(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
-        ((a.sbb && f.garanhao_sbb && f.garanhao_sbb === a.sbb) || f.garanhao_nome === a.nome));
-      const f = fontesCobertura[fIdx];
-      const padrao = a.qtd_coberturas_padrao || 120;
+  // Revisão pós-feedback: "Cotas, direitos de uso e coberturas" deixou de ser uma seção separada
+  // (confundia o criador — parecia um conjunto diferente de garanhões) e passou a aparecer
+  // junto dos "Próprio" na mesma lista, cada card com uma etiqueta de origem clara.
+  const outrasFontesGaranhao = fontesCobertura.filter(f => ['cota', 'direito_uso', 'cobertura'].includes(f.tipo) && f.ciclo === ciclo && f.status === 'ativa');
 
-      const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
-      const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
-      return `<div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
-          <div>
-            <div style="font-size:14px;font-weight:700">${a.nome}</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
-          </div>
+  if (!garanhoes.length && !outrasFontesGaranhao.length) {
+    contentEl.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum garanhão (macho, na cabanha, ≥20 meses) cadastrado em Animais, nem cota/direito de uso/cobertura ativa neste ciclo.</div>';
+    return;
+  }
+
+  const ORIGEM_COR = {proprio:'bg', cota:'ba', direito_uso:'bb', cobertura:'bgr'};
+
+  const cardProprio = (a) => {
+    const fIdx = fontesCobertura.findIndex(f => f.tipo === 'proprio' && f.ciclo === ciclo &&
+      ((a.sbb && f.garanhao_sbb && f.garanhao_sbb === a.sbb) || f.garanhao_nome === a.nome));
+    const f = fontesCobertura[fIdx];
+    const padrao = a.qtd_coberturas_padrao || 120;
+
+    const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
+    const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+        <div>
+          <div style="font-size:14px;font-weight:700">${a.nome} <span class="badge ${ORIGEM_COR.proprio}" style="font-size:9px">Próprio</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
         </div>
-        ${estourado ? `<div style="background:var(--red-l);color:var(--red-d);font-weight:700;font-size:12px;padding:8px 10px;border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--red-d)">⚠️ SALDO ESTOURADO — ${excedente} cobertura(s) além do limite deste garanhão</div>` : ''}
-        <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
-          <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
+      </div>
+      ${estourado ? `<div style="background:var(--red-l);color:var(--red-d);font-weight:700;font-size:12px;padding:8px 10px;border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--red-d)">⚠️ SALDO ESTOURADO — ${excedente} cobertura(s) além do limite deste garanhão</div>` : ''}
+      <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
+        <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px">
+        <label style="display:flex;align-items:center;gap:4px">Disponível neste ciclo:
+          <input type="number" id="fc-inline-qtd-${fIdx}" value="${f.quantidade_adquirida}" min="0" max="${padrao}" step="1" style="width:64px">
+        </label>
+        <button class="btn btn-sm" onclick="_ajustarSaldoCicloProprio(${fIdx},'fc-inline-qtd-${fIdx}')">Salvar</button>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Máx. ${padrao} — padrão do cadastro do animal. Pra aumentar, edite o padrão em Animais.</div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+        ${(f.status === 'ativa' && disponivel > 0) ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${fIdx})">Negociar com outra cabanha</button>` : ''}
+      </div>
+    </div>`;
+  };
+
+  const cardOutraFonte = (f) => {
+    const fIdx = fontesCobertura.indexOf(f);
+    const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
+    const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+        <div>
+          <div style="font-size:14px;font-weight:700">${f.garanhao_nome} <span class="badge ${ORIGEM_COR[f.tipo]}" style="font-size:9px">${FC_TIPO_LABEL[f.tipo] || f.tipo}</span></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : ''}Ciclo ${ciclo}</div>
         </div>
-        <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
-        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px">
-          <label style="display:flex;align-items:center;gap:4px">Disponível neste ciclo:
-            <input type="number" id="fc-inline-qtd-${fIdx}" value="${f.quantidade_adquirida}" min="0" max="${padrao}" step="1" style="width:64px">
-          </label>
-          <button class="btn btn-sm" onclick="_ajustarSaldoCicloProprio(${fIdx},'fc-inline-qtd-${fIdx}')">Salvar</button>
-        </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">Máx. ${padrao} — padrão do cadastro do animal. Pra aumentar, edite o padrão em Animais.</div>
-        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-          ${(f.status === 'ativa' && disponivel > 0) ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${fIdx})">Negociar com outra cabanha</button>` : ''}
-        </div>
-      </div>`;
-    }).join('') + '</div>';
+      </div>
+      ${estourado ? `<div style="background:var(--red-l);color:var(--red-d);font-weight:700;font-size:12px;padding:8px 10px;border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--red-d)">⚠️ SALDO ESTOURADO — ${excedente} cobertura(s) além do limite</div>` : ''}
+      <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
+        <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="editFonteCobertura(${fIdx})">editar</button>
+        ${disponivel > 0 ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${fIdx})">Negociar com outra cabanha</button>` : ''}
+      </div>
+    </div>`;
+  };
+
+  contentEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">' +
+    garanhoes.map(cardProprio).join('') + outrasFontesGaranhao.map(cardOutraFonte).join('') + '</div>';
 }
 
 function _ajustarSaldoCicloProprio(fIdx, inputId) {
@@ -5578,59 +5625,6 @@ function _ajustarSaldoCicloProprio(fIdx, inputId) {
   _dbSalvarFonteCobertura(f, fIdx);
   renderPlanejadorReprodutivo();
   _mostrarStatusSync('✅ Saldo do ciclo atualizado', 'green');
-}
-
-// Reprodutivo v4, Fase 4 (spec 3.2): aba nova, separada, escopada pelo mesmo ciclo selecionado no
-// Planejador — junta tudo que está disponível pra uso naquele ciclo num só lugar (só leitura, sem
-// ações — pra isso já existem as telas específicas: Planejador, Acasalamentos, Garanhões e Coberturas).
-function renderPlantelDisponivel() {
-  const el = document.getElementById('plantel-disponivel-content');
-  if (!el) return;
-  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-
-  const garanhoes = fontesCobertura.filter(f => f.tipo === 'proprio' && f.ciclo === ciclo)
-    .map(f => ({ f, saldo: _saldoFonteCobertura(f) }))
-    .filter(x => x.saldo.disponivel > 0);
-
-  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && (a.estagio || '').toUpperCase() === 'CRIA')
-    .filter(a => !acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado'));
-
-  const outrasFontes = fontesCobertura.filter(f => ['cota', 'direito_uso', 'cobertura'].includes(f.tipo) && f.ciclo === ciclo && f.status === 'ativa')
-    .map(f => ({ f, saldo: _saldoFonteCobertura(f) }))
-    .filter(x => x.saldo.disponivel > 0);
-
-  const embrioes = fontesCobertura.filter(f => f.tipo === 'embriao' && f.ciclo === ciclo && f.status === 'ativa')
-    .map(f => ({ f, saldo: _saldoFonteCobertura(f) }))
-    .filter(x => x.saldo.disponivel > 0);
-
-  // Reprodutivo v4, Fase 8 (revisão pós-feedback): não existe mais um flag permanente
-  // "receptora" no cadastro — ser receptora é um papel válido só naquele ciclo (a mesma
-  // égua pode não ser receptora em outro ciclo). Candidata = qualquer fêmea "Na Cabanha"
-  // com SBB preenchido (exigido pela ABCCC) ainda não vinculada a um TE neste ciclo.
-  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && a.sbb)
-    .filter(a => !acasalamentos.some(ac => String(ac.receptora_animal_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado'));
-
-  const secao = (titulo, itens, vazioMsg, renderItem) =>
-    `<div class="card-title" style="margin:18px 0 8px">${titulo} (${itens.length})</div>` +
-    (itens.length
-      ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">${itens.map(renderItem).join('')}</div>`
-      : `<div class="card" style="text-align:center;padding:1.25rem;color:var(--text3);font-size:12px">${vazioMsg}</div>`);
-
-  const cardFonte = ({ f, saldo }) => `<div class="card" style="padding:10px 12px">
-    <div style="font-weight:700;font-size:13px">${f.garanhao_nome}${f.garanhao_sbb ? ' <span style="font-weight:400;color:var(--text3)">(' + f.garanhao_sbb + ')</span>' : ''}</div>
-    <div style="font-size:11px;color:var(--text2);margin-top:2px">${FC_TIPO_LABEL[f.tipo] || f.tipo} · ${saldo.disponivel} disponível de ${saldo.total}</div>
-  </div>`;
-  const cardAnimal = (a) => `<div class="card" style="padding:10px 12px">
-    <div style="font-weight:700;font-size:13px">${a.nome}</div>
-    <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
-  </div>`;
-
-  el.innerHTML =
-    secao('Garanhões', garanhoes, 'Nenhum garanhão com saldo disponível neste ciclo.', cardFonte) +
-    secao('Éguas de cria', eguas, 'Nenhuma égua de cria disponível (todas já têm acasalamento neste ciclo).', cardAnimal) +
-    secao('Cotas, direitos de uso e coberturas', outrasFontes, 'Nenhuma cota/direito de uso/cobertura ativa neste ciclo.', cardFonte) +
-    secao('Embriões', embrioes, 'Nenhum embrião disponível neste ciclo.', cardFonte) +
-    secao('Receptoras', receptoras, 'Nenhuma receptora livre neste ciclo.', cardAnimal);
 }
 
 function _selecionarCicloPlanejador(ciclo) {
@@ -5662,12 +5656,31 @@ function renderEguasCriaPlanejador() {
     eguas.map(a => {
       const acIdx = acasalamentos.findIndex(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
       const ac = acIdx >= 0 ? acasalamentos[acIdx] : null;
+      // Revisão pós-feedback: uma égua "de cria" também pode estar carregando o embrião de
+      // outra (receptora, TE) neste ciclo — checa isso separado de ser doadora/acasalada dela
+      // mesma, e destaca com cor diferente (roxo) pra ficar óbvio de cara pro criador.
+      const acReceptoraIdx = acasalamentos.findIndex(x => String(x.receptora_animal_id) === String(a.db_id) && x.ciclo === ciclo && x.status !== 'cancelado');
+      const acReceptora = acReceptoraIdx >= 0 ? acasalamentos[acReceptoraIdx] : null;
+
+      if (acReceptora) {
+        return `<div class="card" style="background:var(--purple-l);border-color:var(--purple)">
+          <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--purple-d)">
+            ${a.nome} <span class="badge" style="font-size:9px;background:var(--purple);color:#fff">Receptora</span>
+          </div>
+          <div style="font-size:11px;color:var(--purple-d);margin:4px 0 8px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
+          <div style="font-size:12px;color:var(--purple-d)">Receptora com embrião de <b>${acReceptora.egua_nome || '—'}</b></div>
+          <div style="margin-top:10px"><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${acReceptoraIdx})">Cancelar</button></div>
+        </div>`;
+      }
 
       if (!ac) {
         return `<div class="card" style="border-style:dashed">
           <div style="font-size:14px;font-weight:700">${a.nome}</div>
           <div style="font-size:11px;color:var(--text2);margin:4px 0 10px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Sem acasalamento no ciclo ${ciclo}</div>
-          <button class="btn btn-sm btn-primary" onclick="_acasalarEguaPlanejador('${a.db_id}','${ciclo}')">+ Acasalar</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-primary" onclick="_acasalarEguaPlanejador('${a.db_id}','${ciclo}')">+ Acasalar</button>
+            ${a.sbb ? `<button class="btn btn-sm" onclick="_abrirAtribuirEmbriao('${a.db_id}')">Atribuir embrião</button>` : ''}
+          </div>
         </div>`;
       }
 
@@ -5682,6 +5695,44 @@ function renderEguasCriaPlanejador() {
         <div style="margin-top:10px"><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${acIdx})">Cancelar</button></div>
       </div>`;
     }).join('') + '</div>';
+}
+
+// Reprodutivo v4, Fase 9 (revisão pós-feedback): atribuir embrião a uma receptora começando
+// pelo card dela — antes só dava pra fazer isso pelo lado da doadora, na tela de match.
+function _abrirAtribuirEmbriao(receptoraDbId) {
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  const embrioes = fontesCobertura.filter(f => f.tipo === 'embriao' && f.ciclo === ciclo && f.status === 'ativa')
+    .filter(f => _saldoFonteCobertura(f).disponivel > 0);
+  if (!embrioes.length) return alert('Nenhum embrião disponível neste ciclo. Cadastre um em "+ Nova cota / cobertura" (tipo Embrião) — próprio, de uma égua da cabanha, ou adquirido de outra cabanha.');
+
+  document.getElementById('emb-receptora-id').value = receptoraDbId;
+  const selFonte = document.getElementById('emb-fonte');
+  selFonte.innerHTML = '<option value="">Selecione...</option>' +
+    embrioes.map(f => `<option value="${_fonteKey(f)}">${f.garanhao_nome}${f.garanhao_sbb ? ' (' + f.garanhao_sbb + ')' : ''}</option>`).join('');
+
+  const doadoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && String(a.db_id) !== String(receptoraDbId)
+    && !acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado'));
+  const selDoadora = document.getElementById('emb-doadora');
+  selDoadora.innerHTML = '<option value="">Selecione...</option>' +
+    doadoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
+
+  openModal('modal-atribuir-embriao');
+}
+
+function _confirmarAtribuirEmbriao() {
+  const receptoraId = document.getElementById('emb-receptora-id').value;
+  const fonteKey = document.getElementById('emb-fonte').value;
+  const doadoraId = document.getElementById('emb-doadora').value;
+  if (!fonteKey) return alert('Selecione o embrião.');
+  if (!doadoraId) return alert('Selecione a égua doadora (dona genética do embrião).');
+  closeModal('modal-atribuir-embriao');
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  // Reaproveita o modal de confirmação de acasalamento já existente — só entra com os dois
+  // lados pré-escolhidos (doadora = a égua clicada normalmente na tela de match; receptora =
+  // pré-selecionada aqui, em vez de deixar "Nenhuma selecionada ainda").
+  abrirModalAcasalamentoMatch(fonteKey, doadoraId, ciclo);
+  const selReceptora = document.getElementById('ac-receptora');
+  if (selReceptora) selReceptora.value = receptoraId;
 }
 
 // Reprodutivo v4, Fase 3 (spec 3.4): renomeada de _marcarEguaReprodutora — nunca marcou flag
@@ -5737,7 +5788,7 @@ async function _buscarAbcccParaFonte() {
 // Receptora (TE): égua "de fora" que recebe embrião — cadastrada via SBB, mesma
 // integração já usada no cadastro normal de animal (_buscarAbccc('novo')). Vira
 // uma égua de cria comum ao salvar, elegível como candidata a receptora em qualquer
-// ciclo (ver renderPlantelDisponivel/_acFonteChange) por ser "Na Cabanha" com SBB —
+// ciclo (ver renderEguasCriaPlanejador/_abrirAtribuirEmbriao) por ser "Na Cabanha" com SBB —
 // não existe mais um flag permanente "receptora" no cadastro (Fase 8, revisão pós-feedback:
 // ser receptora é um papel de um ciclo específico, não um atributo fixo do animal).
 function _abrirReceptoraViaSBB() {
@@ -6121,7 +6172,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -6135,7 +6186,7 @@ function switchTab(btn,tid){
   if(tid==='tab-hist-vac')  renderHistVac();
   if(tid==='tab-hist-exam') renderHistExam();
   if(tid==='med-historico') renderMedHistorico();
-  if(tid==='tab-planejador') renderPlanejadorReprodutivo();
+  if(tid==='tab-planejador') { renderPlanejadorReprodutivo(); renderFontesCobertura(); }
   if(tid==='gest-acasalamentos') renderAcasalamentos();
   if(tid==='gest-gestacoes') renderGestacoesNovo();
   if(tid==='gest-protocolos') renderProtocolos();
@@ -9522,7 +9573,7 @@ showPage=function(id){
   if(id==='eventos'){renderEventos();renderEvtPorAnimal();renderEvtResultados();}
   // "gestacao" foi fundida em "reprodutivo" na Fase 5 (spec docs/spec-reprodutivo-v3.md) —
   // mesmas funções de render, só a página que mudou.
-  if(id==='reprodutivo'){renderFontesCobertura();renderPlantelDisponivel();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
+  if(id==='reprodutivo'){renderFontesCobertura();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
   if(id==='estoque'){renderEstoque();renderMovimentos();}
   if(id==='medidas'){renderMedLista();}
   if(id==='saude'){renderSaude();}
@@ -9537,7 +9588,6 @@ switchTab=function(btn,tid){
   if(tid==='nut-templates')renderTemplatesPage();
   if(tid==='evt-animais')renderEvtPorAnimal();
   if(tid==='evt-resultados')renderEvtResultados();
-  if(tid==='gest-fontes'){renderPlantelDisponivel();renderFontesCobertura();}
   if(tid==='est-alertas'||tid==='est-lista')renderEstoque();
   if(tid==='est-movimentos')renderMovimentos();
 };

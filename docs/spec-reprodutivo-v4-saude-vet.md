@@ -698,3 +698,39 @@ tempo.
   propósito nos 4 POSTs de auto-criação), confirmado 1 card só marcado "Selecionado" por vez mesmo sem
   `db_id`; restaurada a rede, clicar de novo persiste e o `db_id` real assume a identidade; filtro
   padrão da aba Garanhões e Coberturas testado escondendo fonte de ciclo antigo e mostrando ao limpar.
+
+### Fase 11 — funde Planejador + Garanhões e Coberturas, unifica origem, receptora fica visível (2026-08-19)
+
+Pedro pediu pra fundir as abas "Planejador de ciclo" e "Garanhões e Coberturas" numa só, e resolver dois
+problemas de clareza: garanhões por Cota/Direito de uso/Cobertura apareciam numa seção separada da de
+"Próprio" (parecia um conjunto diferente de garanhões, quando é o mesmo conceito com origem diferente); e
+não existia nenhuma forma visual de saber, na lista de éguas de cria, quais estavam servindo de receptora
+de embrião de outra égua neste ciclo.
+
+- **Abas fundidas**: "Garanhões e Coberturas" (`gest-fontes`) removida — seu conteúdo (edição completa,
+  filtros, histórico de negociações) virou um bloco colapsável dentro de "Planejador de ciclo"
+  (`tab-planejador`), logo abaixo da lista unificada de garanhões. `renderPlantelDisponivel()` (Fase 4/8,
+  visão só-leitura que ficava no topo dessa aba) foi removida por completo — ficou redundante, a lista
+  unificada do Planejador já mostra tudo isso de forma editável.
+- **Garanhões unificados**: `renderPlanejadorReprodutivo()` agora renderiza numa única grade tanto os
+  garanhões "Próprio" (auto-criados, card rico com edição inline de saldo) quanto as fontes
+  Cota/Direito de uso/Cobertura (cards mais simples, com botão "editar" abrindo o modal completo) — cada
+  card com uma etiqueta de origem (`Próprio`/`Cota`/`Direito de uso`/`Cobertura`) em cor própria, pra ficar
+  óbvio de cara qual é a natureza da disponibilidade.
+- **Receptoras ficam visíveis nas Éguas de cria**: `renderEguasCriaPlanejador()` passou a checar, pra cada
+  égua, se ela está como `receptora_animal_id` de algum acasalamento ativo do ciclo (além de checar se ela
+  é a doadora/acasalada, como já fazia) — se estiver, o card vira roxo (`--purple`/`--purple-l`), ganha
+  badge "Receptora" e mostra "Receptora com embrião de **{doadora}**". Éguas com SBB ainda sem esse papel
+  ganham um botão extra "Atribuir embrião" ao lado do "+ Acasalar" de sempre.
+- **Novo fluxo "Atribuir embrião"** (`_abrirAtribuirEmbriao()`/`_confirmarAtribuirEmbriao()`, modal novo
+  `modal-atribuir-embriao`): inicia pelo lado da receptora (em vez de só pelo lado da doadora, na tela de
+  match) — lista os embriões disponíveis no ciclo (fonte tipo `embriao`, própria ou adquirida) e as éguas
+  elegíveis como doadora (fêmeas na cabanha, sem acasalamento no ciclo, excluindo a própria receptora).
+  Ao confirmar, reaproveita `abrirModalAcasalamentoMatch()` (Fase 8, ponto 3b) já existente — só
+  pré-seleciona a doadora escolhida e o select de receptora, sem duplicar lógica de criação de
+  acasalamento.
+- Testado via servidor estático local + browser: lista unificada mostra Próprio/Cota/Direito de
+  uso/Cobertura juntos com badges corretos; `_abrirAtribuirEmbriao` lista só embriões com saldo e exclui a
+  receptora da lista de doadoras; fluxo completo (atribuir → confirmar → salvar) faz o card da receptora
+  virar roxo com o texto "Receptora com embrião de DOADORA PROPRIA"; aba "Garanhões e Coberturas" some da
+  lista de abas, sem nenhuma referência solta a `gest-fontes`/`renderPlantelDisponivel` no código.
