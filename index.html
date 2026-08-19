@@ -9495,25 +9495,32 @@ function _acCard(a, i, col) {
       }).join('')}
     </div>` : '';
 
-  const etapaStyle = col && col.destaque ? (() => { const e = _acEtapaVet(a); return `<div style="display:flex;align-items:center;gap:5px;margin-top:7px;padding-top:7px;border-top:0.5px solid var(--border);font-size:11px;background:${e.bg};border:0.5px solid ${e.border};border-radius:var(--radius);padding:4px 8px;margin-top:8px"><span style="width:7px;height:7px;border-radius:50%;background:${e.cor};flex-shrink:0;animation:ac-pulse 2s infinite"></span><span style="color:${e.cor};font-weight:500">${e.label}</span></div>`; })() : '';
-  return `<div class="kanban-card"${col?.destaque ? ' style="border-color:var(--green)"' : ''}>
-    <div class="kanban-card-nome">${a.egua_nome}</div>
-    <div class="kanban-card-info">
-      Garanhão: ${a.garanhao_nome || '—'}<br>
-      ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || 'Tipo: a definir pelo vet'} · Ciclo ${a.ciclo || '—'}<br>
-      Tentativas: ${tts.length}
-      ${a.veterinario_nome ? '<br>Vet: ' + a.veterinario_nome : ''}
-      ${a.status === 'cancelado' && a.motivo_cancelamento ? '<br>Motivo: ' + a.motivo_cancelamento : ''}
-    </div>
-    ${etapaStyle}
-    ${htmlTentativas}
-    <div class="kanban-card-actions">
-      ${a.status === 'rascunho' ? `<button class="btn btn-sm" onclick="acasSimular(${i})">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'simulado' ? `<button class="btn btn-sm" onclick="acasAprovar(${i})">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'aprovado' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'em_curso' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-    </div>
-  </div>`;
+  let etapaStyle = '';
+  if (col && col.destaque) {
+    const e = _acEtapaVet(a);
+    etapaStyle = '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;background:'+e.bg+';border:0.5px solid '+e.border+';border-radius:var(--radius);padding:5px 9px">'
+      + '<span style="width:7px;height:7px;border-radius:50%;background:'+e.cor+';flex-shrink:0;animation:ac-pulse 2s infinite"></span>'
+      + '<span style="color:'+e.cor+';font-weight:500;font-size:11px">'+e.label+'</span></div>';
+  }
+  const cardBorder = col?.destaque ? ' style="border-color:var(--green)"' : '';
+  return '<div class="kanban-card"' + cardBorder + '>'
+    + '<div class="kanban-card-nome">'+a.egua_nome+'</div>'
+    + '<div class="kanban-card-info">'
+    + 'Garanhão: '+(a.garanhao_nome||'—')+'<br>'
+    + (AC_TIPO_LABEL[a.tipo_cobertura]||a.tipo_cobertura||'Tipo: a definir pelo vet')+' · Ciclo '+(a.ciclo||'—')+'<br>'
+    + 'Tentativas: '+tts.length
+    + (a.veterinario_nome ? '<br>Vet: '+a.veterinario_nome : '')
+    + (a.status==='cancelado'&&a.motivo_cancelamento ? '<br>Motivo: '+a.motivo_cancelamento : '')
+    + '</div>'
+    + etapaStyle
+    + htmlTentativas
+    + '<div class="kanban-card-actions">'
+    + (a.status==='rascunho' ? '<button class="btn btn-sm" onclick="acasSimular('+i+')">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + (a.status==='simulado' ? '<button class="btn btn-sm" onclick="acasAprovar('+i+')">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + (a.status==='aprovado' ? '<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + (a.status==='em_curso' ? '<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + '</div>'
+    + '</div>';
 }
 
 // Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
