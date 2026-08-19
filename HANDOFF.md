@@ -304,6 +304,88 @@ cabanhas), mais as abas herdadas da Gestação.
   Castrado alinha com o input ao lado, Plantel/modal de acasalamento listam corretamente só fêmeas com
   SBB como candidatas a receptora (égua sem SBB fica de fora).
 
+## 🗑️ Remoção completa da aba "Legado" do Reprodutivo (2026-08-19)
+Fecha de vez o que o incidente de 2026-08-12 (abaixo) tinha deixado pendurado: a aba "Legado" existia só
+porque a Cabanha Mãe de Deus (Luciano) tinha 4 gestações abertas presas no fluxo antigo (pré-Reprodutivo
+v3), tabela `coberturas_arquivadas_legado`. Pedro pediu pra migrar essas 4 pro sistema vigente e remover a
+funcionalidade inteira (frontend + banco).
+
+- **Dados migrados** (query direta, não pela UI): as 4 gestações (NECAJÔ DONANA, INDIANA DO BUTIAZEIRO,
+  TURUMBAMBA CHARRUA, ULTRA II CHARRUA × respectivos garanhões, datas de cobertura/diagnóstico
+  preservadas, ciclo `25/26` real) viraram registros de verdade em `fontes_cobertura` (tipo `cobertura`,
+  já esgotada) + `acasalamentos` (status `confirmado`) + `gestacoes` (status `gestando`) no schema
+  `cab_mae_de_deus` — únicas linhas dessas 3 tabelas nesse tenant até então (schema "limpo", zero risco
+  de colisão). Os 2 registros de fixture na cabanha de teste do Pedro (`cab_cabanha_pedro_teste`) foram
+  descartados — dado de teste, não real.
+- **Frontend**: removida a aba "Legado" (`gest-ativas`), os arrays `coberturas`/`coberturas2`, o modal
+  `modal-cobertura-gest` e toda a cadeia de funções que só existia pra alimentá-lo (`renderGestacao()`,
+  `salvarCoberturaGest()`, `editCobGest()`, `excluirCobertura()`, `_dbSalvarCobertura()`,
+  `_dbExcluirCobertura()`, busca de padrillo via ABCCC duplicada). Pontos que **dependiam
+  funcionalmente** do legado (não só exibiam) foram migrados pra ler da tabela `gestacoes` real em vez
+  de simplesmente apagados: alerta de "parto próximo/atrasado" no dashboard, marcador de parto previsto
+  no calendário de eventos (dia e detalhe do dia), contagem de éguas prenhas pra vacina obrigatória,
+  histórico de "cruzamentos anteriores" no simulador de acasalamento, e a linha do tempo do animal
+  (`_carregarLinhaTempo`, que buscava direto de `coberturas_arquivadas_legado` via REST).
+- **Banco**: migration `docs/migrations/2026-08-19-remove-legado-coberturas.sql` — recria
+  `carregar_dados_cabanha()` (RPC de bootstrap) sem a leitura da tabela legada, dropa
+  `coberturas_arquivadas_legado` do template `public` e de todos os 7 schemas `cab_*` provisionados.
+  **Achado no caminho**: `provisionar_schema_cabanha()` já não incluía essa tabela no array
+  `v_tabelas` — cabanhas provisionadas recentemente já nasciam sem ela, então a RPC de provisionamento
+  não precisou de mudança nenhuma. Confirmado via `pg_constraint` que nenhuma outra tabela tinha FK
+  apontando pra ela — DROP direto, sem risco de cascade em dado de terceiros.
+- Revisão de isolamento (`revisor-isolamento`) rodada — **aprovada**. Confirmou que o gate
+  `tem_acesso_tenant()` continua intacto no início da RPC recriada, e que não sobrou nenhuma referência
+  a `coberturas2`/`coberturas_arquivadas_legado` no `index.html`. Dois pontos que o subagente não
+  conseguiu checar por falta de acesso a ferramentas de banco (policies/triggers referenciando a tabela
+  em texto, e consistência dos 7 schemas pós-DROP) foram conferidos manualmente depois, via MCP — nada
+  encontrado, os 7 schemas ficaram consistentes.
+- Testado via servidor estático local + browser: gestação migrada aparece normalmente em "Gestações
+  ativas" com progresso/trimestre calculados certos; Dashboard, ficha de detalhe do animal, calendário e
+  Planejador renderizam sem erro; sem nenhum resquício textual ou funcional de "Legado" em lugar nenhum
+  do app.
+
+## 🐛 Garanhões "fantasma" em Acasalamentos + bug de seleção múltipla (2026-08-19)
+Pedro reportou dois problemas na Cabanha Mãe de Deus, ciclo 26/27: (1) a aba Acasalamentos listava 3
+garanhões que nunca foram cadastrados como animal da cabanha (LEOPARDO DA GAP SÃO PEDRO-TE, LAS GURIZAS
+FOGONERO, ÍNDIO DO BOEIRO — padrillos externos usados via IA antes do Reprodutivo v3) como fonte "Próprio"
+com 120 coberturas disponíveis; (2) na tela de match (duas colunas), clicar num garanhão específico
+selecionava ele **e mais três outros ao mesmo tempo**.
+
+- **Causa raiz do garanhão fantasma**: um `pg_cron` esquecido (`encerramento-ciclo-reproducao`, roda 1x/ano
+  em 01/08) chamava `public.encerrar_ciclo_reproducao()`, que tinha um passo clonando QUALQUER fonte
+  `proprio` do ciclo anterior pro novo só por nome/SBB baterem — sem checar se o garanhão continua
+  cadastrado como animal. Redundante desde a Fase 2 do Reprodutivo v4 (2026-08-13), que já faz isso no
+  client (`renderPlanejadorReprodutivo()`), validado contra o cadastro real de Animais — o passo do cron
+  nunca foi desligado depois disso e ficou clonando fantasmas, ano após ano, silenciosamente. Verificado
+  que só a Mãe de Deus tinha esse problema (as outras 6 cabanhas provisionadas estavam limpas).
+- **Corrigido**: removido o passo de clonagem da função (migration
+  `docs/migrations/2026-08-19-fix-cron-fontes-fantasma.sql`), mantendo os outros 3 passos legítimos
+  (vencer fontes com saldo, cancelar acasalamentos travados, vencer cota/direito de uso expirados).
+  Limpas as 7 linhas fantasma já existentes na Mãe de Deus (3 do ciclo 26/27 + 4 duplicatas antigas) —
+  sem nenhum acasalamento vinculado a elas, DELETE direto e seguro.
+- **Causa raiz da seleção múltipla**: `_acMatchSelecionarFonte()` comparava fontes por `db_id` — mas uma
+  fonte "Próprio" recém-criada automaticamente ainda não tem `db_id` até o POST assíncrono terminar. Se
+  várias fontes novas estivessem nesse limbo ao mesmo tempo (achado: o POST pra 4 garanhões reais da Mãe
+  de Deus estava falhando silenciosamente — `_supa()` engole erro e retorna `null` sem avisar ninguém —
+  então elas nunca conseguiam persistir e ficavam com `db_id` undefined pra sempre), clicar em qualquer
+  uma delas selecionava TODAS ao mesmo tempo (`String(undefined) === String(undefined)`).
+- **Corrigido**: nova função `_fonteKey(f)` dá uma identidade estável a cada fonte mesmo antes dela ter
+  `db_id` (usa um id local gerado na hora, cacheado no próprio objeto). Além disso, `_acMatchSelecionarFonte()`
+  agora **tenta persistir de novo** a fonte na hora do clique se ela ainda não tem `db_id` — e
+  `renderPlanejadorReprodutivo()` também tenta de novo a cada render, em vez de desistir depois de uma
+  falha. `abrirModalAcasalamentoMatch()` bloqueia com aviso claro se a fonte ainda não conseguiu persistir,
+  em vez de deixar criar um acasalamento com id inválido.
+- **Bônus**: a aba "Garanhões e Coberturas" não tinha filtro padrão nenhum — pra uma cabanha com anos de
+  fontes acumuladas (vencidas, esgotadas, ciclos antigos), isso virava uma lista longa e confusa. Agora a
+  primeira abertura da tela já entra filtrada no ciclo atual do Planejador + status "Ativa" (histórico
+  continua um clique de distância, limpando os filtros).
+- Revisão de isolamento (`revisor-isolamento`) rodada nessa mudança (toca uma função cross-tenant chamada
+  por cron) — ver resultado abaixo se já tiver voltado quando você ler isto.
+- Testado via servidor estático local + browser: reproduzido o bug de verdade (rede falhando de propósito
+  nos 4 POSTs), confirmado que só 1 card fica marcado "Selecionado" por vez mesmo sem `db_id`; restaurada
+  a rede, clicar de novo persiste e o `db_id` real assume; filtro padrão da aba Garanhões e Coberturas
+  testado escondendo fonte de ciclo antigo e mostrando ao limpar os filtros.
+
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
 Investigado a fundo — **dados nunca foram perdidos** (confirmado no banco: 4 gestações abertas intactas
