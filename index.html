@@ -2644,11 +2644,12 @@
 <div class="modal-bg" id="modal-fonte-cobertura">
   <div class="modal">
     <div class="modal-header"><span class="modal-title" id="fc-titulo">Nova fonte de cobertura</span><button class="modal-close" onclick="closeModal('modal-fonte-cobertura')">×</button></div>
+    <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Não é um animal cadastrado na cabanha — é um direito de cobertura sobre um garanhão de fora.
+      <b>Cota/Direito de uso</b> persistem sozinhos ciclo após ciclo, até você cancelar. <b>Cobertura</b> vale só pra este ciclo — precisa comprar/lançar de novo no próximo.</div>
     <input type="hidden" id="fc-edit-idx" value="-1">
     <div class="form-grid">
       <div class="form-group"><label>Tipo</label>
         <select id="fc-tipo" onchange="_toggleCamposFonteCobertura()">
-          <option value="proprio">Próprio</option>
           <option value="cota">Cota</option>
           <option value="direito_uso">Direito de uso</option>
           <option value="cobertura">Cobertura</option>
@@ -2656,19 +2657,10 @@
         </select>
       </div>
       <div class="form-group" id="fc-grp-garanhao-nome"><label>Garanhão</label><input type="text" id="fc-garanhao-nome" placeholder="Nome do garanhão"></div>
-      <div class="form-group" id="fc-grp-garanhao-animal" style="display:none"><label>Garanhão (cadastro)
-        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — Cota exige vínculo com um animal cadastrado</span></label>
-        <select id="fc-garanhao-animal" onchange="_fcGaranhaoAnimalChange()"><option value="">Selecione...</option></select>
-      </div>
       <div class="form-group" id="fc-grp-sbb"><label>SBB
         <span style="font-weight:400;font-size:10px;color:var(--text3)"> — informe pra buscar o nome automaticamente</span></label>
         <input type="text" id="fc-garanhao-sbb" placeholder="Código SBB" onblur="_buscarAbcccParaFonte()" oninput="this.value=this.value.toUpperCase()">
         <div id="fc-abccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
-      </div>
-      <div class="form-group" id="fc-grp-recorrente" style="display:none"><label>&nbsp;</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
-          <input type="checkbox" id="fc-recorrente" style="width:auto"> Recorrente — repete automaticamente no próximo ciclo
-        </label>
       </div>
       <div class="form-group"><label>Quantidade disponível</label><input type="number" id="fc-qtd" min="1" step="1" placeholder="ex: 5"></div>
       <div class="form-group"><label>Ciclo</label><select id="fc-ciclo" onchange="_fcCicloChange()"></select></div>
@@ -5495,14 +5487,15 @@ function renderPlanejadorReprodutivo() {
   renderEguasCriaPlanejador(); // seção independente — roda mesmo sem garanhão cadastrado
   renderMarketplacePlanejador();
 
-  // Reprodutivo v4, Fase 8 (spec 4c): "Direito de uso" marcado como recorrente persiste sozinho
-  // pro próximo ciclo, com a mesma quantidade — análogo ao "Próprio" (Fase 2), mas o "padrão" é
-  // o próprio valor da fonte recorrente no ciclo anterior. Só os dois ciclos oferecidos pelas
-  // pills (atual/próximo) são considerados — ao selecionar o próximo, clona o que for recorrente
-  // do atual e ainda não existir lá.
+  // Revisão pós-feedback: Cota e Direito de uso são, por natureza, algo que persiste entre
+  // ciclos até a cabanha negociar/desfazer (diferente de Cobertura, que é compra avulsa só
+  // pro ciclo em que foi lançada) — não é mais um checkbox opcional "recorrente", é o
+  // comportamento padrão dos dois tipos. Só os dois ciclos oferecidos pelas pills (atual/
+  // próximo) são considerados — ao selecionar o próximo, clona toda Cota/Direito de uso ativa
+  // do atual que ainda não exista lá.
   if (ciclo === cProximo) {
-    fontesCobertura.filter(f => f.tipo === 'direito_uso' && f.recorrente && f.ciclo === cAtual).forEach(f => {
-      const jaTem = fontesCobertura.some(x => x.tipo === 'direito_uso' && x.ciclo === cProximo &&
+    fontesCobertura.filter(f => ['cota', 'direito_uso'].includes(f.tipo) && f.status === 'ativa' && f.ciclo === cAtual).forEach(f => {
+      const jaTem = fontesCobertura.some(x => x.tipo === f.tipo && x.ciclo === cProximo &&
         x.garanhao_nome === f.garanhao_nome && (f.garanhao_sbb ? x.garanhao_sbb === f.garanhao_sbb : true));
       if (jaTem) return;
       const nova = {...f, ciclo: cProximo, status: 'ativa'};
@@ -5526,6 +5519,16 @@ function renderPlanejadorReprodutivo() {
       // a fonte fica presa sem db_id pra sempre — tenta salvar de novo a cada render em vez
       // de desistir, senão ela nunca aparece disponível pra virar acasalamento de verdade.
       if (!existente.db_id) _dbSalvarFonteCobertura(existente, fontesCobertura.indexOf(existente));
+      // Achado real: se o padrão do animal for reduzido em Animais DEPOIS da fonte do ciclo já
+      // ter sido criada, ela ficava presa no valor antigo — sempre acima do que o cadastro
+      // permite agora. O máximo do ciclo nunca pode passar do padrão atual do cadastro; só
+      // reduz sozinho (nunca aumenta — se o padrão subiu, quem decide usar o saldo novo é o
+      // próprio cabanheiro, editando manualmente).
+      const padraoAtual = a.qtd_coberturas_padrao || 120;
+      if (existente.quantidade_adquirida > padraoAtual) {
+        existente.quantidade_adquirida = padraoAtual;
+        _dbSalvarFonteCobertura(existente, fontesCobertura.indexOf(existente));
+      }
       return;
     }
     const novaFonte = {
@@ -5603,6 +5606,7 @@ function renderPlanejadorReprodutivo() {
       <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
       <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="editFonteCobertura(${fIdx})">editar</button>
+        <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirFonteCobertura(${fIdx})">excluir</button>
         ${disponivel > 0 ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${fIdx})">Negociar com outra cabanha</button>` : ''}
       </div>
     </div>`;
@@ -7647,42 +7651,10 @@ const FC_STATUS_LABEL = {ativa:'Ativa', vencida:'Vencida', esgotada:'Esgotada', 
 
 function _toggleCamposFonteCobertura() {
   const tipo = document.getElementById('fc-tipo').value;
-  const grpVigIni = document.getElementById('fc-grp-vig-ini');
-  const grpVigFim = document.getElementById('fc-grp-vig-fim');
   const grpProp   = document.getElementById('fc-grp-cota-prop');
   const grpPct    = document.getElementById('fc-grp-cota-pct');
-  const grpNomeLivre = document.getElementById('fc-grp-garanhao-nome');
-  const grpAnimal = document.getElementById('fc-grp-garanhao-animal');
-  const grpRecorrente = document.getElementById('fc-grp-recorrente');
-  grpVigIni.style.display = tipo === 'proprio' ? 'none' : '';
-  grpVigFim.style.display = tipo === 'proprio' ? 'none' : '';
   grpProp.style.display = tipo === 'cota' ? '' : 'none';
   grpPct.style.display  = tipo === 'cota' ? '' : 'none';
-  // Reprodutivo v4, Fase 8 (spec 4b): Cota passa a exigir vínculo com um animal cadastrado —
-  // troca o campo de nome livre por um select de animais.
-  const ehCota = tipo === 'cota';
-  grpNomeLivre.style.display = ehCota ? 'none' : '';
-  grpAnimal.style.display = ehCota ? '' : 'none';
-  if (ehCota) _fcPopularSelectAnimaisCota();
-  // Reprodutivo v4, Fase 8 (spec 4c): flag "recorrente" só faz sentido pra Direito de uso.
-  grpRecorrente.style.display = tipo === 'direito_uso' ? '' : 'none';
-}
-
-function _fcPopularSelectAnimaisCota() {
-  const sel = document.getElementById('fc-garanhao-animal');
-  if (!sel) return;
-  const atual = sel.value;
-  const machos = animais.filter(a => a.sexo === 'Macho').sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
-  sel.innerHTML = '<option value="">Selecione...</option>' +
-    machos.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
-  if (machos.some(a => String(a.db_id) === String(atual))) sel.value = atual;
-}
-
-function _fcGaranhaoAnimalChange() {
-  const sel = document.getElementById('fc-garanhao-animal');
-  const a = animais.find(x => String(x.db_id) === String(sel.value));
-  document.getElementById('fc-garanhao-nome').value = a ? a.nome : '';
-  document.getElementById('fc-garanhao-sbb').value = a ? (a.sbb || '') : '';
 }
 
 // Reprodutivo v4, Fase 8 (spec 4b): percentual da cota calcula automaticamente a quantidade
@@ -7737,9 +7709,7 @@ function abrirModalFonteCobertura() {
   document.getElementById('fc-tipo').value = 'cota';
   document.getElementById('fc-garanhao-nome').value = '';
   document.getElementById('fc-garanhao-sbb').value = '';
-  document.getElementById('fc-garanhao-animal').value = '';
   document.getElementById('fc-abccc-status').style.display = 'none';
-  document.getElementById('fc-recorrente').checked = false;
   document.getElementById('fc-qtd').value = '';
   _fcPopularSelectCiclo(window._cicloPlanejador || _cicloAtualTexto());
   _fcCicloChange();
@@ -7756,11 +7726,10 @@ function editFonteCobertura(i) {
   if(!f) return;
   document.getElementById('fc-titulo').textContent = 'Editar fonte de cobertura';
   document.getElementById('fc-edit-idx').value = i;
-  document.getElementById('fc-tipo').value = f.tipo || 'proprio';
+  document.getElementById('fc-tipo').value = f.tipo === 'proprio' ? 'cota' : (f.tipo || 'cota');
   document.getElementById('fc-garanhao-nome').value = f.garanhao_nome || '';
   document.getElementById('fc-garanhao-sbb').value = f.garanhao_sbb || '';
   document.getElementById('fc-abccc-status').style.display = 'none';
-  document.getElementById('fc-recorrente').checked = !!f.recorrente;
   document.getElementById('fc-qtd').value = f.quantidade_adquirida ?? '';
   _fcPopularSelectCiclo(f.ciclo || '');
   document.getElementById('fc-vig-ini').value = f.vigencia_inicio || '';
@@ -7770,36 +7739,19 @@ function editFonteCobertura(i) {
   document.getElementById('fc-valor').value = f.valor_cobertura ?? '';
   document.getElementById('fc-obs').value = f.obs || '';
   _toggleCamposFonteCobertura();
-  if (f.tipo === 'cota') {
-    const a = animais.find(x => (f.garanhao_sbb && x.sbb === f.garanhao_sbb) || x.nome === f.garanhao_nome);
-    document.getElementById('fc-garanhao-animal').value = a ? a.db_id : '';
-  }
   openModal('modal-fonte-cobertura');
 }
 
 function salvarFonteCobertura() {
   const tipo = document.getElementById('fc-tipo').value;
-  // Reprodutivo v4, Fase 8 (spec 4b): Cota exige vínculo com um animal cadastrado — nome/SBB vêm
-  // do select, não são mais texto livre.
-  if(tipo === 'cota') {
-    const animalId = document.getElementById('fc-garanhao-animal').value;
-    if(!animalId) return alert('Selecione o garanhão cadastrado (Cota exige vínculo com um animal).');
-    _fcGaranhaoAnimalChange();
-  }
   const garanhao_nome = document.getElementById('fc-garanhao-nome').value.trim();
   if(!garanhao_nome) return alert('Informe o nome do garanhão.');
   const quantidade_adquirida = parseInt(document.getElementById('fc-qtd').value || '0');
   if(!quantidade_adquirida || quantidade_adquirida <= 0) return alert('Informe a quantidade disponível (maior que zero).');
-  if(tipo === 'proprio') {
-    const sbb = document.getElementById('fc-garanhao-sbb').value.trim();
-    const a = animais.find(x => (sbb && x.sbb === sbb) || x.nome === garanhao_nome);
-    const padrao = a?.qtd_coberturas_padrao || 120;
-    if(quantidade_adquirida > padrao) return alert(`Fonte "Próprio" não pode passar do padrão do cadastro do animal (${padrao}). Pra aumentar, edite o padrão em Animais.`);
-  }
   const ciclo = document.getElementById('fc-ciclo').value.trim();
   if(!ciclo) return alert('Informe o ciclo (ex: 26/27).');
   const vigencia_inicio = document.getElementById('fc-vig-ini').value || '';
-  if(tipo !== 'proprio' && !vigencia_inicio) return alert('Informe a vigência de início.');
+  if(!vigencia_inicio) return alert('Informe a vigência de início.');
 
   const idx = parseInt(document.getElementById('fc-edit-idx').value || '-1');
   const obj = {
@@ -7808,16 +7760,13 @@ function salvarFonteCobertura() {
     garanhao_sbb: document.getElementById('fc-garanhao-sbb').value.trim() || '',
     quantidade_adquirida,
     ciclo,
-    vigencia_inicio: tipo !== 'proprio' ? vigencia_inicio : '',
-    vigencia_fim: tipo !== 'proprio' ? (document.getElementById('fc-vig-fim').value || '') : '',
+    vigencia_inicio,
+    vigencia_fim: document.getElementById('fc-vig-fim').value || '',
     proprietario_cota: tipo === 'cota' ? document.getElementById('fc-cota-prop').value.trim() : '',
     percentual_cota: tipo === 'cota' ? (document.getElementById('fc-cota-pct').value || '') : '',
     valor_cobertura: document.getElementById('fc-valor').value || '',
     status: idx >= 0 ? (fontesCobertura[idx]?.status || 'ativa') : 'ativa',
     obs: document.getElementById('fc-obs').value,
-    // Reprodutivo v4, Fase 8 (spec 4c): só faz sentido pra Direito de uso — persiste sozinha pro
-    // próximo ciclo quando marcada (ver renderPlanejadorReprodutivo).
-    recorrente: tipo === 'direito_uso' ? document.getElementById('fc-recorrente').checked : false,
   };
   if(idx >= 0) { fontesCobertura[idx] = {...fontesCobertura[idx], ...obj}; _dbSalvarFonteCobertura(fontesCobertura[idx], idx); }
   else { fontesCobertura.push(obj); _dbSalvarFonteCobertura(obj, fontesCobertura.length - 1); }

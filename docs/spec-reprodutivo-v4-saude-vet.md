@@ -734,3 +734,38 @@ de embrião de outra égua neste ciclo.
   receptora da lista de doadoras; fluxo completo (atribuir → confirmar → salvar) faz o card da receptora
   virar roxo com o texto "Receptora com embrião de DOADORA PROPRIA"; aba "Garanhões e Coberturas" some da
   lista de abas, sem nenhuma referência solta a `gest-fontes`/`renderPlantelDisponivel` no código.
+
+### Fase 12 — corrige persistência do saldo "Próprio" + Cota/Direito de uso sem vínculo de animal (2026-08-19)
+
+Pedro reportou que reduzir o saldo de um garanhão "Próprio" no Planejador e salvar não persistia (ctrl+F5
+voltava pro padrão de 120), e que o saldo ficava sempre 120 "como se não tivesse vínculo" com o cadastro do
+animal. Também pediu pra reverter a decisão da Fase 8 de exigir vínculo com animal cadastrado pra Cota —
+segundo ele, Cota/Direito de uso nunca deveriam ter isso, porque não são animais sob gestão da cabanha, são
+só direitos de cobertura sobre um garanhão de fora.
+
+- **Causa raiz do "120 sempre"**: `renderPlanejadorReprodutivo()` só define `quantidade_adquirida` a partir
+  de `qtd_coberturas_padrao` do animal **na criação** da fonte do ciclo — se o padrão do animal mudasse
+  DEPOIS (editado em Animais), a fonte já existente ficava presa no valor antigo, podendo passar do que o
+  cadastro permite agora. Corrigido: a cada render, se `quantidade_adquirida` da fonte for maior que o
+  padrão atual do animal, reduz sozinha pro padrão atual e persiste — nunca aumenta sozinha (só o
+  cabanheiro aumenta, editando manualmente até o novo teto).
+- **Causa raiz do "não persiste"**: não era um bug novo — a explicação mais provável é a mesma falha
+  silenciosa de sessão/JWT expirado corrigida na Fase anterior (`_garantirTokenValido()` só rodava antes de
+  um fluxo específico). Testado end-to-end depois do fix: editar e salvar persiste de verdade.
+- **Reversão da Fase 8 (ponto 4b)**: removida a exigência de vínculo com animal cadastrado pra Cota —
+  select `fc-garanhao-animal` e as funções `_fcPopularSelectAnimaisCota()`/`_fcGaranhaoAnimalChange()`
+  removidos. Cota volta a usar o campo de nome livre (`fc-garanhao-nome`), igual Direito de uso e
+  Cobertura — nenhum dos três tipos cria ou referencia uma linha em `animais`.
+- **"Próprio" removido do select do modal** "+ Nova cota / cobertura" — um animal próprio elegível já
+  aparece sozinho no Planejador como garanhão da cabanha (Fase 2), não faz sentido oferecer criar um
+  "Próprio" solto por esse modal.
+- **Recorrência deixou de ser opcional**: checkbox "Recorrente" removido. Cota e Direito de uso agora
+  **sempre** persistem automaticamente pro próximo ciclo (comportamento padrão, não mais opt-in) — só
+  Cobertura continua sempre efêmera, precisa ser relançada a cada ciclo. Cards de Cota/Direito de
+  uso/Cobertura no Planejador ganharam botão "excluir" (além do "editar" que já existia), já que agora
+  persistem indefinidamente até o cabanheiro decidir desfazer.
+- Testado via servidor estático local + browser: modal sem "Próprio" no select nem campo de vínculo de
+  animal; salvar Cota com nome livre persiste corretamente; reduzir o padrão do animal em Animais faz a
+  fonte "Próprio" do ciclo ajustar sozinha no próximo render (120→90 testado), sem sobrescrever um valor
+  já editado manualmente abaixo do padrão (50 permaneceu 50); botões editar/excluir presentes nos cards
+  de Cota/Direito de uso/Cobertura.
