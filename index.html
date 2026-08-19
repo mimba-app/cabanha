@@ -10078,7 +10078,7 @@ function dashDrill(tipo, filtro){
     default: return;
   }
 
-  title.textContent=label;
+  title.innerHTML=label;
   content.innerHTML=rows;
   panel.style.display='block';
   panel.scrollIntoView({behavior:'smooth',block:'nearest'});
