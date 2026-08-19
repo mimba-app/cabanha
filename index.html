@@ -12672,9 +12672,8 @@ async function _importarLinhagemGaranhaoExterno(sbb, nome) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + (AUTH_TOKEN || SUPABASE_KEY),
         'apikey': SUPABASE_KEY,
-        'x-tenant-schema': TENANT_SCHEMA,
       },
-      body: JSON.stringify({ sbbs: [sbb.toUpperCase()] }),
+      body: JSON.stringify({ sbbs: [sbb.toUpperCase()], tenant_schema: TENANT_SCHEMA }),
       signal: AbortSignal.timeout(30000),
     });
     if (resp.ok) {
