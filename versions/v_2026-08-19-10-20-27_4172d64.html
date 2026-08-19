@@ -3963,6 +3963,7 @@ function abrirLaudo(b64, nome, tipo) {
   </div>
 </div>
 
+
 </body></html>`
     : `<html><head><title>${nome||'Laudo'}</title><style>body{margin:0;background:#222;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${b64}" alt="${nome||'Laudo'}">
 <div class="modal-bg" id="modal-nao-confirmar">
@@ -3993,6 +3994,7 @@ function abrirLaudo(b64, nome, tipo) {
     </div>
   </div>
 </div>
+
 
 </body></html>`
   );
@@ -5289,21 +5291,74 @@ function _renderDetCorpo(i, editando) {
   // ── MEDIDAS ───────────────────────────────────────────────────────
   const hm=getMedidas(i);
   const pad=a.sexo?.toLowerCase().includes('macho')?PADRÃO_ABCCC.macho:PADRÃO_ABCCC.femea;
-  const S4=`<div class="ficha-section"><div class="ficha-section-title">${_iconRegua(14)} Medidas Biométricas
-    <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalMedida(${i})">+ Medir</button></div>
-    <div style="font-size:10px;color:var(--blue-d);margin-bottom:6px">Padrão ABCCC: cernelha ${pad.cernelha_min}–${pad.cernelha_max}m · tórax ≥${pad.torax_min}m · canela ≥${pad.canela_min}m</div>
-    ${!hm.length?'<div class="nut-empty">Nenhuma medição registrada.</div>'
-    :hm.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(m=>{
-      const stC=checaMedida(m.cernelha,pad.cernelha_min,pad.cernelha_max),stT=checaMedida(m.torax,pad.torax_min,null),stCan=checaMedida(m.canela,pad.canela_min,null);
-      return`<div class="med-card"><div class="med-card-date"><span style="font-family:var(--mono)">${fd(m.data)}</span> · <span class="badge bgr">${m.contexto||'Rotina'}</span>${m.resp?' · '+m.resp:''}</div>
-        <div class="med-grid">
-          ${m.cernelha?`<div class="med-item"><div class="med-val ${stC}">${m.cernelha}m</div><div class="med-label">Cernelha</div></div>`:''}
-          ${m.torax?`<div class="med-item"><div class="med-val ${stT}">${m.torax}m</div><div class="med-label">Tórax</div></div>`:''}
-          ${m.canela?`<div class="med-item"><div class="med-val ${stCan}">${m.canela}m</div><div class="med-label">Canela</div></div>`:''}
-          ${m.peso?`<div class="med-item"><div class="med-val">${m.peso}kg</div><div class="med-label">Peso</div></div>`:''}
-          ${m.escore?`<div class="med-item"><div class="med-val">${m.escore}/9</div><div class="med-label">Escore</div></div>`:''}
-        </div></div>`;
-    }).join('')}</div>`;
+
+  // Painel de confirmação ABCCC (só para não confirmados)
+  const S4conf = (!a.confirmado && a.confirmacao_status !== 'nao_confirmado')
+    ? _htmlPainelConfirmacao(a, false)
+    : '';
+
+  // Gráfico de linha de medidas
+  const chartId = 'med-chart-' + a.db_id;
+  const legendId = 'med-legend-' + a.db_id;
+  const toggleId = 'med-toggle-' + a.db_id;
+
+  // Cards de resumo com última medida
+  const ult = hm.length ? hm.slice().sort((x,y)=>y.data.localeCompare(x.data))[0] : null;
+  const stC   = ult?.cernelha ? checaMedida(ult.cernelha, pad.cernelha_min, pad.cernelha_max) : '';
+  const stT   = ult?.torax    ? checaMedida(ult.torax,    pad.torax_min,    null)              : '';
+  const stCan = ult?.canela   ? checaMedida(ult.canela,   pad.canela_min,   null)              : '';
+
+  const _cardMed = (label, val, unit, status, delta) => {
+    const bg  = status==='med-status-low' ? 'var(--red-l)'   : status==='med-status-ok' ? 'var(--green-l)' : 'var(--bg3)';
+    const clr = status==='med-status-low' ? 'var(--red-d)'   : status==='med-status-ok' ? 'var(--green-d)' : 'var(--text)';
+    const sub = delta !== null ? `<div style="font-size:10px;color:${clr}">${delta}</div>` : '';
+    return val ? `<div style="flex:1;background:${bg};border-radius:var(--radius);padding:8px 10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${label}</div>
+      <div style="font-size:16px;font-weight:700;color:${clr};font-family:var(--mono)">${val}${unit}</div>
+      ${sub}
+    </div>` : '';
+  };
+
+  const deltaC = ult?.cernelha ? (ult.cernelha >= pad.cernelha_min
+    ? `+${((ult.cernelha-pad.cernelha_min)*100).toFixed(1)}cm do mín.`
+    : `${((ult.cernelha-pad.cernelha_min)*100).toFixed(1)}cm do mín.`) : null;
+  const deltaT = ult?.torax    ? (ult.torax >= pad.torax_min
+    ? `+${((ult.torax-pad.torax_min)*100).toFixed(1)}cm do mín.`
+    : `${((ult.torax-pad.torax_min)*100).toFixed(1)}cm do mín.`) : null;
+  const deltaCa = ult?.canela  ? (ult.canela >= pad.canela_min
+    ? `+${((ult.canela-pad.canela_min)*100).toFixed(1)}cm do mín.`
+    : `${((ult.canela-pad.canela_min)*100).toFixed(1)}cm do mín.`) : null;
+
+  const cardsResumo = (ult?.cernelha || ult?.torax || ult?.canela || ult?.peso) ? `
+    <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      ${_cardMed('Cernelha', ult?.cernelha, 'm', stC, deltaC)}
+      ${_cardMed('Tórax', ult?.torax, 'm', stT, deltaT)}
+      ${_cardMed('Canela', ult?.canela, 'm', stCan, deltaCa)}
+      ${ult?.peso ? `<div style="flex:1;background:var(--bg3);border-radius:var(--radius);padding:8px 10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Peso</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);font-family:var(--mono)">${ult.peso}kg</div>
+      </div>` : ''}
+    </div>` : '';
+
+  const S4=`${S4conf}<div class="ficha-section">
+    <div class="ficha-section-title">${_iconRegua(14)} Medidas Biométricas
+      <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalMedida(${i})">+ Medir</button>
+    </div>
+    ${!hm.length ? '<div class="nut-empty">Nenhuma medição registrada.</div>' : `
+      <div style="display:flex;gap:3px;background:var(--bg3);border-radius:var(--radius);padding:2px;margin-bottom:10px;width:fit-content" id="${toggleId}">
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','todos',${i})"    class="btn-med-toggle" data-k="todos"    style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Todas</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','cernelha',${i})" class="btn-med-toggle" data-k="cernelha" style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Cernelha</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','torax',${i})"    class="btn-med-toggle" data-k="torax"    style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Tórax</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','canela',${i})"   class="btn-med-toggle" data-k="canela"   style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Canela</button>
+        <button onclick="_medChartSel('${chartId}','${legendId}','${toggleId}','peso',${i})"     class="btn-med-toggle" data-k="peso"     style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font)">Peso</button>
+      </div>
+      <div id="${legendId}" style="display:flex;gap:14px;font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+      <div style="position:relative;height:200px">
+        <canvas id="${chartId}" role="img" aria-label="Evolução de medidas biométricas do animal"></canvas>
+      </div>
+      ${cardsResumo}
+    `}
+  </div>`;
 
   // ── NUTRIÇÃO ──────────────────────────────────────────────────────
   const n=getNut(i); const ps=projStatus(n);
@@ -5370,8 +5425,9 @@ function _renderDetCorpo(i, editando) {
 
   document.getElementById('det-corpo').innerHTML = S1+S2+S3+S4+S5+S6+S7+S8+S9;
 
-  // Carregar linha do tempo após render
+  // Carregar linha do tempo e gráfico de medidas após render
   if(a.db_id) _carregarLinhaTempo(a.db_id, a.nome, a.nasc||'');
+  setTimeout(() => _initMedChart(i), 50);
 }
 
 function alternarEdicaoAnimal() {
@@ -5698,7 +5754,7 @@ function renderPlanejadorReprodutivo() {
 
   const cardOutraFonte = (f) => {
     const fIdx = fontesCobertura.indexOf(f);
-    const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
+    const { disponivel, total, pct, usado, reservado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
     const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
@@ -5711,7 +5767,7 @@ function renderPlanejadorReprodutivo() {
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
         <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado} confirmada(s)${reservado > 0 ? " · " + reservado + " reservada(s)" : ""}${negociado > 0 ? " · " + negociado + " negociada(s)" : ""} de ${total} (${disponivel} disponível)</div>
       <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="editFonteCobertura(${fIdx})">editar</button>
         <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirFonteCobertura(${fIdx})">excluir</button>
@@ -5738,7 +5794,7 @@ function renderPlanejadorReprodutivo() {
     const f = fontesCobertura[fIdx];
     const padrao = a.qtd_coberturas_padrao || 120;
 
-    const { disponivel, total, pct, usado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
+    const { disponivel, total, pct, usado, reservado, negociado, estourado, excedente } = _saldoFonteCobertura(f);
     const statusCor = estourado ? 'var(--red-d)' : 'var(--green)';
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
@@ -5751,7 +5807,7 @@ function renderPlanejadorReprodutivo() {
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
         <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado} confirmada(s)${reservado > 0 ? " · " + reservado + " reservada(s)" : ""}${negociado > 0 ? " · " + negociado + " negociada(s)" : ""} de ${total} (${disponivel} disponível)</div>
       <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px">
         <label style="display:flex;align-items:center;gap:4px">Disponível neste ciclo:
           <input type="number" id="fc-inline-qtd-${fIdx}" value="${f.quantidade_adquirida}" min="0" max="${padrao}" step="1" style="width:64px">
@@ -8083,7 +8139,8 @@ async function salvarFonteCobertura() {
   const ciclo = document.getElementById('fc-ciclo').value.trim();
   if(!ciclo) return alert('Informe o ciclo (ex: 26/27).');
   const vigencia_inicio = document.getElementById('fc-vig-ini').value || '';
-  if(!vigencia_inicio) return alert('Informe a vigência de início.');
+  // Vigência obrigatória só para cota/direito_uso — cobertura/embrião derivam do ciclo
+  if(!vigencia_inicio && (tipo === 'cota' || tipo === 'direito_uso')) return alert('Informe a vigência de início.');
   // Reprodutivo v4, Fase 14: embrião "próprio" exige selecionar de qual égua da cabanha é —
   // "adquirido" (externo) segue igual Direito de uso/Cobertura, só nome/SBB em texto livre.
   const embriaoOrigemPropria = tipo === 'embriao' && (document.querySelector('input[name="fc-embriao-origem"]:checked')?.value !== 'externa');
@@ -8153,22 +8210,26 @@ function _fonteKey(f) {
 // automática pela própria fórmula — não precisa de lógica extra.
 function _saldoFonteCobertura(f) {
   const total = Number(f.quantidade_adquirida) || 0;
-  const usado = acasalamentos.filter(a => a.status === 'confirmado' && f.db_id && String(a.fonte_cobertura_id) === String(f.db_id)).length;
-  // Fase 7: negociações já consumadas (aceito/quitado) também descontam do
-  // saldo — 'pendente' ainda não foi consumado, 'cancelado' nunca aconteceu.
+  // Consumido definitivamente: acasalamento com prenhez confirmada
+  const usado = acasalamentos.filter(a =>
+    a.status === 'confirmado' && f.db_id && String(a.fonte_cobertura_id) === String(f.db_id)
+  ).length;
+  // Reservado: acasalamentos ativos ainda sem confirmação de prenhez
+  // Reduzem o saldo disponível mas podem ser devolvidos se cancelados sem tentativas
+  const reservado = acasalamentos.filter(a =>
+    ['rascunho','simulado','aprovado','em_curso'].includes(a.status) &&
+    f.db_id && String(a.fonte_cobertura_id) === String(f.db_id)
+  ).length;
+  // Negociações consumadas (vendas/doações aceitas)
   const negociado = coberturasNegociadas
     .filter(n => f.db_id && String(n.fonte_cobertura_id) === String(f.db_id) && ['aceito','quitado'].includes(n.status))
     .reduce((sum, n) => sum + (Number(n.quantidade) || 0), 0);
-  const saldoReal = total - usado - negociado;
+  const saldoReal = total - usado - reservado - negociado;
   const disponivel = Math.max(0, saldoReal);
   const pct = total > 0 ? Math.round((disponivel / total) * 100) : 0;
-  // Decisão da spec (docs/spec-reprodutivo-v3.md, seção 7.3): estourar o saldo NUNCA
-  // bloqueia lançamento — só avisa de forma bem incisiva. Por isso não escondemos o
-  // excedente atrás do Math.max acima; o planejador de ciclo usa estes dois campos
-  // pra mostrar o aviso.
   const estourado = saldoReal < 0;
   const excedente = estourado ? Math.abs(saldoReal) : 0;
-  return {total, usado, negociado, disponivel, pct, estourado, excedente};
+  return {total, usado, reservado, negociado, disponivel, pct, estourado, excedente};
 }
 
 function renderFontesCobertura() {
@@ -8206,7 +8267,7 @@ function renderFontesCobertura() {
   el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">' +
     lista.map(f => {
       const i = fontesCobertura.indexOf(f);
-      const {disponivel, total, pct, estourado, excedente} = _saldoFonteCobertura(f);
+      const {reservado, disponivel, total, pct, estourado, excedente} = _saldoFonteCobertura(f);
       const statusCor = estourado ? 'var(--red-d)' : f.status === 'ativa' ? 'var(--green)' : f.status === 'esgotada' ? 'var(--red-d)' : 'var(--text3)';
       const statusBadge = f.status === 'ativa' ? 'bg' : f.status === 'esgotada' ? 'br' : 'ba';
       const opacidade = f.status === 'cancelada' ? 'opacity:0.55' : '';
@@ -8505,6 +8566,152 @@ function renderHistoricoNegociacoes() {
   }).join('');
 }
 
+
+// ─── GRÁFICO DE MEDIDAS ───────────────────────────────────────────────────────
+
+const _medCharts = {};
+
+function _medChartSel(chartId, legendId, toggleId, medida, animalIdx) {
+  // Atualizar botões toggle
+  const wrap = document.getElementById(toggleId);
+  if (wrap) wrap.querySelectorAll('.btn-med-toggle').forEach(b => {
+    const isAtivo = b.dataset.k === medida;
+    b.style.background = isAtivo ? 'var(--green-d)' : 'transparent';
+    b.style.color      = isAtivo ? 'var(--bg)'      : 'var(--text2)';
+  });
+  _medChartDraw(chartId, legendId, medida, animalIdx);
+}
+
+function _medChartDraw(chartId, legendId, medida, animalIdx) {
+  const a   = animais[animalIdx];
+  const hm  = getMedidas(animalIdx).slice().sort((x,y) => x.data.localeCompare(y.data));
+  if (!hm.length) return;
+  const pad = (a.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+
+  const cs = getComputedStyle(document.documentElement);
+  const clrGreen  = cs.getPropertyValue('--green').trim()  || '#4caf50';
+  const clrGreenD = cs.getPropertyValue('--green-d').trim() || '#2e7d32';
+  const clrRed    = cs.getPropertyValue('--red').trim()    || '#e53935';
+  const clrBlue   = cs.getPropertyValue('--blue').trim()   || '#1976d2';
+  const clrAmber  = cs.getPropertyValue('--amber').trim()  || '#f59e0b';
+  const clrText3  = cs.getPropertyValue('--text3').trim()  || '#888';
+
+  const CFGS = {
+    cernelha: { key:'cernelha', label:'Cernelha', unit:'m', min:pad.cernelha_min, max:pad.cernelha_max, dec:3, cor:clrBlue },
+    torax:    { key:'torax',    label:'Tórax',    unit:'m', min:pad.torax_min,    max:null,              dec:3, cor:clrGreenD },
+    canela:   { key:'canela',   label:'Canela',   unit:'m', min:pad.canela_min,   max:null,              dec:3, cor:clrAmber },
+    peso:     { key:'peso',     label:'Peso',     unit:'kg',min:null,             max:null,              dec:0, cor:'#9e9e9e' },
+  };
+
+  if (_medCharts[chartId]) { _medCharts[chartId].destroy(); delete _medCharts[chartId]; }
+  const canvas = document.getElementById(chartId);
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  // Visão combinada: mostrar todas as medidas métricas juntas (exceto peso)
+  if (medida === 'todos') {
+    const labels = [...new Set(hm.filter(m => m.cernelha||m.torax||m.canela).map(m => fd(m.data)))];
+    const datasets = [];
+    ['cernelha','torax','canela'].forEach(k => {
+      const cfg = CFGS[k];
+      const pts = hm.filter(m => m[k]);
+      if (!pts.length) return;
+      const ptVals = pts.map(m => m[k]);
+      const ptLabels = pts.map(m => fd(m.data));
+      datasets.push({
+        label: cfg.label + ' (m)',
+        data: labels.map(l => { const i = ptLabels.indexOf(l); return i >= 0 ? ptVals[i] : null; }),
+        borderColor: cfg.cor, borderWidth: 2,
+        pointBackgroundColor: ptVals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor),
+        pointBorderColor: ptVals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor),
+        pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: false, spanGaps: false,
+      });
+    });
+    const allVals = ['cernelha','torax','canela'].flatMap(k => hm.filter(m=>m[k]).map(m=>m[k]));
+    const yMin = allVals.length ? Math.min(...allVals) * 0.975 : 0;
+    const yMax = allVals.length ? Math.max(...allVals) * 1.025 : 2;
+    _medCharts[chartId] = new Chart(canvas, {
+      type:'line', data:{labels, datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx => ctx.parsed.y != null ? ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(3)+'m' : null}}},
+        scales:{
+          y:{min:yMin,max:yMax,grid:{color:'rgba(128,128,128,0.08)'},ticks:{font:{size:10},color:clrText3,callback:v=>v.toFixed(3)+'m'}},
+          x:{grid:{display:false},ticks:{font:{size:10},color:clrText3}}
+        }
+      }
+    });
+    const legEl = document.getElementById(legendId);
+    if (legEl) legEl.innerHTML = datasets.map(ds =>
+      `<span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:3px;background:${ds.borderColor};border-radius:2px;display:inline-block;vertical-align:middle"></span><span style="color:var(--text3)">${ds.label}</span></span>`
+    ).join('');
+    return;
+  }
+
+  // Visão individual
+  const cfg = CFGS[medida];
+  if (!cfg) return;
+  const pts = hm.filter(m => m[cfg.key]);
+  if (!pts.length) return;
+  const vals   = pts.map(m => m[cfg.key]);
+  const labels = pts.map(m => fd(m.data));
+  const ptCor  = vals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor);
+  const datasets = [{
+    label: cfg.label, data: vals,
+    borderColor: cfg.min ? clrGreenD : cfg.cor,
+    borderWidth: 2, pointBackgroundColor: ptCor, pointBorderColor: ptCor,
+    pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: false, order: 1,
+  }];
+  if (cfg.min) datasets.push({
+    label:'Mín. '+cfg.min+cfg.unit, data:labels.map(()=>cfg.min),
+    borderColor:clrRed, borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0, order:2,
+  });
+  if (cfg.max) datasets.push({
+    label:'Máx. '+cfg.max+cfg.unit, data:labels.map(()=>cfg.max),
+    borderColor:clrText3, borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false, tension:0, order:3,
+  });
+  const allVals = [...vals, cfg.min, cfg.max].filter(v=>v!=null);
+  const yMin = Math.min(...allVals) * (cfg.unit==='kg' ? 0.90 : 0.978);
+  const yMax = Math.max(...allVals) * (cfg.unit==='kg' ? 1.05 : 1.015);
+  _medCharts[chartId] = new Chart(canvas, {
+    type:'line', data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        if(ctx.datasetIndex>0)return null;
+        const v=ctx.parsed.y;
+        const ok=cfg.min?(v>=cfg.min?' ok':' abaixo do minimo'):'';
+        return ' '+cfg.label+': '+v.toFixed(cfg.dec)+cfg.unit+ok;
+      }}}},
+      scales:{
+        y:{min:yMin,max:yMax,grid:{color:'rgba(128,128,128,0.08)'},ticks:{font:{size:10},color:clrText3,callback:v=>v.toFixed(cfg.dec)+cfg.unit}},
+        x:{grid:{display:false},ticks:{font:{size:10},color:clrText3}}
+      }
+    }
+  });
+  const legEl = document.getElementById(legendId);
+  if (legEl) legEl.innerHTML = datasets.map(ds => {
+    const style = ds.borderDash
+      ? 'width:20px;height:0;border-top:2px dashed '+ds.borderColor+';display:inline-block;vertical-align:middle'
+      : 'width:20px;height:3px;background:'+ds.borderColor+';border-radius:2px;display:inline-block;vertical-align:middle';
+    return '<span style="display:flex;align-items:center;gap:5px"><span style="'+style+'"></span><span style="color:var(--text3)">'+ds.label+'</span></span>';
+  }).join('');
+}
+
+function _initMedChart(animalIdx) {
+  const a = animais[animalIdx];
+  if (!a) return;
+  const chartId  = 'med-chart-'  + a.db_id;
+  const legendId = 'med-legend-' + a.db_id;
+  const toggleId = 'med-toggle-' + a.db_id;
+  const hm = getMedidas(animalIdx);
+  if (!hm.length) return;
+  // Iniciar na visão combinada se houver mais de uma medida métrica
+  const temC = hm.some(m=>m.cernelha), temT = hm.some(m=>m.torax), temCa = hm.some(m=>m.canela);
+  const inicial = (temC && (temT || temCa)) ? 'todos' : (['cernelha','torax','canela','peso'].find(k=>hm.some(m=>m[k]))||'cernelha');
+  _medChartSel(chartId, legendId, toggleId, inicial, animalIdx);
+}
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
 
@@ -8956,11 +9163,19 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supa('GET', 'sangues_linhagem', null,
+        // Timeout de 6s para não travar o modal indefinidamente
+        const rowsPromise = _supa('GET', 'sangues_linhagem', null,
           '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
+        const timeoutPromise = new Promise(res => setTimeout(() => res(null), 6000));
+        const rows = await Promise.race([rowsPromise, timeoutPromise]);
         const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
         const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
-        if (rEgua?.ancestrais_pos && rGar?.ancestrais_pos) {
+        // Se um dos dois não tem linhagem no banco, mostrar aviso em vez de travar
+        if (!rGar?.ancestrais_pos) {
+          htmlConsang = '<div class="alert alert-g" style="font-size:12px">\u2713 Sem parentesco direto detectado. Linhagem do garanhão externo não disponível localmente — análise completa indisponível.</div>';
+        } else if (!rEgua?.ancestrais_pos) {
+          htmlConsang = '<div class="alert alert-g" style="font-size:12px">\u2713 Sem parentesco direto detectado. Linhagem da égua não disponível — análise completa indisponível.</div>';
+        } else if (rEgua?.ancestrais_pos && rGar?.ancestrais_pos) {
           // Nível 2: ancestrais comuns nas gerações 1-2
           const anc2Egua = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
           const comuns2  = rGar.ancestrais_pos.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
@@ -8993,15 +9208,17 @@ async function _renderSimulacaoAcasalamento() {
           }
         }
       } catch(e) { /* mantém mensagem neutra */ }
-    } else if (!nivel2) {
-      // Sem SBB — verificar pelo menos os campos locais
-      htmlConsang = '<div class="alert alert-b" style="font-size:12px">SBB do garanhão não cadastrado — análise de consanguinidade limitada aos dados locais. Sem parentesco direto detectado.</div>';
+    } else {
+      // Sem SBB do garanhão — passou Nível 1 e 2 sem problemas = sem parentesco direto
+      htmlConsang = !sbbGar
+        ? '<div class="alert alert-g" style="font-size:12px">\u2713 Sem parentesco direto detectado. SBB do garanhão não informado — análise de linhagem completa indisponível.</div>'
+        : '<div class="alert alert-g" style="font-size:12px">\u2713 Sem parentesco direto detectado nos dados disponíveis.</div>';
     }
   }
 
   // c) Saldo da fonte (real — Fase 3: consumido = acasalamentos confirmados)
-  const {disponivel, total} = _saldoFonteCobertura(fonte);
-  const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível</div>`;
+  const {disponivel, total, reservado} = _saldoFonteCobertura(fonte);
+  const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível${reservado > 0 ? " (" + reservado + " reservada(s) em acasalamentos ativos)" : ""}</div>`;
 
   el.innerHTML = '<div class="card">' + htmlAnteriores + htmlConsang + htmlSaldo + '</div>';
 }
@@ -11112,6 +11329,24 @@ async function _supa(method, table, body=null, query='') {
   return true;
 }
 
+
+async function _supaUpsert(table, body) {
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile':  TENANT_SCHEMA,
+      'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=minimal,resolution=merge-duplicates',
+    },
+    body: JSON.stringify(body),
+  });
+  return r.ok;
+}
+
 // ── Audit log manual (para login/logout) ──────────────────────────────────────
 async function _auditLog(tabela, acao, registroId, dadosDepois=null) {
   try {
@@ -12410,8 +12645,59 @@ async function _dbSalvarFonteCobertura(f, idx) {
     return !!ok;
   } else {
     const res = await _supa('POST','fontes_cobertura', payload);
-    if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
+    if(res?.[0]?.id) {
+      fontesCobertura[idx].db_id = res[0].id;
+      // Se tem SBB, importar linhagem em background para análise de consanguinidade
+      if (payload.garanhao_sbb) _importarLinhagemGaranhaoExterno(payload.garanhao_sbb, payload.garanhao_nome).catch(()=>{});
+      return true;
+    }
     return false;
+  }
+}
+
+// Importa linhagem de um garanhão externo (cota/cobertura/direito_uso) via edge function analise-sangues
+// Roda em background — não bloqueia o save da fonte
+async function _importarLinhagemGaranhaoExterno(sbb, nome) {
+  if (!sbb) return;
+  // Verificar se já temos linhagem no banco (schema da cabanha)
+  const existente = await _supa('GET', 'sangues_linhagem', null, '?animal_sbb=eq.' + sbb + '&select=id&limit=1');
+  if (existente?.length) return; // já tem — não re-importar
+  try {
+    // analise-sangues espera { sbbs: ['B448447'] } e salva no schema public
+    // Passamos também o schema para salvar na cabanha corrente
+    const EDGE = SUPABASE_URL + '/functions/v1/analise-sangues';
+    const resp = await fetch(EDGE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (AUTH_TOKEN || SUPABASE_KEY),
+        'apikey': SUPABASE_KEY,
+      },
+      body: JSON.stringify({ sbbs: [sbb.toUpperCase()], tenant_schema: TENANT_SCHEMA }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (resp.ok) {
+      // A EF salvou no public — copiar para o schema da cabanha
+      const data = await resp.json();
+      const res = data?.resultados?.[sbb.toUpperCase()];
+      if (res && !res.erro && res.ancestrais_pos?.length) {
+        await _supaUpsert('sangues_linhagem', {
+          animal_sbb: sbb.toUpperCase(),
+          animal_nome: nome || null,
+          ancestrais: res.ancestrais || [],
+          ancestrais_pos: res.ancestrais_pos || [],
+          pai: res.pai || null,
+          mae: res.mae || null,
+          avo_paterno: res.avo_paterno || null,
+          avo_materno: res.avo_materno || null,
+          consultado_em: new Date().toISOString(),
+          erro: null,
+        });
+        console.log('[linhagem] Importada para garanhão externo:', nome, sbb, res.ancestrais_pos.length, 'ancestrais');
+      }
+    }
+  } catch(e) {
+    console.log('[linhagem] Importação background falhou para', sbb, e?.message || '');
   }
 }
 
@@ -13581,5 +13867,7 @@ if(!_checkRecovery()){
   </div>
 </div>
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
