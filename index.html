@@ -361,6 +361,7 @@
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
   .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  @keyframes ac-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
   .kanban-card-data { font-size:11px; font-weight:600; margin-top:4px; }
@@ -8986,11 +8987,11 @@ function _nomePiquete(id) {
 // quando uma tentativa é atualizada com resultado='prenha' (Fase 3 — isso é
 // o gatilho de decremento do saldo da fonte, calculado em _saldoFonteCobertura).
 const AC_STATUS_COLS = [
-  {status:'rascunho', label:'Rascunho'},
-  {status:'simulado',  label:'Simulado'},
-  {status:'aprovado',  label:'Aprovado'},
-  {status:'em_curso',  label:'Em Curso'},
-  {status:'confirmado',label:'Concluído'},
+  {status:'rascunho',  label:'Rascunho',  bg:'var(--bg3)',     border:'var(--border2)',  txt:'var(--text2)',  badgeBg:'var(--text3)',    badgeTxt:'var(--bg)'},
+  {status:'simulado',  label:'Simulado',  bg:'var(--blue-l)',  border:'var(--blue)',     txt:'var(--blue-d)', badgeBg:'var(--blue)',     badgeTxt:'#fff'},
+  {status:'aprovado',  label:'Aprovado',  bg:'var(--amber-l)', border:'var(--amber)',    txt:'var(--amber-d)',badgeBg:'var(--amber)',    badgeTxt:'#fff'},
+  {status:'em_curso',  label:'Em curso',  bg:'var(--green-l)', border:'var(--green)',    txt:'var(--green-d)',badgeBg:'var(--green)',    badgeTxt:'#fff', destaque:true},
+  {status:'confirmado',label:'Concluído', bg:'var(--green-l)', border:'var(--green-d)',  txt:'var(--green-d)',badgeBg:'var(--green-d)',  badgeTxt:'#fff'},
 ];
 const AC_TIPO_LABEL = {Natural:'Natural', IA:'IA', IATF:'IATF', TE:'TE', PIV:'PIV'};
 
@@ -9462,7 +9463,19 @@ function _confirmarResultadoTentativa() {
   renderGestacoesNovo();
 }
 
-function _acCard(a, i) {
+
+// Calcular etapa veterinária atual de um acasalamento em curso
+function _acEtapaVet(a) {
+  const tts = _acTentativas(a).slice().sort((x,y) => x.data.localeCompare(y.data));
+  const ult = tts.length ? tts[tts.length-1] : null;
+  if (!ult)                          return {label:'Aguardando ovulação', bg:'var(--bg3)', border:'var(--border2)', cor:'var(--text2)'};
+  if (ult.resultado === 'aguardando') return {label:'Aguardando diagnóstico', bg:'var(--amber-l)', border:'var(--amber)', cor:'var(--amber-d)'};
+  if (ult.resultado === 'vazia')      return {label:'Vazia — nova tentativa', bg:'var(--red-l)', border:'var(--red)', cor:'var(--red-d)'};
+  if (ult.resultado === 'prenha')     return {label:'Prenha confirmada', bg:'var(--green-l)', border:'var(--green)', cor:'var(--green-d)'};
+  return {label:'Em andamento', bg:'var(--blue-l)', border:'var(--blue)', cor:'var(--blue-d)'};
+}
+
+function _acCard(a, i, col) {
   // Reprodutivo v4, Fase 5 (spec 4): "+ Registrar tentativa" saiu daqui — o acompanhamento de
   // inseminação/monta (e a decisão do tipo de cobertura) migrou pro funil do veterinário
   // (Saúde & Vacinas → aba Reprodutivo), que nasce sozinho quando o acasalamento é aprovado.
@@ -9482,7 +9495,8 @@ function _acCard(a, i) {
       }).join('')}
     </div>` : '';
 
-  return `<div class="kanban-card">
+  const etapaStyle = col && col.destaque ? (() => { const e = _acEtapaVet(a); return `<div style="display:flex;align-items:center;gap:5px;margin-top:7px;padding-top:7px;border-top:0.5px solid var(--border);font-size:11px;background:${e.bg};border:0.5px solid ${e.border};border-radius:var(--radius);padding:4px 8px;margin-top:8px"><span style="width:7px;height:7px;border-radius:50%;background:${e.cor};flex-shrink:0;animation:ac-pulse 2s infinite"></span><span style="color:${e.cor};font-weight:500">${e.label}</span></div>`; })() : '';
+  return `<div class="kanban-card"${col?.destaque ? ' style="border-color:var(--green)"' : ''}>
     <div class="kanban-card-nome">${a.egua_nome}</div>
     <div class="kanban-card-info">
       Garanhão: ${a.garanhao_nome || '—'}<br>
@@ -9491,6 +9505,7 @@ function _acCard(a, i) {
       ${a.veterinario_nome ? '<br>Vet: ' + a.veterinario_nome : ''}
       ${a.status === 'cancelado' && a.motivo_cancelamento ? '<br>Motivo: ' + a.motivo_cancelamento : ''}
     </div>
+    ${etapaStyle}
     ${htmlTentativas}
     <div class="kanban-card-actions">
       ${a.status === 'rascunho' ? `<button class="btn btn-sm" onclick="acasSimular(${i})">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
@@ -9587,9 +9602,13 @@ function renderAcasalamentos() {
     el.innerHTML = '<div class="kanban-board" style="grid-template-columns:repeat(5,1fr)">' +
       AC_STATUS_COLS.map(col => {
         const cards = ativos.filter(a => a.status === col.status);
-        return `<div class="kanban-col kanban-col-emdia">
-          <div class="kanban-col-header"><span>${col.label}</span><span class="kanban-count">${cards.length}</span></div>
-          <div class="kanban-cards">${cards.length ? cards.map(a => _acCard(a, acasalamentos.indexOf(a))).join('') : '<div class="kanban-empty">Nenhum</div>'}</div>
+        const border = col.destaque ? `2px solid ${col.border}` : `0.5px solid ${col.border}`;
+        return `<div style="border-radius:10px;overflow:hidden;border:${border}">
+          <div style="padding:9px 12px;font-size:11px;font-weight:500;display:flex;justify-content:space-between;align-items:center;background:${col.bg};color:${col.txt}">
+            <span>${col.label}</span>
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:${col.badgeBg};color:${col.badgeTxt}">${cards.length}</span>
+          </div>
+          <div class="kanban-cards">${cards.length ? cards.map(a => _acCard(a, acasalamentos.indexOf(a), col)).join('') : '<div class="kanban-empty">Nenhum</div>'}</div>
         </div>`;
       }).join('') + '</div>';
   }
