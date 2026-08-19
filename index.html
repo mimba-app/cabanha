@@ -8138,7 +8138,8 @@ async function salvarFonteCobertura() {
   const ciclo = document.getElementById('fc-ciclo').value.trim();
   if(!ciclo) return alert('Informe o ciclo (ex: 26/27).');
   const vigencia_inicio = document.getElementById('fc-vig-ini').value || '';
-  if(!vigencia_inicio) return alert('Informe a vigência de início.');
+  // Vigência obrigatória só para cota/direito_uso — cobertura/embrião derivam do ciclo
+  if(!vigencia_inicio && (tipo === 'cota' || tipo === 'direito_uso')) return alert('Informe a vigência de início.');
   // Reprodutivo v4, Fase 14: embrião "próprio" exige selecionar de qual égua da cabanha é —
   // "adquirido" (externo) segue igual Direito de uso/Cobertura, só nome/SBB em texto livre.
   const embriaoOrigemPropria = tipo === 'embriao' && (document.querySelector('input[name="fc-embriao-origem"]:checked')?.value !== 'externa');
@@ -12572,6 +12573,8 @@ async function _dbSalvarFonteCobertura(f, idx) {
     const ok = await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
     return !!ok;
   } else {
+    // Debug temporário: logar payload no console para identificar campo inválido
+    console.log('[fontes_cobertura POST]', JSON.stringify(payload, null, 2));
     const res = await _supa('POST','fontes_cobertura', payload);
     if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
     return false;
