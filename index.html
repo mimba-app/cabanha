@@ -366,6 +366,17 @@
   .ficha-field-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
   .ficha-field-val { font-size:13px; color:var(--text); font-weight:600; word-break:break-word; }
   .ficha-field-val.mono { font-family:var(--mono); font-weight:500; } /* dado de registro oficial: RP/SBB/data */
+  /* ── Cabeçalho visual da ficha do animal — avatar placeholder + nome + etiquetas.
+     Fica acima da grade de Identificação existente, não a substitui. ── */
+  .ficha-header { display:flex; align-items:center; gap:1.1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .ficha-avatar {
+    width:104px; height:104px; border-radius:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(155deg, var(--campo-soft), var(--pergaminho2)); color:var(--campo);
+  }
+  .ficha-header-info { flex:1; min-width:200px; }
+  .ficha-header-nome { font-family:var(--serif); font-size:var(--fs-2xl); font-weight:800; color:var(--text); letter-spacing:-0.01em; line-height:1.15; }
+  .ficha-header-sbb { font-family:var(--mono); font-size:12px; color:var(--text3); margin-top:2px; }
+  .ficha-header-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   /* HISTÓRICO SAÚDE */
   .hist-row { display:grid; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .hist-vac { grid-template-columns:90px 90px 1fr 1fr 80px; }
@@ -479,6 +490,42 @@
   .login-btn { width:100%;padding:11px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:0.5rem; }
   .login-btn:hover { background:var(--green-d); }
   .login-error { background:var(--red-l);color:var(--red-d);border-radius:var(--radius);padding:8px 10px;font-size:12px;margin-top:8px;display:none; }
+  /* ── Login "Registro Vivo" — composição em duas colunas. O painel esquerdo é
+     hero de marca, sempre no gradiente escuro fixo (não segue light/dark). ── */
+  .login-screen.v2 { align-items:stretch; justify-content:stretch; background:var(--bg); }
+  .login-shell { display:flex; width:100%; min-height:100vh; min-height:100dvh; }
+  .login-hero {
+    flex:0 0 56%; max-width:56%; position:relative; overflow:hidden; color:#F4EFE6;
+    background: radial-gradient(120% 140% at 20% 15%, #3F5A28 0%, #22301A 48%, #1A1A18 100%);
+    padding:2.5rem 3rem; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .login-hero-top { display:flex; align-items:center; gap:10px; }
+  .login-hero-mono { width:38px; height:38px; border-radius:10px; background:rgba(244,239,230,.14); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:18px; flex-shrink:0; }
+  .login-hero-brand { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:rgba(244,239,230,.75); }
+  .login-hero-eyebrow { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:rgba(232,197,103,.85); margin-bottom:14px; }
+  .login-hero-headline { font-family:var(--serif); font-weight:900; font-size:clamp(32px,4vw,54px); line-height:1.08; letter-spacing:-0.01em; }
+  .login-hero-headline em { font-style:italic; color:#E8C567; }
+  .login-hero-desc { margin-top:16px; font-size:14px; line-height:1.6; color:rgba(244,239,230,.82); max-width:440px; }
+  .login-hero-stats { display:flex; gap:1.75rem; flex-wrap:wrap; padding-top:1.5rem; border-top:1px solid rgba(244,239,230,.18); }
+  .login-hero-stat-val { font-family:var(--mono); font-size:13px; font-weight:600; color:#F4EFE6; }
+  .login-hero-stat-lbl { font-size:11px; color:rgba(244,239,230,.65); margin-top:2px; }
+  .login-form-col { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1.5rem; background:var(--bg); }
+  /* Variantes (restaurando sessão / bloqueado / cancelado / definir senha) seguem
+     como overlay centralizado de tela cheia, independente do layout de duas
+     colunas do login padrão — não fazem parte do redesenho desta rodada. */
+  #login-restaurando, #login-bloqueado, #login-cancelado, #definir-senha-box {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1000;
+  }
+  .login-form-col .login-box { box-shadow:none; border:none; background:transparent; width:360px; padding:0; }
+  .login-form-wordmark { font-family:var(--serif); font-size:22px; font-weight:900; color:var(--ouro); margin-bottom:1.75rem; }
+  @media (max-width:860px){
+    .login-shell { flex-direction:column; }
+    .login-hero { flex:0 0 auto; max-width:100%; padding:1.75rem 1.5rem; }
+    .login-hero-headline { font-size:clamp(26px,7vw,36px); }
+    .login-hero-desc { display:none; }
+    .login-hero-stats { display:none; }
+    .login-form-col { padding:2rem 1.25rem; }
+  }
   .perfil-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--radius-badge);font-size:var(--fs-caption);font-weight:700;text-transform:uppercase; }
   .perfil-adm, .perfil-admin       { background:var(--purple-l);color:var(--purple-d); }
   .perfil-cab, .perfil-cabanheiro  { background:var(--green-l);color:var(--green-d); }
@@ -600,48 +647,65 @@
 </div>
 
 <!-- TELA DE LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-box" id="login-box-main">
-    <div class="login-logo">
-      <div class="login-logo-title">Mimba.</div>
-      <div class="login-logo-sub">Gestão Crioulos · A inteligência da sua cabanha</div>
-    </div>
-    <div id="login-campos-normais">
-      <div class="login-field">
-        <label>Email</label>
-        <input type="email" id="login-user" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+<div id="login-screen" class="login-screen v2">
+  <div class="login-shell" id="login-shell-main">
+    <div class="login-hero">
+      <div class="login-hero-top">
+        <div class="login-hero-mono">M</div>
+        <div class="login-hero-brand">Gestão Crioulos</div>
       </div>
-      <div class="login-field">
-        <label>Senha</label>
-        <div style="position:relative">
-          <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password" style="width:100%;padding-right:38px" onkeydown="if(event.key==='Enter')fazerLogin()">
-          <button type="button" onclick="_toggleLoginSenha()" title="Mostrar/ocultar senha" aria-label="Mostrar/ocultar senha"
-            style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex">
-            <svg id="login-senha-icon-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg id="login-senha-icon-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.9 18.9 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
+      <div>
+        <div class="login-hero-eyebrow">Livro de registro · desde o primeiro acesso</div>
+        <div class="login-hero-headline">O sangue da sua cabanha, sob <em>controle.</em></div>
+        <div class="login-hero-desc">Genealogia até a 5ª geração, histórico de cada animal e o dia a dia da criação — integrados à ABCCC.</div>
+      </div>
+      <div class="login-hero-stats">
+        <div><div class="login-hero-stat-val">10 · módulos completos</div></div>
+        <div><div class="login-hero-stat-val">5ª ger. · genealogia automática</div></div>
+        <div><div class="login-hero-stat-val">ABCCC · integrado nativamente</div></div>
+      </div>
+    </div>
+    <div class="login-form-col">
+      <div class="login-box" id="login-box-main">
+        <div class="login-form-wordmark">Mimba.</div>
+        <div id="login-campos-normais">
+          <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="login-user" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+          </div>
+          <div class="login-field">
+            <label>Senha</label>
+            <div style="position:relative">
+              <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password" style="width:100%;padding-right:38px" onkeydown="if(event.key==='Enter')fazerLogin()">
+              <button type="button" onclick="_toggleLoginSenha()" title="Mostrar/ocultar senha" aria-label="Mostrar/ocultar senha"
+                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex">
+                <svg id="login-senha-icon-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg id="login-senha-icon-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.9 18.9 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="login-btn" onclick="fazerLogin()">Entrar</button>
+          <div class="login-error" id="login-error" style="display:none"></div>
+          <div id="login-seletor" style="display:none;margin-top:10px"></div>
+          <div style="margin-top:10px;text-align:center">
+            <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">Tenho um código de acesso</a>
+          </div>
         </div>
-      </div>
-      <button class="login-btn" onclick="fazerLogin()">Entrar</button>
-      <div class="login-error" id="login-error" style="display:none"></div>
-      <div id="login-seletor" style="display:none;margin-top:10px"></div>
-      <div style="margin-top:10px;text-align:center">
-        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">Tenho um código de acesso</a>
-      </div>
-    </div>
-    <div id="login-codigo-box" style="display:none">
-      <div class="login-field">
-        <label>Email</label>
-        <input type="email" id="cod-email" placeholder="seu@email.com" autocomplete="email">
-      </div>
-      <div class="login-field">
-        <label>Código recebido por e-mail</label>
-        <input type="text" id="cod-codigo" placeholder="000000" inputmode="numeric" style="letter-spacing:4px;font-size:18px;text-align:center" onkeydown="if(event.key==='Enter')confirmarCodigoAcesso()">
-      </div>
-      <button class="login-btn" onclick="confirmarCodigoAcesso()">Confirmar código</button>
-      <div class="login-error" id="cod-error" style="display:none"></div>
-      <div style="margin-top:10px;text-align:center">
-        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
+        <div id="login-codigo-box" style="display:none">
+          <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="cod-email" placeholder="seu@email.com" autocomplete="email">
+          </div>
+          <div class="login-field">
+            <label>Código recebido por e-mail</label>
+            <input type="text" id="cod-codigo" placeholder="000000" inputmode="numeric" style="letter-spacing:4px;font-size:18px;text-align:center" onkeydown="if(event.key==='Enter')confirmarCodigoAcesso()">
+          </div>
+          <button class="login-btn" onclick="confirmarCodigoAcesso()">Confirmar código</button>
+          <div class="login-error" id="cod-error" style="display:none"></div>
+          <div style="margin-top:10px;text-align:center">
+            <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -5247,7 +5311,23 @@ function _renderDetCorpo(i, editando) {
     // Grid de cards independentes (não .ficha-row dentro de grid — cada linha flex
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
-    S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
+    S1=`<div class="ficha-header">
+      <div class="ficha-avatar">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.75"/><path d="M21 15l-5.2-5.2a2 2 0 0 0-2.8 0L4 19"/></svg>
+      </div>
+      <div class="ficha-header-info">
+        <div class="ficha-header-nome">${a.nome||'—'}</div>
+        <div class="ficha-header-sbb">${a.sbb||a.rp||'—'}</div>
+        <div class="ficha-header-tags">
+          ${a.sexo?`<span class="etq-brinco neutro">${a.sexo}</span>`:''}
+          ${a.situacao?`<span class="etq-brinco">${sitLabel(a.situacao)}</span>`:''}
+          ${a.estagio?`<span class="etq-brinco atencao">${a.estagio}</span>`:''}
+          ${a.pelagem?`<span class="etq-brinco terracota">${a.pelagem}</span>`:''}
+          ${a.ciclo?`<span class="etq-brinco">${a.ciclo}</span>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
       ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
