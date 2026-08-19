@@ -5766,7 +5766,7 @@ function renderPlanejadorReprodutivo() {
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
         <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado} confirmada(s)${reservado > 0 ? " · " + reservado + " reservada(s)" : ""}${negociado > 0 ? " · " + negociado + " negociada(s)" : ""} de ${total} (${disponivel} disponível)</div>
       <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" onclick="editFonteCobertura(${fIdx})">editar</button>
         <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirFonteCobertura(${fIdx})">excluir</button>
@@ -5806,7 +5806,7 @@ function renderPlanejadorReprodutivo() {
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden;margin-top:6px">
         <div style="height:6px;background:${statusCor};border-radius:99px;width:${Math.min(100, pct)}%"></div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado + negociado} usada(s) de ${total} (${disponivel} disponível)</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">${usado} confirmada(s)${reservado > 0 ? " · " + reservado + " reservada(s)" : ""}${negociado > 0 ? " · " + negociado + " negociada(s)" : ""} de ${total} (${disponivel} disponível)</div>
       <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px">
         <label style="display:flex;align-items:center;gap:4px">Disponível neste ciclo:
           <input type="number" id="fc-inline-qtd-${fIdx}" value="${f.quantidade_adquirida}" min="0" max="${padrao}" step="1" style="width:64px">
@@ -8209,22 +8209,26 @@ function _fonteKey(f) {
 // automática pela própria fórmula — não precisa de lógica extra.
 function _saldoFonteCobertura(f) {
   const total = Number(f.quantidade_adquirida) || 0;
-  const usado = acasalamentos.filter(a => a.status === 'confirmado' && f.db_id && String(a.fonte_cobertura_id) === String(f.db_id)).length;
-  // Fase 7: negociações já consumadas (aceito/quitado) também descontam do
-  // saldo — 'pendente' ainda não foi consumado, 'cancelado' nunca aconteceu.
+  // Consumido definitivamente: acasalamento com prenhez confirmada
+  const usado = acasalamentos.filter(a =>
+    a.status === 'confirmado' && f.db_id && String(a.fonte_cobertura_id) === String(f.db_id)
+  ).length;
+  // Reservado: acasalamentos ativos ainda sem confirmação de prenhez
+  // Reduzem o saldo disponível mas podem ser devolvidos se cancelados sem tentativas
+  const reservado = acasalamentos.filter(a =>
+    ['rascunho','simulado','aprovado','em_curso'].includes(a.status) &&
+    f.db_id && String(a.fonte_cobertura_id) === String(f.db_id)
+  ).length;
+  // Negociações consumadas (vendas/doações aceitas)
   const negociado = coberturasNegociadas
     .filter(n => f.db_id && String(n.fonte_cobertura_id) === String(f.db_id) && ['aceito','quitado'].includes(n.status))
     .reduce((sum, n) => sum + (Number(n.quantidade) || 0), 0);
-  const saldoReal = total - usado - negociado;
+  const saldoReal = total - usado - reservado - negociado;
   const disponivel = Math.max(0, saldoReal);
   const pct = total > 0 ? Math.round((disponivel / total) * 100) : 0;
-  // Decisão da spec (docs/spec-reprodutivo-v3.md, seção 7.3): estourar o saldo NUNCA
-  // bloqueia lançamento — só avisa de forma bem incisiva. Por isso não escondemos o
-  // excedente atrás do Math.max acima; o planejador de ciclo usa estes dois campos
-  // pra mostrar o aviso.
   const estourado = saldoReal < 0;
   const excedente = estourado ? Math.abs(saldoReal) : 0;
-  return {total, usado, negociado, disponivel, pct, estourado, excedente};
+  return {total, usado, reservado, negociado, disponivel, pct, estourado, excedente};
 }
 
 function renderFontesCobertura() {
@@ -9167,7 +9171,7 @@ async function _renderSimulacaoAcasalamento() {
 
   // c) Saldo da fonte (real — Fase 3: consumido = acasalamentos confirmados)
   const {disponivel, total} = _saldoFonteCobertura(fonte);
-  const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível</div>`;
+  const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível${reservado > 0 ? " (" + reservado + " reservada(s) em acasalamentos ativos)" : ""}</div>`;
 
   el.innerHTML = '<div class="card">' + htmlAnteriores + htmlConsang + htmlSaldo + '</div>';
 }
