@@ -1078,7 +1078,6 @@
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
     <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
-    <button class="tab" id="tab-btn-legado" onclick="switchTab(this,'gest-ativas')">Legado</button>
   </div>
   <div id="tab-planejador" style="display:none">
     <div id="planejador-ciclo-pills" style="display:flex;gap:8px;margin-bottom:14px"></div>
@@ -1220,14 +1219,7 @@
     </div>
     <div id="gest-protocolos-content"></div>
   </div>
-  <div id="gest-ativas" style="display:none">
-    <div class="card-title" style="margin:0 0 8px">Gestações legadas em aberto</div>
-    <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Gestações reais, registradas no fluxo antigo, que ainda não foram fechadas — não é histórico morto. Sem botão de criar novas; feche cada uma editando o resultado (parto, perda etc.) conforme for confirmando.</div>
-    <div id="gest-ativas-content"></div>
-    <div class="card-title" style="margin:22px 0 8px">Histórico arquivado</div>
-    <div class="alert alert-b" style="margin-bottom:0.75rem;font-size:12px">Histórico arquivado — este registro antigo de cobertura foi descontinuado (ver aba "Planejador de ciclo"). Os dados abaixo ficam preservados só como consulta.</div>
-    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr><th style="padding:9px 10px">Égua</th><th>Padrillo / Macho</th><th>Data</th><th>Tipo</th><th>Resultado</th><th>Obs</th></tr></thead><tbody id="tbody-cob-hist"></tbody></table></div>
-  </div>
+
 </div>
 
 <!-- FINANCEIRO -->
@@ -2491,86 +2483,6 @@
   </div>
 </div>
 
-<!-- MODAL COBERTURA GESTAÇÃO -->
-<div class="modal-bg" id="modal-cobertura-gest">
-  <div class="modal" style="width:660px">
-    <div class="modal-header">
-      <span class="modal-title" id="cg-titulo">Registrar cobertura</span>
-      <button class="modal-close" onclick="closeModal('modal-cobertura-gest')">×</button>
-    </div>
-    <input type="hidden" id="cg-edit-idx">
-    <div class="form-grid">
-
-      <!-- ÉGUA -->
-      <div class="form-group">
-        <label>Égua</label>
-        <select id="cg-egua" style="width:100%"><option value="">— selecionar —</option></select>
-      </div>
-
-      <!-- PADRILLO -->
-      <div class="form-group">
-        <label>Padrillo / Macho reprodutor</label>
-        <div style="display:flex;gap:6px">
-          <select id="cg-padrillo-sel" style="flex:1;font-size:12px" onchange="selecionarPadrillo(this.value)">
-            <option value="">— selecionar da cabanha —</option>
-          </select>
-          <button class="btn btn-sm" onclick="toggleCampoPadrillo()" id="btn-padrillo-externo" title="Padrillo externo / outro">✎</button>
-        </div>
-        <input type="text" id="cg-garanhao" placeholder="Nome do macho (padrillo)" style="margin-top:6px;width:100%">
-      </div>
-
-      <!-- BUSCA SBB PADRILLO -->
-      <div class="form-group" style="grid-column:1/-1">
-        <label>SBB do padrillo (busca na ABCCC)</label>
-        <div style="display:flex;gap:6px;align-items:center">
-          <input type="text" id="cg-sbb-padrillo" placeholder="Ex: B512814" style="width:140px;font-family:var(--mono);text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onblur="if(this.value.trim().length>=4)buscarPadrilloSBB()">
-          <button class="btn btn-sm" onclick="buscarPadrilloSBB()" id="btn-buscar-sbb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar na ABCCC</button>
-          <span id="cg-sbb-status" style="font-size:11px;color:var(--text2)"></span>
-        </div>
-        <div id="cg-sbb-resultado" style="display:none;margin-top:8px;padding:8px 10px;background:var(--green-l);border-radius:var(--radius);font-size:11px;color:var(--green-d)"></div>
-      </div>
-
-      <!-- DADOS DA COBERTURA -->
-      <div class="form-group"><label>Data da cobertura</label><input type="date" id="cg-data"></div>
-      <div class="form-group"><label>Tipo de cobertura</label>
-        <select id="cg-tipo">
-          <option>Natural</option>
-          <option>IA (Inseminação Artificial)</option>
-          <option>IATF (IA Tempo Fixo)</option>
-          <option>TE (Transferência de Embrião)</option>
-          <option>PIV (Produção in vitro)</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Data do diagnóstico (USG)</label><input type="date" id="cg-diag"></div>
-      <div class="form-group"><label>Resultado</label>
-        <select id="cg-resultado">
-          <option value="Aguardando">Aguardando diagnóstico</option>
-          <option value="Prenha">Prenha ✓</option>
-          <option value="Vazia">Vazia ✗</option>
-          <option value="Abortou">Abortou</option>
-          <option value="Embrião transferido">Embrião transferido</option>
-        </select>
-      </div>
-
-      <!-- DADOS ADICIONAIS -->
-      <div class="form-group"><label>Veterinário responsável</label><input type="text" id="cg-vet" placeholder="Nome do médico veterinário"></div>
-      <div class="form-group"><label>Data prevista do parto</label><input type="date" id="cg-parto-prev" placeholder="Calculado automaticamente"></div>
-      <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="cg-obs" placeholder="Notas sobre a cobertura, protocolo utilizado..."></div>
-    </div>
-
-    <!-- PAINEL: dados do padrillo buscado -->
-    <div id="cg-padrillo-info" style="display:none;margin-top:0.5rem;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);font-size:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Dados do padrillo (ABCCC)</div>
-      <div id="cg-padrillo-dados" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('modal-cobertura-gest')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarCoberturaGest()">Salvar cobertura</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL ITEM ESTOQUE -->
 <div class="modal-bg" id="modal-estoque-item">
   <div class="modal" style="width:540px">
@@ -3072,7 +2984,6 @@ HOJE.setHours(0,0,0,0);
 // ─── DADOS ───────────────────────────────────────────────────────────────────
 let animais = [];  // sem seed: os dados vem do schema da cabanha ativa
 
-let coberturas = [];
 let lancamentos = [];
 let filtroLancTipo = '';
 
@@ -5019,7 +4930,7 @@ function renderKanbanVac() {
 function _renderVacObrigatorias() {
   const el = document.getElementById('vac-obrigatorias-painel'); if(!el) return;
   const ativos = animais.filter(a=>isAtivo(a));
-  const prenhes = ativos.filter(a=>a.sexo==='Fêmea' && coberturas2.some(c=>c.egua===a.nome&&c.resultado==='Prenha'));
+  const prenhes = ativos.filter(a=>a.sexo==='Fêmea' && gestacoes.some(g=>g.status==='gestando'&&g.egua_nome===a.nome));
 
   // Verificar Influenza/GET-Vacina (não CAMPO) — últimos 12 meses
   const semInfluenza = ativos.filter(a=>{ if(a.estagio==='CAMPO') return false;
@@ -5274,9 +5185,6 @@ function _renderDetCorpo(i, editando) {
   // Gestações reais (Reprodutivo v3) — sistema vigente, prioridade no card.
   const gestAtivas=gestacoes.filter(g=>g.status==='gestando'&&g.egua_nome===a.nome);
   const gestHist=gestacoes.filter(g=>g.egua_nome===a.nome&&g.status!=='gestando');
-  // Legado (tabela arquivada, sem novas entradas) — só aparece se ainda tiver algo em aberto/histórico.
-  const cobAtivas=coberturas2.filter(c=>(c.resultado==='Prenha'||c.resultado==='Aguardando')&&c.egua===a.nome);
-  const cobHist=coberturas2.filter(c=>c.egua===a.nome&&c.resultado!=='Prenha'&&c.resultado!=='Aguardando');
   const S6=a.sexo==='Fêmea'?`<div class="ficha-section"><div class="ficha-section-title">${_iconGestacao(14)} Reprodução</div>
     ${gestAtivas.map(g=>{const dCob=pd(g.data_cobertura),dG=dCob?Math.round((HOJE-dCob)/864e5):0,pct=Math.min(100,Math.max(0,Math.round(dG/GESTACAO_DIAS*100)));
       const dtP=pd(g.parto_previsto);
@@ -5286,15 +5194,7 @@ function _renderDetCorpo(i, editando) {
         <div style="height:5px;background:rgba(0,0,0,0.1);border-radius:99px;margin-top:5px"><div style="width:${pct}%;height:5px;background:var(--green);border-radius:99px"></div></div>
       </div>`}).join('')}
     ${gestHist.length?`<div style="font-size:11px;color:var(--text2)">${gestHist.length} gestação(ões) anterior(es): ${gestHist.map(g=>`${fd(g.data_cobertura)} (${g.status})`).join(', ')}</div>`:''}
-    ${cobAtivas.map(c=>{const dCob=pd(c.data),dG=dCob?Math.round((HOJE-dCob)/864e5):0,pct=Math.min(100,Math.max(0,Math.round(dG/GESTACAO_DIAS*100)));
-      const dtP=dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null;
-      return`<div style="background:var(--bg3);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px">
-        <div style="font-size:12px;font-weight:700;color:var(--text2)">${_iconGestacao(14)} Em gestação (legado) — ${pct}% (${dG}d)</div>
-        <div style="font-size:11px;color:var(--text3)">Padrillo: ${c.garanhao||'—'} · ${fd(c.data)} · Parto: ${dtP?dtP.toLocaleDateString('pt-BR'):'—'}</div>
-        <div style="height:5px;background:rgba(0,0,0,0.1);border-radius:99px;margin-top:5px"><div style="width:${pct}%;height:5px;background:var(--text3);border-radius:99px"></div></div>
-      </div>`}).join('')}
-    ${cobHist.length?`<div style="font-size:11px;color:var(--text3)">${cobHist.length} cobertura(s) legada(s) anterior(es): ${cobHist.map(c=>`${fd(c.data)} (${c.resultado})`).join(', ')}</div>`:''}
-    ${!gestAtivas.length&&!gestHist.length&&!cobAtivas.length&&!cobHist.length?'<div class="nut-empty">Sem registro reprodutivo.</div>':''}
+    ${!gestAtivas.length&&!gestHist.length?'<div class="nut-empty">Sem registro reprodutivo.</div>':''}
   </div>`:'';
 
   // ── DESCENDENTES ─────────────────────────────────────────────────
@@ -5557,9 +5457,6 @@ function renderReprodutivo(){
 
   const pais={};animais.filter(a=>a.pai).forEach(a=>{if(!pais[a.pai])pais[a.pai]=[];pais[a.pai].push(a);});
   document.getElementById('tbody-reprod').innerHTML=Object.entries(pais).sort((a,b)=>b[1].length-a[1].length).map(([p,crias])=>`<tr><td style="padding:8px 10px;font-weight:600">${p}</td><td>${crias.length}</td></tr>`).join('');
-
-  const cobHtml=coberturas.length===0?'':`<tbody>${coberturas.map(c=>{const rC=c.resultado==='Prenha'?'bg':c.resultado==='Vazia'?'br':'ba';return`<tr><td style="padding:8px 10px;font-weight:600">${c.egua}</td><td>${c.garanhao||'—'}${c.sbb_padrillo?`<br><span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${c.sbb_padrillo}</span>`:''}</td><td style="font-size:12px">${fd(c.data)}</td><td><span class="badge bb">${c.tipo}</span></td><td><span class="badge ${rC}">${c.resultado||'Aguardando'}</span></td><td style="font-size:11px;color:var(--text2)">${c.obs||'—'}</td></tr>`;}).join('')}</tbody>`;
-  document.getElementById('tbody-cob-hist').innerHTML=coberturas.length===0?'<tr><td colspan="6" style="padding:16px 10px;text-align:center;color:var(--text3)">Nenhuma cobertura registrada.</td></tr>':coberturas.map(c=>{const rC=c.resultado==='Prenha'?'bg':c.resultado==='Vazia'?'br':'ba';return`<tr><td style="padding:8px 10px;font-weight:600">${c.egua}</td><td>${c.garanhao||'—'}${c.sbb_padrillo?`<br><span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${c.sbb_padrillo}</span>`:''}</td><td style="font-size:12px">${fd(c.data)}</td><td><span class="badge bb">${c.tipo}</span></td><td><span class="badge ${rC}">${c.resultado||'Aguardando'}</span></td><td style="font-size:11px;color:var(--text2)">${c.obs||'—'}</td></tr>`;}).join('');
 }
 
 // ─── PLANEJADOR DE CICLO (Fase 2 da spec docs/spec-reprodutivo-v3.md) ─────────
@@ -6187,7 +6084,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-ativas','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-fontes','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -7624,7 +7521,6 @@ function renderEvtResultados() {
 }
 
 // ─── GESTAÇÃO ─────────────────────────────────────────────────────────────────
-let coberturas2 = [];
 let fontesCobertura = [];
 // Fase 7: negociações de saldo de fonte (venda/doação, dentro da cabanha ou
 // para outra cabanha Mimba). Cross-tenant só via RPC — nunca _supa() direto
@@ -7656,297 +7552,6 @@ const REPRO_ATIVIDADE_LABEL = {medicacao:'Medicação', toque:'Toque', ultrassom
 // categoria nova em Saúde & Vacinas (tabela `tratamentos`, Fase 0).
 let tratamentos = [];
 
-// ─── PADRILLO: seletor e busca ABCCC ─────────────────────────────────────────
-function popularSelectEguas() {
-  const sel = document.getElementById('cg-egua');
-  if(!sel) return;
-  const eguas = animais.filter(a=>isAtivo(a)&&(a.sexo==='Fêmea'||!a.sexo));
-  sel.innerHTML='<option value="">— selecionar —</option>'+
-    eguas.map(a=>`<option value="${a.nome}">${a.nome} (${a.estagio||'—'})</option>`).join('');
-
-  // Também popular select de machos da cabanha
-  const selMacho = document.getElementById('cg-padrillo-sel');
-  if(!selMacho) return;
-  const machos = animais.filter(a=>isAtivo(a)&&a.sexo==='Macho');
-  selMacho.innerHTML = '<option value="">— selecionar da cabanha —</option>' +
-    machos.map(a=>`<option value="${a.nome}|${a.sbb||''}">${a.nome}${a.sbb&&a.sbb!=='-'?' ('+a.sbb+')':''}</option>`).join('') +
-    '<option value="__externo__">✎ Padrillo externo / outro...</option>';
-}
-
-function selecionarPadrillo(val) {
-  if(!val || val === '__externo__') {
-    document.getElementById('cg-garanhao').value = '';
-    document.getElementById('cg-garanhao').focus();
-    return;
-  }
-  const [nome, sbb] = val.split('|');
-  document.getElementById('cg-garanhao').value = nome;
-  if(sbb) {
-    document.getElementById('cg-sbb-padrillo').value = sbb;
-    // Auto-buscar dados se tiver SBB
-    buscarPadrilloSBB();
-  } else {
-    document.getElementById('cg-sbb-padrillo').value = '';
-    document.getElementById('cg-sbb-resultado').style.display = 'none';
-    document.getElementById('cg-padrillo-info').style.display = 'none';
-  }
-}
-
-function toggleCampoPadrillo() {
-  const input = document.getElementById('cg-garanhao');
-  input.focus();
-  input.select();
-}
-
-// Busca SBB na ABCCC — abre página em nova aba e preenche dados manualmente via formulário
-async function buscarPadrilloSBB() {
-  const sbb = (document.getElementById('cg-sbb-padrillo')?.value||'').trim().toUpperCase();
-  if(!sbb) { alert('Digite o código SBB do padrillo.'); return; }
-
-  const statusEl = document.getElementById('cg-sbb-status');
-  const resultEl = document.getElementById('cg-sbb-resultado');
-  const btnEl    = document.getElementById('btn-buscar-sbb');
-
-  // 1. Verificar se já existe na cabanha
-  const animalLocal = animais.find(a => a.sbb && a.sbb.toUpperCase() === sbb);
-  if(animalLocal) {
-    _preencherDadosPadrillo({
-      nome: animalLocal.nome, sbb: animalLocal.sbb,
-      pelagem: animalLocal.pelagem, sexo: animalLocal.sexo,
-      rp: animalLocal.rp, pai: animalLocal.pai, mae: animalLocal.mae,
-      fonte: ((TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '' || 'Cabanha') + ' (cadastrado)',
-    });
-    if(statusEl){ statusEl.textContent='✅ Padrillo encontrado na cabanha.'; statusEl.style.color='var(--green-d)'; }
-    return;
-  }
-
-  // 2. Buscar na ABCCC via Edge Function
-  if(btnEl){ btnEl.disabled=true; btnEl.textContent='🔄 Buscando...'; }
-  if(statusEl){ statusEl.textContent='Consultando ABCCC...'; statusEl.style.color='var(--text2)'; }
-  if(resultEl) resultEl.style.display='none';
-
-  let dados = null;
-  try {
-    const res = await fetch(
-      SUPABASE_URL+'/functions/v1/buscar-abccc?sbb='+encodeURIComponent(sbb),
-      { headers:{'apikey':SUPABASE_KEY}, signal:AbortSignal.timeout(15000) }
-    );
-    if(res.ok) dados = await res.json();
-  } catch(e){ console.warn('ABCCC err:',e); }
-
-  if(btnEl){ btnEl.disabled=false; btnEl.textContent='Buscar na ABCCC'; }
-
-  if(dados?.encontrado==='sim') {
-    _preencherDadosPadrillo({
-      nome:dados.nome, sbb, pelagem:dados.pelagem,
-      sexo:dados.sexo, rp:dados.rp, pai:dados.pai, mae:dados.mae,
-      fonte:'ABCCC (automático)',
-    });
-    if(statusEl){
-      const n=[dados.nome,dados.pelagem,dados.nasc].filter(Boolean).length;
-      statusEl.textContent='✅ '+n+' dado(s) importado(s) da ABCCC.';
-      statusEl.style.color='var(--green-d)';
-    }
-  } else {
-    if(statusEl){
-      statusEl.textContent = dados?.encontrado==='nao'
-        ? 'SBB '+sbb+' não encontrado. Preencha manualmente.'
-        : 'Serviço indisponível. Preencha manualmente.';
-      statusEl.style.color='var(--amber-d)';
-    }
-    _mostrarCamposManuaisPadrillo(sbb);
-  }
-}
-
-function _mostrarCamposManuaisPadrillo(sbb) {
-  const resultEl = document.getElementById('cg-sbb-resultado');
-  if(!resultEl) return;
-  resultEl.style.display='block';
-  resultEl.innerHTML=`
-    <div style="margin-bottom:8px;font-size:11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <strong>SBB ${sbb}</strong>
-      <a href="https://www.cavalocrioulo.org.br/pesquisa/pesquisas.php" target="_blank"
-         class="btn btn-sm" style="background:var(--blue);color:white;border-color:var(--blue);font-size:10px">
-        ${_iconLupa(12)} Consultar na ABCCC
-      </a>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-      <div><label style="font-size:10px;font-weight:700;color:var(--text2)">Nome</label>
-        <input id="sbb-nome-manual" type="text" placeholder="Nome completo" style="width:100%;font-size:11px;margin-top:3px"
-          oninput="document.getElementById('cg-garanhao').value=this.value"></div>
-      <div><label style="font-size:10px;font-weight:700;color:var(--text2)">RP</label>
-        <input id="sbb-rp-manual" type="text" placeholder="RP" style="width:100%;font-size:11px;margin-top:3px"></div>
-      <div><label style="font-size:10px;font-weight:700;color:var(--text2)">Pelagem</label>
-        <input id="sbb-pel-manual" type="text" placeholder="Pelagem" style="width:100%;font-size:11px;margin-top:3px"></div>
-      <div><label style="font-size:10px;font-weight:700;color:var(--text2)">Pai</label>
-        <input id="sbb-pai-manual" type="text" placeholder="Nome do pai" style="width:100%;font-size:11px;margin-top:3px"></div>
-      <div><label style="font-size:10px;font-weight:700;color:var(--text2)">Mãe</label>
-        <input id="sbb-mae-manual" type="text" placeholder="Nome da mãe" style="width:100%;font-size:11px;margin-top:3px"></div>
-      <div><label style="font-size:10px;font-weight:700;color:var(--text2)">Criador</label>
-        <input id="sbb-criador-manual" type="text" placeholder="Criador/Cabanha" style="width:100%;font-size:11px;margin-top:3px"></div>
-    </div>
-    <div style="margin-top:8px;display:flex;gap:6px">
-      <button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green)"
-        onclick="confirmarDadosManuaisPadrillo('${sbb}')">✓ Confirmar dados</button>
-      <button class="btn btn-sm"
-        onclick="document.getElementById('cg-sbb-resultado').style.display='none'">Cancelar</button>
-    </div>`;
-}
-
-function confirmarDadosManuaisPadrillo(sbb) {
-  const nome = document.getElementById('sbb-nome-manual')?.value?.trim();
-  if(!nome) { alert('Informe o nome do padrillo.'); return; }
-  _preencherDadosPadrillo({
-    nome, sbb,
-    rp:      document.getElementById('sbb-rp-manual')?.value,
-    pelagem: document.getElementById('sbb-pel-manual')?.value,
-    pai:     document.getElementById('sbb-pai-manual')?.value,
-    mae:     document.getElementById('sbb-mae-manual')?.value,
-    criador: document.getElementById('sbb-criador-manual')?.value,
-    fonte: `ABCCC (SBB ${sbb})`,
-  });
-}
-
-function _preencherDadosPadrillo(dados) {
-  document.getElementById('cg-garanhao').value = dados.nome || '';
-  document.getElementById('cg-sbb-padrillo').value = dados.sbb || '';
-  document.getElementById('cg-sbb-status').textContent = '✓ Dados preenchidos';
-
-  const resultEl = document.getElementById('cg-sbb-resultado');
-  const infoEl   = document.getElementById('cg-padrillo-info');
-  const dadosEl  = document.getElementById('cg-padrillo-dados');
-
-  resultEl.style.display = 'none';
-  infoEl.style.display = 'block';
-
-  const items = [
-    ['Nome', dados.nome],
-    ['SBB', dados.sbb],
-    ['RP', dados.rp],
-    ['Pelagem', dados.pelagem],
-    ['Pai', dados.pai],
-    ['Mãe', dados.mae],
-    ['Criador', dados.criador||dados.fonte],
-  ].filter(([,v])=>v);
-
-  dadosEl.innerHTML = items.map(([l,v])=>`
-    <div style="background:var(--bg2);border-radius:var(--radius);padding:5px 8px">
-      <div style="font-size:10px;color:var(--text3)">${l}</div>
-      <div style="font-weight:600;font-size:11px;margin-top:1px">${v}</div>
-    </div>`).join('');
-
-  // Guardar dados no contexto para salvar junto à cobertura
-  window._padrilloExtra = dados;
-}
-
-function _calcularPartoPrevistoAuto() {
-  const data = document.getElementById('cg-data')?.value;
-  if(!data) return;
-  const dtCob = pd(data);
-  if(!dtCob) return;
-  const dtParto = new Date(dtCob.getTime() + GESTACAO_DIAS * 864e5);
-  const prevInput = document.getElementById('cg-parto-prev');
-  if(prevInput && !prevInput.value) {
-    prevInput.value = dtParto.toISOString().slice(0,10);
-  }
-}
-
-function salvarCoberturaGest() {
-  const egua = document.getElementById('cg-egua').value;
-  if(!egua) return alert('Selecione a égua.');
-  const garanhao = document.getElementById('cg-garanhao').value.trim();
-  if(!garanhao) return alert('Informe o padrillo / macho reprodutor.');
-  const idx = parseInt(document.getElementById('cg-edit-idx').value||'-1');
-  const obj = {
-    egua,
-    garanhao,
-    sbb_padrillo: document.getElementById('cg-sbb-padrillo').value||'',
-    padrillo_dados: window._padrilloExtra||null,
-    data:     document.getElementById('cg-data').value,
-    tipo:     document.getElementById('cg-tipo').value,
-    diag:     document.getElementById('cg-diag').value,
-    resultado:document.getElementById('cg-resultado').value,
-    vet:      document.getElementById('cg-vet').value,
-    parto_prev:document.getElementById('cg-parto-prev').value,
-    obs:      document.getElementById('cg-obs').value,
-  };
-  if(idx>=0) { coberturas2[idx]=obj; _dbSalvarCobertura(obj, idx); }
-  else { coberturas2.push(obj); _dbSalvarCobertura(obj, coberturas2.length-1); }
-  window._padrilloExtra = null;
-  closeModal('modal-cobertura-gest');
-  renderGestacao();
-}
-
-function editCobGest(i) {
-  const c = coberturas2[i];
-  document.getElementById('cg-titulo').textContent = 'Editar cobertura';
-  document.getElementById('cg-edit-idx').value = i;
-  popularSelectEguas();
-  document.getElementById('cg-egua').value = c.egua;
-  document.getElementById('cg-garanhao').value = c.garanhao||'';
-  document.getElementById('cg-sbb-padrillo').value = c.sbb_padrillo||'';
-  document.getElementById('cg-data').value = c.data||'';
-  document.getElementById('cg-tipo').value = c.tipo||'Natural';
-  document.getElementById('cg-diag').value = c.diag||'';
-  document.getElementById('cg-resultado').value = c.resultado||'Aguardando';
-  document.getElementById('cg-vet').value = c.vet||'';
-  document.getElementById('cg-parto-prev').value = c.parto_prev||'';
-  document.getElementById('cg-obs').value = c.obs||'';
-  document.getElementById('cg-sbb-resultado').style.display = 'none';
-  // Mostrar dados do padrillo se existirem
-  if(c.padrillo_dados) {
-    window._padrilloExtra = c.padrillo_dados;
-    _preencherDadosPadrillo(c.padrillo_dados);
-  } else {
-    document.getElementById('cg-padrillo-info').style.display = 'none';
-  }
-  openModal('modal-cobertura-gest');
-}
-
-function renderGestacao(){
-  const ativas=coberturas2.filter(c=>c.resultado==='Prenha'||c.resultado==='Aguardando');
-  const tabBtn=document.getElementById('tab-btn-legado');
-  if(tabBtn) tabBtn.innerHTML = ativas.length>0 ? `Legado <span class="badge ba" style="margin-left:4px">${ativas.length}</span>` : 'Legado';
-  const el=document.getElementById('gest-ativas-content');
-  if(!el)return;
-  if(ativas.length===0){el.innerHTML='<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma gestação ativa. Registre uma cobertura com resultado "Prenha".</div>';}
-  else{el.innerHTML=ativas.map((c)=>{
-    const i=coberturas2.indexOf(c);
-    const dCob=pd(c.data);
-    const diasGest=dCob?Math.round((HOJE-dCob)/864e5):0;
-    const diasRestantes=GESTACAO_DIAS-diasGest;
-    const pct=Math.min(100,Math.max(0,Math.round(diasGest/GESTACAO_DIAS*100)));
-    // Usar parto previsto manual se existir, senão calcular
-    const dtParto = c.parto_prev ? pd(c.parto_prev) : (dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null);
-    const tri=diasGest<112?'1º trimestre':diasGest<224?'2º trimestre':'3º trimestre';
-    const triC=diasGest<112?'bb':diasGest<224?'ba':'br';
-    const corB=diasGest<112?'#378ADD':diasGest<224?'#EF9F27':'#E24B4A';
-    const sbbTag = c.sbb_padrillo ? `<a class="sbb-link" href="#" onclick="abrirAbccc('${c.sbb_padrillo}');return false;" target="_blank">${c.sbb_padrillo} ↗</a>` : '';
-    return`<div class="gest-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:14px;font-weight:700">${c.egua}</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">
-            Padrillo: <strong>${c.garanhao||'—'}</strong>${sbbTag?' · SBB '+sbbTag:''} · ${fd(c.data)} · ${c.tipo}
-            ${c.vet?' · <span style="color:var(--text3)">Dr. '+c.vet+'</span>':''}
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <span class="badge ${triC}">${tri}</span>
-          <span class="badge ${c.resultado==='Prenha'?'bg':'ba'}">${c.resultado}</span>
-          <button class="btn btn-sm" onclick="editCobGest(${i})">editar</button>
-          <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirCobertura(${i})" title="Excluir esta gestação">🗑</button>
-        </div>
-      </div>
-      <div class="gest-prog"><div class="gest-prog-fill" style="width:${pct}%;background:${corB}"></div></div>
-      <div class="gest-dias">
-        <span>${diasGest}d de gestação (${pct}%)</span>
-        <span>${dtParto?`Parto previsto: <strong>${dtParto.toLocaleDateString('pt-BR')}</strong> (${diasRestantes>0?diasRestantes+'d restantes':'ATRASADO'})`:''}</span>
-      </div>
-      ${c.obs?`<div style="font-size:11px;color:var(--text3);margin-top:6px">Obs: ${c.obs}</div>`:''}
-    </div>`;
-  }).join('');}
-}
 
 // ─── FONTES DE COBERTURA (Fase 1 — cadastro; consumo real vem nas Fases 2/3) ──
 const FC_TIPO_LABEL = {proprio:'Próprio', cota:'Cota', direito_uso:'Direito de uso', cobertura:'Cobertura', embriao:'Embrião'};
@@ -8588,11 +8193,16 @@ async function _renderSimulacaoAcasalamento() {
 
   el.innerHTML = '<div class="card" style="font-size:12px;color:var(--text3)">Simulando...</div>';
 
-  // a) Cruzamentos anteriores
-  const anteriores = coberturas2.filter(c => c.egua === egua.nome && c.garanhao === fonte.garanhao_nome);
+  // a) Cruzamentos anteriores (acasalamentos reais entre esta égua e este garanhão, não cancelados)
+  const anteriores = acasalamentos.filter(ac => ac.egua_nome === egua.nome && ac.garanhao_nome === fonte.garanhao_nome && ac.status !== 'cancelado');
   const htmlAnteriores = anteriores.length
     ? '<div style="font-size:12px;margin-bottom:6px"><b>Cruzamentos anteriores:</b><br>' +
-      anteriores.map(c => `${fd(c.data)} — ${c.resultado || 'Aguardando'}${c.cria_nome ? ' · cria: ' + c.cria_nome : ''}`).join('<br>') +
+      anteriores.map(ac => {
+        const g = gestacoes.find(x => String(x.acasalamento_id) === String(ac.db_id));
+        return g
+          ? `${fd(g.data_cobertura)} — ${GEST_STATUS_LABEL[g.status] || g.status}`
+          : `Ciclo ${ac.ciclo} — ${AC_STATUS_COLS.find(s => s.status === ac.status)?.label || ac.status}`;
+      }).join('<br>') +
       '</div>'
     : '<div style="font-size:12px;color:var(--text3);margin-bottom:6px">Nenhum cruzamento anterior entre esta égua e este garanhão.</div>';
 
@@ -9813,7 +9423,7 @@ showPage=function(id){
   if(id==='eventos'){renderEventos();renderEvtPorAnimal();renderEvtResultados();}
   // "gestacao" foi fundida em "reprodutivo" na Fase 5 (spec docs/spec-reprodutivo-v3.md) —
   // mesmas funções de render, só a página que mudou.
-  if(id==='reprodutivo'){popularSelectEguas();renderGestacao();renderFontesCobertura();renderPlantelDisponivel();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
+  if(id==='reprodutivo'){renderFontesCobertura();renderPlantelDisponivel();renderAcasalamentos();renderGestacoesNovo();renderProtocolos();}
   if(id==='estoque'){renderEstoque();renderMovimentos();}
   if(id==='medidas'){renderMedLista();}
   if(id==='saude'){renderSaude();}
@@ -9877,15 +9487,6 @@ function renderDashboard(){
   });
   estoque.filter(e=>Number(e.atual)<=Number(e.minimo)).forEach(e=>{
     als.push({t:Number(e.atual)===0?'r':'a',m:`${_iconEstoque(14)} Estoque ${Number(e.atual)===0?'ZERADO':'baixo'} — ${e.nome} (${e.atual} ${e.unidade})`, fn:"showPage('estoque')"});
-  });
-  // Legado (tabela arquivada, sem novas entradas desde a Fase 0 do Reprodutivo v3) —
-  // mantido só pra prenhezes que já estavam em aberto não sumirem do radar até serem fechadas.
-  coberturas2.filter(c=>c.resultado==='Prenha'&&c.data).forEach(c=>{
-    const dtRef=c.parto_prev?pd(c.parto_prev):(pd(c.data)?new Date(pd(c.data).getTime()+GESTACAO_DIAS*864e5):null);
-    if(!dtRef) return;
-    const d=Math.round((dtRef-HOJE)/864e5);
-    if(d<=30&&d>=0) als.push({t:'a',m:`${_iconGestacao(14)} Parto próximo (legado) — ${c.egua} em ${d}d`, fn:"showPage('reprodutivo')"});
-    if(d<0)         als.push({t:'r',m:`${_iconGestacao(14)} Parto ATRASADO (legado) — ${c.egua} (${Math.abs(d)}d)`, fn:"showPage('reprodutivo')"});
   });
   // Gestações reais (tabela `gestacoes`, Reprodutivo v3) — a partir daqui é o sistema vigente.
   gestacoes.filter(g=>g.status==='gestando'&&g.parto_previsto).forEach(g=>{
@@ -10760,23 +10361,6 @@ async function _dbSalvarEvento(evt, idx) {
 }
 
 
-// ─── EXCLUSÃO DE COBERTURA/GESTAÇÃO ──────────────────────────────────────────
-async function _dbExcluirCobertura(db_id) {
-  if(!db_id) return;
-  await _supa('DELETE', 'coberturas_arquivadas_legado', null, '?id=eq.' + db_id);
-}
-
-function excluirCobertura(i) {
-  const cob = coberturas2[i];
-  if(!cob) return;
-  const desc = cob.egua + (cob.data ? ' — ' + fd(cob.data) : '') + (cob.garanhao ? ' × ' + cob.garanhao : '');
-  if(!confirm('Excluir esta gestação/cobertura?\n\n' + desc + '\n\nEsta ação não pode ser desfeita.')) return;
-  coberturas2.splice(i, 1);
-  _dbExcluirCobertura(cob.db_id);
-  renderGestacao();
-  _mostrarStatusSync('🗑️ Cobertura excluída', 'green');
-}
-
 
 
 // ─── ANÁLISE DE SANGUES ───────────────────────────────────────────────────────
@@ -11002,11 +10586,11 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
   });
 
   // Buscar dados do banco em paralelo
-  const [vacsDB, examsDB, vermDB, cobDB, medidasDB, midiasDB] = await Promise.all([
+  const [vacsDB, examsDB, vermDB, gestDB, medidasDB, midiasDB] = await Promise.all([
     _supa('GET','vacinacoes','','?animal_id=eq.'+animalId+'&order=data.desc&select=data,vacina,dose,vet') || [],
     _supa('GET','exames','','?animal_id=eq.'+animalId+'&order=data.desc&select=data,tipo,resultado,vet') || [],
     _supa('GET','vermifugacoes','','?animal_id=eq.'+animalId+'&order=data.desc&select=data,produto') || [],
-    _supa('GET','coberturas_arquivadas_legado','','?egua_id=eq.'+animalId+'&order=data.desc&select=data,garanhao,tipo,resultado,parto_real') || [],
+    _supa('GET','gestacoes','','?egua_id=eq.'+animalId+'&order=data_cobertura.desc&select=data_cobertura,parto_real,status') || [],
     _supa('GET','medidas','','?animal_id=eq.'+animalId+'&order=data.desc&select=data,peso,escore,contexto') || [],
     _supa('GET','animal_midia','','?animal_id=eq.'+animalId+'&order=data_midia.desc&select=*') || [],
   ]);
@@ -11017,11 +10601,11 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
     titulo:'Exame: '+v.tipo, sub:v.resultado+(v.vet?' · '+v.vet:'') }));
   (vermDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconComprimido(14),
     titulo:'Vermifugação: '+v.produto, sub:'' }));
-  (cobDB||[]).forEach(v => {
-    if(v.data) eventos_tl.push({ data:v.data, tipo:'repro', icone:'🍀',
-      titulo:'Cobertura ('+v.tipo+')', sub:v.garanhao||'' });
+  (gestDB||[]).forEach(v => {
+    if(v.data_cobertura) eventos_tl.push({ data:v.data_cobertura, tipo:'repro', icone:'🍀',
+      titulo:'Cobertura', sub:GEST_STATUS_LABEL[v.status]||v.status||'' });
     if(v.parto_real) eventos_tl.push({ data:v.parto_real, tipo:'repro', icone:'🐣',
-      titulo:'Parto', sub:'Resultado: '+v.resultado });
+      titulo:'Parto', sub:'' });
   });
   (medidasDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'medida', icone:_iconRegua(14),
     titulo:'Biometria', sub:[v.peso?'Peso: '+v.peso+'kg':null, v.escore?'Escore: '+v.escore:null, v.contexto||null].filter(Boolean).join(' · ') }));
@@ -11433,7 +11017,6 @@ async function _sincronizarAoLogin() {
   _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
-  coberturas2.length = 0;
   fontesCobertura.length = 0;
   acasalamentos.length = 0;
   tentativas.length = 0;
@@ -11477,7 +11060,7 @@ async function _sincronizarAoLogin() {
     }
 
     const dbVac = bootstrap.vacinacoes, dbExam = bootstrap.exames, dbVerm = bootstrap.vermifugacoes,
-          dbCob = bootstrap.coberturas, dbMed = bootstrap.medidas, dbEvt = bootstrap.eventos,
+          dbMed = bootstrap.medidas, dbEvt = bootstrap.eventos,
           dbEst = bootstrap.estoque_itens, dbMov = bootstrap.estoque_movimentos,
           dbLanc = bootstrap.lancamentos, dbPend = bootstrap.pendencias,
           dbUsr = usuarioAtual?.perfil === 'adm' ? bootstrap.usuarios : null;
@@ -11529,19 +11112,6 @@ async function _sincronizarAoLogin() {
           prox: v.prox_data||'', obs: v.obs||''
         });
       });
-    }
-
-    // 5. Coberturas
-    if(dbCob) {
-      coberturas2.length = 0;
-      dbCob.forEach(c => coberturas2.push({
-        db_id: c.id, egua: c.egua_nome, garanhao: c.garanhao||'',
-        sbb_padrillo: c.sbb_padrillo||'', data: c.data,
-        tipo: c.tipo, resultado: c.resultado, diag: c.diag||'',
-        parto_prev: c.parto_prev||'', parto_real: c.parto_real||'',
-        cria_nome: c.cria_nome||'', cria_sexo: c.cria_sexo||'',
-        vet: c.vet||'', obs: c.obs||''
-      }));
     }
 
     // 5b. Fontes de cobertura — a RPC carregar_dados_cabanha() ainda pode não
@@ -11951,53 +11521,6 @@ async function _dbSalvarVermifugacao(reg, animalIdx) {
   };
   const res = await _supa('POST','vermifugacoes',payload);
   if(res?.[0]?.id) reg.db_id = res[0].id;
-}
-
-// ── Coberturas ─────────────────────────────────────────────────────────────
-async function _dbSalvarCobertura(cob, idx) {
-  const eguaAnimal = animais.find(a => a.nome === cob.egua);
-  // Normalizar tipo e resultado para os valores do enum do banco
-  const tipoMap = {
-    'IA (Inseminação Artificial)':'IA', 'IATF (IA Tempo Fixo)':'IATF',
-    'TE (Transferência de Embrião)':'TE', 'PIV (Produção in vitro)':'PIV',
-  };
-  const resMap = {
-    'Abortou':'Aborto', 'Aguardando diagnóstico':'Aguardando',
-    'Prenha ✓':'Prenha', 'Vazia ✗':'Vazia',
-  };
-  // Helper: converter string vazia ou undefined para null
-  const v = x => (x && x !== '') ? x : null;
-
-  const payload = {
-    egua_id:      eguaAnimal?.db_id || null,
-    egua_nome:    cob.egua,
-    garanhao:     v(cob.garanhao),
-    sbb_padrillo: v(cob.sbb_padrillo),
-    data:         v(cob.data),
-    tipo:         tipoMap[cob.tipo] || v(cob.tipo) || 'Natural',
-    resultado:    resMap[cob.resultado] || v(cob.resultado) || 'Aguardando',
-    diag:         v(cob.diag),
-    parto_prev:   v(cob.parto_prev),
-    parto_real:   v(cob.parto_real),
-    cria_nome:    v(cob.cria_nome),
-    cria_sexo:    v(cob.cria_sexo),
-    vet:          v(cob.vet),
-    obs:          v(cob.obs),
-    criado_por:   usuarioAtual?.db_id || null,
-  };
-  // Remover campos null do payload para evitar erros de tipo no PostgreSQL
-  const clean = Object.fromEntries(Object.entries(payload).filter(([k,v]) => v !== null));
-  // Mas manter campos obrigatórios mesmo null
-  clean.egua_nome = payload.egua_nome;
-  clean.tipo      = payload.tipo;
-  clean.resultado = payload.resultado;
-
-  if(cob.db_id) {
-    await _supa('PATCH','coberturas_arquivadas_legado', clean, '?id=eq.'+cob.db_id);
-  } else {
-    const res = await _supa('POST','coberturas_arquivadas_legado', clean);
-    if(res?.[0]?.id) coberturas2[idx].db_id = res[0].id;
-  }
 }
 
 // ── Fontes de cobertura ───────────────────────────────────────────────────
@@ -12467,11 +11990,11 @@ function _entrarSeletor(i){ if(window.__cabs && window.__cabs[i]) _entrarCabanha
 // entre tenants para quem trabalha em mais de uma cabanha.
 function _limparEstadoLocal() {
   // Reprodutivo/marketplace (fontesCobertura, acasalamentos, coberturasNegociadas, gestacoes,
-  // tentativas, coberturas) precisam estar aqui igual aos demais — antes só eram zerados dentro
+  // tentativas) precisam estar aqui igual aos demais — antes só eram zerados dentro
   // de _sincronizarAoLogin (async), deixando uma janela real em que trocar de cabanha e abrir o
   // Planejador antes do sync terminar mostrava dado de negociação (nome/contato de outra cabanha)
   // da cabanha ANTERIOR. Achado na revisão de isolamento antes do corte final da Fase 5.
-  [animais, coberturas2, coberturas, eventosEsp, estoque, movimentos, lancamentos, pendencias, USUARIOS,
+  [animais, eventosEsp, estoque, movimentos, lancamentos, pendencias, USUARIOS,
    fontesCobertura, acasalamentos, coberturasNegociadas, gestacoes, tentativas,
    reproducaoEstagios, reproducaoAtividades, tratamentos]
     .forEach(a => { if (Array.isArray(a)) a.length = 0; });
@@ -12890,13 +12413,13 @@ function renderCalendario() {
     }
   });
   // Partos previstos
-  coberturas2.filter(c=>c.resultado==='Prenha'&&c.data).forEach(c=>{
-    const dCob = pd(c.data);
-    const dtP = c.parto_prev ? pd(c.parto_prev) : (dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null);
+  gestacoes.filter(g=>g.status==='gestando').forEach(g=>{
+    const dCob = pd(g.data_cobertura);
+    const dtP = g.parto_previsto ? pd(g.parto_previsto) : (dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null);
     if(dtP && dtP.getFullYear()===ano && dtP.getMonth()===mes) {
       const key = dtP.getDate();
       if(!evtPorDia[key]) evtPorDia[key] = [];
-      evtPorDia[key].push({nome:_iconGestacao(12)+' Parto previsto — '+c.egua, tipo:'Gestação', data:dtP.toISOString().slice(0,10)});
+      evtPorDia[key].push({nome:_iconGestacao(12)+' Parto previsto — '+g.egua_nome, tipo:'Gestação', data:dtP.toISOString().slice(0,10)});
     }
   });
 
@@ -12933,11 +12456,11 @@ function mostrarEventosDia(dia, mes, ano) {
   eventosEsp.forEach(e=>{
     if(e.data){const ed=pd(e.data);if(ed&&ed.getFullYear()===ano&&ed.getMonth()===mes&&ed.getDate()===dia)evts.push(e);}
   });
-  coberturas2.filter(c=>c.resultado==='Prenha'&&c.data).forEach(c=>{
-    const dCob=pd(c.data);
-    const dtP=c.parto_prev?pd(c.parto_prev):(dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null);
+  gestacoes.filter(g=>g.status==='gestando').forEach(g=>{
+    const dCob=pd(g.data_cobertura);
+    const dtP=g.parto_previsto?pd(g.parto_previsto):(dCob?new Date(dCob.getTime()+GESTACAO_DIAS*864e5):null);
     if(dtP&&dtP.getFullYear()===ano&&dtP.getMonth()===mes&&dtP.getDate()===dia)
-      evts.push({nome:_iconGestacao(12)+' Parto previsto — '+c.egua, tipo:'Gestação'});
+      evts.push({nome:_iconGestacao(12)+' Parto previsto — '+g.egua_nome, tipo:'Gestação'});
   });
   if(!evts.length){el.innerHTML='';return;}
   el.innerHTML=`<div style="border-top:0.5px solid var(--border);padding-top:6px">

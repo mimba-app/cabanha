@@ -608,3 +608,55 @@ Dono do produto usou o cadastro de animal recém-promovido e reportou dois probl
   modais; "Castrado" alinha visualmente com o input "Coberturas por ciclo" ao lado; select de
   Receptora no modal de acasalamento lista só fêmeas "Na Cabanha" com SBB preenchido (égua sem SBB
   fica de fora, confirmado com dado de teste).
+
+### Fase 9 — remoção completa da aba "Legado" + tabela `coberturas_arquivadas_legado` (2026-08-19)
+
+A aba "Legado" (seção histórica, fora do escopo original desta spec) existia só pra não perder as 4
+gestações abertas que a Cabanha Mãe de Deus tinha no fluxo antigo (pré-Reprodutivo v3), ver incidente
+registrado no `HANDOFF.md` de 2026-08-12. Pedro pediu pra migrar essas 4 pro sistema vigente e remover
+a funcionalidade inteira — frontend e banco, "clean".
+
+- **Migração de dado real** (Cabanha Mãe de Deus, `cab_mae_de_deus`, único tenant com gestações reais
+  na tabela legada — a outra ocorrência, na cabanha de teste do Pedro, era fixture, descartada): as 4
+  linhas de `coberturas_arquivadas_legado` (resultado `Prenha`) viraram registros reais em
+  `fontes_cobertura` (tipo `cobertura`, já `esgotada` — representa a cobertura pontual já realizada) +
+  `acasalamentos` (`status='confirmado'`) + `gestacoes` (`status='gestando'`), preservando as datas
+  reais de cobertura e diagnóstico e o ciclo calculado a partir delas (`25/26`, via
+  `public._calc_ciclo_texto()`, a mesma função que a UI usa). Migração feita por SQL direto (não pela
+  UI), documentada em `HANDOFF.md`.
+- **Frontend**: removida a aba "Legado" inteira — botão (`tab-btn-legado`), conteúdo (`gest-ativas`/
+  `gest-ativas-content`, incluindo a subseção "Histórico arquivado" que lia do array `coberturas`,
+  órfão e sempre vazio desde antes desta sessão), o modal `modal-cobertura-gest` e toda a cadeia de
+  funções que só existia pra alimentá-lo: `renderGestacao()`, `salvarCoberturaGest()`, `editCobGest()`,
+  `excluirCobertura()`, `_dbSalvarCobertura()`, `_dbExcluirCobertura()`, `popularSelectEguas()`,
+  `selecionarPadrillo()`, `toggleCampoPadrillo()`, `buscarPadrilloSBB()`,
+  `_mostrarCamposManuaisPadrillo()`, `confirmarDadosManuaisPadrillo()`, `_preencherDadosPadrillo()`,
+  `_calcularPartoPrevistoAuto()`. Os arrays globais `coberturas`/`coberturas2` e a entrada
+  correspondente em `_limparEstadoLocal()` também saíram.
+- **Pontos que dependiam funcionalmente do legado (não só exibição) foram migrados pra ler de
+  `gestacoes`, não apenas apagados** — achado importante pra não perder capacidade real: alerta de
+  "parto próximo/atrasado" no dashboard (`renderDashboard`), marcador de "parto previsto" no calendário
+  de eventos (`renderCalendario` e `mostrarEventosDia`), contagem de éguas prenhas pra checar vacina
+  obrigatória (`_renderVacObrigatorias`), histórico de "cruzamentos anteriores" no painel de simulação
+  do modal de acasalamento (`_renderSimulacaoAcasalamento`, agora lê `acasalamentos` reais em vez do
+  texto livre do legado), e a linha do tempo do animal (`_carregarLinhaTempo`, trocou o fetch de
+  `coberturas_arquivadas_legado` por um fetch equivalente em `gestacoes`).
+- **Banco**: migration `docs/migrations/2026-08-19-remove-legado-coberturas.sql` — recria
+  `carregar_dados_cabanha()` (RPC de bootstrap SECURITY DEFINER) sem a variável/query/chave de
+  `coberturas_arquivadas_legado`, mantendo intacto o gate `tem_acesso_tenant(p_tenant_id)` no início da
+  função. Dropa a tabela do template `public` e, via loop `do $$ ... $$`, de todos os 7 schemas `cab_*`
+  provisionados. **Achado**: `provisionar_schema_cabanha()` já não incluía essa tabela no array
+  `v_tabelas` — cabanhas provisionadas de algum ponto em diante já nasciam sem ela, então a RPC de
+  provisionamento não precisou de nenhuma mudança. Confirmado via `pg_constraint` que nenhuma outra
+  tabela tinha FK apontando pra ela antes do DROP — sem risco de cascade em dado de terceiros.
+- Revisão de isolamento (`revisor-isolamento`) rodada — **aprovada**: gate de acesso preservado na RPC
+  recriada, zero referência remanescente a `coberturas_arquivadas_legado`/`coberturas2` no
+  `index.html`. Os dois pontos que o subagente não conseguiu checar por falta de acesso a ferramentas
+  de banco na sessão dele (policies/triggers referenciando a tabela em texto dinâmico, e consistência
+  dos 7 schemas pós-DROP) foram conferidos manualmente depois via MCP — nenhuma policy/trigger
+  encontrada, e query de consistência (`pg_tables` nos 7 `cab_*`) retornou vazia.
+- Testado via servidor estático local + `mcp__Claude_Browser__*`: sintaxe do `<script>` extraído
+  validada; gestação migrada renderiza normalmente em "Gestações ativas" (progresso/trimestre/data de
+  parto calculados certos a partir da data de cobertura real); Dashboard, ficha de detalhe do animal,
+  calendário de eventos e Planejador de ciclo renderizam sem erro; nenhum resquício textual ou
+  funcional de "Legado" restante em nenhuma tela.

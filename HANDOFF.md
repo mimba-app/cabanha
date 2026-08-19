@@ -304,6 +304,46 @@ cabanhas), mais as abas herdadas da Gestação.
   Castrado alinha com o input ao lado, Plantel/modal de acasalamento listam corretamente só fêmeas com
   SBB como candidatas a receptora (égua sem SBB fica de fora).
 
+## 🗑️ Remoção completa da aba "Legado" do Reprodutivo (2026-08-19)
+Fecha de vez o que o incidente de 2026-08-12 (abaixo) tinha deixado pendurado: a aba "Legado" existia só
+porque a Cabanha Mãe de Deus (Luciano) tinha 4 gestações abertas presas no fluxo antigo (pré-Reprodutivo
+v3), tabela `coberturas_arquivadas_legado`. Pedro pediu pra migrar essas 4 pro sistema vigente e remover a
+funcionalidade inteira (frontend + banco).
+
+- **Dados migrados** (query direta, não pela UI): as 4 gestações (NECAJÔ DONANA, INDIANA DO BUTIAZEIRO,
+  TURUMBAMBA CHARRUA, ULTRA II CHARRUA × respectivos garanhões, datas de cobertura/diagnóstico
+  preservadas, ciclo `25/26` real) viraram registros de verdade em `fontes_cobertura` (tipo `cobertura`,
+  já esgotada) + `acasalamentos` (status `confirmado`) + `gestacoes` (status `gestando`) no schema
+  `cab_mae_de_deus` — únicas linhas dessas 3 tabelas nesse tenant até então (schema "limpo", zero risco
+  de colisão). Os 2 registros de fixture na cabanha de teste do Pedro (`cab_cabanha_pedro_teste`) foram
+  descartados — dado de teste, não real.
+- **Frontend**: removida a aba "Legado" (`gest-ativas`), os arrays `coberturas`/`coberturas2`, o modal
+  `modal-cobertura-gest` e toda a cadeia de funções que só existia pra alimentá-lo (`renderGestacao()`,
+  `salvarCoberturaGest()`, `editCobGest()`, `excluirCobertura()`, `_dbSalvarCobertura()`,
+  `_dbExcluirCobertura()`, busca de padrillo via ABCCC duplicada). Pontos que **dependiam
+  funcionalmente** do legado (não só exibiam) foram migrados pra ler da tabela `gestacoes` real em vez
+  de simplesmente apagados: alerta de "parto próximo/atrasado" no dashboard, marcador de parto previsto
+  no calendário de eventos (dia e detalhe do dia), contagem de éguas prenhas pra vacina obrigatória,
+  histórico de "cruzamentos anteriores" no simulador de acasalamento, e a linha do tempo do animal
+  (`_carregarLinhaTempo`, que buscava direto de `coberturas_arquivadas_legado` via REST).
+- **Banco**: migration `docs/migrations/2026-08-19-remove-legado-coberturas.sql` — recria
+  `carregar_dados_cabanha()` (RPC de bootstrap) sem a leitura da tabela legada, dropa
+  `coberturas_arquivadas_legado` do template `public` e de todos os 7 schemas `cab_*` provisionados.
+  **Achado no caminho**: `provisionar_schema_cabanha()` já não incluía essa tabela no array
+  `v_tabelas` — cabanhas provisionadas recentemente já nasciam sem ela, então a RPC de provisionamento
+  não precisou de mudança nenhuma. Confirmado via `pg_constraint` que nenhuma outra tabela tinha FK
+  apontando pra ela — DROP direto, sem risco de cascade em dado de terceiros.
+- Revisão de isolamento (`revisor-isolamento`) rodada — **aprovada**. Confirmou que o gate
+  `tem_acesso_tenant()` continua intacto no início da RPC recriada, e que não sobrou nenhuma referência
+  a `coberturas2`/`coberturas_arquivadas_legado` no `index.html`. Dois pontos que o subagente não
+  conseguiu checar por falta de acesso a ferramentas de banco (policies/triggers referenciando a tabela
+  em texto, e consistência dos 7 schemas pós-DROP) foram conferidos manualmente depois, via MCP — nada
+  encontrado, os 7 schemas ficaram consistentes.
+- Testado via servidor estático local + browser: gestação migrada aparece normalmente em "Gestações
+  ativas" com progresso/trimestre calculados certos; Dashboard, ficha de detalhe do animal, calendário e
+  Planejador renderizam sem erro; sem nenhum resquício textual ou funcional de "Legado" em lugar nenhum
+  do app.
+
 ## 🚨 Incidente: gestações "sumidas" em produção — Luciano/Mãe de Deus (2026-08-12)
 Sócio reportou que as gestações da Cabanha Mãe de Deus não carregavam nem em `main` nem em `staging`.
 Investigado a fundo — **dados nunca foram perdidos** (confirmado no banco: 4 gestações abertas intactas
