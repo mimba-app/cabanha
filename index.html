@@ -12575,8 +12575,6 @@ async function _dbSalvarFonteCobertura(f, idx) {
     const ok = await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
     return !!ok;
   } else {
-    // Debug temporário: logar payload no console para identificar campo inválido
-    console.log('[fontes_cobertura POST]', JSON.stringify(payload, null, 2));
     const res = await _supa('POST','fontes_cobertura', payload);
     if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
     return false;
