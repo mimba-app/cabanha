@@ -2626,7 +2626,7 @@
         <input type="text" id="nsbb" placeholder="Ex: B649459" style="width:100%" onblur="_buscarAbccc('novo')" oninput="this.value=this.value.toUpperCase()">
         <div id="nabccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
       </div>
-      <div class="form-group"><label>Sexo</label><select id="nsex"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
+      <div class="form-group"><label>Sexo</label><select id="nsex" onchange="_toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob')"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
       <div class="form-group"><label>Pelagem</label><input type="text" id="npel" placeholder="Ex: Gateada"></div>
       <div class="form-group"><label>Ciclo</label><input type="text" id="nciclo" placeholder="Ex: 24/25"></div>
       <div class="form-group"><label>Nascimento</label><input type="date" id="nnasc" onchange="_autoCiclo(this.value,'nciclo')"></div>
@@ -2641,19 +2641,13 @@
           ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
           <input type="checkbox" id="ncastrado" style="width:auto"> Castrado
         </label>
-      </div>
-      <div class="form-group"><label>Coberturas por ciclo (padrão)
-        <span style="font-weight:400;font-size:10px;color:var(--text3)"> — só pra garanhões, usado no Planejador</span></label>
-        <input type="number" id="nqtdcob" min="0" step="1" value="120"></div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="nreceptora" style="width:auto"> Receptora (transferência de embrião)
-        </label>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px">Exige SBB válido preenchido acima.</div>
+        <div id="ngrp-qtdcob" style="display:none;align-items:center;gap:6px">
+          <label style="white-space:nowrap">Coberturas por ciclo (padrão)</label>
+          <input type="number" id="nqtdcob" min="0" step="1" value="120" style="width:80px"></div>
       </div>
       <div class="form-group"><label>Estágio / atividade</label><select id="nest">
         <option value="">— selecione —</option>
@@ -2766,9 +2760,6 @@
       <div class="form-group" id="fc-grp-rm"><label>&nbsp;</label>
         <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px">
           <input type="checkbox" id="fc-tem-rm" style="width:auto"> Reserva de material (RM)
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px;margin-top:4px">
-          <input type="checkbox" id="fc-demerito" style="width:auto"> Registrado como Demérito (ABCCC)
         </label>
       </div>
       <div class="form-group" id="fc-grp-recorrente" style="display:none"><label>&nbsp;</label>
@@ -5149,7 +5140,7 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">SBB ABCCC</label>
           <input id="ed-sbb" value="${a.sbb||''}" style="width:100%;font-size:12px" placeholder="Ex: B649459" onblur="_buscarAbccc('edit')" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Sexo</label>
-          <select id="ed-sexo" style="width:100%;font-size:12px"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
+          <select id="ed-sexo" style="width:100%;font-size:12px" onchange="_toggleQtdCoberturasPadrao('ed-sexo','ed-grp-qtdcob')"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pelagem</label>
           <input id="ed-pelagem" value="${a.pelagem||''}" style="width:100%;font-size:12px" placeholder="Ex: Gateada"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nascimento</label>
@@ -5177,18 +5168,13 @@ function _renderDetCorpo(i, editando) {
             ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
           </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
             <input type="checkbox" id="ed-castrado" style="width:auto" ${a.castrado?'checked':''}> Castrado
           </label>
-        </div>
-        <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Coberturas por ciclo (padrão)</label>
-          <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:100%;font-size:12px"></div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="ed-receptora" style="width:auto" ${a.receptora?'checked':''}> Receptora (transferência de embrião)
-          </label>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">Exige SBB válido preenchido.</div>
+          <div id="ed-grp-qtdcob" style="display:${a.sexo==='Macho'?'flex':'none'};align-items:center;gap:6px">
+            <label style="font-size:12px;white-space:nowrap">Coberturas por ciclo (padrão)</label>
+            <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:80px;font-size:12px"></div>
         </div>
       </div>
     </div>`;
@@ -5360,9 +5346,6 @@ function salvarEdicaoAnimal() {
   const a = animais[i];
   const nome = (document.getElementById('ed-nome')?.value||'').trim().toUpperCase();
   if(!nome) { alert('Nome é obrigatório.'); return; }
-  const sbbEdit = (document.getElementById('ed-sbb')?.value||'').trim();
-  const receptoraChecked = !!document.getElementById('ed-receptora')?.checked;
-  if(receptoraChecked && !sbbEdit) { alert('Receptora exige SBB preenchido (precisa ter SBB válido na ABCCC).'); return; }
   // Aplicar edições
   a.nome     = nome;
   a.rp       = document.getElementById('ed-rp')?.value||a.rp;
@@ -5379,7 +5362,6 @@ function salvarEdicaoAnimal() {
   a.confirmado = !!document.getElementById('ed-confirmado')?.checked;
   a.castrado = !!document.getElementById('ed-castrado')?.checked;
   a.qtd_coberturas_padrao = parseInt(document.getElementById('ed-qtdcob')?.value || '120');
-  a.receptora = receptoraChecked;
   a.foto_url = document.getElementById('ed-foto-b64')?.value || null;
   a.status_cadastro = document.getElementById('ed-status-cadastro')?.value || a.status_cadastro || 'ativo';
   // Persistir no banco
@@ -5661,7 +5643,6 @@ function renderPlanejadorReprodutivo() {
           </label>
           <button class="btn btn-sm" onclick="_ajustarSaldoCicloProprio(${fIdx},'fc-inline-qtd-${fIdx}')">Salvar</button>
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-rm-${fIdx}" style="width:auto" ${f.tem_rm ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'tem_rm',this.checked)"> RM</label>
-          <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="fc-inline-demerito-${fIdx}" style="width:auto" ${f.demerito ? 'checked' : ''} onchange="_ajustarFlagFonteCobertura(${fIdx},'demerito',this.checked)"> Demérito</label>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px">Máx. ${padrao} — padrão do cadastro do animal. Pra aumentar, edite o padrão em Animais.</div>
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -5717,7 +5698,11 @@ function renderPlantelDisponivel() {
     .map(f => ({ f, saldo: _saldoFonteCobertura(f) }))
     .filter(x => x.saldo.disponivel > 0);
 
-  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && a.receptora && isNaCabanha(a))
+  // Reprodutivo v4, Fase 8 (revisão pós-feedback): não existe mais um flag permanente
+  // "receptora" no cadastro — ser receptora é um papel válido só naquele ciclo (a mesma
+  // égua pode não ser receptora em outro ciclo). Candidata = qualquer fêmea "Na Cabanha"
+  // com SBB preenchido (exigido pela ABCCC) ainda não vinculada a um TE neste ciclo.
+  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && a.sbb)
     .filter(a => !acasalamentos.some(ac => String(ac.receptora_animal_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado'));
 
   const secao = (titulo, itens, vazioMsg, renderItem) =>
@@ -5846,15 +5831,15 @@ async function _buscarAbcccParaFonte() {
 
 // Receptora (TE): égua "de fora" que recebe embrião — cadastrada via SBB, mesma
 // integração já usada no cadastro normal de animal (_buscarAbccc('novo')). Vira
-// uma égua de cria comum ao salvar, aparecendo automaticamente na lista acima.
+// uma égua de cria comum ao salvar, elegível como candidata a receptora em qualquer
+// ciclo (ver renderPlantelDisponivel/_acFonteChange) por ser "Na Cabanha" com SBB —
+// não existe mais um flag permanente "receptora" no cadastro (Fase 8, revisão pós-feedback:
+// ser receptora é um papel de um ciclo específico, não um atributo fixo do animal).
 function _abrirReceptoraViaSBB() {
   _limparFormNovoAnimal();
   openModal('modal-novo');
   const sexEl = document.getElementById('nsex'); if (sexEl) sexEl.value = 'Fêmea';
   const estEl = document.getElementById('nest'); if (estEl) estEl.value = 'CRIA';
-  // Reprodutivo v4, Fase 4 (spec 3.5): a receptora agora é o campo/flag estruturado
-  // "nreceptora", não mais texto solto em Observações.
-  const recEl = document.getElementById('nreceptora'); if (recEl) recEl.checked = true;
   const sbbEl = document.getElementById('nsbb'); if (sbbEl) { sbbEl.value = ''; sbbEl.focus(); }
 }
 
@@ -5925,11 +5910,6 @@ function salvarAnimal(){
   const nome=document.getElementById('nn').value.trim().toUpperCase();
   if(!nome)return alert('Nome obrigatório.');
   const sbb=document.getElementById('nsbb').value.trim();
-  const receptora=document.getElementById('nreceptora').checked;
-  // Reprodutivo v4, Fase 4 (spec 3.5): receptora de TE precisa de SBB válido na ABCCC — exigimos
-  // ao menos o campo preenchido aqui (a validação de "válido de verdade" já acontece no blur do
-  // campo, via _buscarAbccc, que resolve o nome oficial).
-  if(receptora && !sbb) return alert('Receptora exige SBB preenchido (precisa ter SBB válido na ABCCC).');
   animais.push({
     rp:document.getElementById('nrp').value,sbb,nome,
     ciclo:document.getElementById('nciclo').value,nasc:document.getElementById('nnasc').value,
@@ -5940,7 +5920,6 @@ function salvarAnimal(){
     confirmado:document.getElementById('ncnf').checked,
     castrado:document.getElementById('ncastrado').checked,
     qtd_coberturas_padrao:parseInt(document.getElementById('nqtdcob').value||'120'),
-    receptora,
     foto_url:document.getElementById('nfoto-b64').value||null,
     ult_vac:'',prox_vac:document.getElementById('npvac').value,
     ult_verm:'',val_exame:document.getElementById('npexame').value,
@@ -5964,10 +5943,18 @@ function _limparFormNovoAnimal() {
   const cnfEl = document.getElementById('ncnf'); if (cnfEl) cnfEl.checked = false;
   const casEl = document.getElementById('ncastrado'); if (casEl) casEl.checked = false;
   const qtdEl = document.getElementById('nqtdcob'); if (qtdEl) qtdEl.value = '120';
-  const recEl = document.getElementById('nreceptora'); if (recEl) recEl.checked = false;
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
+  _toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob');
+}
+
+// "Coberturas por ciclo (padrão)" só faz sentido pra garanhões — campo fica escondido até
+// selecionar Sexo=Macho, em vez de aparecer sempre com um texto explicando "só pra garanhões".
+function _toggleQtdCoberturasPadrao(sexoId, grpId) {
+  const sexo = document.getElementById(sexoId)?.value;
+  const grp = document.getElementById(grpId);
+  if (grp) grp.style.display = sexo === 'Macho' ? 'flex' : 'none';
 }
 
 // Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
@@ -8018,7 +8005,6 @@ function abrirModalFonteCobertura() {
   document.getElementById('fc-garanhao-animal').value = '';
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = false;
-  document.getElementById('fc-demerito').checked = false;
   document.getElementById('fc-recorrente').checked = false;
   document.getElementById('fc-qtd').value = '';
   document.getElementById('fc-ciclo').value = window._cicloPlanejador || _cicloAtualTexto();
@@ -8042,7 +8028,6 @@ function editFonteCobertura(i) {
   document.getElementById('fc-garanhao-sbb').value = f.garanhao_sbb || '';
   document.getElementById('fc-abccc-status').style.display = 'none';
   document.getElementById('fc-tem-rm').checked = !!f.tem_rm;
-  document.getElementById('fc-demerito').checked = !!f.demerito;
   document.getElementById('fc-recorrente').checked = !!f.recorrente;
   document.getElementById('fc-qtd').value = f.quantidade_adquirida ?? '';
   document.getElementById('fc-ciclo').value = f.ciclo || '';
@@ -8090,7 +8075,6 @@ function salvarFonteCobertura() {
     garanhao_nome,
     garanhao_sbb: document.getElementById('fc-garanhao-sbb').value.trim() || '',
     tem_rm: tipo === 'proprio' ? document.getElementById('fc-tem-rm').checked : false,
-    demerito: tipo === 'proprio' ? document.getElementById('fc-demerito').checked : false,
     quantidade_adquirida,
     ciclo,
     vigencia_inicio: tipo !== 'proprio' ? vigencia_inicio : '',
@@ -8179,7 +8163,6 @@ function renderFontesCobertura() {
             <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px">
               ${f.garanhao_nome}
               ${f.tem_rm ? '<span class="badge ba" style="font-size:9px">RM</span>' : ''}
-              ${f.demerito ? '<span class="badge bb" style="font-size:9px">Demérito</span>' : ''}
             </div>
             <div style="font-size:11px;color:var(--text2);margin-top:2px">
               ${f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : ''}Ciclo ${f.ciclo}
@@ -8510,7 +8493,9 @@ function abrirModalAcasalamento() {
   // Reprodutivo v4, Fase 4 (spec 3.5): receptoras disponíveis (flag estruturada, não mais texto
   // livre em Observações) — só relevante quando o tipo de cobertura é TE.
   const selReceptora = document.getElementById('ac-receptora');
-  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && a.receptora && isNaCabanha(a));
+  // Reprodutivo v4, Fase 8 (revisão pós-feedback): sem flag permanente — candidata é
+  // qualquer fêmea "Na Cabanha" com SBB, papel de receptora é só daquele ciclo.
+  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && a.sbb);
   selReceptora.innerHTML = '<option value="">Nenhuma selecionada ainda...</option>' +
     receptoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
 
@@ -8539,7 +8524,9 @@ function abrirModalAcasalamentoMatch(fonteId, eguaDbId, ciclo) {
   selFonte.value = fonte.db_id;
 
   const selReceptora = document.getElementById('ac-receptora');
-  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && a.receptora && isNaCabanha(a));
+  // Reprodutivo v4, Fase 8 (revisão pós-feedback): sem flag permanente — candidata é
+  // qualquer fêmea "Na Cabanha" com SBB, papel de receptora é só daquele ciclo.
+  const receptoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && a.sbb);
   selReceptora.innerHTML = '<option value="">Nenhuma selecionada ainda...</option>' +
     receptoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
 
