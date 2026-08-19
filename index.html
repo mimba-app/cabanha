@@ -11329,6 +11329,24 @@ async function _supa(method, table, body=null, query='') {
   return true;
 }
 
+
+async function _supaUpsert(table, body) {
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile':  TENANT_SCHEMA,
+      'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=minimal,resolution=merge-duplicates',
+    },
+    body: JSON.stringify(body),
+  });
+  return r.ok;
+}
+
 // ── Audit log manual (para login/logout) ──────────────────────────────────────
 async function _auditLog(tabela, acao, registroId, dadosDepois=null) {
   try {
@@ -12641,25 +12659,45 @@ async function _dbSalvarFonteCobertura(f, idx) {
 // Roda em background — não bloqueia o save da fonte
 async function _importarLinhagemGaranhaoExterno(sbb, nome) {
   if (!sbb) return;
-  // Verificar se já temos linhagem no banco
+  // Verificar se já temos linhagem no banco (schema da cabanha)
   const existente = await _supa('GET', 'sangues_linhagem', null, '?animal_sbb=eq.' + sbb + '&select=id&limit=1');
   if (existente?.length) return; // já tem — não re-importar
   try {
-    const EDGE = window.SUPABASE_URL + '/functions/v1/analise-sangues';
-    await fetch(EDGE, {
+    // analise-sangues espera { sbbs: ['B448447'] } e salva no schema public
+    // Passamos também o schema para salvar na cabanha corrente
+    const EDGE = SUPABASE_URL + '/functions/v1/analise-sangues';
+    const resp = await fetch(EDGE, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + (window.AUTH_TOKEN || window.SUPABASE_KEY),
-        'apikey': window.SUPABASE_KEY,
+        'Authorization': 'Bearer ' + (AUTH_TOKEN || SUPABASE_KEY),
+        'apikey': SUPABASE_KEY,
+        'x-tenant-schema': TENANT_SCHEMA,
       },
-      body: JSON.stringify({ sbb, nome }),
+      body: JSON.stringify({ sbbs: [sbb.toUpperCase()] }),
       signal: AbortSignal.timeout(30000),
     });
-    // Não precisa processar a resposta — a edge function salva direto no banco
-    console.log('[linhagem] Importada para garanhão externo:', nome, sbb);
+    if (resp.ok) {
+      // A EF salvou no public — copiar para o schema da cabanha
+      const data = await resp.json();
+      const res = data?.resultados?.[sbb.toUpperCase()];
+      if (res && !res.erro && res.ancestrais_pos?.length) {
+        await _supaUpsert('sangues_linhagem', {
+          animal_sbb: sbb.toUpperCase(),
+          animal_nome: nome || null,
+          ancestrais: res.ancestrais || [],
+          ancestrais_pos: res.ancestrais_pos || [],
+          pai: res.pai || null,
+          mae: res.mae || null,
+          avo_paterno: res.avo_paterno || null,
+          avo_materno: res.avo_materno || null,
+          consultado_em: new Date().toISOString(),
+          erro: null,
+        });
+        console.log('[linhagem] Importada para garanhão externo:', nome, sbb, res.ancestrais_pos.length, 'ancestrais');
+      }
+    }
   } catch(e) {
-    // Falha silenciosa — análise de consanguinidade funcionará com dados locais apenas
     console.log('[linhagem] Importação background falhou para', sbb, e?.message || '');
   }
 }
