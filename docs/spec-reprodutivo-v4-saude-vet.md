@@ -799,3 +799,40 @@ que ela é receptora terminar (parto ou aborto/perda).
   dois caminhos; cadastro novo com a flag mostra o aviso e salva `receptora_externa: true`; badge roxo
   aparece na grade; encerrar a gestação (testado com status "perdida") muda a situação da receptora pra
   Transferido e ela some da listagem padrão de animais ativos.
+
+### Fase 14 — cadastro dedicado de receptora, persistência confiável de Cota/Cobertura, badges de origem chamativos, embrião próprio vinculado (2026-08-19)
+
+Pedro reportou quatro pontos depois de usar o sistema: (1) "+ Adicionar receptora" reaproveitava o modal
+genérico "Cadastrar animal", que mostra campos sem sentido pro caso (Castrado, só se aplica a macho); (2)
+uma fonte de Cota/Cobertura cadastrada não persistia — sumia depois de um F5; (3) o badge de origem do
+garanhão (Próprio/Cota/etc.) ficava pouco evidente; (4) o embrião "próprio" precisa poder vir de uma égua
+da cabanha em **qualquer estágio** (não só "Cria"), e ao atribuir o embrião a uma receptora, a doadora já
+devia vir resolvida — sem perguntar de novo o que o cadastro do embrião já respondeu.
+
+- **Cadastro dedicado de receptora** (`modal-nova-receptora`, `salvarNovaReceptora()`): só os campos que
+  fazem sentido (Nome, SBB com busca ABCCC, Pelagem, Nascimento, Observações) — sexo e estágio fixos
+  (Fêmea/Cria) por trás, sem aparecer no formulário. `_escolherReceptoraNova()` abre esse modal em vez do
+  genérico `modal-novo`; o aviso roxo "fica sob cuidado só enquanto gestante" virou parte do próprio
+  cabeçalho do modal novo, e o código órfão que ele deixava no `modal-novo` (aviso, flag
+  `window._novoAnimalReceptoraExterna`) foi removido.
+- **Persistência de Cota/Cobertura corrigida de verdade**: `salvarFonteCobertura()` virou `async`,
+  **aguarda** a confirmação do banco (`_dbSalvarFonteCobertura()` agora retorna `true`/`false`) antes de
+  fechar o modal — antes fechava e limpava a tela assumindo sucesso sem checar a resposta real, então uma
+  falha silenciosa (sessão, rede, RLS) fazia o registro sumir depois de um F5 sem ninguém saber. Agora, se
+  falhar, o modal continua aberto com os dados preenchidos e um aviso claro pra tentar salvar de novo.
+- **Badge de origem mais chamativo**: trocado de badge pastel (`bg`/`ba`/`bb`/`bgr`, fundo claro) pra cor
+  sólida com texto branco (`_origemBadge()`) — Próprio=verde, Cota=âmbar, Direito de uso=azul,
+  Cobertura=rosa. Bem mais fácil de bater o olho e saber a origem do garanhão sem ler o texto.
+- **Embrião próprio vinculado a um animal de qualquer estágio**: modal "Nova cota / cobertura", tipo
+  Embrião, ganhou escolha de origem — "Égua própria da cabanha" (select de qualquer fêmea cadastrada, sem
+  filtro de estágio — testado com uma égua em "Pista Funcional") ou "Adquirido (externo)" (nome/SBB livre,
+  igual Direito de uso/Cobertura). Nova coluna `fontes_cobertura.doadora_animal_id` (migration
+  `docs/migrations/2026-08-19-embriao-doadora-animal.sql`, nullable, FK pra `animais`) guarda esse
+  vínculo quando é "própria".
+- **`_abrirAtribuirEmbriao()` não pergunta duas vezes**: ao escolher um embrião com `doadora_animal_id`
+  preenchido, o select "Égua doadora" já vem travado nela sozinho (`_embFonteChange()`), com uma dica
+  explicando que já foi definida no cadastro do embrião — só embrião "adquirido" (sem vínculo) continua
+  pedindo a doadora manualmente.
+- Testado via servidor estático local + browser: modal dedicado de receptora sem nenhum campo de macho;
+  embrião próprio aceita doadora em estágio "Pista Funcional" (não só Cria); ao atribuir esse embrião, a
+  doadora vem pré-travada com a dica certa; badges de origem renderizam com cor sólida bem visível.
