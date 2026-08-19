@@ -5307,7 +5307,7 @@ function cancelarEdicaoAnimal() {
   document.getElementById('det-btn-cancelar').style.display='none';
 }
 
-function salvarEdicaoAnimal() {
+async function salvarEdicaoAnimal() {
   const i = window._detIdx;
   const a = animais[i];
   const nome = (document.getElementById('ed-nome')?.value||'').trim().toUpperCase();
@@ -5333,9 +5333,14 @@ function salvarEdicaoAnimal() {
   a.qtd_coberturas_padrao = parseInt(document.getElementById('ed-qtdcob')?.value || '120');
   a.foto_url = document.getElementById('ed-foto-b64')?.value || null;
   a.status_cadastro = document.getElementById('ed-status-cadastro')?.value || a.status_cadastro || 'ativo';
-  // Persistir no banco
-  _dbSalvarAnimal(a, i);
-  // Voltar para modo leitura
+  // Persistir no banco — só volta pro modo leitura se o banco confirmou de verdade; se falhar
+  // (sessão, rede), o formulário continua editável com os dados preenchidos pra tentar de novo,
+  // em vez de fechar e dar a entender que salvou quando não salvou.
+  const btnSalvar = document.getElementById('det-btn-salvar');
+  if (btnSalvar) { btnSalvar.disabled = true; }
+  const ok = await _dbSalvarAnimal(a, i);
+  if (btnSalvar) { btnSalvar.disabled = false; }
+  if (!ok) { alert('Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
   cancelarEdicaoAnimal();
   renderAnimais();
   renderDashboard();
@@ -5768,7 +5773,9 @@ function _abrirAtribuirEmbriao(receptoraDbId) {
   selFonte.innerHTML = '<option value="">Selecione...</option>' +
     embrioes.map(f => `<option value="${_fonteKey(f)}">${f.garanhao_nome}${f.garanhao_sbb ? ' (' + f.garanhao_sbb + ')' : ''}</option>`).join('');
 
-  const doadoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && String(a.db_id) !== String(receptoraDbId)
+  // Receptora (externa ou não) nunca é doadora — ela só carrega o embrião de outra égua, não
+  // pode ser "doadora do próprio embrião" (isso seria só um acasalamento normal, direto nela).
+  const doadoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && !a.receptora_externa && String(a.db_id) !== String(receptoraDbId)
     && !acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado'));
   const selDoadora = document.getElementById('emb-doadora');
   selDoadora.innerHTML = '<option value="">Selecione...</option>' +
@@ -5930,7 +5937,7 @@ async function _buscarAbcccParaReceptora() {
   }
 }
 
-function salvarNovaReceptora() {
+async function salvarNovaReceptora() {
   const nome = document.getElementById('nr-nome').value.trim().toUpperCase();
   if (!nome) return alert('Nome obrigatório.');
   const sbb = document.getElementById('nr-sbb').value.trim();
@@ -5944,7 +5951,16 @@ function salvarNovaReceptora() {
     receptora_externa: true,
     ult_vac: '', prox_vac: '', ult_verm: '', val_exame: '',
   });
-  _dbSalvarAnimal(animais[animais.length - 1], animais.length - 1);
+  const idxNova = animais.length - 1;
+  const btn = document.querySelector('#modal-nova-receptora .modal-footer .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+  const ok = await _dbSalvarAnimal(animais[idxNova], idxNova);
+  if (btn) { btn.disabled = false; btn.textContent = 'Salvar receptora'; }
+  // Achado real: fechar o modal sem confirmar a resposta do banco deixava a receptora presa
+  // sem db_id se o POST falhasse (sessão, rede) — aí ela aparecia em selects (ex.: doadora de
+  // embrião) com um id inválido, e qualquer ação que dependesse de um FK real quebrava mais na
+  // frente, longe da causa. Se falhar, desfaz o push local e deixa tentar de novo.
+  if (!ok) { animais.splice(idxNova, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-nova-receptora');
   populaCiclos(); renderDashboard(); renderAnimais();
   renderPlanejadorReprodutivo();
@@ -6024,7 +6040,7 @@ function _sbbDuplicado(sbb, ignorarIdx) {
 }
 
 // ─── SALVAR ───────────────────────────────────────────────────────────────────
-function salvarAnimal(){
+async function salvarAnimal(){
   const nome=document.getElementById('nn').value.trim().toUpperCase();
   if(!nome)return alert('Nome obrigatório.');
   const sbb=document.getElementById('nsbb').value.trim();
@@ -6044,7 +6060,12 @@ function salvarAnimal(){
     ult_vac:'',prox_vac:document.getElementById('npvac').value,
     ult_verm:'',val_exame:document.getElementById('npexame').value,
   });
-  _dbSalvarAnimal(animais[animais.length-1], animais.length-1);
+  const idxNovo = animais.length-1;
+  const btnSalvar = document.querySelector('#modal-novo .modal-footer .btn-primary');
+  if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = 'Salvando...'; }
+  const ok = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
+  if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar animal'; }
+  if (!ok) { animais.splice(idxNovo, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-novo');
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
@@ -7833,8 +7854,10 @@ function _fcPopularSelectDoadorasEmbriao() {
   if (!sel) return;
   const atual = sel.value;
   // Qualquer fêmea cadastrada na cabanha, de qualquer estágio — a doadora de um embrião não
-  // precisa estar em "Cria" (pode já ter sido desmamada, estar em pista, etc.).
-  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a)).sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
+  // precisa estar em "Cria" (pode já ter sido desmamada, estar em pista, etc.). Nunca uma
+  // receptora (externa ou não) — ela não é um animal "próprio" do plantel, é só quem carrega o
+  // embrião de outra; se a intenção é cruzar ela mesma, isso é acasalamento normal, não embrião.
+  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && !a.receptora_externa).sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
   sel.innerHTML = '<option value="">Selecione...</option>' +
     eguas.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
   if (eguas.some(a => String(a.db_id) === String(atual))) sel.value = atual;
@@ -11802,10 +11825,12 @@ async function _dbSalvarAnimal(a, idx) {
     criado_por: usuarioAtual?.db_id || null
   };
   if(a.db_id) {
-    await _supa('PATCH','animais',payload,`?id=eq.${a.db_id}`);
+    const ok = await _supa('PATCH','animais',payload,`?id=eq.${a.db_id}`);
+    return !!ok;
   } else {
     const res = await _supa('POST','animais',payload);
-    if(res?.[0]?.id) animais[idx].db_id = res[0].id;
+    if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return true; }
+    return false;
   }
 }
 

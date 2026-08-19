@@ -836,3 +836,27 @@ devia vir resolvida — sem perguntar de novo o que o cadastro do embrião já r
 - Testado via servidor estático local + browser: modal dedicado de receptora sem nenhum campo de macho;
   embrião próprio aceita doadora em estágio "Pista Funcional" (não só Cria); ao atribuir esse embrião, a
   doadora vem pré-travada com a dica certa; badges de origem renderizam com cor sólida bem visível.
+
+### Fase 15 — receptora nunca é doadora + cadastro de animal confirma persistência de verdade (2026-08-19)
+
+Pedro reportou o mesmo erro de "Não foi possível salvar" ao tentar atribuir um embrião logo depois de
+cadastrar uma receptora nova, e que a lista de "égua própria" pro embrião mostrava a receptora recém
+cadastrada — o que não faz sentido (uma receptora carrega o embrião de outra, nunca é doadora do próprio).
+
+- **Causa raiz real**: o cadastro de animal (`salvarAnimal()`/`salvarNovaReceptora()`) tinha o mesmo
+  problema já corrigido na Fase 14 pras fontes de cobertura — fechava o modal e limpava a tela **sem
+  confirmar** que o POST realmente chegou no banco. Se falhasse (sessão, rede), o animal ficava só na
+  memória, sem `db_id` real — e qualquer tela que dependesse desse `db_id` depois (como escolher a
+  doadora de um embrião) quebrava longe da causa raiz, com um erro que não tinha nada a ver com embrião.
+- **Corrigido**: `_dbSalvarAnimal()` agora retorna `true`/`false`; `salvarAnimal()`, `salvarNovaReceptora()`
+  e `salvarEdicaoAnimal()` viraram `async` e só fecham o modal/voltam pro modo leitura se o banco
+  confirmou de verdade. Se falhar, desfaz o registro criado localmente (evita "fantasma" sem id real) e
+  avisa claramente pra tentar salvar de novo — mesmo padrão já usado em `salvarFonteCobertura()`.
+- **Receptora nunca aparece como doadora**: tanto o select "Égua própria da cabanha" (cadastro de
+  embrião) quanto o select "Égua doadora" (`_abrirAtribuirEmbriao`, caminho de embrião adquirido) agora
+  excluem qualquer animal com `receptora_externa=true` — ela só carrega o embrião de outra égua, nunca é
+  a dona genética dele. Se a intenção fosse cruzá-la de verdade, isso é um acasalamento normal, não uma
+  atribuição de embrião.
+- Testado via servidor estático local + browser: receptora cadastrada some da lista de doadoras próprias;
+  simulado POST falhando (401) e depois com sucesso — na falha, o registro é desfeito localmente e o
+  modal continua aberto; no sucesso seguinte, persiste com `db_id` real e fecha.
