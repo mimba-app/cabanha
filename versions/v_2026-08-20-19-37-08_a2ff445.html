@@ -361,6 +361,11 @@
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
   .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  @keyframes abccc-spin { to { transform: rotate(360deg); } }
+  .abccc-spin { display:inline-block; animation: abccc-spin 1s linear infinite; }
+  #btn-abccc-update { position:relative; overflow:hidden; min-width:130px; transition:color 0.2s,border-color 0.2s; }
+  #btn-abccc-update .abccc-fill { position:absolute; left:0; top:0; height:100%; background:var(--green-l); transition:width 0.4s; z-index:0; }
+  #btn-abccc-update .abccc-label { position:relative; z-index:1; display:flex; align-items:center; gap:5px; }
   @keyframes ac-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
@@ -775,6 +780,10 @@
   <div class="page-header">
     <div><div class="page-title">Animais</div><div class="page-sub">Plantel completo · dados ABCCC integrados</div></div>
     <div style="display:flex;gap:8px">
+      <button id="btn-abccc-update" class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">
+        <div class="abccc-fill" style="width:0%"></div>
+        <span class="abccc-label"><svg width="13" height="13" id="abccc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;flex-shrink:0"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg><span id="abccc-label-txt">Atualizar ABCCC</span></span>
+      </button>
       <button class="btn" onclick="abrirModalImportarSBB()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Importar por SBB</button>
       <button class="btn btn-primary" onclick="_limparFormNovoAnimal();openModal('modal-novo')">+ Novo animal</button>
     </div>
@@ -1083,7 +1092,7 @@
   <div class="tab-row">
     <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações ativas</button>
     <button class="tab" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
-    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
+    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Cruzamentos</button>
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
     <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
@@ -2468,7 +2477,7 @@
       <div class="form-group"><label>Contexto</label>
         <select id="rm-contexto"><option value="Rotina">Rotina</option><option value="Início projeto nutricional">Início projeto nutricional</option><option value="Fim projeto nutricional">Fim projeto nutricional</option><option value="Pré-prova">Pré-prova</option><option value="Pós-prova">Pós-prova</option></select>
       </div>
-      <div class="form-group"><label>Altura cernelha (m)</label><input type="number" id="rm-cernelha" placeholder="Ex: 1.43" step="0.01" min="0.8" max="1.8"></div>
+      <div class="form-group"><label>Altura cernelha (m)</label><input type="number" id="rm-cernelha" placeholder="Ex: 1.430" step="0.001" min="0.8" max="1.8"></div>
       <div class="form-group"><label>Perímetro tórax (m)</label><input type="number" id="rm-torax" placeholder="Ex: 1.75" step="0.01" min="1.0" max="2.5"></div>
       <div class="form-group"><label>Perímetro canela (m)</label><input type="number" id="rm-canela" placeholder="Ex: 0.19" step="0.001" min="0.1" max="0.35"></div>
       <div class="form-group"><label>Peso (kg)</label><input type="number" id="rm-peso" placeholder="Ex: 420" step="1" min="50" max="800"></div>
@@ -4008,6 +4017,19 @@ function abrirLaudo(b64, nome, tipo) {
 
 // ── EDITAR MEDIDA ─────────────────────────────────────────────────────────────
 
+
+// Editar medida a partir do histórico — usa data-attributes para evitar aspas aninhadas
+function _emh(btn) {
+  const ai = parseInt(btn.getAttribute('data-ai'));
+  const di = btn.getAttribute('data-di');
+  if (!di) { console.log('[_emh] sem db_id'); return; }
+  for (const [ki, lista] of Object.entries(medidas)) {
+    const mi = lista.findIndex(m => m.db_id === di);
+    if (mi >= 0) { abrirEditarMedida(parseInt(ki), mi); return; }
+  }
+  _mostrarStatusSync('⚠️ Medição não encontrada. Recarregue a página.', 'amber');
+}
+
 function abrirEditarMedida(animalIdx, medIdx) {
   const m = getMedidas(animalIdx)[medIdx];
   if (!m) return;
@@ -4081,7 +4103,7 @@ async function salvarEdicaoMedida() {
   renderMedLista(); renderMedHistorico();
   // Re-inicializar gráfico se na ficha do animal
   if (window._detIdx !== undefined) setTimeout(() => _initMedChart(window._detIdx), 100);
-  toast('Medição atualizada.');
+  _mostrarStatusSync('✅ Medição atualizada', 'green');
 }
 
 function abrirModalMedida(preIdx) {
@@ -4304,8 +4326,8 @@ function renderMedHistorico() {
         const isAbccc = r.contexto === 'ABCCC' || r.resp === 'ABCCC';
         const btnEditar = isAbccc
           ? '<span style="font-size:10px;color:var(--text3)" title="Medição oficial ABCCC">🔒</span>'
-          : (animalIdx >= 0 && medIdx >= 0
-              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedida(' + animalIdx + ',' + medIdx + ')">✏</button>'
+          : (animalIdx >= 0 && r.db_id
+              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px;min-width:28px" data-ai="' + animalIdx + '" data-di="' + r.db_id + '" onclick="_emh(this)">✏</button>'
               : '');
         return '<tr>'
           + '<td style="padding:6px 10px;font-weight:600">' + r.nomeAnimal + '</td>'
@@ -8813,6 +8835,114 @@ function _initMedChart(animalIdx) {
   const temC = hm.some(m=>m.cernelha), temT = hm.some(m=>m.torax), temCa = hm.some(m=>m.canela);
   const inicial = (temC && (temT || temCa)) ? 'todos' : (['cernelha','torax','canela','peso'].find(k=>hm.some(m=>m[k]))||'cernelha');
   _medChartSel(chartId, legendId, toggleId, inicial, animalIdx);
+}
+
+
+// ── ATUALIZAÇÃO ABCCC EM LOTE ─────────────────────────────────────────────────
+async function _atualizarTodosAbccc() {
+  const comSbb = animais.filter(a => a.sbb && a.sbb.trim() && isNaCabanha(a));
+  if (!comSbb.length) { _mostrarStatusSync('Nenhum animal com SBB cadastrado.', 'amber'); return; }
+
+  const LOTE_MAX = 30;
+  const avisoLote = comSbb.length > LOTE_MAX ? '\n\nAtenção: apenas os primeiros ' + LOTE_MAX + ' serão processados.' : '';
+  if (!confirm('Atualizar dados de ' + comSbb.length + ' animal(is) via ABCCC?' + avisoLote)) return;
+
+  const alvo = comSbb.slice(0, LOTE_MAX);
+
+  // Controle visual do botão
+  const btn = document.getElementById('btn-abccc-update');
+  const fillEl = btn?.querySelector('.abccc-fill');
+  const iconEl = document.getElementById('abccc-icon');
+  const labelEl = document.getElementById('abccc-label-txt');
+  if (btn) { btn.disabled = true; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green-d)'; }
+  if (iconEl) iconEl.classList.add('abccc-spin');
+
+  let ok = 0, erros = 0, confirmados = 0;
+
+  for (let idx = 0; idx < alvo.length; idx++) {
+    const a = alvo[idx];
+    const pct = Math.round(((idx+1)/alvo.length)*100);
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (labelEl) labelEl.textContent = 'Atualizando... ' + (idx+1) + '/' + alvo.length;
+    if (idx > 0 && idx % 5 === 0) { try { await _garantirTokenValido(); } catch(e) {} }
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/functions/v1/buscar-abccc?sbb=' + encodeURIComponent(a.sbb.trim()),
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + AUTH_TOKEN }, signal: AbortSignal.timeout(15000) }
+      );
+      if (!res.ok) { console.log('[ABCCC] HTTP', res.status, a.nome); erros++; continue; }
+      const d = await res.json();
+      console.log('[ABCCC]', a.nome, d?.encontrado, d?.situacao||'');
+      if (d?.encontrado !== 'sim') { erros++; continue; }
+      // Proteção crítica contra animal errado:
+      // 1. Se a ABCCC retornou um SBB diferente do enviado → ignorar
+      if (d.sbb && d.sbb.toUpperCase() !== a.sbb.toUpperCase()) {
+        console.warn('[ABCCC] SBB divergente:', a.sbb, '→', d.sbb, 'para', a.nome, '— ignorando');
+        erros++; continue;
+      }
+      // 2. Se o nome retornado for completamente diferente do cadastrado → ignorar
+      // (evita sobrescrever quando a ABCCC retorna outro animal)
+      if (d.nome && a.nome) {
+        const nomeAbccc = d.nome.toUpperCase().trim();
+        const nomeCad  = a.nome.toUpperCase().trim();
+        // Pegar a primeira palavra de cada nome para comparar
+        const p1Abccc = nomeAbccc.split(' ')[0];
+        const p1Cad   = nomeCad.split(' ')[0];
+        if (p1Abccc !== p1Cad && !nomeAbccc.includes(p1Cad) && !nomeCad.includes(p1Abccc)) {
+          console.warn('[ABCCC] Nome divergente:', a.nome, '→', d.nome, '— ignorando');
+          erros++; continue;
+        }
+      }
+
+      const patch = { abccc_atualizado_em: new Date().toISOString() };
+      if (d.nome  && d.nome  !== a.nome)  { a.nome  = d.nome;  patch.nome  = d.nome; }
+      if (d.rp    && d.rp    !== a.rp)    { a.rp    = d.rp;    patch.rp    = d.rp; }
+      if (d.pai   && d.pai   !== a.pai)   { a.pai   = d.pai;   patch.pai   = d.pai; }
+      if (d.mae   && d.mae   !== a.mae)   { a.mae   = d.mae;   patch.mae   = d.mae; }
+      if (d.status_abccc) { a.status_abccc = d.status_abccc; patch.status_abccc = d.status_abccc; }
+      if (d.tem_rm !== undefined) { a.tem_rm = !!d.tem_rm; patch.tem_rm = !!d.tem_rm; }
+      if (d.ultima_transferencia) { a.ultima_transferencia = d.ultima_transferencia; patch.ultima_transferencia = d.ultima_transferencia; }
+      if (d.sbb_pai && !a.sbb_pai) { a.sbb_pai = d.sbb_pai; patch.sbb_pai = d.sbb_pai; }
+      if (d.sbb_mae && !a.sbb_mae) { a.sbb_mae = d.sbb_mae; patch.sbb_mae = d.sbb_mae; }
+      if (d.pelagem && !a.pelagem) { a.pelagem = d.pelagem; patch.pelagem = d.pelagem; }
+      if (d.nasc   && !a.nasc)    { a.nasc   = d.nasc;   patch.nasc   = d.nasc; }
+      if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
+        a.confirmacao_status = 'confirmado'; a.confirmado = true;
+        patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+      }
+      if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
+      if (d.situacao === 'Confirmado' && (d.altura || d.torax || d.canela)) {
+        const ai = animais.indexOf(a);
+        const jaTem = getMedidas(ai).some(m => m.contexto === 'ABCCC' || m.resp === 'ABCCC');
+        if (!jaTem && a.db_id) {
+          const nm = { animal_id:a.db_id, data:d.confirmacao_data||new Date().toISOString().slice(0,10),
+            cernelha:d.altura?Number(d.altura):null, torax:d.torax?Number(d.torax):null,
+            canela:d.canela?Number(d.canela):null, contexto:'ABCCC', resp:'ABCCC' };
+          const mr = await _supa('POST','medidas',nm);
+          if (mr?.[0]?.id) { if(!medidas[ai])medidas[ai]=[]; medidas[ai].push({...nm,db_id:mr[0].id}); }
+        }
+      }
+      if (a.db_id && Object.keys(patch).length > 1) await _supa('PATCH','animais',patch,'?id=eq.'+a.db_id);
+      ok++;
+    } catch(e) { console.log('[ABCCC] erro', a.nome, e?.message); erros++; }
+    if (idx < alvo.length-1) await new Promise(r => setTimeout(r, 1500));
+  }
+  // Estado concluído
+  if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="20 6 9 17 4 12"/>'; }
+  if (fillEl) fillEl.style.width = '100%';
+  if (labelEl) labelEl.textContent = ok + ' atualizados' + (erros ? ' (' + erros + ' erros)' : '');
+  if (btn) btn.style.borderColor = 'var(--green-d)';
+
+  renderAnimais();
+  _mostrarStatusSync('✅ ABCCC: '+ok+' atualizados'+(confirmados?' · '+confirmados+' confirmações':'')+(erros?' · '+erros+' erros':''), 'green');
+
+  // Voltar ao estado normal após 4s
+  setTimeout(() => {
+    if (btn) { btn.disabled = false; btn.style.borderColor = ''; btn.style.color = ''; }
+    if (fillEl) fillEl.style.width = '0%';
+    if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>'; }
+    if (labelEl) labelEl.textContent = 'Atualizar ABCCC';
+  }, 4000);
 }
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
