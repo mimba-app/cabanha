@@ -5,7 +5,7 @@ projeto Supabase separado, criado depois do incidente de 19/08 (ver `docs/adr/00
 
 | | |
 |---|---|
-| Organização | **Mimba** (`nlcyadrzcjdwyhzlfupk`) |
+| Organização | **Mimba Lab** (`nlcyadrzcjdwyhzlfupk`) — org de tudo que NÃO é produção |
 | Projeto | **mimba-analytics** (`njynlsugmvtuvcczmuld`) |
 | URL | `https://njynlsugmvtuvcczmuld.supabase.co` |
 | Região | South America (São Paulo) |
@@ -13,6 +13,25 @@ projeto Supabase separado, criado depois do incidente de 19/08 (ver `docs/adr/00
 
 A skill `nova-migration-tenant` **não se aplica** aqui: não existe schema `cab_*` neste projeto,
 e `public` não é template de nada. É um banco comum.
+
+## Por que a org chama "Mimba Lab"
+
+Na Supabase, organização é fronteira de **plano e cobrança** — e a plataforma não deixa misturar
+projeto pago e gratuito na mesma org. Como produção precisa ir para Pro (o plano Free **não tem
+backup automático nenhum**, lição do incidente) e o analítico fica no Free, os dois têm
+obrigatoriamente que morar em orgs diferentes. Não é preferência de organização, é imposição.
+
+Daí a divisão ser por **ambiente**, não por assunto:
+
+| Org | Plano | O que mora |
+|---|---|---|
+| `Mimba` *(a criar, quando produção sair da conta pessoal do Luciano)* | Pro | produção |
+| **`Mimba Lab`** *(esta)* | Free | tudo que **não** é produção |
+
+Nomes por feature (`mimba-dados`, `mimba-analytics`) foram descartados de propósito: esta org
+deve caber também homologação e experimentos. Hoje homologação divide o banco de produção — o
+que obrigou o filtro `ambiente_teste` para esconder cabanhas reais de quem testa. Um projeto de
+homologação aqui elimina esse remendo e torna impossível um teste encostar em dado de cliente.
 
 ## Ordem de aplicação
 
