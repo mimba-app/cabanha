@@ -4021,7 +4021,7 @@ function _emh(btn) {
     const mi = lista.findIndex(m => m.db_id === di);
     if (mi >= 0) { console.log('[_emh] encontrado ki='+ki+' mi='+mi); abrirEditarMedida(parseInt(ki), mi); return; }
   }
-  toast('Medição não encontrada. Recarregue a página.');
+  _mostrarStatusSync('⚠️ Medição não encontrada. Recarregue a página.', 'amber');
 }
 
 function abrirEditarMedida(animalIdx, medIdx) {
@@ -4099,7 +4099,7 @@ async function salvarEdicaoMedida() {
   renderMedLista(); renderMedHistorico();
   // Re-inicializar gráfico se na ficha do animal
   if (window._detIdx !== undefined) setTimeout(() => _initMedChart(window._detIdx), 100);
-  toast('Medição atualizada.');
+  _mostrarStatusSync('✅ Medição atualizada', 'green');
 }
 
 function abrirModalMedida(preIdx) {
