@@ -4009,6 +4009,19 @@ function abrirLaudo(b64, nome, tipo) {
 // ── EDITAR MEDIDA ─────────────────────────────────────────────────────────────
 
 
+function abrirEditarMedidaById(animalIdx, dbId) {
+  if (!dbId) return;
+  // Buscar a medição pelo db_id em todos os arrays
+  let foundIdx = -1, foundAnimalIdx = animalIdx;
+  for (const [ai, lista] of Object.entries(medidas)) {
+    const mi = lista.findIndex(m => m.db_id === dbId);
+    if (mi >= 0) { foundIdx = mi; foundAnimalIdx = Number(ai); break; }
+  }
+  if (foundIdx < 0) { toast('Medição não encontrada. Recarregue a página.'); return; }
+  abrirEditarMedida(foundAnimalIdx, foundIdx);
+}
+
+
 // Inicializar handler do botão salvar medida (evita conflito entre onclick HTML e JS)
 document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('rm-btn-salvar');
@@ -4016,7 +4029,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function abrirEditarMedida(animalIdx, medIdx) {
-  const m = getMedidas(animalIdx)[medIdx];
+  // Suporte a busca por db_id quando medIdx = -1
+  let m = getMedidas(animalIdx)[medIdx];
+  // Fallback: buscar em todos os arrays de medidas pelo db_id
+  if (!m && medIdx === -1) return;
+  // Se medIdx inválido, buscar pelo mesmo db_id
+  if (!m) {
+    for (const [ai, lista] of Object.entries(medidas)) {
+      const found = lista.findIndex(x => x === getMedidas(animalIdx)[medIdx]);
+      if (found >= 0) { m = lista[found]; medIdx = found; animalIdx = Number(ai); break; }
+    }
+  }
   if (!m) return;
   // Medidas ABCCC não são editáveis
   if (m.contexto === 'ABCCC' || m.resp === 'ABCCC') {
@@ -4311,8 +4334,8 @@ function renderMedHistorico() {
         const isAbccc = r.contexto === 'ABCCC' || r.resp === 'ABCCC';
         const btnEditar = isAbccc
           ? '<span style="font-size:10px;color:var(--text3)" title="Medição oficial ABCCC">🔒</span>'
-          : (animalIdx >= 0 && medIdx >= 0
-              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedida(' + animalIdx + ',' + medIdx + ')">✏</button>'
+          : (animalIdx >= 0
+              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedidaById(' + animalIdx + ','' + (r.db_id||'') + '')">✏</button>'
               : '');
         return '<tr>'
           + '<td style="padding:6px 10px;font-weight:600">' + r.nomeAnimal + '</td>'
