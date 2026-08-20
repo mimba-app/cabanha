@@ -8829,6 +8829,78 @@ function _initMedChart(animalIdx) {
   _medChartSel(chartId, legendId, toggleId, inicial, animalIdx);
 }
 
+
+// ── ATUALIZAÇÃO ABCCC EM LOTE ─────────────────────────────────────────────────
+async function _atualizarTodosAbccc() {
+  const comSbb = animais.filter(a => a.sbb && a.sbb.trim() && isNaCabanha(a));
+  console.log('[ABCCC] animais com SBB:', comSbb.length, 'AUTH_TOKEN:', !!AUTH_TOKEN);
+  if (!comSbb.length) { _mostrarStatusSync('Nenhum animal com SBB cadastrado.', 'amber'); return; }
+
+  const LOTE_MAX = 30;
+  const avisoLote = comSbb.length > LOTE_MAX ? '\n\nAtenção: apenas os primeiros ' + LOTE_MAX + ' serão processados.' : '';
+  if (!confirm('Atualizar dados de ' + comSbb.length + ' animal(is) via ABCCC?' + avisoLote)) return;
+
+  const alvo = comSbb.slice(0, LOTE_MAX);
+  const barEl = document.createElement('div');
+  barEl.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;height:5px;background:var(--green-l)';
+  const fillEl = document.createElement('div');
+  fillEl.style.cssText = 'height:5px;background:var(--green-d);width:0%;transition:width 0.4s';
+  barEl.appendChild(fillEl); document.body.appendChild(barEl);
+
+  let ok = 0, erros = 0, confirmados = 0;
+
+  for (let idx = 0; idx < alvo.length; idx++) {
+    const a = alvo[idx];
+    fillEl.style.width = Math.round(((idx+1)/alvo.length)*100) + '%';
+    if (idx > 0 && idx % 5 === 0) { try { await _garantirTokenValido(); } catch(e) {} }
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/functions/v1/buscar-abccc?sbb=' + encodeURIComponent(a.sbb.trim()),
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + AUTH_TOKEN }, signal: AbortSignal.timeout(15000) }
+      );
+      if (!res.ok) { console.log('[ABCCC] HTTP', res.status, a.nome); erros++; continue; }
+      const d = await res.json();
+      console.log('[ABCCC]', a.nome, d?.encontrado, d?.situacao||'');
+      if (d?.encontrado !== 'sim') { erros++; continue; }
+
+      const patch = { abccc_atualizado_em: new Date().toISOString() };
+      if (d.nome  && d.nome  !== a.nome)  { a.nome  = d.nome;  patch.nome  = d.nome; }
+      if (d.rp    && d.rp    !== a.rp)    { a.rp    = d.rp;    patch.rp    = d.rp; }
+      if (d.pai   && d.pai   !== a.pai)   { a.pai   = d.pai;   patch.pai   = d.pai; }
+      if (d.mae   && d.mae   !== a.mae)   { a.mae   = d.mae;   patch.mae   = d.mae; }
+      if (d.status_abccc) { a.status_abccc = d.status_abccc; patch.status_abccc = d.status_abccc; }
+      if (d.tem_rm !== undefined) { a.tem_rm = !!d.tem_rm; patch.tem_rm = !!d.tem_rm; }
+      if (d.ultima_transferencia) { a.ultima_transferencia = d.ultima_transferencia; patch.ultima_transferencia = d.ultima_transferencia; }
+      if (d.sbb_pai && !a.sbb_pai) { a.sbb_pai = d.sbb_pai; patch.sbb_pai = d.sbb_pai; }
+      if (d.sbb_mae && !a.sbb_mae) { a.sbb_mae = d.sbb_mae; patch.sbb_mae = d.sbb_mae; }
+      if (d.pelagem && !a.pelagem) { a.pelagem = d.pelagem; patch.pelagem = d.pelagem; }
+      if (d.nasc   && !a.nasc)    { a.nasc   = d.nasc;   patch.nasc   = d.nasc; }
+      if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
+        a.confirmacao_status = 'confirmado'; a.confirmado = true;
+        patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+      }
+      if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
+      if (d.situacao === 'Confirmado' && (d.altura || d.torax || d.canela)) {
+        const ai = animais.indexOf(a);
+        const jaTem = getMedidas(ai).some(m => m.contexto === 'ABCCC' || m.resp === 'ABCCC');
+        if (!jaTem && a.db_id) {
+          const nm = { animal_id:a.db_id, data:d.confirmacao_data||new Date().toISOString().slice(0,10),
+            cernelha:d.altura?Number(d.altura):null, torax:d.torax?Number(d.torax):null,
+            canela:d.canela?Number(d.canela):null, contexto:'ABCCC', resp:'ABCCC' };
+          const mr = await _supa('POST','medidas',nm);
+          if (mr?.[0]?.id) { if(!medidas[ai])medidas[ai]=[]; medidas[ai].push({...nm,db_id:mr[0].id}); }
+        }
+      }
+      if (a.db_id && Object.keys(patch).length > 1) await _supa('PATCH','animais',patch,'?id=eq.'+a.db_id);
+      ok++;
+    } catch(e) { console.log('[ABCCC] erro', a.nome, e?.message); erros++; }
+    if (idx < alvo.length-1) await new Promise(r => setTimeout(r, 1500));
+  }
+  barEl.remove();
+  renderAnimais();
+  _mostrarStatusSync('✅ ABCCC: '+ok+' atualizados'+(confirmados?' · '+confirmados+' confirmações':'')+(erros?' · '+erros+' erros':''), 'green');
+}
+
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
 
 // Tabela real de desenvolvimento Crioulo — dados Thiago Persici / técnicos ABCCC
