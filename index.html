@@ -361,6 +361,11 @@
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
   .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  @keyframes abccc-spin { to { transform: rotate(360deg); } }
+  .abccc-spin { display:inline-block; animation: abccc-spin 1s linear infinite; }
+  #btn-abccc-update { position:relative; overflow:hidden; min-width:130px; transition:color 0.2s,border-color 0.2s; }
+  #btn-abccc-update .abccc-fill { position:absolute; left:0; top:0; height:100%; background:var(--green-l); transition:width 0.4s; z-index:0; }
+  #btn-abccc-update .abccc-label { position:relative; z-index:1; display:flex; align-items:center; gap:5px; }
   @keyframes ac-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
@@ -775,7 +780,10 @@
   <div class="page-header">
     <div><div class="page-title">Animais</div><div class="page-sub">Plantel completo · dados ABCCC integrados</div></div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">🔄 Atualizar ABCCC</button>
+      <button id="btn-abccc-update" class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">
+        <div class="abccc-fill" style="width:0%"></div>
+        <span class="abccc-label"><svg width="13" height="13" id="abccc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;flex-shrink:0"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg><span id="abccc-label-txt">Atualizar ABCCC</span></span>
+      </button>
       <button class="btn" onclick="abrirModalImportarSBB()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Importar por SBB</button>
       <button class="btn btn-primary" onclick="_limparFormNovoAnimal();openModal('modal-novo')">+ Novo animal</button>
     </div>
@@ -8833,7 +8841,6 @@ function _initMedChart(animalIdx) {
 // ── ATUALIZAÇÃO ABCCC EM LOTE ─────────────────────────────────────────────────
 async function _atualizarTodosAbccc() {
   const comSbb = animais.filter(a => a.sbb && a.sbb.trim() && isNaCabanha(a));
-  console.log('[ABCCC] animais com SBB:', comSbb.length, 'AUTH_TOKEN:', !!AUTH_TOKEN);
   if (!comSbb.length) { _mostrarStatusSync('Nenhum animal com SBB cadastrado.', 'amber'); return; }
 
   const LOTE_MAX = 30;
@@ -8841,17 +8848,22 @@ async function _atualizarTodosAbccc() {
   if (!confirm('Atualizar dados de ' + comSbb.length + ' animal(is) via ABCCC?' + avisoLote)) return;
 
   const alvo = comSbb.slice(0, LOTE_MAX);
-  const barEl = document.createElement('div');
-  barEl.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;height:5px;background:var(--green-l)';
-  const fillEl = document.createElement('div');
-  fillEl.style.cssText = 'height:5px;background:var(--green-d);width:0%;transition:width 0.4s';
-  barEl.appendChild(fillEl); document.body.appendChild(barEl);
+
+  // Controle visual do botão
+  const btn = document.getElementById('btn-abccc-update');
+  const fillEl = btn?.querySelector('.abccc-fill');
+  const iconEl = document.getElementById('abccc-icon');
+  const labelEl = document.getElementById('abccc-label-txt');
+  if (btn) { btn.disabled = true; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green-d)'; }
+  if (iconEl) iconEl.classList.add('abccc-spin');
 
   let ok = 0, erros = 0, confirmados = 0;
 
   for (let idx = 0; idx < alvo.length; idx++) {
     const a = alvo[idx];
-    fillEl.style.width = Math.round(((idx+1)/alvo.length)*100) + '%';
+    const pct = Math.round(((idx+1)/alvo.length)*100);
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (labelEl) labelEl.textContent = 'Atualizando... ' + (idx+1) + '/' + alvo.length;
     if (idx > 0 && idx % 5 === 0) { try { await _garantirTokenValido(); } catch(e) {} }
     try {
       const res = await fetch(
@@ -8896,9 +8908,22 @@ async function _atualizarTodosAbccc() {
     } catch(e) { console.log('[ABCCC] erro', a.nome, e?.message); erros++; }
     if (idx < alvo.length-1) await new Promise(r => setTimeout(r, 1500));
   }
-  barEl.remove();
+  // Estado concluído
+  if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="20 6 9 17 4 12"/>'; }
+  if (fillEl) fillEl.style.width = '100%';
+  if (labelEl) labelEl.textContent = ok + ' atualizados' + (erros ? ' (' + erros + ' erros)' : '');
+  if (btn) btn.style.borderColor = 'var(--green-d)';
+
   renderAnimais();
   _mostrarStatusSync('✅ ABCCC: '+ok+' atualizados'+(confirmados?' · '+confirmados+' confirmações':'')+(erros?' · '+erros+' erros':''), 'green');
+
+  // Voltar ao estado normal após 4s
+  setTimeout(() => {
+    if (btn) { btn.disabled = false; btn.style.borderColor = ''; btn.style.color = ''; }
+    if (fillEl) fillEl.style.width = '0%';
+    if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>'; }
+    if (labelEl) labelEl.textContent = 'Atualizar ABCCC';
+  }, 4000);
 }
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
