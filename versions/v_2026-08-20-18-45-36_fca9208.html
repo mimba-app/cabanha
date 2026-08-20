@@ -4008,6 +4008,22 @@ function abrirLaudo(b64, nome, tipo) {
 
 // ── EDITAR MEDIDA ─────────────────────────────────────────────────────────────
 
+
+// Editar medida a partir do histórico — usa data-attributes para evitar aspas aninhadas
+function _emh(btn) {
+  const ai = parseInt(btn.getAttribute('data-ai'));
+  const di = btn.getAttribute('data-di');
+  console.log('[_emh] ai=', ai, 'di=', di);
+  if (!di) { console.log('[_emh] sem db_id'); return; }
+  console.log('[_emh] medidas keys:', Object.keys(medidas));
+  for (const [ki, lista] of Object.entries(medidas)) {
+    console.log('[_emh] lista['+ki+'] db_ids:', lista.map(m=>m.db_id));
+    const mi = lista.findIndex(m => m.db_id === di);
+    if (mi >= 0) { console.log('[_emh] encontrado ki='+ki+' mi='+mi); abrirEditarMedida(parseInt(ki), mi); return; }
+  }
+  _mostrarStatusSync('⚠️ Medição não encontrada. Recarregue a página.', 'amber');
+}
+
 function abrirEditarMedida(animalIdx, medIdx) {
   const m = getMedidas(animalIdx)[medIdx];
   if (!m) return;
@@ -4059,7 +4075,9 @@ async function salvarEdicaoMedida() {
   reg.resp     = document.getElementById('rm-resp').value || null;
   reg.obs      = document.getElementById('rm-obs').value || null;
   // Persistir no banco
+  console.log('[salvarEdicaoMedida] reg.db_id=', reg?.db_id, 'data=', data);
   if (reg.db_id) {
+    console.log('[salvarEdicaoMedida] enviando PATCH');
     await _supa('PATCH', 'medidas', {
       data: reg.data, contexto: reg.contexto,
       cernelha: reg.cernelha ? Number(reg.cernelha) : null,
@@ -4081,7 +4099,7 @@ async function salvarEdicaoMedida() {
   renderMedLista(); renderMedHistorico();
   // Re-inicializar gráfico se na ficha do animal
   if (window._detIdx !== undefined) setTimeout(() => _initMedChart(window._detIdx), 100);
-  toast('Medição atualizada.');
+  _mostrarStatusSync('✅ Medição atualizada', 'green');
 }
 
 function abrirModalMedida(preIdx) {
@@ -4304,8 +4322,8 @@ function renderMedHistorico() {
         const isAbccc = r.contexto === 'ABCCC' || r.resp === 'ABCCC';
         const btnEditar = isAbccc
           ? '<span style="font-size:10px;color:var(--text3)" title="Medição oficial ABCCC">🔒</span>'
-          : (animalIdx >= 0 && medIdx >= 0
-              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedida(' + animalIdx + ',' + medIdx + ')">✏</button>'
+          : (animalIdx >= 0 && r.db_id
+              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px;min-width:28px" data-ai="' + animalIdx + '" data-di="' + r.db_id + '" onclick="_emh(this)">✏</button>'
               : '');
         return '<tr>'
           + '<td style="padding:6px 10px;font-weight:600">' + r.nomeAnimal + '</td>'
@@ -5338,7 +5356,7 @@ function _renderDetCorpo(i, editando) {
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
-      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
+      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
@@ -9101,6 +9119,7 @@ async function _marcarParaConfirmacao(i) {
   if (!confirm('Marcar este animal para confirmação com técnico ABCCC?')) return;
   await _supa('PATCH','animais',{confirmacao_status:'aguardando_confirmacao'},`?id=eq.${a.db_id}`);
   a.confirmacao_status = 'aguardando_confirmacao';
+  a.confirmado = false;
   _renderDetCorpo(i, false);
   renderAnimais();
   toast('Animal marcado para confirmação.');
@@ -9122,8 +9141,9 @@ async function _confirmarNaoConfirmacao() {
   const obs    = document.getElementById('nc-obs').value;
   if (!motivo) { alert('Selecione um motivo.'); return; }
   const obsCompleta = [motivo, obs].filter(Boolean).join(' — ');
-  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta},`?id=eq.${a.db_id}`);
+  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta,confirmado:false},`?id=eq.${a.db_id}`);
   a.confirmacao_status = 'nao_confirmado';
+  a.confirmado = false;
   a.confirmacao_obs = obsCompleta;
   closeModal('modal-nao-confirmar');
   _renderDetCorpo(i, false);
@@ -12384,7 +12404,7 @@ async function _sincronizarAoLogin() {
         situacao: (()=>{const m={'MORTO(A)':'MORTO','DOADO(A)':'TRANSFERIDO','VENDIDO(A)':'VENDIDO','Vendido(a)':'VENDIDO','Transferido/Doado':'TRANSFERIDO','Morto(a)':'MORTO','Na Cabanha':'NA CABANHA','Empréstimo':'EMPRESTIMO'}; return m[a.situacao]||a.situacao||'NA CABANHA';})(), estagio: a.estagio||'',
         obs: a.obs||'', sexo: a.sexo||'', pelagem: a.pelagem||'',
         ult_vac: '', prox_vac: a.prox_vac||'', ult_verm:'', val_exame: a.val_exame||'',
-        confirmado: !!a.confirmado,
+        confirmado: a.confirmacao_status === 'confirmado' || !!a.confirmado,
         castrado: !!a.castrado,
         qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         receptora: !!a.receptora,
