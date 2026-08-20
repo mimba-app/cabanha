@@ -5,6 +5,54 @@
 > continua no `HANDOFF.md` — este documento cobre só a Área de Dados.
 > **Não contém segredos.**
 
+---
+
+## ⛔ STATUS 2026-08-20 — REMOVIDA DA PRODUÇÃO. LEIA ANTES DE QUALQUER COISA.
+
+**Esta funcionalidade derrubou a produção e foi desmontada. Não reinstale no projeto
+`fmjfvfufkqswweyasjyp`.** O documento abaixo continua válido como *projeto técnico* —
+o modelo de dados, o decodificador DSR do Power BI e o contrato de consumo estão corretos e
+foram validados. O que estava errado era **onde** isso morava.
+
+**O que aconteceu.** Em 19/08 à noite, com a carga da ABCCC já aplicada em produção, a
+instância (plano **FREE**, CPU compartilhada) foi a 72% de CPU e travou: `Database`,
+`PostgREST`, `Auth` e `Storage` ficaram *unhealthy*, a API inteira passou a devolver **522**,
+o `carregar_dados_cabanha` (bootstrap do login) começou a estourar `statement timeout` e um
+checkpoint do Postgres levou **72 segundos** para escrever 714 buffers. Disco não era o
+problema (6% de uso, 170 MB) — era CPU.
+
+**A causa.** 83.778 linhas inseridas **uma a uma** em `dados_registros`, que tem **4 índices de
+expressão sobre jsonb**, mais a matview `mv_abccc_resultados` com **outros 6 índices** e
+`refresh materialized view` **não-concorrente**. São ~83 mil linhas × 11 estruturas de índice
+numa instância que também atende as cabanhas pagantes. A seção 10 deste documento chamava
+essa assimetria de "inofensiva". **Não era.**
+
+**A decisão (Pedro, 20/08).** Base analítica não divide instância com o banco transacional de
+produção. A Área de Dados é refeita num **projeto Supabase separado**.
+
+**O que foi feito:**
+- `docs/migrations/2026-08-20-remover-area-dados-de-producao.sql` — desmonta tudo em produção
+  (3 tabelas, matview, view, 18 funções, bucket e a policy em `storage.objects`). Preserva
+  `mimba_staff`, `sou_staff_mimba()`, `pg_net` e `pg_cron`, que são pré-existentes e em uso.
+- O frontend saiu da `staging` pelo revert de `827f354` — o Painel Mimba voltou à visão única.
+- As migrations `2026-08-19-area-dados-fase*.sql` e `dados/abccc/` **ficam no repo de
+  propósito**: são a receita para reconstruir no projeto novo.
+
+**Ao reconstruir, corrigir estes três antes de carregar qualquer dado:**
+1. Trocar o `insert` linha a linha de `abccc_importar_coletar` por `insert ... select`.
+2. Criar índice único na matview e usar `refresh materialized view concurrently` — o refresh
+   atual pega `ACCESS EXCLUSIVE` e bloqueia todo mundo.
+3. Rever se os 4 índices de expressão jsonb em `dados_registros` são mesmo necessários na
+   carga, ou se podem ser criados depois do load.
+
+**Consequência de arquitetura a resolver no redesenho:** o contrato da seção 5
+(`ref_abccc_animal` / `ref_abccc_reprodutor` chamadas via `_rpc` na mesma conexão) **deixa de
+funcionar** quando os dados estão noutro projeto. Vai precisar de um segundo client Supabase
+apontando para o projeto analítico, ou de uma edge function em produção que faça proxy. É
+decisão de arquitetura — vale passar pelo subagente `arquiteto`.
+
+---
+
 ## 1. O que é e por que existe
 
 Área de **inteligência de dados** da plataforma, restrita a funcionários/sócios da Mimba
