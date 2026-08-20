@@ -16,5 +16,7 @@ Um ADR é curto (~1 página). Escreva quando a decisão for difícil de reverter
 - [0001](0001-multi-tenant-por-schema.md) — Multi-tenant por schema Postgres
 - [0002](0002-auth-identity-first.md) — Auth identity-first (Supabase Auth + membership + RLS)
 - [0003](0003-provisionamento-por-clone-do-template.md) — Provisionamento por clone do template
+- [0004](0004-captura-de-cartao-trial-sem-tokenizacao-client-side.md) — Captura de cartão no trial sem tokenização client-side
+- [0005](0005-onde-mora-a-area-de-dados.md) — Onde mora a Área de Dados (analítico fora da produção)
 
 _Próximo ADR provável: como quebrar o `index.html` (mono-arquivo) preservando o deploy leve._
