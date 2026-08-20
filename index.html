@@ -8874,12 +8874,24 @@ async function _atualizarTodosAbccc() {
       const d = await res.json();
       console.log('[ABCCC]', a.nome, d?.encontrado, d?.situacao||'');
       if (d?.encontrado !== 'sim') { erros++; continue; }
-      // Proteção crítica: verificar se o SBB retornado bate com o enviado
-      // Se a ABCCC retornar outro animal, não atualizar
+      // Proteção crítica contra animal errado:
+      // 1. Se a ABCCC retornou um SBB diferente do enviado → ignorar
       if (d.sbb && d.sbb.toUpperCase() !== a.sbb.toUpperCase()) {
-        console.warn('[ABCCC] SBB divergente para', a.nome, '— enviou', a.sbb, 'recebeu', d.sbb, '— ignorando');
-        erros++;
-        continue;
+        console.warn('[ABCCC] SBB divergente:', a.sbb, '→', d.sbb, 'para', a.nome, '— ignorando');
+        erros++; continue;
+      }
+      // 2. Se o nome retornado for completamente diferente do cadastrado → ignorar
+      // (evita sobrescrever quando a ABCCC retorna outro animal)
+      if (d.nome && a.nome) {
+        const nomeAbccc = d.nome.toUpperCase().trim();
+        const nomeCad  = a.nome.toUpperCase().trim();
+        // Pegar a primeira palavra de cada nome para comparar
+        const p1Abccc = nomeAbccc.split(' ')[0];
+        const p1Cad   = nomeCad.split(' ')[0];
+        if (p1Abccc !== p1Cad && !nomeAbccc.includes(p1Cad) && !nomeCad.includes(p1Abccc)) {
+          console.warn('[ABCCC] Nome divergente:', a.nome, '→', d.nome, '— ignorando');
+          erros++; continue;
+        }
       }
 
       const patch = { abccc_atualizado_em: new Date().toISOString() };
