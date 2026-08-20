@@ -1046,6 +1046,7 @@
   <!-- PENDÊNCIAS -->
 
   <div id="tab-pendencias"<div id="tab-pendencias" style="display:none">
+  <div id="pend-repro-cancelados" style="display:none;margin-bottom:16px"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px">
       <div style="font-size:12px;color:var(--text2)">Pendências geradas automaticamente ao criar eventos. Clique em "Resolvida" quando regularizado.</div>
       <button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Limpar todas as pendências resolvidas?')){pendencias=pendencias.filter(p=>!p.resolvida);renderPendencias()}">Limpar resolvidas</button>
@@ -9530,16 +9531,76 @@ function _confirmarAprovacaoAcasalamento() {
   renderAcasalamentos();
 }
 
-function acasCancelar(i) {
+async function acasCancelar(i) {
   const a = acasalamentos[i];
   if(!a) return;
+
+  // Verificar se está em andamento com o veterinário
+  const est = reproducaoEstagios.find(e => String(e.acasalamento_id) === String(a.db_id));
+  const emVet = est && est.estagio !== 'controle';
+
+  if (emVet) {
+    const ok = confirm(
+      'Este cruzamento já está em andamento com o veterinário.\n\n' +
+      'Égua: ' + a.egua_nome + '\n' +
+      'Garanhão: ' + (a.garanhao_nome||'—') + '\n\n' +
+      'O veterinário será notificado em Pendências.\nDeseja cancelar mesmo assim?'
+    );
+    if (!ok) return;
+  }
+
   const motivo = prompt('Motivo do cancelamento (obrigatório):');
-  if(!motivo || !motivo.trim()) return;
+  if (!motivo || !motivo.trim()) return;
+
   a.status = 'cancelado';
   a.motivo_cancelamento = motivo.trim();
   _dbAtualizarStatusAcasalamento(a, {status: 'cancelado', motivo_cancelamento: a.motivo_cancelamento});
+
+  // Notificar veterinário via flag no estágio
+  if (emVet && est.db_id) {
+    est.cancelado_pelo_criador = true;
+    est.cancelado_em = new Date().toISOString();
+    await _supa('PATCH', 'reproducao_estagios',
+      {cancelado_pelo_criador: true, cancelado_em: est.cancelado_em},
+      '?id=eq.' + est.db_id
+    );
+  }
+
   renderAcasalamentos();
   renderEguasCriaPlanejador();
+  if (emVet) {
+    renderReprodutivoVet();
+    _renderPendenciasRepro();
+  }
+}
+
+function _renderPendenciasRepro() {
+  const el = document.getElementById('pend-repro-cancelados');
+  if (!el) return;
+  const cancelados = reproducaoEstagios.map((e,ei) => ({e,ei})).filter(({e}) => e.cancelado_pelo_criador);
+  if (!cancelados.length) { el.innerHTML=''; el.style.display='none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--red-d);margin-bottom:8px">Cruzamentos cancelados pelo criador — confirme leitura</div>'
+    + cancelados.map(({e,ei}) => {
+        const a = acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+        return '<div style="background:var(--red-l);border:1px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
+          + '<div style="font-size:12px;font-weight:500;color:var(--red-d)">'
+          + (a ? a.egua_nome + ' × ' + (a.garanhao_nome||'—') : 'Cruzamento') + '</div>'
+          + (e.cancelado_em ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">Cancelado em ' + fd(e.cancelado_em.slice(0,10)) + '</div>' : '')
+          + '<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi(' + ei + ')">✓ Li e entendi</button>'
+          + '</div>';
+      }).join('');
+}
+
+async function _reproLiEntendi(ei) {
+  const e = reproducaoEstagios[ei];
+  if (!e) return;
+  if (!confirm('Confirmar leitura e remover do funil veterinário?')) return;
+  if (e.db_id) await _supa('DELETE', 'reproducao_estagios', null, '?id=eq.' + e.db_id);
+  reproducaoEstagios.splice(ei, 1);
+  renderReprodutivoVet();
+  _renderPendenciasRepro();
+  toast('Cruzamento removido do funil veterinário.');
 }
 
 function _toggleCanceladosAcasalamentos() {
@@ -10413,8 +10474,16 @@ function _reproVetCard(ei) {
     </div>`;
   }
 
-  return `<div class="kanban-card">
-    <div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
+  const _bannerC = e.cancelado_pelo_criador
+    ? '<div style="background:var(--red-l);border:1.5px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--red-d)">Criador cancelou este cruzamento</div>'
+      + (e.cancelado_em ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">em ' + fd(e.cancelado_em.slice(0,10)) + '</div>' : '')
+      + '<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi(' + ei + ')">✓ Li e entendi — remover do funil</button>'
+      + '</div>'
+    : '';
+  return '<div class="kanban-card"' + (e.cancelado_pelo_criador ? ' style="border-color:var(--red);opacity:0.85"' : '') + '>'
+    + _bannerC
+    + `<div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
     <div class="kanban-card-info">
       Garanhão: ${a.garanhao_nome || '—'} · Ciclo ${a.ciclo || '—'}<br>
       ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || '—'}${dias !== null ? ' · ' + dias + 'd no estágio' : ''}
@@ -12552,6 +12621,8 @@ async function _sincronizarAoLogin() {
         reproducaoEstagios.push({
           db_id: e.id, acasalamento_id: e.acasalamento_id, estagio: e.estagio || 'controle',
           data_entrada_estagio: e.data_entrada_estagio,
+          cancelado_pelo_criador: !!e.cancelado_pelo_criador,
+          cancelado_em: e.cancelado_em || null,
         });
       });
     }
