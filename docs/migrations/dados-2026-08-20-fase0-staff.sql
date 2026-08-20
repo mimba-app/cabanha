@@ -11,12 +11,22 @@
 -- definições de lá divergirem desta, esta é a que vale para este projeto.
 --
 -- Toda a Área de Dados pendura a RLS neste gate, então ele vem antes de tudo.
+--
+-- ⚠️ CORREÇÃO (2026-08-20, achada ao testar a tela pela primeira vez): a coluna se
+-- chama `user_id`, não `auth_user_id`. `dados-2026-08-20-fase1.sql` — cópia fiel da
+-- migration original que rodou em produção — faz `left join public.mimba_staff s on
+-- s.user_id = d.enviado_por` dentro de `dados_listar_datasets()`. Como este arquivo
+-- (fase0) foi escrito do zero, sem o schema original de produção pra copiar, o nome
+-- da coluna foi um chute que não bateu com o que fase1 já esperava — resultado:
+-- "column s.user_id does not exist" na primeira vez que a tela tentou listar as
+-- bases. Corrigido aqui e no banco (`alter table ... rename column`); nomeado
+-- `user_id` porque é o nome que o resto do código (fiel ao original) já assume.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. Quem é staff da Mimba
 -- ─────────────────────────────────────────────────────────────────────────────
 create table if not exists public.mimba_staff (
-  auth_user_id uuid primary key references auth.users(id) on delete cascade,
+  user_id uuid primary key references auth.users(id) on delete cascade,
   email        text not null,
   nome         text,
   criado_em    timestamptz not null default now()
@@ -42,7 +52,7 @@ security definer
 set search_path = public, auth
 as $$
   select exists (
-    select 1 from public.mimba_staff where auth_user_id = auth.uid()
+    select 1 from public.mimba_staff where user_id = auth.uid()
   );
 $$;
 
@@ -73,17 +83,17 @@ grant select on public.mimba_staff to authenticated;
 -- 4. Cadastrar o staff — PASSO MANUAL
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Crie os usuários em Authentication → Users no dashboard deste projeto (Pedro e Luciano),
--- e então rode o bloco abaixo. Ele resolve o auth_user_id pelo email, então não é preciso
+-- e então rode o bloco abaixo. Ele resolve o user_id pelo email, então não é preciso
 -- copiar UUID à mão. Idempotente.
 --
---   insert into public.mimba_staff (auth_user_id, email, nome)
+--   insert into public.mimba_staff (user_id, email, nome)
 --   select u.id, u.email, v.nome
 --     from auth.users u
 --     join (values
 --       ('pportella23@gmail.com', 'Pedro Portella'),
 --       ('EMAIL_DO_LUCIANO',      'Luciano Mantelli')
 --     ) as v(email, nome) on lower(u.email) = lower(v.email)
---   on conflict (auth_user_id) do update
+--   on conflict (user_id) do update
 --     set email = excluded.email, nome = excluded.nome;
 --
 -- Conferir depois:
