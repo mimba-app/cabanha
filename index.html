@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lan
-      <button class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados ABCCC em background">🔄 Atualizar ABCCC</button>g="pt-BR">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -788,7 +787,8 @@
   </div>
   <div class="filter-row">
     <input style="width:210px" type="text" id="busca" placeholder="Buscar por nome ou SBB..." oninput="filtrar()">
-    <select id="f-sit" onchange="filtrar()"><option value="">Todas situações</option><option value="ativo" selected>Ativos (Cabanha + Empréstimo)</option><option value="NA CABANHA">Na Cabanha</option><option value="EMPRESTIMO">Empréstimo</option><option value="VENDIDO">Vendido(a)</option><option value="TRANSFERIDO">Transferido/Doado</option><option value="MORTO">Morto(a)</option><option value="rascunho">Rascunhos (aguardando SBB)</option></select>
+    <button class="btn btn-sm" onclick="_atualizarTodosAbccc()">🔄 ABCCC</button>
+      <select id="f-sit" onchange="filtrar()"><option value="">Todas situações</option><option value="ativo" selected>Ativos (Cabanha + Empréstimo)</option><option value="NA CABANHA">Na Cabanha</option><option value="EMPRESTIMO">Empréstimo</option><option value="VENDIDO">Vendido(a)</option><option value="TRANSFERIDO">Transferido/Doado</option><option value="MORTO">Morto(a)</option><option value="rascunho">Rascunhos (aguardando SBB)</option></select>
     <select id="f-sexo" onchange="filtrar()"><option value="">Todos sexos</option><option>Fêmea</option><option>Macho</option></select>
     <select id="f-ciclo" onchange="filtrar()"><option value="">Ciclos</option></select>
     <select id="f-confirm" onchange="filtrar()">
@@ -10295,14 +10295,11 @@ function _reproVetCard(ei) {
     </div>`;
   }
 
-  const bannerCancelado = e.cancelado_pelo_criador
-    ? '<div style="background:var(--red-l);border:1.5px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
-      + '<div style="font-size:12px;font-weight:700;color:var(--red-d)">Criador cancelou este cruzamento</div>'
-      + '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+(e.cancelado_em?'em '+fd(e.cancelado_em.slice(0,10)):'')+'</div>'
-      + '<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi('+ei+')">✓ Li e entendi</button>'
-      + '</div>' : '';
+  const bannerC = e.cancelado_pelo_criador
+    ? '<div style="background:var(--red-l);border:1.5px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px"><div style="font-size:12px;font-weight:700;color:var(--red-d)">Criador cancelou este cruzamento</div>'+(e.cancelado_em?'<div style="font-size:11px;color:var(--text2);margin-top:2px">em '+fd(e.cancelado_em.slice(0,10))+'</div>':'')+'<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi('+ei+')">✓ Li e entendi</button></div>'
+    : '';
   return `<div class="kanban-card"${e.cancelado_pelo_criador?' style="border-color:var(--red)"':''}>
-    ${bannerCancelado}<div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
+    ${bannerC}<div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
     <div class="kanban-card-info">
       Garanhão: ${a.garanhao_nome || '—'} · Ciclo ${a.ciclo || '—'}<br>
       ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || '—'}${dias !== null ? ' · ' + dias + 'd no estágio' : ''}
@@ -13956,6 +13953,76 @@ if(!_checkRecovery()){
   _tentarRetomarSessao().then(retomou => { if(!retomou) _carregarEmailLembrado(); });
 }
 
+function saudeTabGrupo(btn,tabId,subId){
+  btn.closest('.tab-row').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['saude-sub-vac','saude-sub-exam','saude-sub-repro'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  if(subId){const sub=document.getElementById(subId);if(sub){sub.style.display='';const fb=sub.querySelector('.tab.active')||sub.querySelector('.tab');if(fb){const m=(fb.getAttribute('onclick')||'').match(/'([^']+)'\s*,\s*this/);if(m){switchTab(fb,m[1]);return;}}}}
+  switchTab(btn,tabId);
+}
+function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
+async function _acasCancelarComVet(i){
+  const a=acasalamentos[i];if(!a)return;
+  const est=reproducaoEstagios.find(e=>String(e.acasalamento_id)===String(a.db_id));
+  const emVet=est&&est.estagio!=='controle';
+  if(emVet&&!confirm('Este cruzamento está em andamento com o veterinário.\nÉgua: '+a.egua_nome+'\nGaranhão: '+(a.garanhao_nome||'—')+'\n\nO vet será notificado em Pendências. Confirma o cancelamento?'))return;
+  const motivo=prompt('Motivo do cancelamento:');if(!motivo||!motivo.trim())return;
+  a.status='cancelado';a.motivo_cancelamento=motivo.trim();
+  _dbAtualizarStatusAcasalamento(a,{status:'cancelado',motivo_cancelamento:a.motivo_cancelamento});
+  if(emVet&&est.db_id){est.cancelado_pelo_criador=true;est.cancelado_em=new Date().toISOString();await _supa('PATCH','reproducao_estagios',{cancelado_pelo_criador:true,cancelado_em:est.cancelado_em},'?id=eq.'+est.db_id);}
+  renderAcasalamentos();renderEguasCriaPlanejador();renderReprodutivoVet();_renderPendenciasRepro();
+}
+async function _reproLiEntendi(ei){
+  const e=reproducaoEstagios[ei];if(!e)return;
+  if(!confirm('Confirmar leitura e remover do funil?'))return;
+  if(e.db_id)await _supa('DELETE','reproducao_estagios',null,'?id=eq.'+e.db_id);
+  reproducaoEstagios.splice(ei,1);renderReprodutivoVet();_renderPendenciasRepro();toast('Removido do funil.');
+}
+function _renderPendenciasRepro(){
+  const el=document.getElementById('pend-repro-cancelados');if(!el)return;
+  const cc=reproducaoEstagios.map((e,ei)=>({e,ei})).filter(({e})=>e.cancelado_pelo_criador);
+  if(!cc.length){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--red-d);margin-bottom:8px">Cruzamentos cancelados pelo criador</div>'
+    +cc.map(({e,ei})=>{const a=acasalamentos.find(x=>String(x.db_id)===String(e.acasalamento_id));
+    return '<div style="background:var(--red-l);border:1px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
+      +'<div style="font-size:12px;color:var(--red-d);font-weight:500">'+(a?a.egua_nome+' x '+(a.garanhao_nome||'—'):'Cruzamento')+'</div>'
+      +(e.cancelado_em?'<div style="font-size:11px;color:var(--text2);margin-top:2px">em '+fd(e.cancelado_em.slice(0,10))+'</div>':'')
+      +'<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi('+ei+')">✓ Li e entendi</button></div>';}).join('');
+}
+async function _atualizarTodosAbccc(){
+  const cs=animais.filter(a=>a.sbb&&a.sbb.trim()&&isNaCabanha(a));
+  if(!cs.length){toast('Nenhum animal com SBB.');return;}
+  if(!confirm('Atualizar '+cs.length+' animal(is) via ABCCC em background?'))return;
+  const bar=document.createElement('div');bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;height:4px;background:var(--green-l)';
+  const fill=document.createElement('div');fill.style.cssText='height:4px;background:var(--green-d);width:0%;transition:width 0.3s';bar.appendChild(fill);document.body.appendChild(bar);
+  let ok=0,erros=0,conf=0;
+  for(let idx=0;idx<cs.length;idx++){
+    const a=cs[idx];fill.style.width=Math.round(((idx+1)/cs.length)*100)+'%';
+    try{
+      const res=await fetch(SUPABASE_URL+'/functions/v1/buscar-abccc?sbb='+encodeURIComponent(a.sbb.trim()),{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+AUTH_TOKEN},signal:AbortSignal.timeout(15000)});
+      if(!res.ok){erros++;continue;}const d=await res.json();if(d?.encontrado!=='sim'){erros++;continue;}
+      const p={abccc_atualizado_em:new Date().toISOString()};
+      if(d.nome&&d.nome!==a.nome){a.nome=d.nome;p.nome=d.nome;}
+      if(d.rp&&d.rp!==a.rp){a.rp=d.rp;p.rp=d.rp;}
+      if(d.pai&&d.pai!==a.pai){a.pai=d.pai;p.pai=d.pai;}
+      if(d.mae&&d.mae!==a.mae){a.mae=d.mae;p.mae=d.mae;}
+      if(d.sbb_pai&&!a.sbb_pai){a.sbb_pai=d.sbb_pai;p.sbb_pai=d.sbb_pai;}
+      if(d.sbb_mae&&!a.sbb_mae){a.sbb_mae=d.sbb_mae;p.sbb_mae=d.sbb_mae;}
+      if(d.pelagem&&!a.pelagem){a.pelagem=d.pelagem;p.pelagem=d.pelagem;}
+      if(d.status_abccc){a.status_abccc=d.status_abccc;p.status_abccc=d.status_abccc;}
+      if(d.tem_rm!==undefined){a.tem_rm=!!d.tem_rm;p.tem_rm=!!d.tem_rm;}
+      if(d.ultima_transferencia){a.ultima_transferencia=d.ultima_transferencia;p.ultima_transferencia=d.ultima_transferencia;}
+      if(d.situacao==='Confirmado'&&a.confirmacao_status!=='confirmado'){a.confirmacao_status='confirmado';p.confirmacao_status='confirmado';conf++;}
+      if(d.confirmacao_data&&!a.confirmado_em){a.confirmado_em=d.confirmacao_data;p.confirmado_em=d.confirmacao_data;}
+      if(d.situacao==='Confirmado'&&(d.altura||d.torax||d.canela)){const jt=getMedidas(animais.indexOf(a)).some(m=>m.contexto==='ABCCC');if(!jt&&a.db_id)await _supa('POST','medidas',{animal_id:a.db_id,data:d.confirmacao_data||new Date().toISOString().slice(0,10),cernelha:d.altura?Number(d.altura):null,torax:d.torax?Number(d.torax):null,canela:d.canela?Number(d.canela):null,contexto:'ABCCC',resp:'ABCCC'});}
+      if(a.db_id)await _supa('PATCH','animais',p,'?id=eq.'+a.db_id);ok++;
+    }catch(e){erros++;}
+    if(idx<cs.length-1)await new Promise(r=>setTimeout(r,1200));
+  }
+  bar.remove();renderAnimais();toast('ABCCC: '+ok+' atualizados · '+conf+' confirmações · '+erros+' erros');
+}
+
 </script>
 <div id="sync-status" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
 
@@ -13989,150 +14056,6 @@ if(!_checkRecovery()){
 </div>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
-// ─── ABAS SAÚDE & VACINAS ─────────────────────────────────────────────────────
-function saudeTabGrupo(btn, tabId, subId) {
-  btn.closest('.tab-row').querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  ['saude-sub-vac','saude-sub-exam','saude-sub-repro'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-  if (subId) {
-    const sub = document.getElementById(subId);
-    if (sub) {
-      sub.style.display = '';
-      const firstBtn = sub.querySelector('.tab.active') || sub.querySelector('.tab');
-      if (firstBtn) {
-        const onclk = firstBtn.getAttribute('onclick') || '';
-        const m = onclk.match(/'([^']+)'\s*,\s*this/);
-        if (m) { switchTab(firstBtn, m[1]); return; }
-      }
-    }
-  }
-  switchTab(btn, tabId);
-}
-function saudeSubTab(subId, tabId, btn) {
-  const sub = document.getElementById(subId);
-  if (sub) sub.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  switchTab(btn, tabId);
-}
-
-// ─── CANCELAMENTO COM VET ─────────────────────────────────────────────────────
-async function _acasCancelarComVet(i) {
-  const a = acasalamentos[i];
-  if (!a) return;
-  const estagio = reproducaoEstagios.find(e => String(e.acasalamento_id) === String(a.db_id));
-  const emAndamentoVet = estagio && estagio.estagio !== 'controle';
-  if (emAndamentoVet) {
-    const ok = confirm(
-      'Este cruzamento já está em andamento com o veterinário\n\n' +
-      'Égua: ' + a.egua_nome + '\nGaranhão: ' + (a.garanhao_nome||'—') + '\n' +
-      'Estágio: ' + (REPRO_ESTAGIO_LABEL[estagio.estagio]||estagio.estagio) + '\n\n' +
-      'O veterinário será notificado em Pendências.\nDeseja cancelar mesmo assim?'
-    );
-    if (!ok) return;
-  }
-  const motivo = prompt('Motivo do cancelamento (obrigatório):');
-  if (!motivo || !motivo.trim()) return;
-  a.status = 'cancelado';
-  a.motivo_cancelamento = motivo.trim();
-  _dbAtualizarStatusAcasalamento(a, {status:'cancelado', motivo_cancelamento:a.motivo_cancelamento});
-  if (emAndamentoVet && estagio.db_id) {
-    estagio.cancelado_pelo_criador = true;
-    estagio.cancelado_em = new Date().toISOString();
-    await _supa('PATCH','reproducao_estagios',
-      {cancelado_pelo_criador:true, cancelado_em:estagio.cancelado_em},
-      '?id=eq.'+estagio.db_id);
-  }
-  renderAcasalamentos();
-  renderEguasCriaPlanejador();
-  renderReprodutivoVet();
-  _renderPendenciasRepro();
-}
-
-async function _reproLiEntendi(ei) {
-  const e = reproducaoEstagios[ei];
-  if (!e) return;
-  if (!confirm('Confirmar leitura e remover do funil?')) return;
-  if (e.db_id) await _supa('DELETE','reproducao_estagios',null,'?id=eq.'+e.db_id);
-  reproducaoEstagios.splice(ei, 1);
-  renderReprodutivoVet();
-  _renderPendenciasRepro();
-  toast('Cruzamento removido do funil veterinário.');
-}
-
-function _renderPendenciasRepro() {
-  const el = document.getElementById('pend-repro-cancelados');
-  if (!el) return;
-  const cancelados = reproducaoEstagios.map((e,ei) => ({e,ei})).filter(({e}) => e.cancelado_pelo_criador);
-  if (!cancelados.length) { el.innerHTML=''; el.style.display='none'; return; }
-  el.style.display='';
-  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--red-d);margin-bottom:8px">Cruzamentos cancelados pelo criador — requer confirmação de leitura</div>'
-    + cancelados.map(({e,ei}) => {
-      const a = acasalamentos.find(x => String(x.db_id)===String(e.acasalamento_id));
-      return '<div style="background:var(--red-l);border:1px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
-        + '<div style="font-size:12px;color:var(--red-d);font-weight:500">'+(a?a.egua_nome+' x '+(a.garanhao_nome||'—'):'Cruzamento')+'</div>'
-        + (e.cancelado_em?'<div style="font-size:11px;color:var(--text2);margin-top:2px">Cancelado em '+fd(e.cancelado_em.slice(0,10))+'</div>':'')
-        + '<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi('+ei+')">✓ Li e entendi</button>'
-        + '</div>';
-    }).join('');
-}
-
-// ─── ATUALIZAÇÃO ABCCC EM LOTE ────────────────────────────────────────────────
-async function _atualizarTodosAbccc() {
-  const comSbb = animais.filter(a => a.sbb && a.sbb.trim() && isNaCabanha(a));
-  if (!comSbb.length) { toast('Nenhum animal com SBB cadastrado.'); return; }
-  if (!confirm('Atualizar dados de '+comSbb.length+' animal(is) via ABCCC em background?')) return;
-  const barEl = document.createElement('div');
-  barEl.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;height:4px;background:var(--green-l)';
-  const fillEl = document.createElement('div');
-  fillEl.style.cssText='height:4px;background:var(--green-d);width:0%;transition:width 0.3s';
-  barEl.appendChild(fillEl);
-  document.body.appendChild(barEl);
-  let ok=0,erros=0,confirmados=0;
-  for (let idx=0; idx<comSbb.length; idx++) {
-    const a=comSbb[idx];
-    fillEl.style.width=Math.round(((idx+1)/comSbb.length)*100)+'%';
-    try {
-      const res = await fetch(SUPABASE_URL+'/functions/v1/buscar-abccc?sbb='+encodeURIComponent(a.sbb.trim()),
-        {headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+AUTH_TOKEN},signal:AbortSignal.timeout(15000)});
-      if (!res.ok){erros++;continue;}
-      const d=await res.json();
-      if (d?.encontrado!=='sim'){erros++;continue;}
-      const patch={abccc_atualizado_em:new Date().toISOString()};
-      if(d.nome&&d.nome!==a.nome){a.nome=d.nome;patch.nome=d.nome;}
-      if(d.rp&&d.rp!==a.rp){a.rp=d.rp;patch.rp=d.rp;}
-      if(d.pai&&d.pai!==a.pai){a.pai=d.pai;patch.pai=d.pai;}
-      if(d.mae&&d.mae!==a.mae){a.mae=d.mae;patch.mae=d.mae;}
-      if(d.sbb_pai&&!a.sbb_pai){a.sbb_pai=d.sbb_pai;patch.sbb_pai=d.sbb_pai;}
-      if(d.sbb_mae&&!a.sbb_mae){a.sbb_mae=d.sbb_mae;patch.sbb_mae=d.sbb_mae;}
-      if(d.pelagem&&!a.pelagem){a.pelagem=d.pelagem;patch.pelagem=d.pelagem;}
-      if(d.status_abccc){a.status_abccc=d.status_abccc;patch.status_abccc=d.status_abccc;}
-      if(d.tem_rm!==undefined){a.tem_rm=!!d.tem_rm;patch.tem_rm=!!d.tem_rm;}
-      if(d.ultima_transferencia){a.ultima_transferencia=d.ultima_transferencia;patch.ultima_transferencia=d.ultima_transferencia;}
-      if(d.situacao==='Confirmado'&&a.confirmacao_status!=='confirmado'){
-        a.confirmacao_status='confirmado';patch.confirmacao_status='confirmado';confirmados++;
-      }
-      if(d.confirmacao_data&&!a.confirmado_em){a.confirmado_em=d.confirmacao_data;patch.confirmado_em=d.confirmacao_data;}
-      if(d.situacao==='Confirmado'&&(d.altura||d.torax||d.canela)){
-        const jaTem=getMedidas(animais.indexOf(a)).some(m=>m.contexto==='ABCCC');
-        if(!jaTem&&a.db_id)await _supa('POST','medidas',{
-          animal_id:a.db_id,data:d.confirmacao_data||new Date().toISOString().slice(0,10),
-          cernelha:d.altura?Number(d.altura):null,torax:d.torax?Number(d.torax):null,
-          canela:d.canela?Number(d.canela):null,contexto:'ABCCC',resp:'ABCCC'});
-      }
-      if(a.db_id)await _supa('PATCH','animais',patch,'?id=eq.'+a.db_id);
-      ok++;
-    } catch(e){erros++;}
-    if(idx<comSbb.length-1)await new Promise(r=>setTimeout(r,1200));
-  }
-  barEl.remove();
-  renderAnimais();
-  toast('ABCCC: '+ok+' atualizados · '+confirmados+' confirmações · '+erros+' erros');
-}
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
