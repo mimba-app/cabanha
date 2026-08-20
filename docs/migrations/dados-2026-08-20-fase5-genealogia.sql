@@ -206,7 +206,9 @@ begin
       values (
         v_sbb, coalesce(nullif(trim(v_linha->>'nome'), ''), v_sbb),
         nullif(trim(v_linha->>'sexo'), ''),
-        nullif(v_linha->>'nasc', '')::date,
+        -- Catálogos vêm em DD/MM/YYYY (padrão BR), não no formato ISO que ::date
+        -- assume por padrão — cast direto ia falhar ou trocar dia/mês silenciosamente.
+        to_date(nullif(v_linha->>'nasc', ''), 'DD/MM/YYYY'),
         v_sbb_pai, v_sbb_mae, 'catalogo_pdf'
       )
       on conflict (sbb) do update set
