@@ -293,7 +293,11 @@ begin
   -- Fiel ao desenho original; a única mudança aqui é incluir ap.m1=v_m1 na soma
   -- (ausente no rascunho original — 5 termos em vez dos 6 que os comentários do
   -- próprio autor descrevem; oversight, não redesenho).
-  select jsonb_agg(m order by (m->>'score')::numeric desc)
+  -- CORREÇÃO 3 (achada só ao testar com dado real, presente já no rascunho
+  -- original): `m` aqui é o RECORD da subquery, não jsonb ainda — `m->>'score'`
+  -- só funciona depois que jsonb_agg já converteu a linha. ORDER BY precisa
+  -- referenciar a coluna de verdade (m.score, já numeric), não o operador jsonb.
+  select jsonb_agg(m order by m.score desc)
   into v_matches
   from (
     select
