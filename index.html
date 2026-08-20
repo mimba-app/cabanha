@@ -8874,6 +8874,13 @@ async function _atualizarTodosAbccc() {
       const d = await res.json();
       console.log('[ABCCC]', a.nome, d?.encontrado, d?.situacao||'');
       if (d?.encontrado !== 'sim') { erros++; continue; }
+      // Proteção crítica: verificar se o SBB retornado bate com o enviado
+      // Se a ABCCC retornar outro animal, não atualizar
+      if (d.sbb && d.sbb.toUpperCase() !== a.sbb.toUpperCase()) {
+        console.warn('[ABCCC] SBB divergente para', a.nome, '— enviou', a.sbb, 'recebeu', d.sbb, '— ignorando');
+        erros++;
+        continue;
+      }
 
       const patch = { abccc_atualizado_em: new Date().toISOString() };
       if (d.nome  && d.nome  !== a.nome)  { a.nome  = d.nome;  patch.nome  = d.nome; }
