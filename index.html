@@ -4013,11 +4013,13 @@ function abrirLaudo(b64, nome, tipo) {
 function _emh(btn) {
   const ai = parseInt(btn.getAttribute('data-ai'));
   const di = btn.getAttribute('data-di');
-  if (!di) return;
-  // Buscar a medição pelo db_id em todos os índices de medidas
+  console.log('[_emh] ai=', ai, 'di=', di);
+  if (!di) { console.log('[_emh] sem db_id'); return; }
+  console.log('[_emh] medidas keys:', Object.keys(medidas));
   for (const [ki, lista] of Object.entries(medidas)) {
+    console.log('[_emh] lista['+ki+'] db_ids:', lista.map(m=>m.db_id));
     const mi = lista.findIndex(m => m.db_id === di);
-    if (mi >= 0) { abrirEditarMedida(parseInt(ki), mi); return; }
+    if (mi >= 0) { console.log('[_emh] encontrado ki='+ki+' mi='+mi); abrirEditarMedida(parseInt(ki), mi); return; }
   }
   toast('Medição não encontrada. Recarregue a página.');
 }
@@ -4073,7 +4075,9 @@ async function salvarEdicaoMedida() {
   reg.resp     = document.getElementById('rm-resp').value || null;
   reg.obs      = document.getElementById('rm-obs').value || null;
   // Persistir no banco
+  console.log('[salvarEdicaoMedida] reg.db_id=', reg?.db_id, 'data=', data);
   if (reg.db_id) {
+    console.log('[salvarEdicaoMedida] enviando PATCH');
     await _supa('PATCH', 'medidas', {
       data: reg.data, contexto: reg.contexto,
       cernelha: reg.cernelha ? Number(reg.cernelha) : null,
