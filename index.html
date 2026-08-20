@@ -8702,12 +8702,15 @@ function _medChartDraw(chartId, legendId, medida, animalIdx) {
       if (!pts.length) return;
       const ptVals = pts.map(m => m[k]);
       const ptLabels = pts.map(m => fd(m.data));
+      // Alinhar data e cores pelo array de labels (nulls onde não há dado)
+      const alignedData = labels.map(l => { const i = ptLabels.indexOf(l); return i >= 0 ? ptVals[i] : null; });
+      const alignedCors = alignedData.map(v => v === null ? 'transparent' : (cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor));
       datasets.push({
         label: cfg.label + ' (m)',
-        data: labels.map(l => { const i = ptLabels.indexOf(l); return i >= 0 ? ptVals[i] : null; }),
+        data: alignedData,
         borderColor: cfg.cor, borderWidth: 2,
-        pointBackgroundColor: ptVals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor),
-        pointBorderColor: ptVals.map(v => cfg.min ? (v < cfg.min ? clrRed : clrGreen) : cfg.cor),
+        pointBackgroundColor: alignedCors,
+        pointBorderColor: alignedCors,
         pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: false, spanGaps: false,
       });
     });
@@ -9021,11 +9024,16 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   // Calcular dados esperados para cernelha
   const espC = meses !== null ? _alturaEsperadaCrioulo(meses, animal.sexo) : null;
 
-  const linhasMedidas = ult
+  const _linhasGeradas = ult
     ? _linhaMedida('Cernelha', ult.cernelha, pad.cernelha_min, pad.cernelha_max, null, espC?.media, espC?.dp)
       + _linhaMedida('Tórax',   ult.torax,    pad.torax_min,    null,              _CURVA_TORAX,  null, null)
       + _linhaMedida('Canela',  ult.canela,   pad.canela_min,   null,              _CURVA_CANELA, null, null)
-    : '<div style="font-size:12px;color:var(--text3);padding:8px 0">Sem medidas registradas. Registre a primeira medida para ver a projeção.</div>';
+    : '';
+  const linhasMedidas = _linhasGeradas
+    ? _linhasGeradas
+    : '<div style="font-size:12px;color:var(--text3);padding:8px 0">'
+      + (ult ? 'Medição registrada apenas para peso — registre cernelha, tórax ou canela para ver a projeção de confirmação.' : 'Sem medidas registradas. Registre a primeira medida para ver a projeção.')
+      + '</div>';
 
   const idxAnimal = i;
   const botoesAcao = modoCompacto ? '' :
