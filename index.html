@@ -361,6 +361,7 @@
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
   .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  @keyframes ac-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
   .kanban-card-data { font-size:11px; font-weight:600; margin-top:4px; }
@@ -5216,9 +5217,9 @@ function _renderDetCorpo(i, editando) {
             ${piquetes.filter(p=>p.ativo).map(p=>'<option value="'+p.db_id+'"'+(a.piquete_id===p.db_id?' selected':'')+'>'+p.nome+'</option>').join('')}
           </select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Mãe</label>
-          <input id="ed-mae" value="${a.mae||''}" style="width:100%;font-size:12px" placeholder="Nome da mãe"></div>
+          <input id="ed-mae" value="${a.mae||''}" style="width:100%;font-size:12px" placeholder="Preenchido via SBB" readonly></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pai</label>
-          <input id="ed-pai" value="${a.pai||''}" style="width:100%;font-size:12px" placeholder="Nome do pai"></div>
+          <input id="ed-pai" value="${a.pai||''}" style="width:100%;font-size:12px" placeholder="Preenchido via SBB" readonly></div>
         <div class="form-group" style="grid-column:1/-1"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Observações</label>
           <input id="ed-obs" value="${a.obs||''}" style="width:100%;font-size:12px" placeholder="Observações"></div>
         <div class="form-group" style="grid-column:1/-1">
@@ -8297,7 +8298,7 @@ function renderFontesCobertura() {
         ${f.obs ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Obs: ${f.obs}</div>` : ''}
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
           ${(f.status === 'ativa' && disponivel > 0) ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${i})">Negociar</button>` : ''}
-          <button class="btn btn-sm" onclick="editFonteCobertura(${i})">editar</button>
+          <button class="btn btn-sm" onclick="editFonteCobertura(${i})">✏ Ver / Editar</button>
           <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirFonteCobertura(${i})">🗑</button>
         </div>
       </div>`;
@@ -8715,9 +8716,18 @@ function _initMedChart(animalIdx) {
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
 
-// Percentuais de desenvolvimento por faixa de idade (meses) — curva Crioulo UFPEL
-// Cernelha é mais rápida; tórax e canela seguem curva similar mas mais conservadora
-const _CURVA_CERNELHA = [[0,0.65],[3,0.74],[6,0.82],[9,0.87],[12,0.91],[15,0.94],[18,0.96],[21,0.98],[24,1.0]];
+// Tabela real de desenvolvimento Crioulo — dados Thiago Persici / técnicos ABCCC
+// Altura média por idade em meses (m) com desvio padrão
+const _TABELA_ALTURA_CRIOULO = {
+  12:[1.25,0.01],13:[1.27,0.02],14:[1.28,0.02],15:[1.29,0.02],
+  16:[1.30,0.01],17:[1.32,0.01],18:[1.33,0.01],19:[1.34,0.01],
+  20:[1.35,0.01],21:[1.36,0.02],22:[1.37,0.02],23:[1.38,0.02],24:[1.39,0.02],
+};
+// Curvas por sexo — percentual da meta adulta (macho 1.44m | fêmea 1.43m)
+const _CURVA_CERNELHA_MACHO = [[0,0.62],[6,0.79],[12,0.868],[13,0.882],[14,0.889],[15,0.896],[16,0.903],[17,0.917],[18,0.924],[19,0.931],[20,0.938],[21,0.944],[22,0.951],[23,0.958],[24,0.965],[36,1.0]];
+const _CURVA_CERNELHA_FEMEA = [[0,0.62],[6,0.79],[12,0.874],[13,0.888],[14,0.895],[15,0.902],[16,0.909],[17,0.923],[18,0.930],[19,0.937],[20,0.944],[21,0.951],[22,0.958],[23,0.965],[24,0.972],[36,1.0]];
+// Mantém alias para compatibilidade com código existente
+const _CURVA_CERNELHA = _CURVA_CERNELHA_MACHO;
 const _CURVA_TORAX    = [[0,0.60],[3,0.70],[6,0.79],[9,0.85],[12,0.90],[15,0.93],[18,0.95],[21,0.97],[24,1.0]];
 const _CURVA_CANELA   = [[0,0.62],[3,0.72],[6,0.80],[9,0.86],[12,0.90],[15,0.93],[18,0.95],[21,0.97],[24,1.0]];
 
@@ -8748,6 +8758,36 @@ function _projetarMedida(valorAtual, meses, curva) {
   return Math.round((valorAtual / pct) * 1000) / 1000; // 3 casas
 }
 
+
+// Análise real da cernelha vs tabela de referência Crioulo por idade
+function _alturaEsperadaCrioulo(meses, sexo) {
+  if (meses >= 12 && meses <= 24 && _TABELA_ALTURA_CRIOULO[meses]) {
+    const [media, dp] = _TABELA_ALTURA_CRIOULO[meses];
+    return {media, dp};
+  }
+  const isMacho = (sexo||'').toLowerCase().includes('macho');
+  const curva = isMacho ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+  const meta = isMacho ? 1.44 : 1.43;
+  const pct = _interpolarCurva(curva, meses);
+  return {media: Math.round(pct * meta * 1000)/1000, dp: 0.02};
+}
+
+function _analiseCernelha(valorAtual, meses, sexo) {
+  if (!valorAtual || meses === null) return null;
+  const esp = _alturaEsperadaCrioulo(meses, sexo);
+  const pad = (sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+  const desvio = Math.round((valorAtual - esp.media) * 100) / 100;
+  const isMacho = (sexo||'').toLowerCase().includes('macho');
+  const curva = isMacho ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+  const proj = _projetarMedida(valorAtual, meses, curva);
+  const ok = proj !== null && proj >= pad.cernelha_min;
+  return {
+    esperado: esp.media, dp: esp.dp, desvio,
+    proj, ok,
+    status: desvio >= 0 ? 'ok' : desvio >= -esp.dp ? 'atencao' : 'risco',
+  };
+}
+
 // Calcula status de confirmação automático baseado em medidas e idade
 function _calcStatusConfirmacao(animal) {
   // Se criador já decidiu manualmente, respeitar
@@ -8773,7 +8813,8 @@ function _calcStatusConfirmacao(animal) {
   }
 
   // < 24 meses: projeção
-  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _CURVA_CERNELHA) : null;
+  const _curvaC = (animal.sexo||''). toLowerCase().includes('macho') ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _curvaC) : null;
   const projT  = ult.torax    ? _projetarMedida(ult.torax,    meses, _CURVA_TORAX)    : null;
   const projCa = ult.canela   ? _projetarMedida(ult.canela,   meses, _CURVA_CANELA)   : null;
 
@@ -8986,11 +9027,11 @@ function _nomePiquete(id) {
 // quando uma tentativa é atualizada com resultado='prenha' (Fase 3 — isso é
 // o gatilho de decremento do saldo da fonte, calculado em _saldoFonteCobertura).
 const AC_STATUS_COLS = [
-  {status:'rascunho', label:'Rascunho'},
-  {status:'simulado',  label:'Simulado'},
-  {status:'aprovado',  label:'Aprovado'},
-  {status:'em_curso',  label:'Em Curso'},
-  {status:'confirmado',label:'Concluído'},
+  {status:'rascunho',  label:'Rascunho',  bg:'var(--bg3)',     border:'var(--border2)', txt:'var(--text2)', badgeBg:'var(--text3)',   badgeTxt:'var(--bg)'},
+  {status:'simulado',  label:'Simulado',  bg:'var(--blue-l)', border:'var(--blue)',    txt:'var(--blue-d)',badgeBg:'var(--blue)',    badgeTxt:'#fff'},
+  {status:'aprovado',  label:'Aprovado',  bg:'var(--amber-l)',border:'var(--amber)',   txt:'var(--amber-d)',badgeBg:'var(--amber)',  badgeTxt:'#fff'},
+  {status:'em_curso',  label:'Em curso',  bg:'var(--green-l)',border:'var(--green)',   txt:'var(--green-d)',badgeBg:'var(--green)',  badgeTxt:'#fff', destaque:true},
+  {status:'confirmado',label:'Concluído', bg:'var(--green-l)',border:'var(--green-d)',txt:'var(--green-d)',badgeBg:'var(--green-d)',badgeTxt:'#fff'},
 ];
 const AC_TIPO_LABEL = {Natural:'Natural', IA:'IA', IATF:'IATF', TE:'TE', PIV:'PIV'};
 
@@ -9454,7 +9495,20 @@ function _confirmarResultadoTentativa() {
   renderGestacoesNovo();
 }
 
-function _acCard(a, i) {
+
+function _acEtapaVet(a) {
+  const est = reproducaoEstagios.find(e => String(e.acasalamento_id) === String(a.db_id));
+  if (!est) return {label:'Aguardando veterinário', bg:'var(--bg3)', border:'var(--border2)', cor:'var(--text2)'};
+  const MAP = {
+    controle:    {label:'Controle inicial',               bg:'var(--bg3)',     border:'var(--border2)', cor:'var(--text2)'},
+    inseminacao: {label:'Inseminação / Cruzamento',       bg:'var(--blue-l)', border:'var(--blue)',    cor:'var(--blue-d)'},
+    ovuladas:    {label:'Ovulou — aguardando DG',         bg:'var(--amber-l)',border:'var(--amber)',   cor:'var(--amber-d)'},
+    dg_precoce:  {label:'DG — aguardando confirmação',    bg:'var(--green-l)',border:'var(--green)',   cor:'var(--green-d)'},
+  };
+  return MAP[est.estagio] || {label:'Em andamento', bg:'var(--blue-l)', border:'var(--blue)', cor:'var(--blue-d)'};
+}
+
+function _acCard(a, i, col) {
   // Reprodutivo v4, Fase 5 (spec 4): "+ Registrar tentativa" saiu daqui — o acompanhamento de
   // inseminação/monta (e a decisão do tipo de cobertura) migrou pro funil do veterinário
   // (Saúde & Vacinas → aba Reprodutivo), que nasce sozinho quando o acasalamento é aprovado.
@@ -9474,23 +9528,32 @@ function _acCard(a, i) {
       }).join('')}
     </div>` : '';
 
-  return `<div class="kanban-card">
-    <div class="kanban-card-nome">${a.egua_nome}</div>
-    <div class="kanban-card-info">
-      Garanhão: ${a.garanhao_nome || '—'}<br>
-      ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || 'Tipo: a definir pelo vet'} · Ciclo ${a.ciclo || '—'}<br>
-      Tentativas: ${tts.length}
-      ${a.veterinario_nome ? '<br>Vet: ' + a.veterinario_nome : ''}
-      ${a.status === 'cancelado' && a.motivo_cancelamento ? '<br>Motivo: ' + a.motivo_cancelamento : ''}
-    </div>
-    ${htmlTentativas}
-    <div class="kanban-card-actions">
-      ${a.status === 'rascunho' ? `<button class="btn btn-sm" onclick="acasSimular(${i})">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'simulado' ? `<button class="btn btn-sm" onclick="acasAprovar(${i})">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'aprovado' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'em_curso' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-    </div>
-  </div>`;
+    let etapaHtml = '';
+  if (col && col.destaque) {
+    const et = _acEtapaVet(a);
+    etapaHtml = '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:5px 9px;background:'+et.bg+';border:0.5px solid '+et.border+';border-radius:var(--radius)">'
+      + '<span style="width:7px;height:7px;border-radius:50%;background:'+et.cor+';flex-shrink:0;animation:ac-pulse 2s infinite"></span>'
+      + '<span style="color:'+et.cor+';font-weight:500;font-size:11px">'+et.label+'</span></div>';
+  }
+  const cardBorder = col && col.destaque ? ' style="border-color:var(--green)"' : '';
+  return '<div class="kanban-card"'+cardBorder+'>'
+    + '<div class="kanban-card-nome">'+a.egua_nome+'</div>'
+    + '<div class="kanban-card-info">'
+    + 'Garanhão: '+(a.garanhao_nome||'—')+'<br>'
+    + (AC_TIPO_LABEL[a.tipo_cobertura]||a.tipo_cobertura||'Tipo: a definir pelo vet')+' · Ciclo '+(a.ciclo||'—')+'<br>'
+    + 'Tentativas: '+tts.length
+    + (a.veterinario_nome ? '<br>Vet: '+a.veterinario_nome : '')
+    + (a.status==='cancelado'&&a.motivo_cancelamento ? '<br>Motivo: '+a.motivo_cancelamento : '')
+    + '</div>'
+    + etapaHtml
+    + htmlTentativas
+    + '<div class="kanban-card-actions">'
+    + (a.status==='rascunho' ? `<button class="btn btn-sm" onclick="acasSimular(${i})">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : '')
+    + (a.status==='simulado' ? `<button class="btn btn-sm" onclick="acasAprovar(${i})">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : '')
+    + (a.status==='aprovado' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : '')
+    + (a.status==='em_curso' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : '')
+    + '</div>'
+    + '</div>';
 }
 
 // Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
@@ -9579,10 +9642,14 @@ function renderAcasalamentos() {
     el.innerHTML = '<div class="kanban-board" style="grid-template-columns:repeat(5,1fr)">' +
       AC_STATUS_COLS.map(col => {
         const cards = ativos.filter(a => a.status === col.status);
-        return `<div class="kanban-col kanban-col-emdia">
-          <div class="kanban-col-header"><span>${col.label}</span><span class="kanban-count">${cards.length}</span></div>
-          <div class="kanban-cards">${cards.length ? cards.map(a => _acCard(a, acasalamentos.indexOf(a))).join('') : '<div class="kanban-empty">Nenhum</div>'}</div>
-        </div>`;
+        const borda = col.destaque ? `2px solid ${col.border}` : `0.5px solid ${col.border}`;
+        return '<div style="border-radius:10px;overflow:hidden;border:'+borda+'">'
+          + '<div style="padding:9px 12px;font-size:11px;font-weight:500;display:flex;justify-content:space-between;align-items:center;background:'+col.bg+';color:'+col.txt+'">'
+          + '<span>'+col.label+'</span>'
+          + '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:'+col.badgeBg+';color:'+col.badgeTxt+'">'+cards.length+'</span>'
+          + '</div>'
+          + '<div class="kanban-cards">'+(cards.length ? cards.map(a => _acCard(a, acasalamentos.indexOf(a), col)).join('') : '<div class="kanban-empty">Nenhum</div>')+'</div>'
+          + '</div>';
       }).join('') + '</div>';
   }
 
