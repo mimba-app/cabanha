@@ -2486,7 +2486,7 @@
     <div id="rm-padrão-info" style="margin-top:8px;padding:8px 10px;background:var(--blue-l);border-radius:var(--radius);font-size:11px;color:var(--blue-d)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="7" width="20" height="10" rx="1"/><path d="M6 7v3M10 7v5M14 7v3M18 7v5"/></svg> <strong>Padrão ABCCC:</strong> Machos — cernelha 1,40–1,50m · tórax ≥1,68m · canela ≥0,18m &nbsp;|&nbsp; Fêmeas — cernelha 1,38–1,48m · tórax ≥1,70m · canela ≥0,175m
     </div>
-    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-reg-med');document.getElementById('rm-modal-titulo').textContent='Registrar medidas';document.getElementById('rm-btn-salvar').textContent='Salvar';document.getElementById('rm-btn-salvar').onclick=salvarMedida;">Cancelar</button><button class="btn btn-primary" onclick="salvarMedida()">Salvar medidas</button></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-reg-med');document.getElementById('rm-titulo').textContent='Registrar medidas';document.getElementById('rm-btn-salvar').textContent='Salvar';document.getElementById('rm-btn-salvar').onclick=salvarMedida;">Cancelar</button><button class="btn btn-primary" id="rm-btn-salvar" onclick="salvarMedida()">Salvar medidas</button></div>
   </div>
 </div>
 
@@ -4033,7 +4033,7 @@ function abrirEditarMedida(animalIdx, medIdx) {
   document.getElementById('rm-resp').value = m.resp || '';
   document.getElementById('rm-obs').value = m.obs || '';
   // Mudar título e botão para modo edição
-  document.getElementById('rm-modal-titulo').textContent = 'Editar medição';
+  document.getElementById('rm-titulo').textContent = 'Editar medição';
   document.getElementById('rm-btn-salvar').textContent = 'Salvar alterações';
   document.getElementById('rm-btn-salvar').onclick = salvarEdicaoMedida;
   openModal('modal-reg-med');
@@ -4071,7 +4071,7 @@ async function salvarEdicaoMedida() {
     }, '?id=eq.' + reg.db_id);
   }
   // Restaurar modal para modo cadastro
-  document.getElementById('rm-modal-titulo').textContent = 'Registrar medidas';
+  document.getElementById('rm-titulo').textContent = 'Registrar medidas';
   document.getElementById('rm-btn-salvar').textContent = 'Salvar';
   document.getElementById('rm-btn-salvar').onclick = salvarMedida;
   window._editMedAnimalIdx = undefined;
