@@ -14019,6 +14019,8 @@ async function _atualizarTodosAbccc(){
       if(a.db_id)await _supa('PATCH','animais',p,'?id=eq.'+a.db_id);ok++;
     }catch(e){erros++;}
     if(idx<cs.length-1)await new Promise(r=>setTimeout(r,1200));
+    // Renovar token a cada 5 animais para evitar expiração de sessão
+    if(idx>0 && idx%5===0) await _garantirTokenValido();
   }
   bar.remove();renderAnimais();toast('ABCCC: '+ok+' atualizados · '+conf+' confirmações · '+erros+' erros');
 }
