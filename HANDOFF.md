@@ -6,6 +6,11 @@
 - **App/produto Mimba:** sessão em `projetos/cabanha` → *"lê o HANDOFF.md e vamos continuar"*. Carregam sozinhos: CLAUDE.md, memória (`MEMORY.md`), subagentes (`revisor-isolamento`, `arquiteto`, `engenheiro-frontend`) e skills (`nova-migration-tenant`, `deploy`, `testar-provisionamento`).
 - **Landing:** sessão em `projetos/mimba-landing` (repo `mimba-app/mimba-landing`, clonado). O `index.html` é um bundle gerado; as páginas `/assinar` e `/obrigado` são hand-authored (editáveis à vontade).
 
+## 📊 Área de Dados (Mimba Dados) — 2026-08-19
+Área de inteligência de dados no Painel Mimba (abas **Dados** e **Inteligência**), restrita a `mimba_staff`.
+Já carregada com **83.778 resultados de provas da ABCCC (1982–2026)**. Documento próprio:
+**`HANDOFF-AREA-DADOS.md`** — leia esse antes de mexer em qualquer coisa `dados_*`, `abccc_*` ou `ref_*`.
+
 ## 🔴 O MAIS IMPORTANTE PRA SABER AGORA
 Toda a maratona de correções desde a apresentação (ver `ROADMAP.md` + seções abaixo) está **só na branch `staging`**, publicada em **`https://mimba-hml.pages.dev/`** via Cloudflare Pages — **nada disso está em produção** (`app.mimba.com.br`, branch `main`) ainda. A `main` só tem o que foi feito antes da `staging` existir. **Decisão pendente há várias sessões: promover `staging` → `main`?** (`git checkout main && git merge staging` + skill `deploy`, depois de testar tudo na URL de staging).
 
