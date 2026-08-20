@@ -4341,8 +4341,8 @@ function renderMedHistorico() {
         const isAbccc = r.contexto === 'ABCCC' || r.resp === 'ABCCC';
         const btnEditar = isAbccc
           ? '<span style="font-size:10px;color:var(--text3)" title="Medição oficial ABCCC">🔒</span>'
-          : (animalIdx >= 0
-              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedidaById(' + animalIdx + ','' + (r.db_id||'') + '')">✏</button>'
+          : (animalIdx >= 0 && r.db_id
+              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" data-aidx="' + animalIdx + '" data-dbid="' + r.db_id + '" onclick="_editMedFromBtn(this)">✏</button>'
               : '');
         return '<tr>'
           + '<td style="padding:6px 10px;font-weight:600">' + r.nomeAnimal + '</td>'
