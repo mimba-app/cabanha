@@ -361,6 +361,7 @@
   .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
   .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  @keyframes ac-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
   .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
   .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
   .kanban-card-data { font-size:11px; font-weight:600; margin-top:4px; }
@@ -774,6 +775,7 @@
   <div class="page-header">
     <div><div class="page-title">Animais</div><div class="page-sub">Plantel completo · dados ABCCC integrados</div></div>
     <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">🔄 Atualizar ABCCC</button>
       <button class="btn" onclick="abrirModalImportarSBB()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Importar por SBB</button>
       <button class="btn btn-primary" onclick="_limparFormNovoAnimal();openModal('modal-novo')">+ Novo animal</button>
     </div>
@@ -851,15 +853,24 @@
     </div>
   </div>
   <div class="tab-row">
-    <button class="tab active" onclick="switchTab(this,'tab-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
-    <button class="tab" onclick="switchTab(this,'tab-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
-    <button class="tab" onclick="switchTab(this,'tab-verm')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
-    <button class="tab" onclick="switchTab(this,'tab-tratamentos')">Tratamentos</button>
-    <button class="tab" onclick="switchTab(this,'tab-hist-vac')">Histórico Vacinas</button>
-    <button class="tab" onclick="switchTab(this,'tab-hist-exam')">Histórico Exames</button>
-    <button class="tab" onclick="switchTab(this,'tab-pendencias')">Pendências <span id="pend-count-badge"></span></button>
-    <button class="tab" onclick="switchTab(this,'tab-reprodutivo-vet')">Reprodutivo</button>
-    <button class="tab" onclick="switchTab(this,'tab-proto-repro')">🧬 Protocolo Reprodutivo</button>
+    <button class="tab active" id="saude-tab-vac" onclick="saudeTabGrupo(this,'tab-vac','saude-sub-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
+    <button class="tab" id="saude-tab-exam" onclick="saudeTabGrupo(this,'tab-exam','saude-sub-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
+    <button class="tab" id="saude-tab-verm" onclick="saudeTabGrupo(this,'tab-verm',null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
+    <button class="tab" id="saude-tab-repro" onclick="saudeTabGrupo(this,'tab-reprodutivo-vet','saude-sub-repro')">🐎 Reprodutivo</button>
+    <button class="tab" id="saude-tab-trat" onclick="saudeTabGrupo(this,'tab-tratamentos',null)">Tratamentos</button>
+    <button class="tab" id="saude-tab-pend" onclick="saudeTabGrupo(this,'tab-pendencias',null)">Pendências <span id="pend-count-badge"></span></button>
+  </div>
+  <div id="saude-sub-vac" class="tab-row" style="background:var(--bg3);border-top:1px solid var(--border);padding:4px 12px;gap:4px">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-vac','tab-vac',this)">Aplicadas</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-vac','tab-hist-vac',this)">Histórico</button>
+  </div>
+  <div id="saude-sub-exam" class="tab-row" style="display:none;background:var(--bg3);border-top:1px solid var(--border);padding:4px 12px;gap:4px">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-exam','tab-exam',this)">Registrados</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-exam','tab-hist-exam',this)">Histórico</button>
+  </div>
+  <div id="saude-sub-repro" class="tab-row" style="display:none;background:var(--bg3);border-top:1px solid var(--border);padding:4px 12px;gap:4px">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-repro','tab-reprodutivo-vet',this)">Funil veterinário</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-repro','tab-proto-repro',this)">Protocolo reprodutivo</button>
   </div>
 
   <!-- KANBAN VACINAS -->
@@ -1045,6 +1056,7 @@
   <!-- PENDÊNCIAS -->
 
   <div id="tab-pendencias"<div id="tab-pendencias" style="display:none">
+  <div id="pend-repro-cancelados" style="display:none;margin-bottom:16px"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px">
       <div style="font-size:12px;color:var(--text2)">Pendências geradas automaticamente ao criar eventos. Clique em "Resolvida" quando regularizado.</div>
       <button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Limpar todas as pendências resolvidas?')){pendencias=pendencias.filter(p=>!p.resolvida);renderPendencias()}">Limpar resolvidas</button>
@@ -1081,7 +1093,7 @@
   <div class="tab-row">
     <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações ativas</button>
     <button class="tab" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
-    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
+    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Cruzamentos</button>
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
     <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
@@ -5216,9 +5228,9 @@ function _renderDetCorpo(i, editando) {
             ${piquetes.filter(p=>p.ativo).map(p=>'<option value="'+p.db_id+'"'+(a.piquete_id===p.db_id?' selected':'')+'>'+p.nome+'</option>').join('')}
           </select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Mãe</label>
-          <input id="ed-mae" value="${a.mae||''}" style="width:100%;font-size:12px" placeholder="Nome da mãe"></div>
+          <input id="ed-mae" value="${a.mae||''}" style="width:100%;font-size:12px" placeholder="Preenchido via SBB" readonly></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pai</label>
-          <input id="ed-pai" value="${a.pai||''}" style="width:100%;font-size:12px" placeholder="Nome do pai"></div>
+          <input id="ed-pai" value="${a.pai||''}" style="width:100%;font-size:12px" placeholder="Preenchido via SBB" readonly></div>
         <div class="form-group" style="grid-column:1/-1"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Observações</label>
           <input id="ed-obs" value="${a.obs||''}" style="width:100%;font-size:12px" placeholder="Observações"></div>
         <div class="form-group" style="grid-column:1/-1">
@@ -7970,7 +7982,7 @@ const PROTO_TIPO_ETAPA_LABEL = {vacina:'Vacina', hormonio:'Hormônio', exame:'Ex
 // Reprodutivo v4, Fase 5 (spec 4): kanban do veterinário — 1:1 com acasalamentos, criado quando
 // o criador aprova o planejamento (libera pro funil). estagio: controle→inseminacao→ovuladas→dg_precoce.
 let reproducaoEstagios = [];
-const REPRO_ESTAGIO_LABEL = {controle:'Controle', inseminacao:'Inseminação/Cruzamento', ovuladas:'Ovuladas', dg_precoce:'DG precoce'};
+const REPRO_ESTAGIO_LABEL = {controle:'Controle', inseminacao:'Inseminação/Cruzamento', ovuladas:'Ovuladas', dg_precoce:'Diagnóstico Gestacional (DG)'};
 // Atividades soltas do veterinário (medicação/toque/ultrassom/comentário) por acasalamento,
 // em qualquer ponto do funil — inclusive depois de virar gestação real.
 let reproducaoAtividades = [];
@@ -8297,7 +8309,7 @@ function renderFontesCobertura() {
         ${f.obs ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Obs: ${f.obs}</div>` : ''}
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
           ${(f.status === 'ativa' && disponivel > 0) ? `<button class="btn btn-sm" style="color:var(--green-d);border-color:var(--green)" onclick="abrirModalNegociarCobertura(${i})">Negociar</button>` : ''}
-          <button class="btn btn-sm" onclick="editFonteCobertura(${i})">editar</button>
+          <button class="btn btn-sm" onclick="editFonteCobertura(${i})">✏ Ver / Editar</button>
           <button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="excluirFonteCobertura(${i})">🗑</button>
         </div>
       </div>`;
@@ -8715,15 +8727,34 @@ function _initMedChart(animalIdx) {
 
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
 
-// Percentuais de desenvolvimento por faixa de idade (meses) — curva Crioulo UFPEL
-// Cernelha é mais rápida; tórax e canela seguem curva similar mas mais conservadora
-const _CURVA_CERNELHA = [[0,0.65],[3,0.74],[6,0.82],[9,0.87],[12,0.91],[15,0.94],[18,0.96],[21,0.98],[24,1.0]];
+// Curva real de desenvolvimento Crioulo — tabela Thiago Persici / ABCCC
+// Valores de altura (m) por idade (meses) — média de potros Crioulo
+// Fonte: tabela de desenvolvimento de potros utilizada por técnicos ABCCC
+const _TABELA_ALTURA_CRIOULO = {
+  // [meses]: [altura_media_m, desvio_padrao]
+  12:[1.25,0.01], 13:[1.27,0.02], 14:[1.28,0.02], 15:[1.29,0.02],
+  16:[1.30,0.01], 17:[1.32,0.01], 18:[1.33,0.01], 19:[1.34,0.01],
+  20:[1.35,0.01], 21:[1.36,0.02], 22:[1.37,0.02], 23:[1.38,0.02],
+  24:[1.39,0.02],
+};
+
+// Percentual de desenvolvimento em relação à meta adulta
+// Macho: meta central ABCCC = 1.44m | Fêmea: 1.43m
+const _CURVA_CERNELHA_MACHO = [
+  [0,0.62],[6,0.79],[12,0.868],[13,0.882],[14,0.889],[15,0.896],
+  [16,0.903],[17,0.917],[18,0.924],[19,0.931],[20,0.938],[21,0.944],
+  [22,0.951],[23,0.958],[24,0.965],[30,0.985],[36,1.0]
+];
+const _CURVA_CERNELHA_FEMEA = [
+  [0,0.62],[6,0.79],[12,0.874],[13,0.888],[14,0.895],[15,0.902],
+  [16,0.909],[17,0.923],[18,0.930],[19,0.937],[20,0.944],[21,0.951],
+  [22,0.958],[23,0.965],[24,0.972],[30,0.988],[36,1.0]
+];
 const _CURVA_TORAX    = [[0,0.60],[3,0.70],[6,0.79],[9,0.85],[12,0.90],[15,0.93],[18,0.95],[21,0.97],[24,1.0]];
 const _CURVA_CANELA   = [[0,0.62],[3,0.72],[6,0.80],[9,0.86],[12,0.90],[15,0.93],[18,0.95],[21,0.97],[24,1.0]];
 
 function _interpolarCurva(curva, meses) {
-  if (meses >= 24) return 1.0;
-  if (meses <= 0)  return curva[0][1];
+  if (meses <= 0) return curva[0][1];
   for (let i = 0; i < curva.length - 1; i++) {
     const [m0, p0] = curva[i], [m1, p1] = curva[i+1];
     if (meses >= m0 && meses <= m1) {
@@ -8731,7 +8762,23 @@ function _interpolarCurva(curva, meses) {
       return p0 + t * (p1 - p0);
     }
   }
-  return 1.0;
+  return curva[curva.length-1][1];
+}
+
+// Retorna a altura esperada para a idade em meses, com desvio padrão
+// Usa a tabela real do Thiago quando disponível, senão interpola a curva
+function _alturaEsperadaCrioulo(meses, sexo) {
+  const isMacho = (sexo||'').toLowerCase().includes('macho');
+  // Tabela direta para 12-24 meses
+  if (meses >= 12 && meses <= 24 && _TABELA_ALTURA_CRIOULO[meses]) {
+    const [media, dp] = _TABELA_ALTURA_CRIOULO[meses];
+    return { media, dp, fonte: 'tabela' };
+  }
+  // Fora da tabela: usar curva
+  const curva = isMacho ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+  const metaAdulta = isMacho ? 1.44 : 1.43;
+  const pct = _interpolarCurva(curva, meses);
+  return { media: Math.round(pct * metaAdulta * 1000) / 1000, dp: 0.02, fonte: 'curva' };
 }
 
 function _idadeMeses(nasc) {
@@ -8746,6 +8793,28 @@ function _projetarMedida(valorAtual, meses, curva) {
   const pct = _interpolarCurva(curva, meses);
   if (pct <= 0) return null;
   return Math.round((valorAtual / pct) * 1000) / 1000; // 3 casas
+}
+
+// Retorna análise de situação para a cernelha baseada na tabela real
+function _analiseCernelha(valorAtual, meses, sexo) {
+  if (!valorAtual || meses === null) return null;
+  const esp = _alturaEsperadaCrioulo(meses, sexo);
+  const pad = (sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+  const desvio = Math.round((valorAtual - esp.media) * 100) / 100; // em metros
+  const desvioDP = esp.dp > 0 ? Math.round((desvio / esp.dp) * 10) / 10 : 0;
+  // Projeção adulta simples
+  const curva = (sexo||'').toLowerCase().includes('macho') ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+  const proj = _projetarMedida(valorAtual, meses, curva);
+  const ok = proj !== null && proj >= pad.cernelha_min;
+  return {
+    esperado: esp.media,
+    dp: esp.dp,
+    desvio,       // metros acima/abaixo do esperado para a idade
+    desvioDP,     // quantos DPs acima/abaixo
+    proj,
+    ok,
+    status: desvio >= 0 ? 'ok' : desvio >= -esp.dp ? 'atencao' : 'risco',
+  };
 }
 
 // Calcula status de confirmação automático baseado em medidas e idade
@@ -8824,24 +8893,43 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
 
   const linhasMedidas = (() => {
     if (!ult) return '<div style="font-size:12px;color:var(--text3)">Sem medidas registradas. Registre a primeira medida para ver a projeção.</div>';
-    const medidas = [
-      { label:'Cernelha', val:ult.cernelha, min:pad.cernelha_min, max:pad.cernelha_max, curva:_CURVA_CERNELHA },
-      { label:'Tórax',    val:ult.torax,    min:pad.torax_min,    max:null,              curva:_CURVA_TORAX },
-      { label:'Canela',   val:ult.canela,   min:pad.canela_min,   max:null,              curva:_CURVA_CANELA },
-    ];
-    return medidas.filter(m => m.val).map(m => {
-      const proj = meses < 24 ? _projetarMedida(m.val, meses, m.curva) : m.val;
-      const ok   = proj !== null && proj >= m.min && (m.max === null || proj <= m.max + 0.02);
-      const margem = proj !== null ? Math.round((proj - m.min) * 100) / 100 : null;
-      const cor  = ok ? 'var(--green-d)' : 'var(--red-d)';
-      const margemStr = margem !== null ? (margem >= 0 ? `+${margem}m` : `${margem}m`) : '';
-      const limStr = m.max ? `${m.min}–${m.max}m` : `≥${m.min}m`;
-      return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text2)">${m.label}</span>
-        <span style="font-family:var(--mono)">${m.val}m${meses < 24 ? ` → <b>${proj}m</b>` : ''}</span>
-        <span style="color:${cor};font-weight:700;font-family:var(--mono)">${margemStr} <span style="font-size:10px;font-weight:400">${limStr}</span></span>
-      </div>`;
-    }).join('');
+    // Cernelha: análise real com tabela de referência Crioulo
+    const analiseC = ult.cernelha ? _analiseCernelha(ult.cernelha, meses, a.sexo) : null;
+    const projtorax  = ult.torax  ? _projetarMedida(ult.torax,  meses, _CURVA_TORAX)  : null;
+    const projcanela = ult.canela ? _projetarMedida(ult.canela, meses, _CURVA_CANELA) : null;
+    const linhas = [];
+    if (analiseC) {
+      const corS = analiseC.status==='ok' ? 'var(--green-d)' : analiseC.status==='atencao' ? 'var(--amber-d)' : 'var(--red-d)';
+      const ico  = analiseC.status==='ok' ? '✓' : '⚠';
+      const dvLabel = analiseC.desvio >= 0
+        ? '+' + Math.round(analiseC.desvio*100) + 'cm acima do esperado para ' + meses + 'm'
+        : Math.round(analiseC.desvio*100) + 'cm abaixo do esperado para ' + meses + 'm';
+      linhas.push('<div style="padding:6px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'
+        + '<span style="font-weight:500;color:var(--text)">Cernelha</span>'
+        + '<span style="font-family:var(--mono);color:'+corS+';font-weight:700">'+ico+' '+ult.cernelha+'m</span>'
+        + '</div>'
+        + '<div style="font-size:11px;color:var(--text2);margin-bottom:2px">Esperado '+meses+'m: '+analiseC.esperado+'m ± '+analiseC.dp+'m · <span style="color:'+corS+'">'+dvLabel+'</span></div>'
+        + (analiseC.proj ? '<div style="font-size:11px;color:'+(analiseC.ok?'var(--green-d)':'var(--red-d)')+'">Projeção adulta: '+analiseC.proj+'m (mín. '+pad.cernelha_min+'m)</div>' : '')
+        + '</div>');
+    }
+    if (ult.torax) {
+      const okT = projtorax !== null && projtorax >= pad.torax_min;
+      linhas.push('<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">'
+        + '<span style="font-weight:500;color:var(--text)">Tórax</span>'
+        + '<span style="font-family:var(--mono)">' + ult.torax + 'm' + (projtorax ? ' → ' + projtorax + 'm' : '') + '</span>'
+        + '<span style="font-size:11px;color:'+(okT?'var(--green-d)':'var(--red-d)')+'">'+(okT?'✓ ok':'⚠ proj. abaixo de '+pad.torax_min+'m')+'</span>'
+        + '</div>');
+    }
+    if (ult.canela) {
+      const okCa = projcanela !== null && projcanela >= pad.canela_min;
+      linhas.push('<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0">'
+        + '<span style="font-weight:500;color:var(--text)">Canela</span>'
+        + '<span style="font-family:var(--mono)">' + ult.canela + 'm' + (projcanela ? ' → ' + projcanela + 'm' : '') + '</span>'
+        + '<span style="font-size:11px;color:'+(okCa?'var(--green-d)':'var(--red-d)')+'">'+(okCa?'✓ ok':'⚠ proj. abaixo de '+pad.canela_min+'m')+'</span>'
+        + '</div>');
+    }
+    return linhas.join('');
   })();
 
   const idxAnimal = animais.indexOf(animal);
@@ -8986,11 +9074,11 @@ function _nomePiquete(id) {
 // quando uma tentativa é atualizada com resultado='prenha' (Fase 3 — isso é
 // o gatilho de decremento do saldo da fonte, calculado em _saldoFonteCobertura).
 const AC_STATUS_COLS = [
-  {status:'rascunho', label:'Rascunho'},
-  {status:'simulado',  label:'Simulado'},
-  {status:'aprovado',  label:'Aprovado'},
-  {status:'em_curso',  label:'Em Curso'},
-  {status:'confirmado',label:'Concluído'},
+  {status:'rascunho',  label:'Rascunho',  bg:'var(--bg3)',     border:'var(--border2)',  txt:'var(--text2)',  badgeBg:'var(--text3)',    badgeTxt:'var(--bg)'},
+  {status:'simulado',  label:'Simulado',  bg:'var(--blue-l)',  border:'var(--blue)',     txt:'var(--blue-d)', badgeBg:'var(--blue)',     badgeTxt:'#fff'},
+  {status:'aprovado',  label:'Aprovado',  bg:'var(--amber-l)', border:'var(--amber)',    txt:'var(--amber-d)',badgeBg:'var(--amber)',    badgeTxt:'#fff'},
+  {status:'em_curso',  label:'Em curso',  bg:'var(--green-l)', border:'var(--green)',    txt:'var(--green-d)',badgeBg:'var(--green)',    badgeTxt:'#fff', destaque:true},
+  {status:'confirmado',label:'Concluído', bg:'var(--green-l)', border:'var(--green-d)',  txt:'var(--green-d)',badgeBg:'var(--green-d)',  badgeTxt:'#fff'},
 ];
 const AC_TIPO_LABEL = {Natural:'Natural', IA:'IA', IATF:'IATF', TE:'TE', PIV:'PIV'};
 
@@ -9217,7 +9305,7 @@ async function _renderSimulacaoAcasalamento() {
   }
 
   // c) Saldo da fonte (real — Fase 3: consumido = acasalamentos confirmados)
-  const {disponivel, total} = _saldoFonteCobertura(fonte);
+  const {disponivel, total, reservado} = _saldoFonteCobertura(fonte);
   const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível${reservado > 0 ? " (" + reservado + " reservada(s) em acasalamentos ativos)" : ""}</div>`;
 
   el.innerHTML = '<div class="card">' + htmlAnteriores + htmlConsang + htmlSaldo + '</div>';
@@ -9462,7 +9550,21 @@ function _confirmarResultadoTentativa() {
   renderGestacoesNovo();
 }
 
-function _acCard(a, i) {
+
+// Calcular etapa veterinária atual — usa reproducaoEstagios (funil do vet em Saúde)
+function _acEtapaVet(a) {
+  const est = reproducaoEstagios.find(e => String(e.acasalamento_id) === String(a.db_id));
+  if (!est) return {label:'Aguardando veterinário', bg:'var(--bg3)', border:'var(--border2)', cor:'var(--text2)'};
+  const MAP = {
+    controle:    {label:'Controle inicial',               bg:'var(--bg3)',     border:'var(--border2)', cor:'var(--text2)'},
+    inseminacao: {label:'Inseminação/Cruzamento',         bg:'var(--blue-l)',  border:'var(--blue)',    cor:'var(--blue-d)'},
+    ovuladas:    {label:'Ovulou — aguardando DG precoce', bg:'var(--amber-l)', border:'var(--amber)',   cor:'var(--amber-d)'},
+    dg_precoce:  {label:'DG — aguardando confirmação',    bg:'var(--green-l)', border:'var(--green)',   cor:'var(--green-d)'},
+  };
+  return MAP[est.estagio] || {label:'Em andamento', bg:'var(--blue-l)', border:'var(--blue)', cor:'var(--blue-d)'};
+}
+
+function _acCard(a, i, col) {
   // Reprodutivo v4, Fase 5 (spec 4): "+ Registrar tentativa" saiu daqui — o acompanhamento de
   // inseminação/monta (e a decisão do tipo de cobertura) migrou pro funil do veterinário
   // (Saúde & Vacinas → aba Reprodutivo), que nasce sozinho quando o acasalamento é aprovado.
@@ -9482,23 +9584,32 @@ function _acCard(a, i) {
       }).join('')}
     </div>` : '';
 
-  return `<div class="kanban-card">
-    <div class="kanban-card-nome">${a.egua_nome}</div>
-    <div class="kanban-card-info">
-      Garanhão: ${a.garanhao_nome || '—'}<br>
-      ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || 'Tipo: a definir pelo vet'} · Ciclo ${a.ciclo || '—'}<br>
-      Tentativas: ${tts.length}
-      ${a.veterinario_nome ? '<br>Vet: ' + a.veterinario_nome : ''}
-      ${a.status === 'cancelado' && a.motivo_cancelamento ? '<br>Motivo: ' + a.motivo_cancelamento : ''}
-    </div>
-    ${htmlTentativas}
-    <div class="kanban-card-actions">
-      ${a.status === 'rascunho' ? `<button class="btn btn-sm" onclick="acasSimular(${i})">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'simulado' ? `<button class="btn btn-sm" onclick="acasAprovar(${i})">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'aprovado' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-      ${a.status === 'em_curso' ? `<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar(${i})">Cancelar</button>` : ''}
-    </div>
-  </div>`;
+  let etapaStyle = '';
+  if (col && col.destaque) {
+    const e = _acEtapaVet(a);
+    etapaStyle = '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;background:'+e.bg+';border:0.5px solid '+e.border+';border-radius:var(--radius);padding:5px 9px">'
+      + '<span style="width:7px;height:7px;border-radius:50%;background:'+e.cor+';flex-shrink:0;animation:ac-pulse 2s infinite"></span>'
+      + '<span style="color:'+e.cor+';font-weight:500;font-size:11px">'+e.label+'</span></div>';
+  }
+  const cardBorder = col?.destaque ? ' style="border-color:var(--green)"' : '';
+  return '<div class="kanban-card"' + cardBorder + '>'
+    + '<div class="kanban-card-nome">'+a.egua_nome+'</div>'
+    + '<div class="kanban-card-info">'
+    + 'Garanhão: '+(a.garanhao_nome||'—')+'<br>'
+    + (AC_TIPO_LABEL[a.tipo_cobertura]||a.tipo_cobertura||'Tipo: a definir pelo vet')+' · Ciclo '+(a.ciclo||'—')+'<br>'
+    + 'Tentativas: '+tts.length
+    + (a.veterinario_nome ? '<br>Vet: '+a.veterinario_nome : '')
+    + (a.status==='cancelado'&&a.motivo_cancelamento ? '<br>Motivo: '+a.motivo_cancelamento : '')
+    + '</div>'
+    + etapaStyle
+    + htmlTentativas
+    + '<div class="kanban-card-actions">'
+    + (a.status==='rascunho' ? '<button class="btn btn-sm" onclick="acasSimular('+i+')">Simular</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + (a.status==='simulado' ? '<button class="btn btn-sm" onclick="acasAprovar('+i+')">Aprovar</button><button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + (a.status==='aprovado' ? '<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + (a.status==='em_curso' ? '<button class="btn btn-sm" style="color:var(--red-d);border-color:var(--red-d)" onclick="acasCancelar('+i+')">Cancelar</button>' : '')
+    + '</div>'
+    + '</div>';
 }
 
 // Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
@@ -9587,9 +9698,13 @@ function renderAcasalamentos() {
     el.innerHTML = '<div class="kanban-board" style="grid-template-columns:repeat(5,1fr)">' +
       AC_STATUS_COLS.map(col => {
         const cards = ativos.filter(a => a.status === col.status);
-        return `<div class="kanban-col kanban-col-emdia">
-          <div class="kanban-col-header"><span>${col.label}</span><span class="kanban-count">${cards.length}</span></div>
-          <div class="kanban-cards">${cards.length ? cards.map(a => _acCard(a, acasalamentos.indexOf(a))).join('') : '<div class="kanban-empty">Nenhum</div>'}</div>
+        const border = col.destaque ? `2px solid ${col.border}` : `0.5px solid ${col.border}`;
+        return `<div style="border-radius:10px;overflow:hidden;border:${border}">
+          <div style="padding:9px 12px;font-size:11px;font-weight:500;display:flex;justify-content:space-between;align-items:center;background:${col.bg};color:${col.txt}">
+            <span>${col.label}</span>
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:${col.badgeBg};color:${col.badgeTxt}">${cards.length}</span>
+          </div>
+          <div class="kanban-cards">${cards.length ? cards.map(a => _acCard(a, acasalamentos.indexOf(a), col)).join('') : '<div class="kanban-empty">Nenhum</div>'}</div>
         </div>`;
       }).join('') + '</div>';
   }
@@ -10180,8 +10295,11 @@ function _reproVetCard(ei) {
     </div>`;
   }
 
-  return `<div class="kanban-card">
-    <div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
+  const bannerC = e.cancelado_pelo_criador
+    ? '<div style="background:var(--red-l);border:1.5px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px"><div style="font-size:12px;font-weight:700;color:var(--red-d)">Criador cancelou este cruzamento</div>'+(e.cancelado_em?'<div style="font-size:11px;color:var(--text2);margin-top:2px">em '+fd(e.cancelado_em.slice(0,10))+'</div>':'')+'<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi('+ei+')">✓ Li e entendi</button></div>'
+    : '';
+  return `<div class="kanban-card"${e.cancelado_pelo_criador?' style="border-color:var(--red)"':''}>
+    ${bannerC}<div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
     <div class="kanban-card-info">
       Garanhão: ${a.garanhao_nome || '—'} · Ciclo ${a.ciclo || '—'}<br>
       ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || '—'}${dias !== null ? ' · ' + dias + 'd no estágio' : ''}
@@ -12066,6 +12184,19 @@ function _mostrarStatusSync(msg, tipo) {
 // ══════════════════════════════════════════════════════════════════════════════
 async function _sincronizarAoLogin() {
   _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
+
+  // Garantir token válido antes do bootstrap — previne "usando dados locais"
+  // causado por sessão expirada (ex: após update ABCCC longo em background)
+  try {
+    await _garantirTokenValido();
+  } catch(e) {
+    // Token irrecuperável — limpar sessão e forçar novo login
+    console.warn('Token inválido, limpando sessão:', e);
+    localStorage.removeItem('mimba_sessao');
+    location.reload();
+    return;
+  }
+
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
   fontesCobertura.length = 0;
@@ -13833,6 +13964,78 @@ _loadUsuarios();
 if(!_checkRecovery()){
   _checkAcessoCodigo();
   _tentarRetomarSessao().then(retomou => { if(!retomou) _carregarEmailLembrado(); });
+}
+
+function saudeTabGrupo(btn,tabId,subId){
+  btn.closest('.tab-row').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['saude-sub-vac','saude-sub-exam','saude-sub-repro'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  if(subId){const sub=document.getElementById(subId);if(sub){sub.style.display='';const fb=sub.querySelector('.tab.active')||sub.querySelector('.tab');if(fb){const m=(fb.getAttribute('onclick')||'').match(/'([^']+)'\s*,\s*this/);if(m){switchTab(fb,m[1]);return;}}}}
+  switchTab(btn,tabId);
+}
+function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
+async function _acasCancelarComVet(i){
+  const a=acasalamentos[i];if(!a)return;
+  const est=reproducaoEstagios.find(e=>String(e.acasalamento_id)===String(a.db_id));
+  const emVet=est&&est.estagio!=='controle';
+  if(emVet&&!confirm('Este cruzamento está em andamento com o veterinário.\nÉgua: '+a.egua_nome+'\nGaranhão: '+(a.garanhao_nome||'—')+'\n\nO vet será notificado em Pendências. Confirma o cancelamento?'))return;
+  const motivo=prompt('Motivo do cancelamento:');if(!motivo||!motivo.trim())return;
+  a.status='cancelado';a.motivo_cancelamento=motivo.trim();
+  _dbAtualizarStatusAcasalamento(a,{status:'cancelado',motivo_cancelamento:a.motivo_cancelamento});
+  if(emVet&&est.db_id){est.cancelado_pelo_criador=true;est.cancelado_em=new Date().toISOString();await _supa('PATCH','reproducao_estagios',{cancelado_pelo_criador:true,cancelado_em:est.cancelado_em},'?id=eq.'+est.db_id);}
+  renderAcasalamentos();renderEguasCriaPlanejador();renderReprodutivoVet();_renderPendenciasRepro();
+}
+async function _reproLiEntendi(ei){
+  const e=reproducaoEstagios[ei];if(!e)return;
+  if(!confirm('Confirmar leitura e remover do funil?'))return;
+  if(e.db_id)await _supa('DELETE','reproducao_estagios',null,'?id=eq.'+e.db_id);
+  reproducaoEstagios.splice(ei,1);renderReprodutivoVet();_renderPendenciasRepro();toast('Removido do funil.');
+}
+function _renderPendenciasRepro(){
+  const el=document.getElementById('pend-repro-cancelados');if(!el)return;
+  const cc=reproducaoEstagios.map((e,ei)=>({e,ei})).filter(({e})=>e.cancelado_pelo_criador);
+  if(!cc.length){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--red-d);margin-bottom:8px">Cruzamentos cancelados pelo criador</div>'
+    +cc.map(({e,ei})=>{const a=acasalamentos.find(x=>String(x.db_id)===String(e.acasalamento_id));
+    return '<div style="background:var(--red-l);border:1px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
+      +'<div style="font-size:12px;color:var(--red-d);font-weight:500">'+(a?a.egua_nome+' x '+(a.garanhao_nome||'—'):'Cruzamento')+'</div>'
+      +(e.cancelado_em?'<div style="font-size:11px;color:var(--text2);margin-top:2px">em '+fd(e.cancelado_em.slice(0,10))+'</div>':'')
+      +'<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi('+ei+')">✓ Li e entendi</button></div>';}).join('');
+}
+async function _atualizarTodosAbccc(){
+  const cs=animais.filter(a=>a.sbb&&a.sbb.trim()&&isNaCabanha(a));
+  if(!cs.length){toast('Nenhum animal com SBB.');return;}
+  if(!confirm('Atualizar '+cs.length+' animal(is) via ABCCC em background?'))return;
+  const bar=document.createElement('div');bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;height:4px;background:var(--green-l)';
+  const fill=document.createElement('div');fill.style.cssText='height:4px;background:var(--green-d);width:0%;transition:width 0.3s';bar.appendChild(fill);document.body.appendChild(bar);
+  let ok=0,erros=0,conf=0;
+  for(let idx=0;idx<cs.length;idx++){
+    const a=cs[idx];fill.style.width=Math.round(((idx+1)/cs.length)*100)+'%';
+    try{
+      const res=await fetch(SUPABASE_URL+'/functions/v1/buscar-abccc?sbb='+encodeURIComponent(a.sbb.trim()),{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+AUTH_TOKEN},signal:AbortSignal.timeout(15000)});
+      if(!res.ok){erros++;continue;}const d=await res.json();if(d?.encontrado!=='sim'){erros++;continue;}
+      const p={abccc_atualizado_em:new Date().toISOString()};
+      if(d.nome&&d.nome!==a.nome){a.nome=d.nome;p.nome=d.nome;}
+      if(d.rp&&d.rp!==a.rp){a.rp=d.rp;p.rp=d.rp;}
+      if(d.pai&&d.pai!==a.pai){a.pai=d.pai;p.pai=d.pai;}
+      if(d.mae&&d.mae!==a.mae){a.mae=d.mae;p.mae=d.mae;}
+      if(d.sbb_pai&&!a.sbb_pai){a.sbb_pai=d.sbb_pai;p.sbb_pai=d.sbb_pai;}
+      if(d.sbb_mae&&!a.sbb_mae){a.sbb_mae=d.sbb_mae;p.sbb_mae=d.sbb_mae;}
+      if(d.pelagem&&!a.pelagem){a.pelagem=d.pelagem;p.pelagem=d.pelagem;}
+      if(d.status_abccc){a.status_abccc=d.status_abccc;p.status_abccc=d.status_abccc;}
+      if(d.tem_rm!==undefined){a.tem_rm=!!d.tem_rm;p.tem_rm=!!d.tem_rm;}
+      if(d.ultima_transferencia){a.ultima_transferencia=d.ultima_transferencia;p.ultima_transferencia=d.ultima_transferencia;}
+      if(d.situacao==='Confirmado'&&a.confirmacao_status!=='confirmado'){a.confirmacao_status='confirmado';p.confirmacao_status='confirmado';conf++;}
+      if(d.confirmacao_data&&!a.confirmado_em){a.confirmado_em=d.confirmacao_data;p.confirmado_em=d.confirmacao_data;}
+      if(d.situacao==='Confirmado'&&(d.altura||d.torax||d.canela)){const jt=getMedidas(animais.indexOf(a)).some(m=>m.contexto==='ABCCC');if(!jt&&a.db_id)await _supa('POST','medidas',{animal_id:a.db_id,data:d.confirmacao_data||new Date().toISOString().slice(0,10),cernelha:d.altura?Number(d.altura):null,torax:d.torax?Number(d.torax):null,canela:d.canela?Number(d.canela):null,contexto:'ABCCC',resp:'ABCCC'});}
+      if(a.db_id)await _supa('PATCH','animais',p,'?id=eq.'+a.db_id);ok++;
+    }catch(e){erros++;}
+    if(idx<cs.length-1)await new Promise(r=>setTimeout(r,1200));
+    // Renovar token a cada 5 animais para evitar expiração de sessão
+    if(idx>0 && idx%5===0) await _garantirTokenValido();
+  }
+  bar.remove();renderAnimais();toast('ABCCC: '+ok+' atualizados · '+conf+' confirmações · '+erros+' erros');
 }
 
 </script>
