@@ -1196,7 +1196,7 @@
         <div id="ac-match-eguas" class="kanban-cards"></div>
       </div>
     </div>
-    <div class="card-title" style="margin:22px 0 8px">Acasalamentos deste ciclo</div>
+    <div class="card-title" style="margin:22px 0 8px">Cruzamentos deste ciclo</div>
     <div id="ac-kanban-content"></div>
     <div id="ac-cancelados-wrap" style="margin-top:1rem">
       <div class="card" style="cursor:pointer" onclick="_toggleCanceladosAcasalamentos()">
@@ -9629,6 +9629,21 @@ let _acAprovarIdx = -1;
 function acasAprovar(i) {
   const a = acasalamentos[i];
   if(!a || a.status !== 'simulado') return;
+
+  // Bloquear se égua tem gestação ativa
+  const gestacaoAtiva = gestacoes.find(g =>
+    String(g.egua_id) === String(a.egua_id) &&
+    g.status !== 'concluida' && g.status !== 'perdida'
+  );
+  if (gestacaoAtiva) {
+    alert(
+      'Não é possível aprovar este cruzamento.\n\n' +
+      a.egua_nome + ' tem uma gestação ativa do ciclo ' + (gestacaoAtiva.ciclo || '—') + '.\n\n' +
+      'Registre o nascimento da cria ou a perda da gestação antes de iniciar um novo cruzamento.'
+    );
+    return;
+  }
+
   _acAprovarIdx = i;
   document.getElementById('ac-aprovar-idx').value = i;
   const selVet = document.getElementById('ac-aprovar-vet');
