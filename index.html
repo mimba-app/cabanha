@@ -12184,6 +12184,19 @@ function _mostrarStatusSync(msg, tipo) {
 // ══════════════════════════════════════════════════════════════════════════════
 async function _sincronizarAoLogin() {
   _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
+
+  // Garantir token válido antes do bootstrap — previne "usando dados locais"
+  // causado por sessão expirada (ex: após update ABCCC longo em background)
+  try {
+    await _garantirTokenValido();
+  } catch(e) {
+    // Token irrecuperável — limpar sessão e forçar novo login
+    console.warn('Token inválido, limpando sessão:', e);
+    localStorage.removeItem('mimba_sessao');
+    location.reload();
+    return;
+  }
+
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
   fontesCobertura.length = 0;
