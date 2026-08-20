@@ -8842,7 +8842,8 @@ function _calcStatusConfirmacao(animal) {
   }
 
   // < 24 meses: projeção
-  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _CURVA_CERNELHA) : null;
+  const _curvaC = (animal.sexo||''). toLowerCase().includes('macho') ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _curvaC) : null;
   const projT  = ult.torax    ? _projetarMedida(ult.torax,    meses, _CURVA_TORAX)    : null;
   const projCa = ult.canela   ? _projetarMedida(ult.canela,   meses, _CURVA_CANELA)   : null;
 
