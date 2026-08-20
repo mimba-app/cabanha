@@ -8942,59 +8942,112 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   const status = _calcStatusConfirmacao(animal);
   if (status === 'nao_confirmado') return '';
 
-  const _ultMed = (() => { const h=getMedidas(animais.indexOf(animal)); return h.length?h.reduce((b,x)=>x.data>b.data?x:b):null; })();
-  const meses = _ultMed?.data ? _idadeMesesNaData(animal.nasc, _ultMed.data) : _idadeMeses(animal.nasc);
-  const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
   const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+  const meses = ult?.data ? _idadeMesesNaData(animal.nasc, ult.data) : _idadeMeses(animal.nasc);
+  const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+  const isMacho = (animal.sexo||'').toLowerCase().includes('macho');
 
-  const corBorda = status === 'em_risco' ? 'var(--red-d)' : status === 'apto_confirmacao' ? 'var(--green-d)' : 'var(--blue-d)';
+  const corBorda = status==='em_risco' ? 'var(--red-d)' : status==='apto_confirmacao' ? 'var(--green-d)' : 'var(--blue-d)';
+  const corBg    = status==='em_risco' ? 'var(--red-l)'  : status==='apto_confirmacao' ? 'var(--green-l)' : 'var(--blue-l)';
   const labelStatus = {
-    'em_desenvolvimento': '📏 Em desenvolvimento',
-    'em_risco': '⚠️ Em risco',
+    'em_desenvolvimento': 'Em desenvolvimento',
+    'em_risco': '⚠ Em risco',
     'apto_confirmacao': '✓ Apto para confirmação',
-    'aguardando_confirmacao': '📋 Marcado para confirmação',
+    'aguardando_confirmacao': 'Marcado para confirmação',
   }[status] || status;
 
-  const linhasMedidas = (() => {
-    if (!ult) return '<div style="font-size:12px;color:var(--text3)">Sem medidas registradas. Registre a primeira medida para ver a projeção.</div>';
-    const medidas = [
-      { label:'Cernelha', val:ult.cernelha, min:pad.cernelha_min, max:pad.cernelha_max, curva:_CURVA_CERNELHA },
-      { label:'Tórax',    val:ult.torax,    min:pad.torax_min,    max:null,              curva:_CURVA_TORAX },
-      { label:'Canela',   val:ult.canela,   min:pad.canela_min,   max:null,              curva:_CURVA_CANELA },
-    ];
-    return medidas.filter(m => m.val).map(m => {
-      const proj = meses < 24 ? _projetarMedida(m.val, meses, m.curva) : m.val;
-      const ok   = proj !== null && proj >= m.min && (m.max === null || proj <= m.max + 0.02);
-      const margem = proj !== null ? Math.round((proj - m.min) * 100) / 100 : null;
-      const cor  = ok ? 'var(--green-d)' : 'var(--red-d)';
-      const margemStr = margem !== null ? (margem >= 0 ? `+${margem}m` : `${margem}m`) : '';
-      const limStr = m.max ? `${m.min}–${m.max}m` : `≥${m.min}m`;
-      return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text2)">${m.label}</span>
-        <span style="font-family:var(--mono)">${m.val}m${meses < 24 ? ` → <b>${proj}m</b>` : ''}</span>
-        <span style="color:${cor};font-weight:700;font-family:var(--mono)">${margemStr} <span style="font-size:10px;font-weight:400">${limStr}</span></span>
-      </div>`;
-    }).join('');
-  })();
+  const dataLabel = ult?.data ? fd(ult.data) : 'sem medição';
 
-  const idxAnimal = animais.indexOf(animal);
-  const botoesAcao = modoCompacto ? '' : `
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-      ${!animal.marcacao_rp_em ? `<button class="btn btn-sm" onclick="_registrarMarcacaoRP(${idxAnimal})" title="Registrar data da marcação física do RP no animal">📌 Registrar marcação RP</button>` : `<span style="font-size:11px;color:var(--text3)">RP marcado em ${fd(animal.marcacao_rp_em)}</span>`}
-      ${status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : ''}
-      <button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>
-    </div>`;
+  // Renderizar linha de medida com barra posicional
+  const _linhaMedida = (label, val, min, max, curva, esp, dpVal) => {
+    if (!val) return '';
+    const curvaC = isMacho ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
+    const curvaReal = label === 'Cernelha' ? curvaC : curva;
+    const proj = meses !== null && meses < 24 ? _projetarMedida(val, meses, curvaReal) : val;
+    const projOk = proj !== null && proj >= min && (max === null || proj <= max + 0.02);
+    const corProj = projOk ? 'var(--green-d)' : 'var(--red-d)';
 
-  return `<div style="border-left:3px solid ${corBorda};padding:10px 12px;margin-top:10px;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:12px;font-weight:700;color:${corBorda}">CONFIRMAÇÃO ABCCC ${labelStatus}</span>
-      ${meses !== null ? `<span style="font-size:11px;color:var(--text3)">${meses} meses${meses < 24 ? ' · projeção adulta' : ''}</span>` : ''}
-    </div>
-    ${linhasMedidas}
-    ${botoesAcao}
-  </div>`;
+    // Posição na barra: range 1.20 a 1.55m para cernelha; 1.40 a 2.00 para tórax; 0.14 a 0.25 para canela
+    const ranges = {
+      'Cernelha': [1.20, 1.55],
+      'Tórax':    [1.40, 2.00],
+      'Canela':   [0.14, 0.25],
+    };
+    const [rMin, rMax] = ranges[label] || [min * 0.85, max || min * 1.3];
+    const pct = v => Math.max(0, Math.min(100, ((v - rMin) / (rMax - rMin)) * 100));
+
+    // Zona esperada para a idade
+    const zonaIni = esp && dpVal ? pct(esp - dpVal) : null;
+    const zonaFim = esp && dpVal ? pct(esp + dpVal) : null;
+    const posAtual = pct(val);
+    const posMin   = pct(min);
+
+    const desvio = esp ? Math.round((val - esp) * 100) / 100 : null;
+    const desvioStr = desvio !== null
+      ? (desvio >= 0 ? '+' + desvio + 'cm' : desvio + 'cm') + ' vs esperado'
+      : '';
+    const corDesvio = desvio !== null && desvio >= -(dpVal||0.02) ? 'var(--green-d)' : 'var(--red-d)';
+
+    const projStr = proj !== null
+      ? 'Projeção adulta: <strong>' + proj.toFixed(3) + 'm</strong> ' + (projOk ? '✓' : '— abaixo do mín. ' + min + 'm')
+      : '';
+
+    return '<div style="margin-bottom:12px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
+      + '<span style="font-size:12px;font-weight:500;color:var(--text)">' + label + '</span>'
+      + '<div style="display:flex;align-items:baseline;gap:10px">'
+      + '<span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text)">' + val + 'm</span>'
+      + (esp ? '<span style="font-size:11px;color:var(--text3)">esperado: ' + esp + ' ± ' + dpVal + 'm</span>' : '')
+      + (desvio !== null ? '<span style="font-family:var(--mono);font-size:11px;color:' + corDesvio + ';font-weight:500">' + desvioStr + '</span>' : '')
+      + '</div></div>'
+      // Barra posicional
+      + '<div style="position:relative;height:12px;border-radius:6px;background:var(--bg3);border:0.5px solid var(--border)">'
+      + (zonaIni !== null ? '<div style="position:absolute;left:' + zonaIni + '%;width:' + (zonaFim - zonaIni) + '%;height:100%;background:var(--green-l);border-radius:3px" title="Zona esperada para ' + meses + ' meses"></div>' : '')
+      + '<div style="position:absolute;left:' + posMin + '%;width:2px;height:100%;background:var(--blue-d)" title="Mínimo ABCCC: ' + min + 'm"></div>'
+      + '<div style="position:absolute;left:' + posAtual + '%;transform:translateX(-50%);top:-2px;width:14px;height:14px;border-radius:50%;background:' + corDesvio + ';border:2px solid var(--bg2)" title="Medição: ' + val + 'm"></div>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:3px">'
+      + '<span>' + rMin + 'm</span>'
+      + (esp ? '<span style="color:var(--text2)">esperado ' + (meses||'') + 'm</span>' : '')
+      + '<span style="color:var(--blue-d)">mín. ABCCC ' + min + 'm</span>'
+      + '<span>' + rMax + 'm</span>'
+      + '</div>'
+      + '<div style="font-size:11px;color:' + corProj + ';margin-top:3px">' + projStr + '</div>'
+      + '</div>';
+  };
+
+  // Calcular dados esperados para cernelha
+  const espC = meses !== null ? _alturaEsperadaCrioulo(meses, animal.sexo) : null;
+
+  const linhasMedidas = ult
+    ? _linhaMedida('Cernelha', ult.cernelha, pad.cernelha_min, pad.cernelha_max, null, espC?.media, espC?.dp)
+      + _linhaMedida('Tórax',   ult.torax,    pad.torax_min,    null,              _CURVA_TORAX,  null, null)
+      + _linhaMedida('Canela',  ult.canela,   pad.canela_min,   null,              _CURVA_CANELA, null, null)
+    : '<div style="font-size:12px;color:var(--text3);padding:8px 0">Sem medidas registradas. Registre a primeira medida para ver a projeção.</div>';
+
+  const idxAnimal = i;
+  const botoesAcao = modoCompacto ? '' :
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+    + (!animal.marcacao_rp_em
+        ? `<button class="btn btn-sm" onclick="_registrarMarcacaoRP(${idxAnimal})">📌 Registrar marcação RP</button>`
+        : `<span style="font-size:11px;color:var(--text3);align-self:center">RP marcado em ${fd(animal.marcacao_rp_em)}</span>`)
+    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : '')
+    + `<button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>`
+    + '</div>';
+
+  return '<div style="border-left:3px solid ' + corBorda + ';padding:12px 14px;margin-top:10px;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    + '<div>'
+    + '<span style="font-size:11px;font-weight:500;color:' + corBorda + ';text-transform:uppercase;letter-spacing:.05em">CONFIRMAÇÃO ABCCC</span>'
+    + '<span style="margin-left:8px;font-size:11px;background:' + corBg + ';color:' + corBorda + ';padding:2px 8px;border-radius:99px;border:0.5px solid ' + corBorda + '">' + labelStatus + '</span>'
+    + '</div>'
+    + (meses !== null ? '<span style="font-size:11px;color:var(--text3)">' + meses + ' meses · medido em ' + dataLabel + '</span>' : '')
+    + '</div>'
+    + linhasMedidas
+    + botoesAcao
+    + '</div>';
 }
 
 async function _registrarMarcacaoRP(i) {
