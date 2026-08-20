@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mimba Lab — Área de Dados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Tokens de marca "Registro Vivo" — mesma paleta do app de produção,
+     copiada de propósito (não importada) porque este é um arquivo standalone,
+     servido separado, apontando pra outro projeto Supabase. Ver ADR 0005. ── */
+  :root {
+    --ink: #2B2419; --ink-70: rgba(43,36,25,.70); --ink-50: rgba(43,36,25,.50);
+    --ink-30: rgba(43,36,25,.30); --ink-15: rgba(43,36,25,.15); --ink-08: rgba(43,36,25,.08);
+    --campo: #4F6B2E; --campo-deep: #33461C; --campo-soft: #DEE7C9;
+    --terracota: #B15A2E; --terracota-soft: #F3DCC9;
+    --critico: #9B3226; --critico-soft: #F4DAD3;
+    --atencao: #A9791E; --atencao-soft: #F1E3C2;
+    --areia: #F4EFE6; --pergaminho: #FCF9F3; --pergaminho2: #F8F3EA;
+    --r-sm: 8px; --r-md: 16px; --r-lg: 26px;
+    --sh-sm: 0 1px 2px rgba(43,36,25,.09);
+    --sh-md: 0 1px 1px rgba(43,36,25,.06), 0 14px 26px -12px rgba(43,36,25,.28);
+    --card-border: none;
+    --tint-hover: rgba(43,36,25,.07);
+    --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+    --text: var(--ink); --text2: var(--ink-70); --text3: var(--ink-50);
+    --border: var(--ink-15); --border2: var(--ink-30);
+    --green: var(--campo); --green-l: var(--campo-soft); --green-d: var(--campo-deep);
+    --amber: var(--atencao); --amber-l: var(--atencao-soft); --amber-d: var(--atencao);
+    --red: var(--critico); --red-l: var(--critico-soft); --red-d: var(--critico);
+    --blue: #378ADD; --blue-l: #E6F1FB; --blue-d: #185FA5;
+    --purple: #534AB7; --purple-l: #EEEDFE; --purple-d: #3C3489;
+    --pink: #D4537E; --pink-l: #FBEAF0; --pink-d: #993356;
+    --teal: #1D9E75; --teal-l: #E1F5EE; --teal-d: #0F6E56;
+    --gray-l: var(--ink-08); --gray-d: var(--ink-70);
+    --radius: var(--r-sm); --radius-lg: var(--r-md); --radius-badge: 4px 4px 4px 2px;
+    --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
+    --serif: 'Playfair Display', Georgia, serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #F0EFE9; --ink-70: rgba(240,239,233,.70); --ink-50: rgba(240,239,233,.50);
+      --ink-30: rgba(240,239,233,.30); --ink-15: rgba(240,239,233,.15); --ink-08: rgba(240,239,233,.08);
+      --campo: #8FB35A; --campo-deep: #A9CD7A; --campo-soft: rgba(143,179,90,.16);
+      --terracota: #E08A54; --terracota-soft: rgba(224,138,84,.16);
+      --critico: #E2776A; --critico-soft: rgba(226,119,106,.14);
+      --atencao: #E3B95E; --atencao-soft: rgba(227,185,94,.14);
+      --areia: #1A1A18; --pergaminho: #242422; --pergaminho2: #1F1F1C;
+      --sh-sm: 0 1px 2px rgba(0,0,0,.35);
+      --sh-md: 0 1px 0 rgba(255,255,255,.03) inset, 0 16px 30px -14px rgba(0,0,0,.6);
+      --card-border: 1px solid var(--ink-08);
+      --tint-hover: rgba(240,239,233,.09);
+      --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+      --text: var(--ink); --text2: var(--ink-70); --text3: var(--ink-50);
+      --border: var(--ink-15); --border2: var(--ink-30);
+      --green-l: var(--campo-soft); --green-d: var(--campo-deep);
+      --amber-l: var(--atencao-soft); --amber-d: var(--atencao);
+      --red-l: var(--critico-soft); --red-d: var(--critico);
+      --blue-l: #0d1e2e; --blue-d: #7ab8f0;
+      --purple-l: #1a1840; --purple-d: #a89ef0;
+      --pink-l: #2e1020; --pink-d: #f08ab0;
+      --teal-l: #0d2420; --teal-d: #5dd4a8;
+      --gray-l: var(--ink-08); --gray-d: var(--ink-70);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
+  .btn { padding:8px 15px; border-radius:10px; border:1px solid var(--border2); background:var(--bg2); font-size:12.5px; font-weight:600; cursor:pointer; color:var(--text); font-family:var(--font); transition:background .14s ease, transform .15s ease, box-shadow .15s ease; }
+  .btn:hover { background:var(--bg3); transform:translateY(-1px); box-shadow:var(--sh-sm); }
+  .btn:active { transform:translateY(0); box-shadow:none; }
+  .btn:disabled { opacity:.55; cursor:default; transform:none; box-shadow:none; }
+  .btn-primary { background:linear-gradient(180deg,#5A7A38,var(--campo)); color:#fff; border-color:transparent; font-weight:700; box-shadow:0 1px 0 rgba(255,255,255,.25) inset, var(--sh-sm); }
+  .btn-primary:hover { background:linear-gradient(180deg,var(--campo),var(--campo-deep)); box-shadow:0 1px 0 rgba(255,255,255,.2) inset, var(--sh-md); }
+  .btn-sm { padding:5px 11px; font-size:11.5px; border-radius:9px; }
+  @media (prefers-color-scheme: dark) {
+    .btn-primary { background:linear-gradient(180deg,#9CC968,#7EA84A); color:#182008; box-shadow:0 1px 0 rgba(255,255,255,.2) inset; }
+    .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
+  }
+  .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:1.4rem; }
+  .metric { background:var(--bg2); border-radius:var(--r-md); padding:18px 20px; border:var(--card-border); box-shadow:var(--sh-sm); }
+  .metric-label { font-size:11.5px; color:var(--text2); margin-bottom:8px; }
+  .metric-value { font-size:26px; font-weight:500; color:var(--text); font-family:var(--mono); line-height:1.1; }
+  .card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:22px 24px; margin-bottom:1rem; box-shadow:var(--sh-sm); }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { text-align:left; font-weight:600; font-size:11px; color:var(--text2); padding:0 10px 8px 0; border-bottom:0.5px solid var(--border); }
+  td { padding:9px 10px 9px 0; border-bottom:0.5px solid var(--border); color:var(--text); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr:hover td { background:var(--tint-hover); }
+  .badge { display:inline-block; font-size:10px; padding:2px 7px; border-radius:var(--radius-badge); font-weight:600; white-space:nowrap; }
+  .bg { background:var(--green-l); color:var(--green-d); }
+  .ba { background:var(--amber-l); color:var(--amber-d); }
+  .br { background:var(--red-l); color:var(--red-d); }
+  .bb { background:var(--blue-l); color:var(--blue-d); }
+  .bgr { background:var(--gray-l); color:var(--gray-d); }
+  input, select { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none; box-shadow:inset 0 1px 2px rgba(43,36,25,.06); transition:border-color .14s ease, box-shadow .14s ease; }
+  input:focus, select:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+  label { display:block; margin-bottom:3px; }
+  .tab-row { display:flex; margin-bottom:1.1rem; border-bottom:0.5px solid var(--border); overflow-x:auto; }
+  .tab-row .tab { flex-shrink:0; padding:7px 14px; font-size:12px; cursor:pointer; color:var(--text2); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; font-family:var(--font); }
+  .tab-row .tab.active { color:var(--green-d); border-bottom-color:var(--green); font-weight:600; }
+  .alert { padding:9px 12px; border-radius:var(--radius); font-size:12px; margin-bottom:10px; }
+  .alert-r { background:var(--red-l); color:var(--red-d); border-left:3px solid var(--red); }
+  ::placeholder { color: var(--text3); }
+
+  /* ── Chrome da página (fora do padrão do app — esta é uma tela própria) ── */
+  .lab-shell { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+  .lab-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; gap:12px; flex-wrap:wrap; }
+  .lab-title { font-family:var(--serif); font-size:22px; font-weight:900; letter-spacing:-.01em; }
+  .lab-title .dot { color:var(--green-d); }
+  .lab-sub { font-family:var(--mono); font-size:11px; color:var(--text3); margin-top:3px; }
+  .lab-user { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text2); }
+  .lab-user .who { font-weight:600; color:var(--text); }
+  .lab-banner { text-align:center; padding:60px 20px; color:var(--text3); font-size:13px; }
+  .lab-banner .btn { margin-top:14px; }
+
+  /* ── Tela de login — bem mais simples que o app: só staff, só e-mail/senha ── */
+  #login-screen { min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-card { width:100%; max-width:360px; background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-md); padding:32px 28px; }
+  .login-word { font-family:var(--serif); font-weight:900; font-size:24px; margin-bottom:2px; }
+  .login-word .dot { color:var(--green-d); }
+  .login-eyebrow { font-family:var(--mono); font-size:10.5px; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; margin-bottom:22px; }
+  .login-field { margin-bottom:14px; }
+  .login-field label { font-size:11.5px; color:var(--text2); }
+  .login-field input { width:100%; }
+  #login-erro { font-size:12px; color:var(--red-d); margin:6px 0 0; min-height:1em; }
+  #login-btn { width:100%; margin-top:6px; padding:10px; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <form class="login-card" id="login-form" onsubmit="return _labLogin(event)">
+    <div class="login-word">Mimba <span class="dot">Lab</span></div>
+    <div class="login-eyebrow">Área de dados — acesso restrito a staff</div>
+    <div class="login-field">
+      <label for="login-email">E-mail</label>
+      <input type="email" id="login-email" required autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label for="login-senha">Senha</label>
+      <input type="password" id="login-senha" required autocomplete="current-password">
+    </div>
+    <p id="login-erro"></p>
+    <button type="submit" class="btn btn-primary" id="login-btn">Entrar</button>
+  </form>
+</div>
+
+<div id="lab-app" style="display:none">
+  <div class="lab-shell">
+    <div class="lab-header">
+      <div>
+        <div class="lab-title">Mimba <span class="dot">Lab</span></div>
+        <div class="lab-sub">Área de dados — projeto analítico, separado de produção</div>
+      </div>
+      <div class="lab-user">
+        <span class="who" id="lab-user-nome">—</span>
+        <button class="btn btn-sm" onclick="_labLogout()">Sair</button>
+      </div>
+    </div>
+
+    <div id="lab-negado" style="display:none" class="lab-banner">
+      Sua conta está autenticada, mas não está na lista de staff da Mimba
+      (<code>mimba_staff</code>). Peça pra alguém com acesso ao SQL Editor te adicionar.
+      <div><button class="btn" onclick="_labLogout()">Trocar de conta</button></div>
+    </div>
+
+    <div id="lab-conteudo">
+      <div class="tab-row">
+        <button class="tab active" onclick="pmTab(this,'pm-aba-dados')">Dados</button>
+        <button class="tab" onclick="pmTab(this,'pm-aba-intel')">Inteligência</button>
+      </div>
+
+      <!-- ── ABA DADOS — landing zone analítica ── -->
+      <div id="pm-aba-dados">
+        <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:1.25rem">
+          <div class="metric"><div class="metric-label">Bases carregadas</div><div class="metric-value" id="pd-m-datasets">—</div></div>
+          <div class="metric"><div class="metric-label">Publicadas</div><div class="metric-value" id="pd-m-publicados">—</div></div>
+          <div class="metric"><div class="metric-label">Registros totais</div><div class="metric-value" id="pd-m-registros">—</div></div>
+          <div class="metric"><div class="metric-label">Último envio</div><div class="metric-value" style="font-size:15px" id="pd-m-ultimo">—</div></div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">Carregar base</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:14px">
+            CSV, TSV ou Excel (.xlsx). A primeira linha precisa ser o cabeçalho. O arquivo original fica guardado; as linhas ficam consultáveis pelas funcionalidades do sistema.
+          </div>
+          <div id="pd-drop" style="border:1.5px dashed var(--border2);border-radius:var(--r-md);padding:22px;text-align:center;cursor:pointer;transition:background .15s ease,border-color .15s ease">
+            <div style="font-size:13px;font-weight:600" id="pd-drop-titulo">Arraste o arquivo aqui ou clique para escolher</div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:4px" id="pd-drop-sub">Nenhum arquivo selecionado</div>
+          </div>
+          <input type="file" id="pd-file" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none">
+          <div id="pd-form" style="display:none;margin-top:14px">
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+              <div><label style="font-size:11.5px;color:var(--text2)">Nome da base</label>
+                <input type="text" id="pd-nome" style="width:100%" placeholder="Ex.: Resultados Freio de Ouro 2026"></div>
+              <div><label style="font-size:11.5px;color:var(--text2)">Tipo</label>
+                <select id="pd-tipo" style="width:100%">
+                  <option value="generico">Genérico</option>
+                  <option value="resultados_abccc">Resultados ABCCC (entra nas análises)</option>
+                  <option value="resultados_competicao">Resultados de competição (outro)</option>
+                  <option value="pedigree">Pedigree / genealogia</option>
+                </select></div>
+            </div>
+            <div style="margin-top:10px"><label style="font-size:11.5px;color:var(--text2)">Descrição — o que tem aqui e de onde veio</label>
+              <input type="text" id="pd-desc" style="width:100%" placeholder="Opcional, mas ajuda muito quem for usar depois"></div>
+            <div id="pd-previa" style="margin-top:12px;font-size:11.5px;color:var(--text2)"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+              <button class="btn btn-primary" id="pd-btn-enviar" onclick="pdEnviar()">Carregar base</button>
+              <button class="btn" onclick="pdLimparForm()">Cancelar</button>
+              <span id="pd-status" style="font-size:12px;color:var(--text2)"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:4px">Fonte automática — painel público da ABCCC</div>
+              <div style="font-size:12px;color:var(--text2);max-width:640px">
+                Puxa os resultados de provas direto do painel da ABCCC (morfologia, credenciadoras, classificatórias,
+                Bocal de Ouro, Final Freio de Ouro). Substitui a base inteira a cada atualização — rode depois de cada temporada.
+              </div>
+            </div>
+            <button class="btn btn-primary" id="pd-btn-abccc" onclick="pdAtualizarAbccc()">Atualizar agora</button>
+          </div>
+          <div id="pd-abccc-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+          <table><thead><tr>
+            <th style="padding:9px 10px">Base</th><th>Tipo</th><th>Formato</th><th>Linhas</th>
+            <th>Status</th><th>Enviado por</th><th>Quando</th><th></th>
+          </tr></thead><tbody id="pd-tbody"></tbody></table>
+        </div>
+        <div id="pd-previa-box"></div>
+      </div>
+
+      <!-- ── ABA INTELIGÊNCIA — análises sobre os dados da ABCCC ── -->
+      <div id="pm-aba-intel" style="display:none">
+        <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:1.25rem">
+          <div class="metric"><div class="metric-label">Premiações</div><div class="metric-value" id="pi-m-registros">—</div></div>
+          <div class="metric"><div class="metric-label">Animais premiados</div><div class="metric-value" id="pi-m-animais">—</div></div>
+          <div class="metric"><div class="metric-label">Reprodutores</div><div class="metric-value" id="pi-m-reprodutores">—</div></div>
+          <div class="metric"><div class="metric-label">Títulos de campeão</div><div class="metric-value" id="pi-m-campeonatos">—</div></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div><label style="font-size:11.5px;color:var(--text2)">Ranking por</label>
+              <select id="pi-dim" onchange="piRanking()">
+                <option value="pai">Garanhão (pai)</option>
+                <option value="mae">Matriz (mãe)</option>
+                <option value="criador">Criador</option>
+                <option value="animal">Animal</option>
+                <option value="prova">Prova</option>
+                <option value="cidade">Cidade</option>
+              </select></div>
+            <div><label style="font-size:11.5px;color:var(--text2)">Do ciclo</label>
+              <input type="text" id="pi-ciclo-de" placeholder="1982" style="width:80px" onchange="piRanking()"></div>
+            <div><label style="font-size:11.5px;color:var(--text2)">Até</label>
+              <input type="text" id="pi-ciclo-ate" placeholder="2026" style="width:80px" onchange="piRanking()"></div>
+            <div><label style="font-size:11.5px;color:var(--text2)">Mostrar</label>
+              <select id="pi-limite" onchange="piRanking()">
+                <option value="25">25</option><option value="50">50</option><option value="100">100</option>
+              </select></div>
+            <button class="btn" onclick="piRanking()">Aplicar</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px">
+            O <strong>índice</strong> pondera cada premiação (Grande Campeão 10 · Campeão de categoria e 1º lugar 5 ·
+            Reservado 3 · demais colocações 0,5 a 2). É um ranqueamento nosso, não uma métrica oficial da ABCCC.
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+          <table><thead><tr>
+            <th style="padding:9px 10px">Nome</th><th>Índice</th><th>Títulos</th><th>Grandes camp.</th>
+            <th>Animais</th><th>Premiações</th>
+          </tr></thead><tbody id="pi-tbody"></tbody></table>
+        </div>
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:8px">Consultar animal</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" id="pi-busca" placeholder="Nome do animal ou SBB" style="flex:1;min-width:220px"
+                   onkeydown="if(event.key==='Enter')piBuscar()">
+            <button class="btn btn-primary" onclick="piBuscar()">Buscar</button>
+          </div>
+          <div id="pi-busca-res" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Mimba Lab — página standalone, projeto Supabase separado de produção ───
+// Ver ADR 0005 (docs/adr/0005-onde-mora-a-area-de-dados.md). Este arquivo NUNCA
+// deve importar nada do index.html de produção nem apontar pro projeto de
+// produção — é exatamente a separação que o incidente de 19/08 ensinou a fazer.
+const SUPABASE_URL = 'https://njynlsugmvtuvcczmuld.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_B1Smz51ZdvexgXhMjBARxA_s6zBF2v9';
+const SESSAO_KEY = 'mimba_lab_sessao';   // chave própria — não colide com a sessão do app em /
+
+let AUTH_TOKEN = null, AUTH_USER = null, PD_ARQUIVO = null;
+let PI_CARREGADO = false, PD_CARREGADO = false;
+
+function pd(s){ if(!s) return null; const d = new Date(s+'T00:00:00'); return isNaN(d) ? null : d; }
+function fd(s){ const d = pd(s); if(!d) return '—'; return d.toLocaleDateString('pt-BR'); }
+function _pdEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function _pdNum(n){ return (Number(n)||0).toLocaleString('pt-BR'); }
+
+// ─── Sessão ──────────────────────────────────────────────────────────────
+function _labSalvarSessao(dados) {
+  localStorage.setItem(SESSAO_KEY, JSON.stringify(dados));
+}
+function _labLerSessao() {
+  try { return JSON.parse(localStorage.getItem(SESSAO_KEY) || 'null'); } catch(e) { return null; }
+}
+function _labLimparSessao() {
+  localStorage.removeItem(SESSAO_KEY);
+  AUTH_TOKEN = null; AUTH_USER = null;
+}
+
+// Renova o access_token via refresh_token se estiver a menos de 60s de expirar
+// (mesma lição do incidente de produção: nunca deixar um RPC ir com token velho).
+async function _labGarantirToken() {
+  const s = _labLerSessao();
+  if (!s) return false;
+  if (Date.now() < s.expira_em - 60000) { AUTH_TOKEN = s.access_token; AUTH_USER = s.user; return true; }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    });
+    if (!r.ok) { _labLimparSessao(); return false; }
+    const d = await r.json();
+    const nova = { access_token: d.access_token, refresh_token: d.refresh_token, user: d.user, expira_em: Date.now() + (d.expires_in||3600)*1000 };
+    _labSalvarSessao(nova);
+    AUTH_TOKEN = nova.access_token; AUTH_USER = nova.user;
+    return true;
+  } catch(e) { _labLimparSessao(); return false; }
+}
+
+async function _labLogin(ev) {
+  ev.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erroEl = document.getElementById('login-erro');
+  const btn = document.getElementById('login-btn');
+  erroEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: senha })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_description || d.msg || 'E-mail ou senha incorretos.');
+    _labSalvarSessao({ access_token: d.access_token, refresh_token: d.refresh_token, user: d.user, expira_em: Date.now() + (d.expires_in||3600)*1000 });
+    AUTH_TOKEN = d.access_token; AUTH_USER = d.user;
+    await _labEntrar();
+  } catch(e) {
+    erroEl.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+}
+
+function _labLogout() {
+  _labLimparSessao();
+  document.getElementById('lab-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-senha').value = '';
+}
+
+// Pós-login: confirma que é staff (sou_staff_mimba) antes de mostrar qualquer dado.
+async function _labEntrar() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('lab-app').style.display = 'block';
+  document.getElementById('lab-user-nome').textContent = AUTH_USER?.email || '—';
+  let ehStaff = false;
+  try { ehStaff = await _rpcD('sou_staff_mimba', {}); } catch(e) { ehStaff = false; }
+  if (!ehStaff) {
+    document.getElementById('lab-negado').style.display = 'block';
+    document.getElementById('lab-conteudo').style.display = 'none';
+    return;
+  }
+  document.getElementById('lab-negado').style.display = 'none';
+  document.getElementById('lab-conteudo').style.display = 'block';
+  _pdLigarUpload();
+  PD_CARREGADO = true; pdCarregarCatalogo();
+}
+
+// ─── RPC (como o _rpc do app principal, mas propaga a mensagem de erro — aqui
+// quem usa precisa saber exatamente o que falhou, não só "deu erro"). ───
+async function _rpcD(fn, args) {
+  await _labGarantirToken();
+  if (!AUTH_TOKEN) throw new Error('Sessão expirada — faça login de novo.');
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args || {})
+  });
+  const txt = await r.text();
+  if (!r.ok) {
+    let msg = `Erro ${r.status}`;
+    try { const j = JSON.parse(txt); msg = j.message || j.hint || j.details || msg; } catch(e) {}
+    throw new Error(msg);
+  }
+  try { return txt ? JSON.parse(txt) : null; } catch(e) { return txt; }
+}
+
+function pmTab(btn, id) {
+  btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['pm-aba-dados','pm-aba-intel'].forEach(x=>{
+    const el = document.getElementById(x);
+    if (el) el.style.display = x===id ? 'block' : 'none';
+  });
+  if (id==='pm-aba-intel' && !PI_CARREGADO) { PI_CARREGADO = true; piCarregar(); }
+}
+
+// ─── Catálogo de bases ──────────────────────────────────────────────────────
+const PD_STATUS_BADGE = { publicado:'bg', processando:'ba', erro:'br', arquivado:'bgr' };
+
+async function pdCarregarCatalogo() {
+  const tb = document.getElementById('pd-tbody');
+  tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.6rem;color:var(--text3)">Carregando...</td></tr>';
+  let lista = [], resumo = {};
+  try {
+    [lista, resumo] = await Promise.all([_rpcD('dados_listar_datasets',{}), _rpcD('dados_resumo',{})]);
+  } catch(e) {
+    tb.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:1.6rem;color:var(--red-d)">${_pdEsc(e.message)}</td></tr>`;
+    return;
+  }
+  document.getElementById('pd-m-datasets').textContent   = _pdNum(resumo?.datasets);
+  document.getElementById('pd-m-publicados').textContent = _pdNum(resumo?.publicados);
+  document.getElementById('pd-m-registros').textContent  = _pdNum(resumo?.registros);
+  document.getElementById('pd-m-ultimo').textContent     = resumo?.ultimo_envio ? fd(String(resumo.ultimo_envio).slice(0,10)) : '—';
+
+  if (!lista.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.6rem;color:var(--text3)">Nenhuma base carregada ainda.</td></tr>';
+    return;
+  }
+  tb.innerHTML = lista.map(d => `<tr>
+    <td style="padding:8px 10px">
+      <div style="font-weight:600">${_pdEsc(d.nome)}</div>
+      ${d.descricao ? `<div style="font-size:11px;color:var(--text3);max-width:380px">${_pdEsc(d.descricao)}</div>` : ''}
+    </td>
+    <td style="font-size:11.5px">${_pdEsc(d.tipo)}</td>
+    <td style="font-size:11.5px;color:var(--text2)">${_pdEsc(d.formato||'—')}</td>
+    <td style="text-align:right">${_pdNum(d.total_linhas)}</td>
+    <td><span class="badge ${PD_STATUS_BADGE[d.status]||'bgr'}">${_pdEsc(d.status)}</span>
+        ${d.erro ? `<div style="font-size:10.5px;color:var(--red-d)">${_pdEsc(d.erro)}</div>` : ''}</td>
+    <td style="font-size:11.5px;color:var(--text2)">${_pdEsc(d.enviado_por_nome||'—')}</td>
+    <td style="font-size:11px;color:var(--text2)">${fd(String(d.enviado_em||'').slice(0,10))}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-sm" onclick="pdPrevia('${d.id}')">Prévia</button>
+      <button class="btn btn-sm" style="color:var(--red-d)" onclick="pdExcluir('${d.id}', this)">Excluir</button>
+    </td>
+  </tr>`).join('');
+}
+
+async function pdPrevia(id) {
+  const box = document.getElementById('pd-previa-box');
+  box.innerHTML = '<div class="card" style="font-size:12px;color:var(--text3)">Carregando prévia...</div>';
+  try {
+    const linhas = await _rpcD('dados_amostra', { p_dataset:id, p_limite:15 });
+    if (!linhas || !linhas.length) { box.innerHTML = '<div class="card" style="font-size:12px">Base sem linhas.</div>'; return; }
+    const cols = Object.keys(linhas[0]);
+    box.innerHTML = `<div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+      <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:700">Prévia — primeiras ${linhas.length} linhas</div>
+        <button class="btn btn-sm" onclick="document.getElementById('pd-previa-box').innerHTML=''">Fechar</button>
+      </div>
+      <table><thead><tr>${cols.map(c=>`<th style="padding:7px 9px">${_pdEsc(c)}</th>`).join('')}</tr></thead>
+      <tbody>${linhas.map(l=>`<tr>${cols.map(c=>`<td style="font-size:11.5px;padding:6px 9px">${_pdEsc(l[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  } catch(e) { box.innerHTML = `<div class="card" style="color:var(--red-d);font-size:12px">${_pdEsc(e.message)}</div>`; }
+}
+
+async function pdExcluir(id, btn) {
+  if (!confirm('Excluir esta base e todas as linhas dela? Não dá pra desfazer.')) return;
+  btn.disabled = true; btn.textContent = 'Excluindo...';
+  try {
+    await _rpcD('dados_excluir_dataset', { p_dataset:id });
+    await pdCarregarCatalogo();
+    PI_CARREGADO = false;
+  } catch(e) { alert('Falha ao excluir: ' + e.message); btn.disabled = false; btn.textContent = 'Excluir'; }
+}
+
+// ─── Leitura de arquivo ─────────────────────────────────────────────────────
+// Parser próprio pra CSV/TSV (respeita aspas, aspas escapadas e quebra de linha
+// dentro do campo). Excel usa SheetJS carregado sob demanda — só quando alguém
+// escolhe um .xlsx, pra não pesar o carregamento da página pra todo mundo.
+function _pdParseDelimitado(texto) {
+  texto = texto.replace(/^﻿/, '');
+  const primeira = (texto.slice(0, 8000).split(/\r?\n/)[0] || '');
+  let delim = ',', melhor = -1;
+  for (const d of [',',';','\t','|']) { const n = primeira.split(d).length; if (n > melhor) { melhor = n; delim = d; } }
+  const linhas = []; let campo = '', linha = [], aspas = false;
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (aspas) {
+      if (c === '"') { if (texto[i+1] === '"') { campo += '"'; i++; } else aspas = false; }
+      else campo += c;
+    } else if (c === '"') aspas = true;
+    else if (c === delim) { linha.push(campo); campo = ''; }
+    else if (c === '\n') { linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
+    else if (c !== '\r') campo += c;
+  }
+  if (campo !== '' || linha.length) { linha.push(campo); linhas.push(linha); }
+  return linhas;
+}
+
+function _pdCarregarSheetJS() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((ok, err) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload  = () => window.XLSX ? ok(window.XLSX) : err(new Error('Leitor de Excel não inicializou.'));
+    s.onerror = () => err(new Error('Não foi possível carregar o leitor de Excel. Salve a planilha como CSV e tente de novo.'));
+    document.head.appendChild(s);
+  });
+}
+
+function _pdMatrizParaObjetos(matriz) {
+  if (!matriz.length) return { colunas: [], linhas: [] };
+  const brutos = matriz[0].map((c,i) => String(c==null?'':c).trim() || `Coluna ${i+1}`);
+  const vistos = {}, colunas = brutos.map(c => { vistos[c] = (vistos[c]||0)+1; return vistos[c] > 1 ? `${c} (${vistos[c]})` : c; });
+  const linhas = [];
+  for (let i = 1; i < matriz.length; i++) {
+    const r = matriz[i];
+    if (!r || !r.length || r.every(v => v==null || String(v).trim()==='')) continue;  // pula linha vazia
+    const o = {};
+    colunas.forEach((c, j) => { const v = r[j]; o[c] = (v==null || v==='') ? null : String(v).trim(); });
+    linhas.push(o);
+  }
+  return { colunas, linhas };
+}
+
+async function pdArquivoEscolhido(file) {
+  if (!file) return;
+  const ext = (file.name.split('.').pop()||'').toLowerCase();
+  document.getElementById('pd-drop-titulo').textContent = file.name;
+  document.getElementById('pd-drop-sub').textContent = 'Lendo arquivo...';
+  try {
+    let matriz;
+    if (ext === 'xlsx' || ext === 'xls') {
+      const XLSX = await _pdCarregarSheetJS();
+      const wb = XLSX.read(await file.arrayBuffer(), { type:'array' });
+      matriz = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:null });
+    } else {
+      matriz = _pdParseDelimitado(await file.text());
+    }
+    const { colunas, linhas } = _pdMatrizParaObjetos(matriz);
+    if (!linhas.length) throw new Error('O arquivo não tem nenhuma linha de dados abaixo do cabeçalho.');
+    PD_ARQUIVO = { file, colunas, linhas, formato: ext };
+    document.getElementById('pd-drop-sub').textContent =
+      `${_pdNum(linhas.length)} linhas · ${colunas.length} colunas`;
+    document.getElementById('pd-form').style.display = 'block';
+    if (!document.getElementById('pd-nome').value) {
+      document.getElementById('pd-nome').value = file.name.replace(/\.[^.]+$/, '');
+    }
+    document.getElementById('pd-previa').innerHTML =
+      `<strong>Colunas detectadas:</strong> ${colunas.map(c=>_pdEsc(c)).join(' · ')}`;
+  } catch(e) {
+    PD_ARQUIVO = null;
+    document.getElementById('pd-drop-sub').textContent = e.message;
+    document.getElementById('pd-form').style.display = 'none';
+  }
+}
+
+function pdLimparForm() {
+  PD_ARQUIVO = null;
+  document.getElementById('pd-form').style.display = 'none';
+  document.getElementById('pd-file').value = '';
+  document.getElementById('pd-nome').value = '';
+  document.getElementById('pd-desc').value = '';
+  document.getElementById('pd-status').textContent = '';
+  document.getElementById('pd-drop-titulo').textContent = 'Arraste o arquivo aqui ou clique para escolher';
+  document.getElementById('pd-drop-sub').textContent = 'Nenhum arquivo selecionado';
+}
+
+async function pdEnviar() {
+  if (!PD_ARQUIVO) return;
+  const nome = document.getElementById('pd-nome').value.trim();
+  if (!nome) { alert('Dê um nome pra base.'); return; }
+  const tipo = document.getElementById('pd-tipo').value;
+  const desc = document.getElementById('pd-desc').value.trim() || null;
+  const btn = document.getElementById('pd-btn-enviar');
+  const st  = document.getElementById('pd-status');
+  btn.disabled = true;
+  let datasetId = null;
+  try {
+    const caminho = `${Date.now()}-${PD_ARQUIVO.file.name.replace(/[^\w.\-]/g,'_')}`;
+    st.textContent = 'Criando base...';
+    datasetId = await _rpcD('dados_criar_dataset', {
+      p_nome:nome, p_tipo:tipo, p_descricao:desc,
+      p_fonte:'upload manual', p_arquivo_nome:PD_ARQUIVO.file.name,
+      p_formato:PD_ARQUIVO.formato, p_colunas:PD_ARQUIVO.colunas, p_storage_path:caminho
+    });
+
+    // Guarda o arquivo original. Se falhar, segue — o que importa são as linhas.
+    st.textContent = 'Guardando arquivo original...';
+    try {
+      await _labGarantirToken();
+      await fetch(`${SUPABASE_URL}/storage/v1/object/dados-mimba/${encodeURIComponent(caminho)}`, {
+        method:'POST',
+        headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${AUTH_TOKEN}`, 'x-upsert':'true' },
+        body: PD_ARQUIVO.file
+      });
+    } catch(e) { /* arquivo original é conveniência, não bloqueia a carga */ }
+
+    const LOTE = 500, total = PD_ARQUIVO.linhas.length;
+    for (let i = 0; i < total; i += LOTE) {
+      st.textContent = `Carregando linhas... ${_pdNum(Math.min(i+LOTE,total))} de ${_pdNum(total)}`;
+      await _rpcD('dados_inserir_lote', { p_dataset:datasetId, p_linhas: PD_ARQUIVO.linhas.slice(i, i+LOTE) });
+    }
+    await _rpcD('dados_finalizar_dataset', { p_dataset:datasetId, p_status:'publicado', p_erro:null });
+    if (tipo === 'resultados_abccc') { st.textContent = 'Atualizando análises...'; await _rpcD('abccc_atualizar_analises',{}); }
+    st.textContent = `Pronto — ${_pdNum(total)} linhas carregadas.`;
+    pdLimparForm();
+    PI_CARREGADO = false;
+    await pdCarregarCatalogo();
+  } catch(e) {
+    st.textContent = '';
+    if (datasetId) { try { await _rpcD('dados_finalizar_dataset', { p_dataset:datasetId, p_status:'erro', p_erro:e.message }); } catch(_){} }
+    alert('Falha ao carregar: ' + e.message);
+    await pdCarregarCatalogo();
+  } finally { btn.disabled = false; }
+}
+
+// ─── Importação automática da ABCCC ─────────────────────────────────────────
+// pg_net é assíncrono e só envia a requisição depois do COMMIT, então o ciclo é
+// sempre disparar() -> aguardar -> coletar(). Cada página traz até 30k linhas e
+// devolve o restart token da próxima; a primeira linha de cada continuação repete
+// a última da anterior (o coletar já descarta, por isso o flag p_continuacao).
+async function pdAtualizarAbccc() {
+  const btn = document.getElementById('pd-btn-abccc');
+  const st  = document.getElementById('pd-abccc-status');
+  if (!confirm('Isso substitui a base inteira de resultados da ABCCC. Continuar?')) return;
+  btn.disabled = true;
+  try {
+    st.textContent = 'Localizando a base...';
+    const lista = await _rpcD('dados_listar_datasets', {});
+    let ds = (lista||[]).find(d => d.tipo === 'resultados_abccc');
+    let dsId = ds?.id;
+    if (!dsId) {
+      dsId = await _rpcD('dados_criar_dataset', {
+        p_nome:'ABCCC — Resultados de provas (série histórica)', p_tipo:'resultados_abccc',
+        p_descricao:'Resultados de morfologia, credenciadoras, classificatórias, Bocal de Ouro e Final Freio de Ouro. Uma linha por premiação.',
+        p_fonte:'https://www.cavalocrioulo.org.br/eventos/painel_resultados',
+        p_arquivo_nome:null, p_formato:'api',
+        p_colunas:['SBB','Animal','Sexo','Pai','Mãe','Criador','Ciclo','Cidade','Prova','Colocação'],
+        p_storage_path:null
+      });
+    }
+    let restart = null, continuacao = false, total = 0, pagina = 0;
+    while (pagina < 40) {
+      pagina++;
+      st.textContent = `Buscando página ${pagina} na ABCCC...`;
+      const req = await _rpcD('abccc_importar_disparar', { p_janela:30000, p_restart:restart, p_ciclo:null });
+      let r = null;
+      for (let tentativa = 0; tentativa < 60; tentativa++) {
+        await new Promise(ok => setTimeout(ok, 1000));
+        r = await _rpcD('abccc_importar_coletar', { p_dataset:dsId, p_request_id:req, p_continuacao:continuacao });
+        if (r && r.estado !== 'aguardando') break;
+        st.textContent = `Aguardando a ABCCC responder (página ${pagina})...`;
+      }
+      if (!r || r.estado === 'aguardando') throw new Error('A ABCCC não respondeu a tempo. Tente de novo.');
+      total += (r.inseridas || 0);
+      st.textContent = `${_pdNum(total)} linhas importadas...`;
+      if (r.fim) break;
+      restart = r.restart; continuacao = true;
+    }
+    await _rpcD('dados_finalizar_dataset', { p_dataset:dsId, p_status:'publicado', p_erro:null });
+    st.textContent = 'Atualizando análises...';
+    await _rpcD('abccc_atualizar_analises', {});
+    st.textContent = `Pronto — ${_pdNum(total)} linhas importadas da ABCCC.`;
+    PI_CARREGADO = false;
+    await pdCarregarCatalogo();
+  } catch(e) {
+    st.innerHTML = `<span style="color:var(--red-d)">${_pdEsc(e.message)}</span>`;
+  } finally { btn.disabled = false; }
+}
+
+// ─── Inteligência ───────────────────────────────────────────────────────────
+async function piCarregar() {
+  try {
+    const r = await _rpcD('abccc_resumo', {});
+    document.getElementById('pi-m-registros').textContent    = _pdNum(r?.registros);
+    document.getElementById('pi-m-animais').textContent      = _pdNum(r?.animais);
+    document.getElementById('pi-m-reprodutores').textContent = _pdNum(r?.reprodutores);
+    document.getElementById('pi-m-campeonatos').textContent  = _pdNum(r?.campeonatos);
+    if (r && r.ciclo_min) {
+      document.getElementById('pi-ciclo-de').placeholder  = r.ciclo_min;
+      document.getElementById('pi-ciclo-ate').placeholder = r.ciclo_max;
+    }
+  } catch(e) { /* sem base ainda — o ranking mostra o aviso */ }
+  piRanking();
+}
+
+async function piRanking() {
+  const tb = document.getElementById('pi-tbody');
+  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.6rem;color:var(--text3)">Calculando...</td></tr>';
+  const de  = document.getElementById('pi-ciclo-de').value.trim()  || null;
+  const ate = document.getElementById('pi-ciclo-ate').value.trim() || null;
+  try {
+    const linhas = await _rpcD('abccc_ranking', {
+      p_dimensao: document.getElementById('pi-dim').value,
+      p_ciclo_de: de, p_ciclo_ate: ate,
+      p_limite: Number(document.getElementById('pi-limite').value)||25
+    });
+    if (!linhas || !linhas.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.6rem;color:var(--text3)">Nenhum resultado. Carregue a base da ABCCC na aba Dados.</td></tr>';
+      return;
+    }
+    tb.innerHTML = linhas.map((l,i) => `<tr>
+      <td style="padding:8px 10px"><span style="color:var(--text3);font-size:11px">${i+1}.</span> <strong>${_pdEsc(l.nome)}</strong></td>
+      <td style="text-align:right;font-weight:700">${_pdNum(Math.round(l.indice))}</td>
+      <td style="text-align:right">${_pdNum(l.campeoes)}</td>
+      <td style="text-align:right">${_pdNum(l.grandes_campeoes)}</td>
+      <td style="text-align:right">${_pdNum(l.animais)}</td>
+      <td style="text-align:right;color:var(--text2)">${_pdNum(l.premiacoes)}</td>
+    </tr>`).join('');
+  } catch(e) {
+    tb.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:1.6rem;color:var(--red-d)">${_pdEsc(e.message)}</td></tr>`;
+  }
+}
+
+async function piBuscar() {
+  const termo = document.getElementById('pi-busca').value.trim();
+  const box = document.getElementById('pi-busca-res');
+  if (!termo) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div style="font-size:12px;color:var(--text3)">Buscando...</div>';
+  try {
+    const linhas = await _rpcD('abccc_buscar', { p_termo:termo, p_limite:25 });
+    if (!linhas || !linhas.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text3)">Nada encontrado.</div>'; return; }
+    box.innerHTML = `<div style="overflow-x:auto"><table><thead><tr>
+      <th style="padding:7px 9px">Animal</th><th>SBB</th><th>Sexo</th><th>Pai</th><th>Mãe</th>
+      <th>Índice</th><th>Títulos</th><th>Premiações</th></tr></thead>
+      <tbody>${linhas.map(l=>`<tr>
+        <td style="padding:6px 9px;font-weight:600">${_pdEsc(l.animal)}</td>
+        <td style="font-size:11.5px">${_pdEsc(l.sbb)}</td>
+        <td style="font-size:11.5px">${_pdEsc(l.sexo)}</td>
+        <td style="font-size:11.5px;color:var(--text2)">${_pdEsc(l.pai)}</td>
+        <td style="font-size:11.5px;color:var(--text2)">${_pdEsc(l.mae)}</td>
+        <td style="text-align:right;font-weight:700">${_pdNum(Math.round(l.indice))}</td>
+        <td style="text-align:right">${_pdNum(l.campeoes)}</td>
+        <td style="text-align:right;color:var(--text2)">${_pdNum(l.premiacoes)}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch(e) { box.innerHTML = `<div style="font-size:12px;color:var(--red-d)">${_pdEsc(e.message)}</div>`; }
+}
+
+// Liga o seletor de arquivo e o arrastar-soltar assim que a tela existe.
+function _pdLigarUpload() {
+  const drop = document.getElementById('pd-drop'), input = document.getElementById('pd-file');
+  if (!drop || !input || drop.dataset.ligado) return;
+  drop.dataset.ligado = '1';
+  drop.onclick = () => input.click();
+  input.onchange = () => pdArquivoEscolhido(input.files[0]);
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.style.background = 'var(--bg3)'; drop.style.borderColor = 'var(--green)';
+  }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.style.background = ''; drop.style.borderColor = '';
+  }));
+  drop.addEventListener('drop', e => { if (e.dataTransfer.files[0]) pdArquivoEscolhido(e.dataTransfer.files[0]); });
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────
+(async function _labInit() {
+  const ok = await _labGarantirToken();
+  if (ok) { await _labEntrar(); }
+})();
+</script>
+</body>
+</html>
