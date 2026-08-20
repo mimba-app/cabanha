@@ -5338,7 +5338,7 @@ function _renderDetCorpo(i, editando) {
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
-      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
+      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
@@ -9101,6 +9101,7 @@ async function _marcarParaConfirmacao(i) {
   if (!confirm('Marcar este animal para confirmação com técnico ABCCC?')) return;
   await _supa('PATCH','animais',{confirmacao_status:'aguardando_confirmacao'},`?id=eq.${a.db_id}`);
   a.confirmacao_status = 'aguardando_confirmacao';
+  a.confirmado = false;
   _renderDetCorpo(i, false);
   renderAnimais();
   toast('Animal marcado para confirmação.');
@@ -9122,8 +9123,9 @@ async function _confirmarNaoConfirmacao() {
   const obs    = document.getElementById('nc-obs').value;
   if (!motivo) { alert('Selecione um motivo.'); return; }
   const obsCompleta = [motivo, obs].filter(Boolean).join(' — ');
-  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta},`?id=eq.${a.db_id}`);
+  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta,confirmado:false},`?id=eq.${a.db_id}`);
   a.confirmacao_status = 'nao_confirmado';
+  a.confirmado = false;
   a.confirmacao_obs = obsCompleta;
   closeModal('modal-nao-confirmar');
   _renderDetCorpo(i, false);
@@ -12384,7 +12386,7 @@ async function _sincronizarAoLogin() {
         situacao: (()=>{const m={'MORTO(A)':'MORTO','DOADO(A)':'TRANSFERIDO','VENDIDO(A)':'VENDIDO','Vendido(a)':'VENDIDO','Transferido/Doado':'TRANSFERIDO','Morto(a)':'MORTO','Na Cabanha':'NA CABANHA','Empréstimo':'EMPRESTIMO'}; return m[a.situacao]||a.situacao||'NA CABANHA';})(), estagio: a.estagio||'',
         obs: a.obs||'', sexo: a.sexo||'', pelagem: a.pelagem||'',
         ult_vac: '', prox_vac: a.prox_vac||'', ult_verm:'', val_exame: a.val_exame||'',
-        confirmado: !!a.confirmado,
+        confirmado: a.confirmacao_status === 'confirmado' || !!a.confirmado,
         castrado: !!a.castrado,
         qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         receptora: !!a.receptora,
