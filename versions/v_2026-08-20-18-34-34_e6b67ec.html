@@ -1046,6 +1046,7 @@
   <!-- PENDÊNCIAS -->
 
   <div id="tab-pendencias"<div id="tab-pendencias" style="display:none">
+  <div id="pend-repro-cancelados" style="display:none;margin-bottom:16px"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px">
       <div style="font-size:12px;color:var(--text2)">Pendências geradas automaticamente ao criar eventos. Clique em "Resolvida" quando regularizado.</div>
       <button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Limpar todas as pendências resolvidas?')){pendencias=pendencias.filter(p=>!p.resolvida);renderPendencias()}">Limpar resolvidas</button>
@@ -4290,23 +4291,36 @@ function renderMedHistorico() {
   });
   rows.sort((a,b)=>b.data.localeCompare(a.data));
   if(!rows.length){el.innerHTML='<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhuma medição registrada.</div>';return;}
-  el.innerHTML=`<div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr>
-    <th style="padding:9px 10px">Animal</th><th>Data</th><th>Contexto</th><th>Cernelha</th><th>Tórax</th><th>Canela</th><th>Peso</th><th>Escore</th><th>Responsável</th>
-  </tr></thead><tbody>${rows.map(r=>{
-    const pad=r.sexo?.toLowerCase().includes('macho')?PADRÃO_ABCCC.macho:PADRÃO_ABCCC.femea;
-    const stC=checaMedida(r.cernelha,pad.cernelha_min,pad.cernelha_max),stT=checaMedida(r.torax,pad.torax_min,null),stCan=checaMedida(r.canela,pad.canela_min,null);
-    return`<tr>
-      <td style="padding:6px 10px;font-weight:600">${r.nomeAnimal}</td>
-      <td style="font-size:12px">${fd(r.data)}</td>
-      <td><span class="badge bgr">${r.contexto||'Rotina'}</span></td>
-      <td>${r.cernelha?`<span class="med-val-pill ${stC}">${r.cernelha}m</span>`:'—'}</td>
-      <td>${r.torax?`<span class="med-val-pill ${stT}">${r.torax}m</span>`:'—'}</td>
-      <td>${r.canela?`<span class="med-val-pill ${stCan}">${r.canela}m</span>`:'—'}</td>
-      <td>${r.peso?r.peso+'kg':'—'}</td>
-      <td>${r.escore?r.escore+'/9':'—'}</td>
-      <td style="font-size:11px;color:var(--text2)">${r.resp||'—'}</td>
-    </tr>`;
-  }).join('')}</tbody></table></div>`;
+  el.innerHTML = '<div class="card" style="padding:0;overflow:hidden;overflow-x:auto"><table><thead><tr>'
+    + '<th style="padding:9px 10px">Animal</th><th>Data</th><th>Contexto</th><th>Cernelha</th><th>Tórax</th><th>Canela</th><th>Peso</th><th>Escore</th><th>Responsável</th><th></th>'
+    + '</tr></thead><tbody>'
+    + rows.map(r => {
+        const pad = r.sexo?.toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
+        const stC = checaMedida(r.cernelha, pad.cernelha_min, pad.cernelha_max);
+        const stT = checaMedida(r.torax, pad.torax_min, null);
+        const stCan = checaMedida(r.canela, pad.canela_min, null);
+        const animalIdx = animais.findIndex(a => a.nome === r.nomeAnimal);
+        const medIdx = animalIdx >= 0 ? getMedidas(animalIdx).findIndex(m => m.data === r.data && m.db_id === r.db_id) : -1;
+        const isAbccc = r.contexto === 'ABCCC' || r.resp === 'ABCCC';
+        const btnEditar = isAbccc
+          ? '<span style="font-size:10px;color:var(--text3)" title="Medição oficial ABCCC">🔒</span>'
+          : (animalIdx >= 0 && medIdx >= 0
+              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedida(' + animalIdx + ',' + medIdx + ')">✏</button>'
+              : '');
+        return '<tr>'
+          + '<td style="padding:6px 10px;font-weight:600">' + r.nomeAnimal + '</td>'
+          + '<td style="font-size:12px">' + fd(r.data) + '</td>'
+          + '<td><span class="badge bgr">' + (r.contexto||'Rotina') + '</span></td>'
+          + '<td>' + (r.cernelha ? '<span class="med-val-pill ' + stC + '">' + r.cernelha + 'm</span>' : '—') + '</td>'
+          + '<td>' + (r.torax   ? '<span class="med-val-pill ' + stT   + '">' + r.torax   + 'm</span>' : '—') + '</td>'
+          + '<td>' + (r.canela  ? '<span class="med-val-pill ' + stCan + '">' + r.canela  + 'm</span>' : '—') + '</td>'
+          + '<td>' + (r.peso ? r.peso + 'kg' : '—') + '</td>'
+          + '<td>' + (r.escore ? r.escore + '/9' : '—') + '</td>'
+          + '<td style="font-size:11px;color:var(--text2)">' + (r.resp||'—') + '</td>'
+          + '<td>' + btnEditar + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
 }
 
 // ─── VERMIFUGAÇÃO ─────────────────────────────────────────────────────────────
@@ -5324,7 +5338,7 @@ function _renderDetCorpo(i, editando) {
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
-      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
+      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
@@ -8890,7 +8904,9 @@ function _calcStatusConfirmacao(animal) {
 
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
-  const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+  // Para avaliação de confirmação: última medição com cernelha/tórax/canela
+  const ultComMetricaC = hist.filter(m => m.cernelha||m.torax||m.canela).sort((a,b) => b.data.localeCompare(a.data))[0] || null;
+  const ult = ultComMetricaC || (hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null);
   // Usa idade na data da medição — não a idade de hoje
   // Assim o sistema avalia se a medida estava dentro do esperado QUANDO foi registrada
   const meses = ult?.data ? _idadeMesesNaData(animal.nasc, ult.data) : _idadeMeses(animal.nasc);
@@ -8947,7 +8963,11 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
 
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
-  const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+  // Para confirmação: usar última medição que tenha cernelha (mais relevante para ABCCC)
+  // Fallback: última medição com qualquer dado métrico, depois qualquer medição
+  const ultComCernelha = hist.filter(m => m.cernelha).sort((a,b) => b.data.localeCompare(a.data))[0] || null;
+  const ultComMetrica  = hist.filter(m => m.cernelha||m.torax||m.canela).sort((a,b) => b.data.localeCompare(a.data))[0] || null;
+  const ult = ultComCernelha || ultComMetrica || (hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null);
   const meses = ult?.data ? _idadeMesesNaData(animal.nasc, ult.data) : _idadeMeses(animal.nasc);
   const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
   const isMacho = (animal.sexo||'').toLowerCase().includes('macho');
@@ -9081,6 +9101,7 @@ async function _marcarParaConfirmacao(i) {
   if (!confirm('Marcar este animal para confirmação com técnico ABCCC?')) return;
   await _supa('PATCH','animais',{confirmacao_status:'aguardando_confirmacao'},`?id=eq.${a.db_id}`);
   a.confirmacao_status = 'aguardando_confirmacao';
+  a.confirmado = false;
   _renderDetCorpo(i, false);
   renderAnimais();
   toast('Animal marcado para confirmação.');
@@ -9102,8 +9123,9 @@ async function _confirmarNaoConfirmacao() {
   const obs    = document.getElementById('nc-obs').value;
   if (!motivo) { alert('Selecione um motivo.'); return; }
   const obsCompleta = [motivo, obs].filter(Boolean).join(' — ');
-  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta},`?id=eq.${a.db_id}`);
+  await _supa('PATCH','animais',{confirmacao_status:'nao_confirmado',confirmacao_obs:obsCompleta,confirmado:false},`?id=eq.${a.db_id}`);
   a.confirmacao_status = 'nao_confirmado';
+  a.confirmado = false;
   a.confirmacao_obs = obsCompleta;
   closeModal('modal-nao-confirmar');
   _renderDetCorpo(i, false);
@@ -9511,16 +9533,76 @@ function _confirmarAprovacaoAcasalamento() {
   renderAcasalamentos();
 }
 
-function acasCancelar(i) {
+async function acasCancelar(i) {
   const a = acasalamentos[i];
   if(!a) return;
+
+  // Verificar se está em andamento com o veterinário
+  const est = reproducaoEstagios.find(e => String(e.acasalamento_id) === String(a.db_id));
+  const emVet = est && est.estagio !== 'controle';
+
+  if (emVet) {
+    const ok = confirm(
+      'Este cruzamento já está em andamento com o veterinário.\n\n' +
+      'Égua: ' + a.egua_nome + '\n' +
+      'Garanhão: ' + (a.garanhao_nome||'—') + '\n\n' +
+      'O veterinário será notificado em Pendências.\nDeseja cancelar mesmo assim?'
+    );
+    if (!ok) return;
+  }
+
   const motivo = prompt('Motivo do cancelamento (obrigatório):');
-  if(!motivo || !motivo.trim()) return;
+  if (!motivo || !motivo.trim()) return;
+
   a.status = 'cancelado';
   a.motivo_cancelamento = motivo.trim();
   _dbAtualizarStatusAcasalamento(a, {status: 'cancelado', motivo_cancelamento: a.motivo_cancelamento});
+
+  // Notificar veterinário via flag no estágio
+  if (emVet && est.db_id) {
+    est.cancelado_pelo_criador = true;
+    est.cancelado_em = new Date().toISOString();
+    await _supa('PATCH', 'reproducao_estagios',
+      {cancelado_pelo_criador: true, cancelado_em: est.cancelado_em},
+      '?id=eq.' + est.db_id
+    );
+  }
+
   renderAcasalamentos();
   renderEguasCriaPlanejador();
+  if (emVet) {
+    renderReprodutivoVet();
+    _renderPendenciasRepro();
+  }
+}
+
+function _renderPendenciasRepro() {
+  const el = document.getElementById('pend-repro-cancelados');
+  if (!el) return;
+  const cancelados = reproducaoEstagios.map((e,ei) => ({e,ei})).filter(({e}) => e.cancelado_pelo_criador);
+  if (!cancelados.length) { el.innerHTML=''; el.style.display='none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--red-d);margin-bottom:8px">Cruzamentos cancelados pelo criador — confirme leitura</div>'
+    + cancelados.map(({e,ei}) => {
+        const a = acasalamentos.find(x => String(x.db_id) === String(e.acasalamento_id));
+        return '<div style="background:var(--red-l);border:1px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
+          + '<div style="font-size:12px;font-weight:500;color:var(--red-d)">'
+          + (a ? a.egua_nome + ' × ' + (a.garanhao_nome||'—') : 'Cruzamento') + '</div>'
+          + (e.cancelado_em ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">Cancelado em ' + fd(e.cancelado_em.slice(0,10)) + '</div>' : '')
+          + '<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi(' + ei + ')">✓ Li e entendi</button>'
+          + '</div>';
+      }).join('');
+}
+
+async function _reproLiEntendi(ei) {
+  const e = reproducaoEstagios[ei];
+  if (!e) return;
+  if (!confirm('Confirmar leitura e remover do funil veterinário?')) return;
+  if (e.db_id) await _supa('DELETE', 'reproducao_estagios', null, '?id=eq.' + e.db_id);
+  reproducaoEstagios.splice(ei, 1);
+  renderReprodutivoVet();
+  _renderPendenciasRepro();
+  toast('Cruzamento removido do funil veterinário.');
 }
 
 function _toggleCanceladosAcasalamentos() {
@@ -10394,8 +10476,16 @@ function _reproVetCard(ei) {
     </div>`;
   }
 
-  return `<div class="kanban-card">
-    <div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
+  const _bannerC = e.cancelado_pelo_criador
+    ? '<div style="background:var(--red-l);border:1.5px solid var(--red);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--red-d)">Criador cancelou este cruzamento</div>'
+      + (e.cancelado_em ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">em ' + fd(e.cancelado_em.slice(0,10)) + '</div>' : '')
+      + '<button class="btn btn-sm" style="margin-top:6px;background:var(--red-d);color:#fff;border-color:var(--red-d)" onclick="_reproLiEntendi(' + ei + ')">✓ Li e entendi — remover do funil</button>'
+      + '</div>'
+    : '';
+  return '<div class="kanban-card"' + (e.cancelado_pelo_criador ? ' style="border-color:var(--red);opacity:0.85"' : '') + '>'
+    + _bannerC
+    + `<div class="kanban-card-nome">${a.egua_nome}${bloqueado ? ' <span class="badge br" style="font-size:9px">Bloqueada</span>' : ''}</div>
     <div class="kanban-card-info">
       Garanhão: ${a.garanhao_nome || '—'} · Ciclo ${a.ciclo || '—'}<br>
       ${AC_TIPO_LABEL[a.tipo_cobertura] || a.tipo_cobertura || '—'}${dias !== null ? ' · ' + dias + 'd no estágio' : ''}
@@ -12296,7 +12386,7 @@ async function _sincronizarAoLogin() {
         situacao: (()=>{const m={'MORTO(A)':'MORTO','DOADO(A)':'TRANSFERIDO','VENDIDO(A)':'VENDIDO','Vendido(a)':'VENDIDO','Transferido/Doado':'TRANSFERIDO','Morto(a)':'MORTO','Na Cabanha':'NA CABANHA','Empréstimo':'EMPRESTIMO'}; return m[a.situacao]||a.situacao||'NA CABANHA';})(), estagio: a.estagio||'',
         obs: a.obs||'', sexo: a.sexo||'', pelagem: a.pelagem||'',
         ult_vac: '', prox_vac: a.prox_vac||'', ult_verm:'', val_exame: a.val_exame||'',
-        confirmado: !!a.confirmado,
+        confirmado: a.confirmacao_status === 'confirmado' || !!a.confirmado,
         castrado: !!a.castrado,
         qtd_coberturas_padrao: a.qtd_coberturas_padrao ?? 120,
         receptora: !!a.receptora,
@@ -12533,6 +12623,8 @@ async function _sincronizarAoLogin() {
         reproducaoEstagios.push({
           db_id: e.id, acasalamento_id: e.acasalamento_id, estagio: e.estagio || 'controle',
           data_entrada_estagio: e.data_entrada_estagio,
+          cancelado_pelo_criador: !!e.cancelado_pelo_criador,
+          cancelado_em: e.cancelado_em || null,
         });
       });
     }
