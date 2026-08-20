@@ -8903,7 +8903,9 @@ function _calcStatusConfirmacao(animal) {
 
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
-  const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+  // Para avaliação de confirmação: última medição com cernelha/tórax/canela
+  const ultComMetricaC = hist.filter(m => m.cernelha||m.torax||m.canela).sort((a,b) => b.data.localeCompare(a.data))[0] || null;
+  const ult = ultComMetricaC || (hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null);
   // Usa idade na data da medição — não a idade de hoje
   // Assim o sistema avalia se a medida estava dentro do esperado QUANDO foi registrada
   const meses = ult?.data ? _idadeMesesNaData(animal.nasc, ult.data) : _idadeMeses(animal.nasc);
@@ -8960,7 +8962,11 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
 
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
-  const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+  // Para confirmação: usar última medição que tenha cernelha (mais relevante para ABCCC)
+  // Fallback: última medição com qualquer dado métrico, depois qualquer medição
+  const ultComCernelha = hist.filter(m => m.cernelha).sort((a,b) => b.data.localeCompare(a.data))[0] || null;
+  const ultComMetrica  = hist.filter(m => m.cernelha||m.torax||m.canela).sort((a,b) => b.data.localeCompare(a.data))[0] || null;
+  const ult = ultComCernelha || ultComMetrica || (hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null);
   const meses = ult?.data ? _idadeMesesNaData(animal.nasc, ult.data) : _idadeMeses(animal.nasc);
   const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
   const isMacho = (animal.sexo||'').toLowerCase().includes('macho');
