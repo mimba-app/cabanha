@@ -4008,6 +4008,20 @@ function abrirLaudo(b64, nome, tipo) {
 
 // ── EDITAR MEDIDA ─────────────────────────────────────────────────────────────
 
+
+// Editar medida a partir do histórico — usa data-attributes para evitar aspas aninhadas
+function _emh(btn) {
+  const ai = parseInt(btn.getAttribute('data-ai'));
+  const di = btn.getAttribute('data-di');
+  if (!di) return;
+  // Buscar a medição pelo db_id em todos os índices de medidas
+  for (const [ki, lista] of Object.entries(medidas)) {
+    const mi = lista.findIndex(m => m.db_id === di);
+    if (mi >= 0) { abrirEditarMedida(parseInt(ki), mi); return; }
+  }
+  toast('Medição não encontrada. Recarregue a página.');
+}
+
 function abrirEditarMedida(animalIdx, medIdx) {
   const m = getMedidas(animalIdx)[medIdx];
   if (!m) return;
@@ -4304,8 +4318,8 @@ function renderMedHistorico() {
         const isAbccc = r.contexto === 'ABCCC' || r.resp === 'ABCCC';
         const btnEditar = isAbccc
           ? '<span style="font-size:10px;color:var(--text3)" title="Medição oficial ABCCC">🔒</span>'
-          : (animalIdx >= 0 && medIdx >= 0
-              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px" onclick="abrirEditarMedida(' + animalIdx + ',' + medIdx + ')">✏</button>'
+          : (animalIdx >= 0 && r.db_id
+              ? '<button class="btn btn-sm" style="font-size:10px;padding:2px 7px;min-width:28px" data-ai="' + animalIdx + '" data-di="' + r.db_id + '" onclick="_emh(this)">✏</button>'
               : '');
         return '<tr>'
           + '<td style="padding:6px 10px;font-weight:600">' + r.nomeAnimal + '</td>'
