@@ -8744,6 +8744,13 @@ function _interpolarCurva(curva, meses) {
   return 1.0;
 }
 
+function _idadeMesesNaData(nasc, dataRef) {
+  if (!nasc || !dataRef) return _idadeMeses(nasc);
+  const n = new Date(nasc + 'T12:00:00');
+  const ref = new Date(dataRef + 'T12:00:00');
+  return Math.max(0, (ref.getFullYear() - n.getFullYear()) * 12 + (ref.getMonth() - n.getMonth()));
+}
+
 function _idadeMeses(nasc) {
   if (!nasc) return null;
   const n = new Date(nasc + 'T12:00:00'), hoje = new Date();
@@ -8794,13 +8801,15 @@ function _calcStatusConfirmacao(animal) {
   const manual = animal.confirmacao_status;
   if (manual === 'confirmado' || manual === 'nao_confirmado' || manual === 'aguardando_confirmacao') return manual;
 
-  const meses = _idadeMeses(animal.nasc);
-  if (meses === null) return 'em_desenvolvimento';
-
-  const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
   const ult = hist.length ? hist.reduce((b,x) => x.data > b.data ? x : b) : null;
+  // Usa idade na data da medição — não a idade de hoje
+  // Assim o sistema avalia se a medida estava dentro do esperado QUANDO foi registrada
+  const meses = ult?.data ? _idadeMesesNaData(animal.nasc, ult.data) : _idadeMeses(animal.nasc);
+  if (meses === null) return 'em_desenvolvimento';
+
+  const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
 
   if (!ult) return 'em_desenvolvimento';
 
@@ -8849,7 +8858,8 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   const status = _calcStatusConfirmacao(animal);
   if (status === 'nao_confirmado') return '';
 
-  const meses = _idadeMeses(animal.nasc);
+  const _ultMed = (() => { const h=getMedidas(animais.indexOf(animal)); return h.length?h.reduce((b,x)=>x.data>b.data?x:b):null; })();
+  const meses = _ultMed?.data ? _idadeMesesNaData(animal.nasc, _ultMed.data) : _idadeMeses(animal.nasc);
   const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
   const i = animais.indexOf(animal);
   const hist = getMedidas(i);
