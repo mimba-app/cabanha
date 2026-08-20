@@ -2487,7 +2487,7 @@
     <div id="rm-padrão-info" style="margin-top:8px;padding:8px 10px;background:var(--blue-l);border-radius:var(--radius);font-size:11px;color:var(--blue-d)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="7" width="20" height="10" rx="1"/><path d="M6 7v3M10 7v5M14 7v3M18 7v5"/></svg> <strong>Padrão ABCCC:</strong> Machos — cernelha 1,40–1,50m · tórax ≥1,68m · canela ≥0,18m &nbsp;|&nbsp; Fêmeas — cernelha 1,38–1,48m · tórax ≥1,70m · canela ≥0,175m
     </div>
-    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-reg-med');document.getElementById('rm-titulo').textContent='Registrar medidas';document.getElementById('rm-btn-salvar').textContent='Salvar';document.getElementById('rm-btn-salvar').onclick=salvarMedida;">Cancelar</button><button class="btn btn-primary" id="rm-btn-salvar" onclick="salvarMedida()">Salvar medidas</button></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-reg-med');document.getElementById('rm-titulo').textContent='Registrar medidas';document.getElementById('rm-btn-salvar').textContent='Salvar medidas';document.getElementById('rm-btn-salvar').onclick=salvarMedida;window._editMedAnimalIdx=undefined;window._editMedIdx=undefined;">Cancelar</button><button class="btn btn-primary" id="rm-btn-salvar">Salvar medidas</button></div>
   </div>
 </div>
 
@@ -4007,6 +4007,13 @@ function abrirLaudo(b64, nome, tipo) {
 
 
 // ── EDITAR MEDIDA ─────────────────────────────────────────────────────────────
+
+
+// Inicializar handler do botão salvar medida (evita conflito entre onclick HTML e JS)
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('rm-btn-salvar');
+  if (btn) btn.onclick = salvarMedida;
+});
 
 function abrirEditarMedida(animalIdx, medIdx) {
   const m = getMedidas(animalIdx)[medIdx];
