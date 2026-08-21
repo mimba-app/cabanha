@@ -12,7 +12,7 @@
 | 1 | Ajuste de tipografia do design system | Alta (destrava o resto) | ✅ Feito — Manrope aplicada em tudo, mergeado na `main` |
 | 2 | Cruzamentos com dois modos (rápido / imersivo) | **A mais importante** | ✅ Implementado, em `staging` — aguardando validação do Luciano antes de mergear |
 | 3 | Avaliar app mobile nativo + loja | Média | ✅ Decidido (2026-08-22) — ver seção 3 |
-| 4 | Agente de IA interno de apoio | Média | Escopo de produto fechado — falta ADR de arquitetura |
+| 4 | Agente de IA interno de apoio | Média | ✅ ADR 0006 registrado — falta revisão de isolamento + implementação |
 
 ---
 
@@ -140,15 +140,26 @@ dúvida":
   cabanha — precisa de RPCs/ferramentas restritas, no mesmo espírito de
   `tem_acesso_tenant`), custo por chamada e como isso entra no preço do
   plano.
-- Como o agente combina os 3 domínios de dado (schema da cabanha, Mimba Lab,
-  conhecimento geral do sistema) sem confundir contexto.
-- Dado o tamanho, esse é candidato a **outro ADR** antes de qualquer linha de
-  código — decisão estrutural (novo serviço/edge function, acesso a dado
-  sensível, custo recorrente por chamada de modelo).
+**Arquitetura decidida — ADR 0006** (`docs/adr/0006-agente-de-ia-interno-arquitetura.md`):
 
-**Próximo passo:** sessão de arquitetura dedicada (o `arquiteto` conduz) pra
-desenhar como o agente acessa dado com segurança e qual o modelo de custo,
-antes de qualquer protótipo.
+- **Orquestração:** Claude API chamada por uma Edge Function Deno nova
+  (`agente-ia`), rodando com o JWT do usuário (nunca `service_role`),
+  streaming SSE direto pro chat, sem lib nova no frontend. Chave da API só
+  como secret de servidor.
+- **Ferramentas — princípio não negociável:** toda ferramenta do agente é
+  uma RPC existente ou nova read-only, no mesmo padrão de segurança já
+  usado no projeto (`tem_acesso_tenant`, `SECURITY DEFINER`, grant só
+  `authenticated`) — nunca SQL livre. Superfície inicial desenhada:
+  `cab_buscar_animal`, `cab_listar_gestacoes_ativas`, `cab_resumo_periodo`,
+  `abccc_analisar_cruzamento`, `abccc_genealogia_resumo`, `ajuda_sistema`.
+- **3 domínios de dado** (cabanha, Mimba Lab, conhecimento de uso do
+  sistema): atribuição de fonte feita pela Edge Function, não pelo modelo —
+  nunca deixa o dado agregado do Lab se misturar com o dado da cabanha do
+  jeito que pareça a mesma coisa.
+- **Custo:** rate limit técnico por tenant, configurável por plano —
+  número exato de cota é decisão de precificação, fora do ADR.
+- Qualquer RPC nova passa por `revisor-isolamento` antes de implementar —
+  **nenhuma implementação foi feita ainda**, só a decisão registrada.
 
 ---
 
