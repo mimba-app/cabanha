@@ -7,7 +7,7 @@
 <script>
   // Aplica o tema salvo (se houver) ANTES do CSS pintar a tela — sem isso, a página
   // pinta primeiro com prefers-color-scheme e só depois troca pro tema escolhido,
-  // gerando um flash visível. Ver _alternarTema() no script principal.
+  // gerando um flash visível. Ver _definirTema() no script principal.
   try {
     const t = localStorage.getItem('mimba_tema');
     if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
@@ -98,7 +98,7 @@
     --fs-2xl: 30px;
   }
   /* Tema escuro — via preferência do sistema (prefers-color-scheme) OU escolha manual
-     (data-theme, toggle na sidebar, persistida em localStorage — ver _alternarTema()).
+     (data-theme, toggle em Conta > Cabanha, persistida em localStorage — ver _definirTema()).
      O media query só vale quando não há escolha manual explícita pra CLARO
      (:not([data-theme="light"])); o bloco [data-theme="dark"] repete os mesmos valores
      pra a escolha manual de escuro valer mesmo com o sistema em claro. */
@@ -808,15 +808,15 @@
   .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
   .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
 
-  /* Seletor de modo (Rápido × Inteligência) — mesmo padrão visual do toggle de tema da
-     sidebar (pill com estado ativo). Fica fora de .jornada-ac (escolhe ENTRE a tela clássica
-     de duas colunas e a jornada, não é parte de nenhuma das duas), então usa os tokens reais
-     direto em vez dos aliases --ja-*, que só existem dentro de .jornada-ac. Persistido por
-     pessoa (localStorage), não pelo tema do app inteiro. */
-  #ja-modo-wrap .ja-modo-switch{display:inline-flex;gap:2px;background:var(--pergaminho2);border:var(--card-border);border-radius:99px;padding:3px;margin-bottom:18px;}
-  #ja-modo-wrap .ja-modo-btn{border:none;background:none;font-family:var(--font);font-weight:700;font-size:12px;padding:8px 16px;border-radius:99px;cursor:pointer;color:var(--ink-50);transition:background .15s,color .15s;}
-  #ja-modo-wrap .ja-modo-btn.on{background:var(--pergaminho);color:var(--ink);box-shadow:var(--sh-sm);}
-  #ja-modo-wrap .ja-modo-hint{font-size:12px;color:var(--ink-50);margin:-10px 0 18px;}
+  /* Pill toggle genérico (estado ativo destacado) — usado no seletor de modo de Cruzamentos
+     (Rápido × Inteligência) e no toggle de tema (Claro × Escuro) em Conta. Componente
+     independente, sem escopo de ancestral — usa os tokens reais direto. */
+  .pill-switch{display:inline-flex;gap:2px;background:var(--pergaminho2);border:var(--card-border);border-radius:99px;padding:3px;}
+  .pill-switch-btn{border:none;background:none;font-family:var(--font);font-weight:700;font-size:12px;padding:8px 16px;border-radius:99px;cursor:pointer;color:var(--ink-50);transition:background .15s,color .15s;}
+  .pill-switch-btn.on{background:var(--pergaminho);color:var(--ink);box-shadow:var(--sh-sm);}
+  .pill-switch-hint{font-size:12px;color:var(--ink-50);}
+  #ja-modo-wrap .pill-switch{margin-bottom:18px;}
+  #ja-modo-wrap .pill-switch-hint{margin:-10px 0 18px;}
 
   .jornada-ac .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:20px;padding:18px 22px;border:var(--card-border);box-shadow:var(--ja-sh-md);}
   .jornada-ac .ja-alvo-av{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:linear-gradient(140deg,var(--ja-campo-soft),var(--ja-pergaminho2));
@@ -1114,16 +1114,6 @@
 <div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
 
 <div class="sidebar" id="sidebar-main">
-  <!-- Linha própria, fora de .logo: a imagem de logo de cada cabanha varia muito de
-       tamanho/proporção (max-height:72px, largura livre) e um botão absoluto sobre ela
-       ficava sobreposto dependendo do logo — achado real, 2026-08-22. Uma linha dedicada
-       acima da logo nunca colide, seja qual for o tamanho da imagem. -->
-  <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
-    <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="color:var(--chrome-text3)">
-      <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
-      <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
-  </div>
   <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
     <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M</span></div>
@@ -1690,11 +1680,11 @@
          jornada completa (docs/spec-acasalamento-jornada-tres-direcoes.md): Conselho ranqueia
          as fontes por nota, Confluência de Sangues e Dossiê Selado seguem depois. -->
     <div id="ja-modo-wrap">
-      <div class="ja-modo-switch" id="ja-modo-switch">
-        <button class="ja-modo-btn" id="ja-modo-btn-rapido" onclick="jaSelecionarModo('rapido')">⚡ Rápido</button>
-        <button class="ja-modo-btn" id="ja-modo-btn-inteligencia" onclick="jaSelecionarModo('inteligencia')">✨ Inteligência</button>
+      <div class="pill-switch" id="ja-modo-switch">
+        <button class="pill-switch-btn" id="ja-modo-btn-rapido" onclick="jaSelecionarModo('rapido')">⚡ Rápido</button>
+        <button class="pill-switch-btn" id="ja-modo-btn-inteligencia" onclick="jaSelecionarModo('inteligencia')">✨ Inteligência</button>
       </div>
-      <div class="ja-modo-hint" id="ja-modo-hint"></div>
+      <div class="pill-switch-hint" id="ja-modo-hint"></div>
     </div>
 
     <!-- MODO RÁPIDO: duas colunas, clique-clique, sem ranking — pra quem despacha volume alto. -->
@@ -2241,6 +2231,16 @@
             <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
             <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
             <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
+          </div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Tema</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="pill-switch" id="conta-tema-switch">
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
+            </div>
+            <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
           </div>
         </div>
       </div>
@@ -12668,6 +12668,7 @@ function abrirTelaConta() {
   else { logoImg.style.display='none'; logoPh.style.display='flex'; }
   window._contaNovoLogo = undefined;
   document.getElementById('conta-cor-primaria').value = TENANT_INFO?.cor_primaria || '#2D6A4F';
+  _atualizarIconeTema();
   document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
   document.getElementById('conta-tab-cabanha').style.display = '';
   document.getElementById('conta-tab-usuarios').style.display = 'none';
@@ -14877,11 +14878,12 @@ function _misturarComBranco(hex, pct) {
   return `rgb(${mix(rgb.r)},${mix(rgb.g)},${mix(rgb.b)})`;
 }
 
-// Toggle de tema claro/escuro (sidebar) — por padrão o app segue prefers-color-scheme
-// (:root e o media query no <style>); escolher aqui grava data-theme no <html> e persiste
-// em localStorage, sobrepondo o sistema até a pessoa trocar de novo. O script inline no
-// <head> (antes do <style>) já aplica esse valor salvo cedo, pra não piscar o tema errado
-// no primeiro paint.
+// Toggle de tema claro/escuro — vive em Conta > Cabanha (pill "Claro"/"Escuro", junto da cor
+// da marca), não mais na sidebar. Por padrão o app segue prefers-color-scheme (:root e o
+// media query no <style>); escolher aqui grava data-theme no <html> e persiste em
+// localStorage, sobrepondo o sistema até a pessoa trocar de novo. O script inline no <head>
+// (antes do <style>) já aplica esse valor salvo cedo, pra não piscar o tema errado no
+// primeiro paint.
 const TEMA_KEY = 'mimba_tema';
 function _temaEfetivo() {
   const salvo = document.documentElement.getAttribute('data-theme');
@@ -14890,16 +14892,13 @@ function _temaEfetivo() {
 }
 function _atualizarIconeTema() {
   const escuro = _temaEfetivo() === 'dark';
-  const sol = document.getElementById('icon-tema-sol');
-  const lua = document.getElementById('icon-tema-lua');
-  if (!sol || !lua) return;
-  // Mostra o sol quando o tema atual é escuro (clicar leva pro claro) e vice-versa —
-  // o ícone representa o destino do clique, não o estado atual.
-  sol.style.display = escuro ? '' : 'none';
-  lua.style.display = escuro ? 'none' : '';
+  const btnLight = document.getElementById('conta-tema-btn-light');
+  const btnDark = document.getElementById('conta-tema-btn-dark');
+  if (!btnLight || !btnDark) return;
+  btnLight.classList.toggle('on', !escuro);
+  btnDark.classList.toggle('on', escuro);
 }
-function _alternarTema() {
-  const novo = _temaEfetivo() === 'dark' ? 'light' : 'dark';
+function _definirTema(novo) {
   document.documentElement.setAttribute('data-theme', novo);
   document.documentElement.style.colorScheme = novo;
   try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
