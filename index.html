@@ -832,6 +832,50 @@
   .jornada-ac .ja-passo{font-family:var(--ja-mono);font-size:11px;color:var(--ja-ink-30);opacity:0;animation:ja-entrapasso .4s ease forwards;}
   .jornada-ac .ja-passo.ja-p1{animation-delay:.1s;} .jornada-ac .ja-passo.ja-p2{animation-delay:.6s;} .jornada-ac .ja-passo.ja-p3{animation-delay:1.1s;}
   @keyframes ja-entrapasso{to{opacity:1;color:var(--ja-ink-70);}}
+
+  /* arena — direção A (O Dossiê Selado) */
+  .jornada-ac .ja-arena{position:relative;display:flex;align-items:center;justify-content:center;gap:0;min-height:190px;}
+  .jornada-ac .ja-lado{width:230px;background:var(--ja-pergaminho);border-radius:18px;padding:15px 17px;box-shadow:var(--ja-sh-sm);
+        transition:transform .75s cubic-bezier(.22,1,.36,1), box-shadow .75s;position:relative;z-index:2;}
+  .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-esq, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-esq{transform:translateX(40px);box-shadow:var(--ja-sh-md);}
+  .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-dir, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-dir{transform:translateX(-40px);box-shadow:var(--ja-sh-md);}
+  .jornada-ac .ja-lado-nome{font-family:var(--ja-serif);font-weight:700;font-size:16px;line-height:1.15;}
+  .jornada-ac .ja-lado-meta{font-family:var(--ja-mono);font-size:10.5px;color:var(--ja-ink-50);margin-top:4px;}
+  .jornada-ac .ja-centro{width:120px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;z-index:3;}
+  .jornada-ac .ja-fio{position:absolute;top:50%;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,var(--ja-ink-15),transparent);}
+  .jornada-ac .ja-arena.ja-fase-1 .ja-fio, .jornada-ac .ja-arena.ja-fase-2 .ja-fio{background:linear-gradient(90deg,transparent,var(--ja-ouro),transparent);
+      box-shadow:0 0 16px 2px rgba(184,134,11,.5);transition:all .5s;}
+  .jornada-ac .ja-nucleo{width:56px;height:56px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;
+          background:radial-gradient(circle at 40% 35%, #F3E2A8, var(--ja-ouro));box-shadow:0 0 30px 7px rgba(184,134,11,.45);
+          animation:ja-pulsa 1.05s ease-in-out infinite;}
+  @keyframes ja-pulsa{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+  .jornada-ac .ja-nucleo::before,.jornada-ac .ja-nucleo::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1.5px solid rgba(184,134,11,.55);animation:ja-onda 1.8s ease-out infinite;}
+  .jornada-ac .ja-nucleo::after{animation-delay:.9s;}
+  @keyframes ja-onda{0%{transform:scale(.85);opacity:.9;}100%{transform:scale(2.1);opacity:0;}}
+  .jornada-ac .ja-selo{width:104px;height:104px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        position:relative;animation:ja-carimbo .62s cubic-bezier(.2,1.5,.4,1) both;}
+  .jornada-ac .ja-selo .ja-aro{position:absolute;inset:7px;border-radius:50%;border:1.5px dashed currentColor;opacity:.5;}
+  .jornada-ac .ja-selo .ja-nucleo-txt{font-family:var(--ja-serif);font-weight:900;font-size:26px;line-height:1;}
+  .jornada-ac .ja-selo .ja-lbl{font-family:var(--ja-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;text-align:center;padding:0 8px;}
+  @keyframes ja-carimbo{0%{transform:scale(2.7) rotate(-20deg);opacity:0;}58%{transform:scale(.93) rotate(-6deg);opacity:1;}76%{transform:scale(1.05) rotate(-4.2deg);}100%{transform:scale(1) rotate(-5deg);opacity:1;}}
+  .jornada-ac .ja-impacto{position:absolute;width:104px;height:104px;border-radius:50%;border:2px solid var(--ja-campo);
+           animation:ja-impacto .75s ease-out .3s both;pointer-events:none;}
+  @keyframes ja-impacto{0%{transform:scale(.6);opacity:.85;}100%{transform:scale(2.6);opacity:0;}}
+
+  .jornada-ac .ja-dossie{margin-top:22px;animation:ja-sobe .6s cubic-bezier(.22,1,.36,1) both;}
+  .jornada-ac .ja-dossie-topo{display:flex;align-items:flex-start;gap:18px;background:var(--ja-pergaminho);border-radius:20px;padding:20px 22px;box-shadow:var(--ja-sh-md);}
+  .jornada-ac .ja-veredito-h{font-family:var(--ja-serif);font-weight:700;font-size:20px;line-height:1.15;}
+  .jornada-ac .ja-veredito-sub{font-size:12.5px;color:var(--ja-ink-70);margin-top:6px;line-height:1.55;max-width:440px;}
+  .jornada-ac .ja-grade{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;}
+  .jornada-ac .ja-bloco{background:var(--ja-pergaminho);border-radius:16px;padding:14px 16px;box-shadow:var(--ja-sh-sm);animation:ja-sobe .5s cubic-bezier(.22,1,.36,1) both;}
+  .jornada-ac .ja-bloco.ja-b1{animation-delay:.1s;} .jornada-ac .ja-bloco.ja-b2{animation-delay:.2s;} .jornada-ac .ja-bloco.ja-b3{animation-delay:.3s;}
+  .jornada-ac .ja-bloco-t{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:9px;}
+  .jornada-ac .ja-linha-anc{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--ja-ink-08);font-size:11.5px;}
+  .jornada-ac .ja-linha-anc:last-child{border-bottom:none;}
+  .jornada-ac .ja-barra2{height:6px;border-radius:99px;background:var(--ja-ink-08);overflow:hidden;margin-top:5px;}
+  .jornada-ac .ja-barra2 span{display:block;height:100%;border-radius:99px;background:var(--ja-campo);animation:ja-cresce2 .8s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes ja-cresce2{from{width:0 !important;}}
+  .jornada-ac .ja-acoes{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
   @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
 </style>
 </head>
@@ -1603,7 +1647,8 @@
 
           <div style="display:flex;gap:9px;margin-top:14px;justify-content:flex-end;">
             <button class="ja-btn2" onclick="_jaVoltarRanking()">Comparar com outra fonte</button>
-            <button class="ja-btn2 forte" id="ja-b-btn-aprovar" onclick="_jaAcasalarLinha(window._jaFonteAtualKey)" style="display:none;">Aprovar mesmo assim</button>
+            <button class="ja-btn2" onclick="_jaAcasalarLinha(window._jaFonteAtualKey, true)">Rodar dossiê selado</button>
+            <button class="ja-btn2 forte" id="ja-b-btn-aprovar" onclick="_jaAcasalarLinha(window._jaFonteAtualKey, false)" style="display:none;">Aprovar mesmo assim</button>
           </div>
         </div>
       </div>
@@ -9804,6 +9849,9 @@ function _acFontesAtivas() {
 // (com selects de Égua/Fonte visíveis) fica como fallback interno, chamado só se algo pedir
 // diretamente (ex.: nenhum ponto de entrada novo usa mais isso como padrão).
 function abrirModalAcasalamento() {
+  // Entrada manual (form completo) — nunca a cerimônia do Dossiê Selado, que é exclusiva
+  // do fluxo C→B→A da jornada (_jaAcasalarLinha).
+  window._jaModoDossie = false;
   const selEgua = document.getElementById('ac-egua');
   const eguas = _acEguasAtivas();
   selEgua.innerHTML = '<option value="">Selecione...</option>' +
@@ -9899,6 +9947,10 @@ async function _renderSimulacaoAcasalamento() {
   const egua = animais.find(a => String(a.db_id) === String(eguaId));
   const fonte = fontesCobertura.find(f => String(f.db_id) === String(fonteId));
   if(!egua || !fonte) { el.innerHTML = ''; return; }
+
+  // Direção A · O Dossiê Selado — só no fluxo C→B→A da jornada (_jaAcasalarLinha),
+  // nunca na entrada manual de formulário (abrirModalAcasalamento zera a flag).
+  if (window._jaModoDossie) { _jaRenderDossie(el, egua, fonte); return; }
 
   el.innerHTML = '<div class="card" style="font-size:12px;color:var(--text3)">Simulando...</div>';
 
@@ -10062,7 +10114,7 @@ function salvarAcasalamento() {
   acasalamentos.push(obj);
   _dbSalvarAcasalamento(obj, acasalamentos.length - 1);
   closeModal('modal-acasalamento');
-  window._jaEguaId = null; window._jaFase = 0;
+  window._jaEguaId = null; window._jaFase = 0; window._jaModoDossie = false;
   renderAcasalamentos();
   renderEguasCriaPlanejador();
 }
@@ -10713,14 +10765,143 @@ function _jaRenderVereditoB(c) {
     </div>`;
 }
 
+// Direção A · O Dossiê Selado — corpo do modal de confirmação quando chega pelo fluxo da
+// jornada (_jaAcasalarLinha). animado=true toca a cerimônia (arena aproximando, núcleo
+// pulsando, selo carimbando); animado=false mostra o resultado já pronto, pro usuário
+// que só quer confirmar rápido (ver comentário em _jaAcasalarLinha).
+async function _jaRenderDossie(el, egua, fonte) {
+  const animado = window._jaModoDossieAnimado !== false;
+  el.innerHTML = `
+    <div class="jornada-ac" style="padding:20px 22px;">
+      <div class="ja-arena" id="ja-a-arena">
+        <div class="ja-lado ja-esq">
+          <div class="ja-quem-papel">Garanhão · fonte</div>
+          <div class="ja-lado-nome">${fonte.garanhao_nome}</div>
+          <div class="ja-lado-meta">${fonte.garanhao_sbb ? 'SBB ' + fonte.garanhao_sbb + ' · ' : ''}${FC_TIPO_LABEL[fonte.tipo] || fonte.tipo}</div>
+        </div>
+        <div class="ja-centro">
+          <div class="ja-fio"></div>
+          <div id="ja-a-centro-conteudo"><div class="ja-nucleo"></div></div>
+        </div>
+        <div class="ja-lado ja-dir">
+          <div class="ja-quem-papel">Égua</div>
+          <div class="ja-lado-nome">${egua.nome}</div>
+          <div class="ja-lado-meta">${egua.sbb ? 'SBB ' + egua.sbb + ' · ' : ''}${egua.estagio || ''}</div>
+        </div>
+      </div>
+      <div id="ja-a-passos" class="ja-passos" style="align-items:center;">
+        <div class="ja-passo ja-p1">consultando SBB ${fonte.garanhao_sbb || '—'} e ${egua.sbb || '—'} na ABCCC</div>
+        <div class="ja-passo ja-p2">cruzando linhagens em busca de ancestral comum</div>
+        <div class="ja-passo ja-p3">projetando concentração de sangue da cria</div>
+      </div>
+      <div id="ja-a-dossie"></div>
+    </div>`;
+
+  const arena = document.getElementById('ja-a-arena');
+  arena.classList.add('ja-fase-1');
+  const c = window._jaConsangCache || await _jaConsanguinidade(egua, fonte);
+
+  const montar = () => {
+    arena.classList.add('ja-fase-2');
+    const risco = c.nivel >= 2 || (c.ic !== null && c.ic !== undefined && c.ic > 6.25);
+    document.getElementById('ja-a-centro-conteudo').innerHTML = `
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+        <div class="ja-impacto"></div>
+        <div class="ja-selo" style="background:${risco ? 'var(--ja-critico-soft)' : 'var(--ja-campo-soft)'};color:${risco ? 'var(--ja-critico)' : 'var(--ja-campo-deep)'};box-shadow:var(--ja-sh-md);">
+          <div class="ja-aro"></div>
+          <div class="ja-nucleo-txt">A</div>
+          <div class="ja-lbl">${risco ? 'Atenção' : 'Recomendado'}</div>
+        </div>
+      </div>`;
+    document.getElementById('ja-a-passos').style.display = 'none';
+    _jaMontarDossieConteudo(egua, fonte, c);
+  };
+  if (animado) setTimeout(montar, 2200); else montar();
+}
+
+function _jaMontarDossieConteudo(egua, fonte, c) {
+  const el = document.getElementById('ja-a-dossie');
+  const risco = c.nivel >= 2 || (c.ic !== null && c.ic !== undefined && c.ic > 6.25);
+
+  // Sangue projetado na cria — fração estimada por ancestral nomeado, 0.5^geração (mesma
+  // lógica de Wright já usada no IC), os 3 mais próximos entre os dois lados.
+  const porNome = {};
+  [...(c.ancGar || []), ...(c.ancEgua || [])].forEach(a => { if (porNome[a.nome] === undefined || a.gen < porNome[a.nome]) porNome[a.nome] = a.gen; });
+  const top3 = Object.entries(porNome).map(([nome, gen]) => ({ nome, pct: Math.pow(0.5, gen) * 100 })).sort((a, b) => b.pct - a.pct).slice(0, 3);
+
+  const anteriores = acasalamentos.filter(ac => ac.egua_nome === egua.nome && ac.garanhao_nome === fonte.garanhao_nome && ac.status !== 'cancelado');
+  const criasGaranhao = animais.filter(a => (a.pai || '').toUpperCase() === fonte.garanhao_nome.toUpperCase()).length;
+  const partosEgua = animais.filter(a => (a.mae || '').toUpperCase() === egua.nome.toUpperCase()).length;
+  const saldo = _saldoFonteCobertura(fonte);
+
+  el.innerHTML = `
+    <div class="ja-dossie">
+      <div class="ja-dossie-topo">
+        <div style="flex:1;">
+          <div class="ja-eyebrow">Parecer do cruzamento · rascunho</div>
+          <div class="ja-veredito-h" style="margin-top:6px;color:${risco ? 'var(--ja-critico)' : 'var(--ja-campo-deep)'}">${c.texto}</div>
+          <div class="ja-veredito-sub">${anteriores.length ? anteriores.length + ' cruzamento(s) anterior(es) entre esta égua e este garanhão.' : 'Nenhum cruzamento anterior registrado entre esta égua e este garanhão.'}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div class="ja-quem-papel">Grau de parentesco</div>
+          <div style="font-family:var(--ja-serif);font-weight:900;font-size:36px;color:${risco ? 'var(--ja-critico)' : 'var(--ja-campo-deep)'};line-height:1;margin-top:4px;">${c.ic ?? '?'}<span style="font-size:18px;">%</span></div>
+        </div>
+      </div>
+
+      <div class="ja-grade">
+        <div class="ja-bloco ja-b1">
+          <div class="ja-bloco-t">Sangue projetado na cria</div>
+          ${top3.length ? top3.map(t => `
+            <div style="font-size:11.5px;margin-top:9px;">
+              <div style="display:flex;justify-content:space-between;"><span>${t.nome}</span><b style="font-family:var(--ja-mono)">${t.pct.toFixed(1)}%</b></div>
+              <div class="ja-barra2"><span style="width:${t.pct.toFixed(1)}%"></span></div>
+            </div>`).join('') : '<div style="font-size:11.5px;color:var(--ja-ink-50)">Sem dado de linhagem suficiente.</div>'}
+        </div>
+        <div class="ja-bloco ja-b2">
+          <div class="ja-bloco-t">Histórico entre os dois</div>
+          <div style="font-size:12px;color:var(--ja-ink-70);line-height:1.6;">${anteriores.length ? anteriores.length + ' cruzamento(s) anterior(es) registrado(s).' : 'Nenhum cruzamento anterior registrado entre esta égua e este garanhão.'}</div>
+          <div style="margin-top:11px;padding-top:10px;border-top:1px solid var(--ja-ink-08);font-size:11.5px;">
+            <div class="ja-linha-anc"><span>Crias do garanhão na cabanha</span><b style="font-family:var(--ja-mono)">${criasGaranhao}</b></div>
+            <div class="ja-linha-anc"><span>Partos anteriores da égua</span><b style="font-family:var(--ja-mono)">${partosEgua}</b></div>
+          </div>
+        </div>
+        <div class="ja-bloco ja-b3">
+          <div class="ja-bloco-t">Antes de aprovar</div>
+          ${saldo.disponivel > 0
+            ? `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--ja-campo-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--ja-campo-deep);">✓ Saldo da fonte comporta este acasalamento (${saldo.disponivel} de ${saldo.total})</div>`
+            : `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--ja-atencao-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--ja-atencao);">! Saldo da fonte esgotado (${saldo.disponivel} de ${saldo.total})</div>`}
+          ${risco ? `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--ja-critico-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--ja-critico);margin-top:7px;">! ${c.texto}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="ja-acoes">
+        <button class="ja-btn2" onclick="_jaTestarOutroPar()">Testar outro par</button>
+      </div>
+    </div>`;
+}
+
+function _jaTestarOutroPar() {
+  closeModal('modal-acasalamento');
+  window._jaModoDossie = false;
+  _jaVoltarLista();
+}
+
 // Passo final da jornada (usado por B via "Aprovar mesmo assim" — A, o Dossiê Selado,
 // entra numa fase seguinte substituindo este modal por dentro, sem mudar quem o chama).
-async function _jaAcasalarLinha(fonteKey) {
+// animado=true (botão "Rodar dossiê selado" em B): toca a cerimônia completa (arena
+// aproximando, núcleo pulsando, selo carimbando) antes do dossiê. animado=false (botão
+// "Aprovar mesmo assim"): mostra o mesmo dossiê já pronto, sem esperar a animação —
+// é o atalho pra quem já decidiu e só quer confirmar rápido.
+async function _jaAcasalarLinha(fonteKey, animado) {
   const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
   const f = fontesCobertura[idx];
   if (!f) return;
   if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  window._jaModoDossie = true;
+  window._jaModoDossieAnimado = animado !== false;
+  // Reaproveita o resultado já calculado em C/B pra não bater em sangues_linhagem de novo.
+  window._jaConsangCache = (window._jaRanking || []).find(r => _fonteKey(r.fonte) === fonteKey)?.consang || null;
   abrirModalAcasalamentoMatch(_fonteKey(f), window._jaEguaId, ciclo);
 }
 
