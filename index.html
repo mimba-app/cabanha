@@ -724,6 +724,76 @@
     #print-area, #print-area * { visibility:visible; }
     #print-area { display:block; position:absolute; top:0; left:0; width:100%; }
   }
+
+  /* ── Jornada de Acasalamento (C·Conselho → B·Confluência → A·Dossiê Selado) ──
+     docs/spec-acasalamento-jornada-tres-direcoes.md. Tema paralelo — tokens e
+     tipografia copiados literalmente do artefato de referência (Playfair
+     Display / DM Sans / DM Mono, paleta "pergaminho/campo/terracota/ouro"),
+     namespaced em .jornada-ac pra não vazar pro resto do app. */
+  .jornada-ac {
+    --ja-ink:#2B2419; --ja-ink-70:rgba(43,36,25,.7); --ja-ink-50:rgba(43,36,25,.52);
+    --ja-ink-30:rgba(43,36,25,.3); --ja-ink-15:rgba(43,36,25,.14); --ja-ink-08:rgba(43,36,25,.07);
+    --ja-campo:#4F6B2E; --ja-campo-deep:#33461C; --ja-campo-soft:#DEE7C9;
+    --ja-terracota:#B15A2E; --ja-terracota-soft:#F3DCC9; --ja-terracota-ink:#7A3B1C;
+    --ja-ouro:#B8860B; --ja-ouro-soft:#F1E2B8;
+    --ja-critico:#9B3226; --ja-critico-soft:#F4DAD3;
+    --ja-atencao:#A9791E; --ja-atencao-soft:#F1E3C2;
+    --ja-areia:#F4EFE6; --ja-pergaminho:#FCF9F3; --ja-pergaminho2:#F8F3EA;
+    --ja-sh-sm:0 1px 2px rgba(43,36,25,.09);
+    --ja-sh-md:0 1px 1px rgba(43,36,25,.06), 0 14px 26px -12px rgba(43,36,25,.28);
+    --ja-sh-lg:0 2px 3px rgba(43,36,25,.07), 0 30px 56px -16px rgba(43,36,25,.34);
+    --ja-serif:'Playfair Display',Georgia,serif; --ja-sans:'DM Sans',-apple-system,sans-serif; --ja-mono:'DM Mono','SF Mono',monospace;
+    font-family:var(--ja-sans); color:var(--ja-ink); background:var(--ja-areia);
+    border-radius:20px; padding:26px 28px; margin-bottom:18px;
+  }
+  .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-terracota-ink);}
+  .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
+  .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
+
+  .jornada-ac .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:20px;padding:18px 22px;box-shadow:var(--ja-sh-md);}
+  .jornada-ac .ja-alvo-av{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:linear-gradient(140deg,var(--ja-campo-soft),var(--ja-pergaminho2));
+           display:flex;align-items:center;justify-content:center;font-family:var(--ja-serif);font-weight:800;font-size:22px;color:var(--ja-campo-deep);}
+  .jornada-ac .ja-etq{font-family:var(--ja-mono);font-size:9.5px;padding:3px 9px 3px 12px;border-radius:4px 10px 10px 4px;display:inline-block;
+       -webkit-mask-image:radial-gradient(circle 3px at 7px 50%,transparent 3px,black 3.5px);mask-image:radial-gradient(circle 3px at 7px 50%,transparent 3px,black 3.5px);}
+
+  .jornada-ac .ja-btn-analisar{font-family:var(--ja-sans);font-weight:700;font-size:13px;padding:13px 24px;border:none;border-radius:12px;
+    background:linear-gradient(180deg,#5A7A38,var(--ja-campo));color:#fff;cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--ja-sh-md);white-space:nowrap;}
+  .jornada-ac .ja-btn-analisar:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--ja-sh-lg);}
+  .jornada-ac .ja-btn2{font-family:var(--ja-sans);font-weight:700;font-size:12px;padding:9px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho);color:var(--ja-ink);}
+  .jornada-ac .ja-btn2.forte{border:none;background:linear-gradient(180deg,#5A7A38,var(--ja-campo));color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--ja-sh-sm);}
+
+  /* baralho embaralhando — direção C */
+  .jornada-ac .ja-baralho{position:relative;height:190px;display:flex;align-items:center;justify-content:center;margin-top:8px;}
+  .jornada-ac .ja-carta{position:absolute;width:230px;height:110px;background:var(--ja-pergaminho);border-radius:16px;box-shadow:var(--ja-sh-md);
+         display:flex;flex-direction:column;justify-content:center;padding:0 20px;}
+  .jornada-ac .ja-carta .ja-cn{font-family:var(--ja-serif);font-weight:700;font-size:15px;}
+  .jornada-ac .ja-carta .ja-cm{font-family:var(--ja-mono);font-size:10px;color:var(--ja-ink-50);margin-top:3px;}
+  .jornada-ac .ja-c1{animation:ja-gira1 1.5s cubic-bezier(.45,0,.35,1) infinite;}
+  .jornada-ac .ja-c2{animation:ja-gira2 1.5s cubic-bezier(.45,0,.35,1) infinite;}
+  .jornada-ac .ja-c3{animation:ja-gira3 1.5s cubic-bezier(.45,0,.35,1) infinite;}
+  @keyframes ja-gira1{0%,100%{transform:translateX(-150px) rotate(-7deg) scale(.93);opacity:.55;}33%{transform:translateX(0) rotate(0) scale(1);opacity:1;}66%{transform:translateX(150px) rotate(7deg) scale(.93);opacity:.55;}}
+  @keyframes ja-gira2{0%,100%{transform:translateX(0) rotate(0) scale(1);opacity:1;}33%{transform:translateX(150px) rotate(7deg) scale(.93);opacity:.55;}66%{transform:translateX(-150px) rotate(-7deg) scale(.93);opacity:.55;}}
+  @keyframes ja-gira3{0%,100%{transform:translateX(150px) rotate(7deg) scale(.93);opacity:.55;}33%{transform:translateX(-150px) rotate(-7deg) scale(.93);opacity:.55;}66%{transform:translateX(0) rotate(0) scale(1);opacity:1;}}
+  .jornada-ac .ja-contador{font-family:var(--ja-mono);font-size:11.5px;color:var(--ja-ink-50);text-align:center;margin-top:6px;}
+
+  /* ranking — direção C */
+  .jornada-ac .ja-linha{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:16px;padding:14px 18px;box-shadow:var(--ja-sh-sm);
+         margin-bottom:9px;animation:ja-entra .5s cubic-bezier(.22,1,.36,1) both;transition:transform .16s ease, box-shadow .16s ease;}
+  .jornada-ac .ja-linha:hover{transform:translateY(-2px);box-shadow:var(--ja-sh-md), 0 0 0 1px var(--ja-ink-15);}
+  .jornada-ac .ja-linha.top{background:linear-gradient(100deg,var(--ja-campo-soft) 0%, var(--ja-pergaminho) 55%);box-shadow:var(--ja-sh-md);}
+  @keyframes ja-entra{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+  .jornada-ac .ja-pos{font-family:var(--ja-serif);font-weight:900;font-size:22px;color:var(--ja-ink-30);width:34px;flex-shrink:0;text-align:center;}
+  .jornada-ac .ja-linha.top .ja-pos{color:var(--ja-ouro);}
+  .jornada-ac .ja-quem{flex:1;min-width:0;}
+  .jornada-ac .ja-quem-n{font-family:var(--ja-serif);font-weight:700;font-size:16px;}
+  .jornada-ac .ja-quem-m{font-family:var(--ja-mono);font-size:10.5px;color:var(--ja-ink-50);margin-top:2px;}
+  .jornada-ac .ja-porq{width:250px;flex-shrink:0;font-size:11.5px;color:var(--ja-ink-70);line-height:1.5;}
+  .jornada-ac .ja-nota{width:96px;flex-shrink:0;text-align:right;}
+  .jornada-ac .ja-nota-v{font-family:var(--ja-serif);font-weight:900;font-size:27px;line-height:1;}
+  .jornada-ac .ja-barra{height:5px;border-radius:99px;background:var(--ja-ink-08);overflow:hidden;margin-top:6px;}
+  .jornada-ac .ja-barra span{display:block;height:100%;border-radius:99px;animation:ja-cresce .95s cubic-bezier(.22,1,.36,1) both .15s;}
+  @keyframes ja-cresce{from{width:0 !important;}}
+  @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
 </style>
 </head>
 <body>
@@ -1422,20 +1492,46 @@
        docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
        lugar, só o menu. -->
   <div id="gest-acasalamentos" style="display:none">
-    <!-- Reprodutivo v4, Fase 8 (spec 3b): entrada padrão do "Acasalar" — duas colunas lado a
-         lado (garanhões/fontes × éguas), clique-clique pra ligar, sem drag-and-drop. Substitui o
-         modal de formulário como ponto de entrada principal; o modal antigo (modal-acasalamento)
-         vira só a confirmação do match (ciclo/observações) e continua existindo por dentro. -->
-    <div class="page-sub" style="margin:-6px 0 10px">Clique num garanhão/fonte à esquerda, depois numa égua à direita, pra criar o acasalamento deste ciclo (<span id="ac-match-ciclo-label">—</span>).</div>
-    <div id="ac-match-resumo-sel" style="display:none;margin-bottom:10px"></div>
-    <div class="kanban-board" style="grid-template-columns:1fr 1fr;gap:14px">
-      <div class="kanban-col kanban-col-emdia">
-        <div class="kanban-col-header"><span>Garanhões / Fontes</span></div>
-        <div id="ac-match-fontes" class="kanban-cards"></div>
+    <!-- Jornada de Acasalamento (docs/spec-acasalamento-jornada-tres-direcoes.md), Fase 1 (C ·
+         O Conselho): substitui a antiga tela de duas colunas (garanhão × égua, clique-clique).
+         Agora começa escolhendo a égua; o Conselho ranqueia as fontes do ciclo por nota. B
+         (Confluência de Sangues) e A (Dossiê Selado) entram nas fases seguintes. -->
+    <div class="jornada-ac" id="ja-conselho">
+      <div class="ja-eyebrow">Direção C · O Conselho</div>
+      <div class="ja-titulo">Escolha a égua e veja quem combina com ela.</div>
+      <div class="ja-sub">Aponte a égua e o Mimba ranqueia as fontes de cobertura disponíveis no ciclo <b id="ja-ciclo-label">—</b>, cruzando consanguinidade, diversidade de sangue e saldo/sanidade da fonte.</div>
+
+      <div id="ja-passo-lista">
+        <div id="ja-eguas-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"></div>
       </div>
-      <div class="kanban-col kanban-col-emdia">
-        <div class="kanban-col-header"><span>Éguas</span></div>
-        <div id="ac-match-eguas" class="kanban-cards"></div>
+
+      <div id="ja-passo-alvo" style="display:none;">
+        <div class="ja-alvo">
+          <div class="ja-alvo-av" id="ja-alvo-av">—</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);">Égua escolhida</div>
+            <div style="font-family:var(--ja-serif);font-weight:700;font-size:19px;line-height:1.15;margin-top:3px;" id="ja-alvo-nome">—</div>
+            <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;" id="ja-alvo-tags"></div>
+          </div>
+          <div style="align-self:center;display:flex;gap:8px;flex-shrink:0;">
+            <button class="ja-btn2" onclick="_jaVoltarLista()">trocar égua</button>
+            <button class="ja-btn-analisar" id="ja-btn-analisar" onclick="_jaAnalisar()">Quem combina com ela?</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="ja-passo-baralho" style="display:none;">
+        <div class="ja-baralho" id="ja-baralho-cartas"></div>
+        <div class="ja-contador" id="ja-contador"></div>
+      </div>
+
+      <div id="ja-passo-ranking" style="display:none;margin-top:18px;">
+        <div class="ja-eyebrow" style="margin-bottom:10px;">Fontes do ciclo <span id="ja-ranking-ciclo"></span>, ranqueadas</div>
+        <div id="ja-ranking-lista"></div>
+        <div style="font-family:var(--ja-mono);font-size:10.5px;color:var(--ja-ink-30);margin-top:12px;">
+          nota = consanguinidade (peso 5) · diversidade de sangue (3) · saldo e sanidade da fonte (2)
+        </div>
+        <button class="ja-btn2" style="margin-top:14px;" onclick="_jaVoltarLista()">Escolher outra égua</button>
       </div>
     </div>
     <div class="card-title" style="margin:22px 0 8px">Cruzamentos deste ciclo</div>
@@ -9837,7 +9933,7 @@ async function _renderSimulacaoAcasalamento() {
   }
 
   // c) Saldo da fonte (real — Fase 3: consumido = acasalamentos confirmados)
-  const {disponivel, total} = _saldoFonteCobertura(fonte);
+  const {disponivel, total, reservado} = _saldoFonteCobertura(fonte);
   const htmlSaldo = `<div style="font-size:12px;margin-top:6px"><b>Saldo da fonte:</b> ${disponivel} de ${total} disponível${reservado > 0 ? " (" + reservado + " reservada(s) em acasalamentos ativos)" : ""}</div>`;
 
   el.innerHTML = '<div class="card">' + htmlAnteriores + htmlConsang + htmlSaldo + '</div>';
@@ -9892,7 +9988,7 @@ function salvarAcasalamento() {
   acasalamentos.push(obj);
   _dbSalvarAcasalamento(obj, acasalamentos.length - 1);
   closeModal('modal-acasalamento');
-  window._acMatchFonteId = null;
+  window._jaEguaId = null; window._jaFase = 0;
   renderAcasalamentos();
   renderEguasCriaPlanejador();
 }
@@ -10221,67 +10317,197 @@ function _acCard(a, i, col) {
 // Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
 // éguas disponíveis no ciclo do Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem
 // remover) fonte sem saldo ou égua já com match feito nesse ciclo, em vez de escondê-las.
+// Jornada de Acasalamento — Fase 1 (docs/spec-acasalamento-jornada-tres-direcoes.md).
+// Direção C · O Conselho: escolhe a égua primeiro, depois o Mimba ranqueia as fontes do
+// ciclo. Substitui a antiga tela de duas colunas garanhão×égua (_acMatchSelecionarFonte/
+// _acMatchSelecionarEgua) — B (Confluência de Sangues) e A (Dossiê Selado) vêm nas fases
+// seguintes, encaixando entre "escolher uma linha do ranking" e "abrir o modal de confirmação".
 function renderAcasalamentosMatch() {
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-  const cicloLabel = document.getElementById('ac-match-ciclo-label');
-  if (cicloLabel) cicloLabel.textContent = ciclo;
-
-  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
-  const elF = document.getElementById('ac-match-fontes');
-  if (elF) {
-    elF.innerHTML = fontes.length ? fontes.map(f => {
-      const saldo = _saldoFonteCobertura(f);
-      const semSaldo = saldo.disponivel <= 0;
-      const key = _fonteKey(f);
-      const sel = window._acMatchFonteId && window._acMatchFonteId === key;
-      return `<div class="kanban-card" style="cursor:${semSaldo ? 'default' : 'pointer'};opacity:${semSaldo ? 0.45 : 1};${sel ? 'outline:2px solid var(--green-d)' : ''}" ${semSaldo ? '' : `onclick="_acMatchSelecionarFonte('${key}')"`}>
-        <div class="kanban-card-nome">${f.garanhao_nome}${sel ? ' <span class="badge bg" style="font-size:9px">Selecionado</span>' : ''}</div>
-        <div class="kanban-card-info">${FC_TIPO_LABEL[f.tipo] || f.tipo} · ${saldo.disponivel} de ${saldo.total} disponível${semSaldo ? ' <span class="badge br" style="font-size:9px">Sem saldo</span>' : ''}</div>
-      </div>`;
-    }).join('') : '<div class="kanban-empty">Nenhuma fonte neste ciclo. Cadastre em "Garanhões e Coberturas".</div>';
-  }
+  document.querySelectorAll('#ja-ciclo-label, #ja-ranking-ciclo').forEach(el => el.textContent = ciclo);
 
   const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && (a.estagio || '').toUpperCase() === 'CRIA');
-  const elE = document.getElementById('ac-match-eguas');
-  if (elE) {
-    elE.innerHTML = eguas.length ? eguas.map(a => {
+  const elLista = document.getElementById('ja-eguas-lista');
+  if (elLista) {
+    elLista.innerHTML = eguas.length ? eguas.map(a => {
       const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
-      return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_acMatchSelecionarEgua('${a.db_id}')"`}>
+      return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_jaEscolherEgua('${a.db_id}')"`}>
         <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
         <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
       </div>`;
     }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
   }
 
-  _acMatchAtualizarResumoSel();
+  const fase = window._jaEguaId ? (window._jaFase || 0) : -1;
+  document.getElementById('ja-passo-lista').style.display = fase === -1 ? '' : 'none';
+  document.getElementById('ja-passo-alvo').style.display = fase >= 0 ? '' : 'none';
+  document.getElementById('ja-passo-baralho').style.display = fase === 1 ? '' : 'none';
+  document.getElementById('ja-passo-ranking').style.display = fase === 2 ? '' : 'none';
+  if (fase >= 0) _jaRenderAlvo();
 }
 
-async function _acMatchSelecionarFonte(fonteKey) {
-  if (!fonteKey) { window._acMatchFonteId = null; renderAcasalamentosMatch(); return; }
+function _jaEscolherEgua(eguaDbId) {
+  window._jaEguaId = eguaDbId;
+  window._jaFase = 0;
+  renderAcasalamentosMatch();
+}
+
+function _jaVoltarLista() {
+  clearTimeout(window._jaTimer);
+  window._jaEguaId = null;
+  window._jaFase = 0;
+  renderAcasalamentosMatch();
+}
+
+function _jaRenderAlvo() {
+  const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
+  if (!egua) { _jaVoltarLista(); return; }
+  document.getElementById('ja-alvo-av').textContent = (egua.nome || '?').trim().charAt(0).toUpperCase();
+  document.getElementById('ja-alvo-nome').textContent = egua.nome;
+  document.getElementById('ja-alvo-tags').innerHTML =
+    (egua.estagio ? `<span class="ja-etq" style="background:var(--ja-terracota-soft);color:var(--ja-terracota-ink);">${egua.estagio.toUpperCase()}</span>` : '') +
+    `<span class="ja-etq" style="background:var(--ja-campo-soft);color:var(--ja-campo-deep);">NA CABANHA</span>` +
+    (egua.sbb ? `<span class="ja-etq" style="background:var(--ja-pergaminho2);color:var(--ja-ink-70);">${egua.sbb}</span>` : '');
+  const btn = document.getElementById('ja-btn-analisar');
+  btn.textContent = window._jaFase === 2 ? 'Rodar de novo' : 'Quem combina com ela?';
+}
+
+// Nível de consanguinidade + IC estimado — mesma lógica de gen 1-5 via sangues_linhagem.
+// ancestrais_pos já usada no modal de confirmação, mas devolvida como dado estruturado
+// (nota, texto, diversidade) em vez de HTML pronto, pra alimentar o ranking do Conselho.
+async function _jaConsanguinidade(egua, fonte) {
+  const nomeEgua = (egua.nome || '').toUpperCase();
+  const nomeGar = (fonte.garanhao_nome || '').toUpperCase();
+  const paiEgua = (egua.pai || '').toUpperCase();
+  const maeEgua = (egua.mae || '').toUpperCase();
+  const animalGar = animais.find(a => a.nome?.toUpperCase() === nomeGar && (a.sexo || '').toLowerCase().includes('macho'));
+  const paiGar = (animalGar?.pai || '').toUpperCase();
+  const maeGar = (animalGar?.mae || '').toUpperCase();
+
+  if (nomeGar && paiEgua && nomeGar === paiEgua) return { nivel: 1, ic: 100, texto: `Proibido — ${fonte.garanhao_nome} é o pai de ${egua.nome}.`, diversidade: null };
+  if (nomeEgua && maeGar && nomeEgua === maeGar) return { nivel: 1, ic: 100, texto: `Proibido — ${egua.nome} é a mãe de ${fonte.garanhao_nome}.`, diversidade: null };
+  if (paiEgua && maeEgua && paiGar && maeGar && paiEgua === paiGar && maeEgua === maeGar) return { nivel: 1, ic: 100, texto: 'Proibido — irmãos completos (mesmo pai e mesma mãe).', diversidade: null };
+  if (paiEgua && paiGar && paiEgua === paiGar) return { nivel: 2, ic: 12.5, texto: `Meio-irmãos pelo pai (${egua.pai}).`, diversidade: 0 };
+  if (maeEgua && maeGar && maeEgua === maeGar) return { nivel: 2, ic: 12.5, texto: `Meio-irmãos pela mãe (${egua.mae}).`, diversidade: 0 };
+
+  const sbbEgua = (egua.sbb || '').trim().toUpperCase();
+  const sbbGar = (fonte.garanhao_sbb || '').trim().toUpperCase();
+  if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
+
+  try {
+    const rows = await _supa('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
+    const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
+    const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
+    if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
+
+    const nomesEgua3 = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesGar3 = new Set(rGar.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const uniao = new Set([...nomesEgua3, ...nomesGar3]);
+    const intersec = [...nomesEgua3].filter(n => nomesGar3.has(n));
+    const diversidade = uniao.size ? 1 - (intersec.length / uniao.size) : 1;
+
+    const anc5Egua = {};
+    rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
+    let ic = 0; const comuns5 = [];
+    rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+      if (anc5Egua[x.nome] !== undefined) { ic += Math.pow(0.5, anc5Egua[x.nome] + x.gen + 1); comuns5.push(x.nome); }
+    });
+    ic = Math.round(ic * 10000) / 100;
+
+    if (intersec.length) return { nivel: 2, ic: Math.max(ic, 12.5), texto: `Ancestral comum nas 3 primeiras gerações: ${intersec[0]}${intersec.length > 1 ? ' +' + (intersec.length - 1) : ''}.`, diversidade };
+    if (ic > 6.25) return { nivel: 3, ic, texto: `IC estimado ≈${ic}%. Ancestral(is) comum(ns): ${[...new Set(comuns5)].slice(0, 2).join(', ')}.`, diversidade };
+    if (ic > 0) return { nivel: 0, ic, texto: `IC estimado ≈${ic}% — dentro do limite recomendado (≤6,25%).`, diversidade };
+    return { nivel: 0, ic: 0, texto: 'Zero ancestral comum em 5 gerações.', diversidade };
+  } catch (e) {
+    return { nivel: 0, ic: null, texto: 'Não foi possível consultar a linhagem agora.', diversidade: null };
+  }
+}
+
+// nota = consanguinidade (peso 5) · diversidade de sangue (peso 3) · saldo e sanidade da
+// fonte (peso 2) — fórmula do artefato de referência, cada componente em escala 0-10.
+// A checagem de sanidade (AIE/exames do garanhão) fica pra uma fase seguinte — hoje o
+// componente "saldo e sanidade" só considera o saldo disponível da fonte.
+function _jaScoreConsang(c) {
+  if (c.nivel === 1) return 0;
+  if (c.ic === null || c.ic === undefined) return 6;
+  return Math.max(0, Math.min(10, 10 - c.ic * 0.5));
+}
+function _jaScoreDiversidade(c) {
+  if (c.diversidade === null || c.diversidade === undefined) return 6;
+  return Math.max(0, Math.min(10, c.diversidade * 10));
+}
+function _jaScoreSaldo(fonte) {
+  const { disponivel, total } = _saldoFonteCobertura(fonte);
+  const pct = total > 0 ? disponivel / total : 0;
+  return Math.max(0, Math.min(10, pct * 6 + 4));
+}
+
+async function _jaAnalisar() {
+  const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  if (!egua || !fontes.length) { alert('Nenhuma fonte de cobertura cadastrada neste ciclo. Cadastre em "Garanhões e Coberturas".'); return; }
+
+  window._jaFase = 1;
+  window._jaAnaliseInicio = Date.now();
+  renderAcasalamentosMatch();
+  const cartas = fontes.slice(0, 3);
+  document.getElementById('ja-baralho-cartas').innerHTML = cartas.map((f, i) => `
+    <div class="ja-carta ja-c${i + 1}"><div class="ja-cn">${f.garanhao_nome}</div><div class="ja-cm">avaliando ancestrais…</div></div>
+  `).join('');
+  document.getElementById('ja-contador').textContent = `cruzando a linhagem de ${egua.nome} contra ${fontes.length} fonte${fontes.length > 1 ? 's' : ''} do ciclo ${ciclo}`;
+
+  const analises = await Promise.all(fontes.map(async f => {
+    const c = await _jaConsanguinidade(egua, f);
+    const nota = c.nivel === 1 ? 0 : Math.round(5 * _jaScoreConsang(c) + 3 * _jaScoreDiversidade(c) + 2 * _jaScoreSaldo(f));
+    return { fonte: f, consang: c, nota };
+  }));
+  const ranking = analises.filter(x => x.consang.nivel !== 1).sort((a, b) => b.nota - a.nota);
+  window._jaRanking = ranking;
+
+  // Deixa a animação do baralho rodar pelo menos ~2.2s mesmo se o cálculo terminar
+  // rápido (é síncrono/local, sem round-trip de rede) — senão o efeito nem aparece.
+  const decorrido = Date.now() - window._jaAnaliseInicio;
+  clearTimeout(window._jaTimer);
+  window._jaTimer = setTimeout(() => { window._jaFase = 2; renderAcasalamentosMatch(); _jaRenderRanking(); }, Math.max(300, 2200 - decorrido));
+}
+
+function _jaRenderRanking() {
+  const el = document.getElementById('ja-ranking-lista');
+  const ranking = window._jaRanking || [];
+  if (!ranking.length) { el.innerHTML = '<div class="kanban-empty">Nenhuma fonte disponível sem impedimento de consanguinidade neste ciclo.</div>'; return; }
+  el.innerHTML = ranking.map((r, i) => {
+    const cor = r.nota >= 70 ? 'var(--ja-campo)' : r.nota >= 45 ? 'var(--ja-atencao)' : 'var(--ja-critico)';
+    const notaCor = r.nota >= 70 ? 'var(--ja-campo-deep)' : r.nota >= 45 ? 'var(--ja-atencao)' : 'var(--ja-critico)';
+    const saldo = _saldoFonteCobertura(r.fonte);
+    return `<div class="ja-linha${i === 0 ? ' top' : ''}" style="animation-delay:${(i * 0.1).toFixed(2)}s">
+      <div class="ja-pos">${i + 1}</div>
+      <div class="ja-quem">
+        <div class="ja-quem-n">${r.fonte.garanhao_nome}</div>
+        <div class="ja-quem-m">${FC_TIPO_LABEL[r.fonte.tipo] || r.fonte.tipo} · ${saldo.disponivel} de ${saldo.total} disponível</div>
+      </div>
+      <div class="ja-porq" style="${r.consang.nivel >= 2 ? 'color:var(--ja-critico)' : ''}">${r.consang.texto}</div>
+      <div class="ja-nota">
+        <div class="ja-nota-v" style="color:${notaCor}">${r.nota}</div>
+        <div class="ja-barra"><span style="width:${r.nota}%;background:${cor}"></span></div>
+      </div>
+      <button class="ja-btn2${i === 0 ? ' forte' : ''}" onclick="_jaAcasalarLinha('${_fonteKey(r.fonte)}')">Acasalar</button>
+    </div>`;
+  }).join('');
+}
+
+async function _jaAcasalarLinha(fonteKey) {
   const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
   const f = fontesCobertura[idx];
   if (!f) return;
   // Fonte recém-criada automaticamente (ex.: "Próprio" do ciclo) cujo POST ainda não
-  // terminou — tenta persistir agora antes de deixar selecionar, pra nunca fechar um
-  // acasalamento com uma fonte sem id real no banco.
+  // terminou — tenta persistir agora antes de deixar prosseguir, igual já fazia a tela
+  // de match antiga (_acMatchSelecionarFonte).
   if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
-  window._acMatchFonteId = _fonteKey(f);
-  renderAcasalamentosMatch();
-}
-
-function _acMatchSelecionarEgua(eguaDbId) {
-  if (!window._acMatchFonteId) return alert('Selecione primeiro um garanhão/fonte à esquerda.');
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-  abrirModalAcasalamentoMatch(window._acMatchFonteId, eguaDbId, ciclo);
-}
-
-function _acMatchAtualizarResumoSel() {
-  const el = document.getElementById('ac-match-resumo-sel');
-  if (!el) return;
-  const f = window._acMatchFonteId && fontesCobertura.find(x => _fonteKey(x) === window._acMatchFonteId);
-  if (!f) { el.style.display = 'none'; return; }
-  el.style.display = '';
-  el.innerHTML = `<div class="alert alert-b" style="font-size:12px">Selecionado: <b>${f.garanhao_nome}</b> — clique agora numa égua à direita pra criar o acasalamento. <button class="btn btn-sm" style="margin-left:8px" onclick="_acMatchSelecionarFonte(null)">cancelar seleção</button></div>`;
+  // B (Confluência de Sangues) e A (Dossiê Selado) entram aqui nas fases seguintes —
+  // por ora, mesma confirmação final que já existia.
+  abrirModalAcasalamentoMatch(_fonteKey(f), window._jaEguaId, ciclo);
 }
 
 function renderAcasalamentos() {
