@@ -546,7 +546,9 @@
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
-  @media(max-width:900px){ .kanban-board { grid-template-columns:1fr; } }
+  .kanban-board.cols-4 { grid-template-columns:repeat(4,1fr); }
+  .kanban-board.cols-5 { grid-template-columns:repeat(5,1fr); }
+  @media(max-width:900px){ .kanban-board, .kanban-board.cols-4, .kanban-board.cols-5 { grid-template-columns:1fr; } }
   /* Kanban — cabeçalho colorido (tokens de estado do "Registro Vivo"), corpo em
      pergaminho2 e cards em pergaminho puro, sem borda no claro (só sombra). */
   .kanban-col { border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); }
@@ -1568,7 +1570,7 @@
        nasce e passa a aparecer também na aba Reprodutivo do criador (mesma tabela `gestacoes`). -->
   <div id="tab-reprodutivo-vet" style="display:none">
     <div class="page-sub" style="margin:-6px 0 14px">Acompanhamento do que o criador liberou no planejamento — do controle inicial até a confirmação de prenhez.</div>
-    <div class="kanban-board" id="kanban-reprodutivo-vet-board" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="kanban-board cols-4" id="kanban-reprodutivo-vet-board"></div>
   </div>
   <div id="tab-repro-gestacoes" style="display:none">
     <div class="page-sub" style="margin:-6px 0 14px">Gestações ativas em andamento — mesmo acompanhamento da aba Reprodutivo do criador.</div>
@@ -11161,7 +11163,7 @@ function renderAcasalamentos() {
   if(doCiclo.length === 0) {
     el.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum acasalamento planejado. Clique em "+ Novo acasalamento".</div>';
   } else {
-    el.innerHTML = '<div class="kanban-board" style="grid-template-columns:repeat(5,1fr)">' +
+    el.innerHTML = '<div class="kanban-board cols-5">' +
       AC_STATUS_COLS.map(col => {
         const cards = ativos.filter(a => a.status === col.status);
         const borda = col.destaque ? `2px solid ${col.border}` : `0.5px solid ${col.border}`;
