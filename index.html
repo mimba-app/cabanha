@@ -800,7 +800,7 @@
     font-family:var(--ja-sans); color:var(--ja-ink); background:var(--ja-areia);
     border-radius:var(--radius-lg); padding:26px 28px; margin-bottom:18px;
   }
-  .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-terracota-ink);}
+  .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-ink-50);}
   .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
   .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
 
@@ -1108,18 +1108,21 @@
 <div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
 
 <div class="sidebar" id="sidebar-main">
-  <div class="logo" style="position:relative">
+  <!-- Linha própria, fora de .logo: a imagem de logo de cada cabanha varia muito de
+       tamanho/proporção (max-height:72px, largura livre) e um botão absoluto sobre ela
+       ficava sobreposto dependendo do logo — achado real, 2026-08-22. Uma linha dedicada
+       acima da logo nunca colide, seja qual for o tamanho da imagem. -->
+  <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+    <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="color:var(--chrome-text3)">
+      <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
+      <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+  <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
     <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M</span></div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
-    <!-- Fora do card de conta (rodapé da sidebar) de propósito: lá só cabe um ícone
-         a mais sem a badge de perfil (ex.: "ADMINISTRADOR") estourar o card e ficar
-         embaixo do botão — achado real, 2026-08-22. Aqui no topo sobra espaço. -->
-    <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="position:absolute;top:0;right:0;color:var(--chrome-text3)">
-      <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
-      <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
   </div>
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Dashboard</span></button>
   <!-- Animais: silhueta do CAVALO DE XADREZ (peça de knight) — contorno fechado da peça,
