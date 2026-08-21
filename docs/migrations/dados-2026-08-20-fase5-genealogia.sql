@@ -166,6 +166,23 @@ end; $$;
 revoke all on function public.genealogia_atualizar_posicoes() from public, anon;
 grant execute on function public.genealogia_atualizar_posicoes() to authenticated;
 
+-- 5b. genealogia_resumo() — métricas pra tela (mesmo padrão de dados_resumo/abccc_resumo).
+create or replace function public.genealogia_resumo()
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare v jsonb;
+begin
+  if not public.sou_staff_mimba() then raise exception 'acesso negado'; end if;
+  select jsonb_build_object(
+    'animais_total', (select count(*) from public.animais_genealogia),
+    'animais_com_genealogia', (select count(*) from public.animais_genealogia where sbb_pai is not null or sbb_mae is not null),
+    'resultados_catalogo', (select count(*) from public.resultados_competitivos where fonte = 'catalogo_pdf'),
+    'posicoes', (select count(*) from public.animal_posicoes)
+  ) into v;
+  return v;
+end; $$;
+revoke all on function public.genealogia_resumo() from public, anon;
+grant execute on function public.genealogia_resumo() to authenticated;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 6. carregar_catalogo_genealogia — carga em lote de catálogo com genealogia real
 --    (sbb_pai/sbb_mae como SBB, não só nome — diferente do dataset de resultados
