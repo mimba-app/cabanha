@@ -15,7 +15,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     /* ── "Registro Vivo" — paleta oficial (redesign aprovado 2026-08-19) ── */
@@ -70,7 +70,12 @@
     --radius-badge: 4px 4px 4px 2px; /* forma discreta e distinta do pill genérico, usada em badges/tags */
     --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
-    --serif: 'Playfair Display', Georgia, serif;
+    /* Trocada de Playfair Display pra Manrope (2026-08-22, pedido do sócio via
+       comparativo /design-system) — a serifada lia como "antiga e romântica"; a
+       geométrica mantém peso pros títulos/números grandes sem o floreio. --serif
+       é o nome do token histórico (usado em centenas de lugares) — o valor mudou,
+       o nome ficou, pra não precisar tocar em cada regra que usa var(--serif). */
+    --serif: 'Manrope', -apple-system, sans-serif;
     /* Chrome de marca (sidebar, login) — alias dos tokens de tema, para seguir
        claro/escuro junto com o resto do app via prefers-color-scheme (não fica
        mais sempre escuro). Dourado (--ouro) continua reservado só pro
