@@ -12336,6 +12336,22 @@ async function salvarUsuario() {
   } else {
     const idx = USUARIOS.findIndex(u => u.id === editId);
     if(idx < 0) return alert('Usuário não encontrado.');
+
+    // tenant_memberships.perfil é quem realmente controla o acesso — _entrarCabanha()
+    // prioriza ele sobre o da tabela usuarios do schema a cada login. Sem atualizar os
+    // dois juntos, mudar o perfil aqui "revertia" sozinho no próximo login (achado
+    // real, 2026-08-22: rebaixar um admin pra cabanheiro não pegava). Só chama quando o
+    // perfil muda de verdade e há authUserId (convite pendente ainda não tem identidade
+    // vinculada — não existe membership pra atualizar ainda).
+    const perfilMudou = perfil !== USUARIOS[idx].perfil;
+    if(perfilMudou && USUARIOS[idx].authUserId) {
+      const btnP = document.getElementById('usr-btn-salvar');
+      if(btnP) { btnP.disabled = true; btnP.textContent = 'Salvando...'; }
+      const ok = await _rpc('atualizar_perfil_membership', { p_tenant_id: TENANT_INFO?.tenant_id, p_auth_user_id: USUARIOS[idx].authUserId, p_perfil: perfil });
+      if(btnP) { btnP.disabled = false; btnP.textContent = 'Salvar'; }
+      if(ok !== true) return alert('Não foi possível alterar o perfil. Confira se você é administrador desta cabanha, ou se isso deixaria a cabanha sem nenhum administrador ativo.');
+    }
+
     USUARIOS[idx].nome   = nome;
     USUARIOS[idx].perfil = perfil;
     USUARIOS[idx].label  = PERFIS_INFO[perfil]?.label || perfil;
