@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mimba — Gestão Crioulos</title>
+<script>
+  // Aplica o tema salvo (se houver) ANTES do CSS pintar a tela — sem isso, a página
+  // pinta primeiro com prefers-color-scheme e só depois troca pro tema escolhido,
+  // gerando um flash visível. Ver _alternarTema() no script principal.
+  try {
+    const t = localStorage.getItem('mimba_tema');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -83,8 +92,13 @@
     --fs-xl: 24px;
     --fs-2xl: 30px;
   }
+  /* Tema escuro — via preferência do sistema (prefers-color-scheme) OU escolha manual
+     (data-theme, toggle na sidebar, persistida em localStorage — ver _alternarTema()).
+     O media query só vale quando não há escolha manual explícita pra CLARO
+     (:not([data-theme="light"])); o bloco [data-theme="dark"] repete os mesmos valores
+     pra a escolha manual de escuro valer mesmo com o sistema em claro. */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       /* Fundo preto/cinza neutro — nunca marrom/terroso em dark mode */
       --ink: #F0EFE9;
       --ink-70: rgba(240,239,233,.70);
@@ -118,6 +132,39 @@
       --gray-l: var(--ink-08); --gray-d: var(--ink-70);
       --card-neutral: var(--pergaminho2); --card-neutral-border: var(--ink-15);
     }
+  }
+  :root[data-theme="dark"] {
+    --ink: #F0EFE9;
+    --ink-70: rgba(240,239,233,.70);
+    --ink-50: rgba(240,239,233,.50);
+    --ink-30: rgba(240,239,233,.30);
+    --ink-15: rgba(240,239,233,.15);
+    --ink-08: rgba(240,239,233,.08);
+    --campo: #8FB35A; --campo-deep: #A9CD7A; --campo-soft: rgba(143,179,90,.16);
+    --terracota: #E08A54; --terracota-soft: rgba(224,138,84,.16); --terracota-ink: #E08A54;
+    --ouro: #E8C567; --ouro-soft: rgba(232,197,103,.16);
+    --critico: #E2776A; --critico-soft: rgba(226,119,106,.14);
+    --atencao: #E3B95E; --atencao-soft: rgba(227,185,94,.14);
+    --areia: #1A1A18; --pergaminho: #242422; --pergaminho2: #1F1F1C;
+    --sh-sm: 0 1px 2px rgba(0,0,0,.35);
+    --sh-md: 0 1px 0 rgba(255,255,255,.03) inset, 0 16px 30px -14px rgba(0,0,0,.6);
+    --sh-lg: 0 1px 0 rgba(255,255,255,.04) inset, 0 30px 56px -16px rgba(0,0,0,.72);
+    --card-border: 1px solid var(--ink-08);
+    --tint-hover: rgba(240,239,233,.09);
+
+    --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+    --text: var(--ink); --text2: var(--ink-70); --text3: var(--ink-50);
+    --border: var(--ink-15); --border2: var(--ink-30);
+    --green-l: var(--campo-soft); --green-d: var(--campo-deep);
+    --ouro-l: var(--ouro-soft); --ouro-d: var(--ouro);
+    --amber-l: var(--atencao-soft); --amber-d: var(--atencao);
+    --red-l: var(--critico-soft); --red-d: var(--critico);
+    --blue-l: #0d1e2e; --blue-d: #7ab8f0;
+    --purple-l: #1a1840; --purple-d: #a89ef0;
+    --pink-l: #2e1020; --pink-d: #f08ab0;
+    --teal-l: #0d2420; --teal-d: #5dd4a8;
+    --gray-l: var(--ink-08); --gray-d: var(--ink-70);
+    --card-neutral: var(--pergaminho2); --card-neutral-border: var(--ink-15);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow-x: hidden; max-width: 100vw; }
@@ -174,9 +221,11 @@
   @media (prefers-color-scheme: dark) {
     /* Verde claro sobre texto escuro: em fundo escuro o verde-campo vívido só fica
        legível com tinta escura por cima (mesma regra do protótipo escuro). */
-    .btn-primary { background:linear-gradient(180deg,#9CC968,#7EA84A); color:#182008; box-shadow:0 1px 0 rgba(255,255,255,.2) inset; }
-    .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
+    :root:not([data-theme="light"]) .btn-primary { background:linear-gradient(180deg,#9CC968,#7EA84A); color:#182008; box-shadow:0 1px 0 rgba(255,255,255,.2) inset; }
+    :root:not([data-theme="light"]) .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
   }
+  :root[data-theme="dark"] .btn-primary { background:linear-gradient(180deg,#9CC968,#7EA84A); color:#182008; box-shadow:0 1px 0 rgba(255,255,255,.2) inset; }
+  :root[data-theme="dark"] .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
   .sidebar .sidebar-icon-btn:hover { background:var(--border); color:var(--chrome-text); }
@@ -1060,6 +1109,10 @@
         <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--chrome-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="sidebar-perfil-badge" style="margin-top:2px"></div>
       </div>
+      <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="color:var(--chrome-text3)">
+        <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
+        <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="sidebar-icon-btn" onclick="abrirTelaConta()" title="Configurações da conta" aria-label="Configurações da conta" style="color:var(--chrome-text3)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -14601,6 +14654,43 @@ function _misturarComBranco(hex, pct) {
   if (!rgb) return null;
   const mix = c => Math.round(c + (255 - c) * pct);
   return `rgb(${mix(rgb.r)},${mix(rgb.g)},${mix(rgb.b)})`;
+}
+
+// Toggle de tema claro/escuro (sidebar) — por padrão o app segue prefers-color-scheme
+// (:root e o media query no <style>); escolher aqui grava data-theme no <html> e persiste
+// em localStorage, sobrepondo o sistema até a pessoa trocar de novo. O script inline no
+// <head> (antes do <style>) já aplica esse valor salvo cedo, pra não piscar o tema errado
+// no primeiro paint.
+const TEMA_KEY = 'mimba_tema';
+function _temaEfetivo() {
+  const salvo = document.documentElement.getAttribute('data-theme');
+  if (salvo === 'light' || salvo === 'dark') return salvo;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function _atualizarIconeTema() {
+  const escuro = _temaEfetivo() === 'dark';
+  const sol = document.getElementById('icon-tema-sol');
+  const lua = document.getElementById('icon-tema-lua');
+  if (!sol || !lua) return;
+  // Mostra o sol quando o tema atual é escuro (clicar leva pro claro) e vice-versa —
+  // o ícone representa o destino do clique, não o estado atual.
+  sol.style.display = escuro ? '' : 'none';
+  lua.style.display = escuro ? 'none' : '';
+}
+function _alternarTema() {
+  const novo = _temaEfetivo() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', novo);
+  document.documentElement.style.colorScheme = novo;
+  try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
+  _atualizarIconeTema();
+}
+_atualizarIconeTema();
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    let temEscolhaSalva = false;
+    try { temEscolhaSalva = !!localStorage.getItem(TEMA_KEY); } catch (e) {}
+    if (!temEscolhaSalva) _atualizarIconeTema();
+  });
 }
 function _aplicarCorPrimaria(cor) {
   const root = document.documentElement.style;
