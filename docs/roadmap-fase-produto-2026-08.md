@@ -12,7 +12,7 @@
 | 1 | Ajuste de tipografia do design system | Alta (destrava o resto) | ✅ Feito — Manrope aplicada em tudo, mergeado na `main` |
 | 2 | Cruzamentos com dois modos (rápido / imersivo) | **A mais importante** | ✅ Implementado, em `staging` — aguardando validação do Luciano antes de mergear |
 | 3 | Avaliar app mobile nativo + loja | Média | ✅ Decidido (2026-08-22) — ver seção 3 |
-| 4 | Agente de IA interno de apoio | Média | Em discovery |
+| 4 | Agente de IA interno de apoio | Média | Escopo de produto fechado — falta ADR de arquitetura |
 
 ---
 
@@ -114,23 +114,41 @@ implementação vem numa sessão dedicada a isso.
 
 ## 4. Agente de IA interno de apoio
 
-**Ainda não escopado.** Mesma situação — "vai vender muito" é a tese, mas
-faltam as perguntas de produto:
+**Escopo inicial fechado (2026-08-22)** — mais amplo do que "chatbot de
+dúvida":
 
-- Apoio a quem, fazendo o quê? Exemplos de uso real ajudam muito aqui:
-  "pergunta em português sobre a genealogia de um animal", "sugestão de
-  manejo nutricional baseada no histórico", "dúvida sobre como usar uma tela
-  do sistema", "resumo do que aconteceu na cabanha na semana"?
-- Onde ele mora na interface — um chat flutuante, uma aba própria, dentro de
-  cada tela específica (contextual)?
-- Que dado ele enxerga — só o da cabanha logada (isolamento entre tenants
-  continua valendo, e com força redobrada se o agente tiver acesso amplo ao
-  banco) ou também dado agregado da ABCCC?
-- Custo por chamada de modelo e como isso entra no preço do plano.
+- **Casos de uso** (todos confirmados, não é só um):
+  1. Perguntas sobre o dado da própria cabanha ("quantas éguas prenhas esse
+     ciclo?", "resumo da semana").
+  2. Sugestão/análise de manejo e cruzamento — vai além de responder, dá uma
+     opinião (ex.: reaproveitando o ranking do Conselho — seção "A jornada"
+     do design system — como uma das fontes de raciocínio).
+  3. **Especialista ABCCC** — genealogia, campeões, ancestralidade,
+     reaproveitando diretamente o trabalho já feito no Mimba Lab
+     (`mimba-analytics`, RPCs `analisar_cruzamento`/`genealogia_resumo`) em
+     vez de começar do zero.
+  4. Ajuda de uso do sistema (onboarding/suporte embutido).
+- **Superfície:** chat flutuante, acessível de qualquer tela do app.
+- **Escopo de dado:** cabanha logada (isolamento multi-tenant intacto) +
+  dado agregado/público da ABCCC (`mimba-analytics` — não é dado de outra
+  cabanha, então não fere isolamento).
 
-**Próximo passo:** também discovery — vale conversar sobre 2-3 casos de uso
-concretos que vocês já imaginam, pra eu conseguir desenhar a primeira versão
-em vez de um agente genérico "pergunte qualquer coisa".
+**Ainda em aberto** (perguntas de arquitetura, não de produto):
+
+- Modelo/orquestração — qual LLM, tool-calling pra consultar o banco com
+  segurança (nunca deixar o agente montar SQL livre contra schemas de
+  cabanha — precisa de RPCs/ferramentas restritas, no mesmo espírito de
+  `tem_acesso_tenant`), custo por chamada e como isso entra no preço do
+  plano.
+- Como o agente combina os 3 domínios de dado (schema da cabanha, Mimba Lab,
+  conhecimento geral do sistema) sem confundir contexto.
+- Dado o tamanho, esse é candidato a **outro ADR** antes de qualquer linha de
+  código — decisão estrutural (novo serviço/edge function, acesso a dado
+  sensível, custo recorrente por chamada de modelo).
+
+**Próximo passo:** sessão de arquitetura dedicada (o `arquiteto` conduz) pra
+desenhar como o agente acessa dado com segurança e qual o modelo de custo,
+antes de qualquer protótipo.
 
 ---
 
