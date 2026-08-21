@@ -1,10 +1,18 @@
 # Mimba — Design System "Registro Vivo"
 
-> Documento oficial e decisório da identidade visual do Mimba. Consolida o que já
-> está implementado e aprovado (redesign "Registro Vivo", 2026-08-19) com a
-> extensão que veio da jornada de acasalamento (2026-08-21) — que não é um
-> desvio, é a mesma linguagem aplicada a um momento de mais peso. Este é o
-> documento de referência para qualquer decisão futura de UI no Mimba.
+> Documento oficial e decisório da identidade visual do Mimba, no nível
+> **operacional**: como a marca vira componente, token, tela e protótipo no
+> código. A fonte da verdade da marca em si — princípio, wordmark, cor,
+> voz, o que é e o que não é a Mimba — é o **Manual de Identidade Visual
+> (MIV)**; este documento é alimentado a partir dele, traduzindo suas
+> diretrizes pra decisão de implementação. Se um encontrar o outro
+> divergente, o MIV vence e este documento precisa ser atualizado.
+>
+> Consolida o que já está implementado e aprovado (redesign "Registro Vivo",
+> 2026-08-19) com a extensão que veio da jornada de acasalamento
+> (2026-08-21) — que não é um desvio, é a mesma linguagem aplicada a um
+> momento de mais peso. Este é o documento de referência para qualquer
+> decisão futura de UI no Mimba.
 
 ## 1. Princípio
 
@@ -150,6 +158,16 @@ Tudo em `index.html` (sem framework/bundler — ver `CLAUDE.md`):
   próprio, comentado, com `--ja-*` como **aliases** dos tokens reais (nunca
   valores fixos — ver seção 2). Ver
   `docs/spec-acasalamento-jornada-tres-direcoes.md` pro fluxo completo.
+- **Marca** (`.mimba-dot`) — a regra do MIV ("Mimba" na cor de texto do
+  contexto, ponto sempre `--ouro`) é uma única classe, `.mimba-dot`,
+  aplicada ao `.` em toda ocorrência do wordmark/monograma:
+  `.login-form-wordmark`, `.login-logo-title` (telas de
+  restaurando/bloqueado/cancelado/definir-senha), `.powered-by` (rodapé do
+  Dashboard) e `.logo-monogram` (avatar da sidebar — sempre "M.", nunca só
+  "M"). Cuidado de especificidade: `.logo-monogram span` já tem uma regra
+  de cor própria (`#fff`) mais específica que `.mimba-dot` sozinha — por
+  isso existe também `.logo-monogram span.mimba-dot`, que precisa
+  continuar junto se a estrutura desse componente mudar.
 
 **Regra pra quem for adicionar UI nova:** nunca crie um token de cor/sombra/
 fonte novo sem antes checar se um destes já serve. Se precisar de um
