@@ -15317,7 +15317,13 @@ async function solicitarRecuperacaoSenha(){
   const _reset=()=>{ if(btn){ btn.disabled=false; btn.textContent='Enviar link de recuperação'; } };
   if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
   try{
-    const r=await fetch(`${SUPABASE_URL}/auth/v1/recover`,{
+    // redirect_to: volta pro MESMO domínio de onde a pessoa clicou "Esqueci minha
+    // senha" — sem isso, a Supabase usa um Site URL fixo pra todo mundo, e quem está
+    // testando em QA/staging (ou um usuário real em PRD testando local) cai sempre no
+    // mesmo lugar ao clicar no link do e-mail, não em quem o pediu. O domínio precisa
+    // estar na lista de Redirect URLs permitidas no Supabase Auth (Authentication →
+    // URL Configuration) — senão a Supabase ignora e cai no Site URL padrão mesmo.
+    const r=await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${encodeURIComponent(location.origin)}`,{
       method:'POST',
       headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
       body: JSON.stringify({ email })
