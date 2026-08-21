@@ -52,9 +52,14 @@ Borda dura + sombra fraca nos dois temas é o que faz um app parecer desenho 2D
 
 Três famílias, três papéis — nunca misturados:
 
-- **Playfair Display** (serifada, peso 700/900, itálico 600) — títulos,
-  números grandes, nomes de animais, o "A" carimbado no selo. É a voz
-  editorial/cerimonial. Usa peso 900 só em números/selos de destaque máximo.
+- **Manrope** (geométrica, peso 700/800 — token `--serif`, nome histórico
+  mantido) — títulos, números grandes, nomes de animais, o "A" carimbado no
+  selo. Trocou de Playfair Display em 2026-08-22 (pedido do sócio: a
+  serifada lia como "antiga e romântica" pra um sistema com tecnologia
+  embarcada; comparada com Space Grotesk e Bricolage Grotesque antes de
+  decidir — ver `/design-system`, seção 03). Itálico usado só como acento
+  pontual (uma palavra por vez) sai como itálico sintético — Manrope não tem
+  face itálica de verdade no Google Fonts.
 - **DM Sans** (400–700) — todo o resto: corpo de texto, botões, labels de
   formulário, navegação. A voz de trabalho, neutra e legível.
 - **DM Mono** (400–500) — eyebrows (rótulos em caixa alta, letter-spacing
@@ -63,8 +68,8 @@ Três famílias, três papéis — nunca misturados:
   de cartório ou o rodapé de um documento oficial.
 
 Escala: 6 degraus, razão ~1.2, base 14px (`--fs-caption` 10px →
-`--fs-2xl` 30px). Títulos de página usam Playfair 32px/900; títulos de card,
-Playfair 20-21px/700; corpo, DM Sans 12-14px.
+`--fs-2xl` 30px). Títulos de página usam Manrope 32px/800; títulos de card,
+Manrope 20-21px/700; corpo, DM Sans 12-14px.
 
 ## 4. Espaçamento, raio, sombra
 
@@ -79,7 +84,7 @@ Playfair 20-21px/700; corpo, DM Sans 12-14px.
   de identificação do animal. Usado pra badges de identificação (RP/SBB,
   situação, pelagem, ciclo).
 - **Selo de registro** (`.selo-registro`): círculo com anel pontilhado e
-  glyph central em Playfair — usado no lugar de badge/pill pra status
+  glyph central em Manrope — usado no lugar de badge/pill pra status
   crítico em pontos-chave (vacina vencida, alerta prioritário).
 
 ## 5. Movimento — a cerimônia
@@ -127,7 +132,7 @@ exceção.
   nunca vazam pra interface — são vocabulário interno, não copy de produto.
 - **Erros e pendências não pedem desculpa.** "AIE do garanhão vence em 22
   dias" — direto, sem "ops!" nem rodeio.
-- **Números grandes em Playfair, contexto em DM Mono.** Um dado importante
+- **Números grandes em Manrope, contexto em DM Mono.** Um dado importante
   (nota do Conselho, coeficiente de endogamia, métrica do dashboard) ganha
   peso editorial; a explicação ao lado fica discreta e monoespaçada.
 
