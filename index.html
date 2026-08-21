@@ -1095,11 +1095,18 @@
 <div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
 
 <div class="sidebar" id="sidebar-main">
-  <div class="logo">
+  <div class="logo" style="position:relative">
     <img id="sidebar-logo-img" alt="" style="display:none">
     <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M</span></div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
+    <!-- Fora do card de conta (rodapé da sidebar) de propósito: lá só cabe um ícone
+         a mais sem a badge de perfil (ex.: "ADMINISTRADOR") estourar o card e ficar
+         embaixo do botão — achado real, 2026-08-22. Aqui no topo sobra espaço. -->
+    <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="position:absolute;top:0;right:0;color:var(--chrome-text3)">
+      <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
+      <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
   </div>
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Dashboard</span></button>
   <!-- Animais: silhueta do CAVALO DE XADREZ (peça de knight) — contorno fechado da peça,
@@ -1127,10 +1134,6 @@
         <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--chrome-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="sidebar-perfil-badge" style="margin-top:2px"></div>
       </div>
-      <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="color:var(--chrome-text3)">
-        <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
-        <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
       <button class="sidebar-icon-btn" onclick="abrirTelaConta()" title="Configurações da conta" aria-label="Configurações da conta" style="color:var(--chrome-text3)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
