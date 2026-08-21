@@ -6,33 +6,67 @@
 <title>Mimba — Gestão Crioulos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Skin oficial recuperada de index_7.html (referência enviada pelo Pedro, 2026-08-12) */
-    --bg: #f5f4f0;
-    --bg2: #ffffff;
-    --bg3: #f0efe9;
-    --text: #1a1a18;
-    --text2: #5f5e5a;
-    --text3: #9e9c96;
-    --border: rgba(0,0,0,0.1);
-    --border2: rgba(0,0,0,0.18);
-    --green: #639922; --green-l: #EAF3DE; --green-d: #3B6D11;
-    --ouro: #B8860B; --ouro-l: #FBF5DC; --ouro-d: #8A6608;      /* acento dourado da marca — só usado no wordmark "Mimba." (login, rodapé da sidebar), nunca em fundo/UI */
-    --amber: #EF9F27; --amber-l: #FAEEDA; --amber-d: #854F0B;
-    --red: #E24B4A; --red-l: #FCEBEB; --red-d: #A32D2D;
-    --blue: #378ADD; --blue-l: #E6F1FB; --blue-d: #185FA5;
+    /* ── "Registro Vivo" — paleta oficial (redesign aprovado 2026-08-19) ── */
+    --ink: #2B2419;
+    --ink-70: rgba(43,36,25,.70);
+    --ink-50: rgba(43,36,25,.50);
+    --ink-30: rgba(43,36,25,.30);
+    --ink-15: rgba(43,36,25,.15);
+    --ink-08: rgba(43,36,25,.08);
+    --campo: #4F6B2E; --campo-deep: #33461C; --campo-soft: #DEE7C9;
+    --terracota: #B15A2E; --terracota-soft: #F3DCC9; --terracota-ink: #7A3B1C;
+    --ouro: #B8860B; --ouro-soft: #F1E2B8;      /* acento dourado da marca — só usado no wordmark "Mimba." (login, rodapé da sidebar), nunca em fundo/UI/hover */
+    --critico: #9B3226; --critico-soft: #F4DAD3;
+    --atencao: #A9791E; --atencao-soft: #F1E3C2;
+    --areia: #F4EFE6; --pergaminho: #FCF9F3; --pergaminho2: #F8F3EA;
+    --r-sm: 8px; --r-md: 16px; --r-lg: 26px;
+    --sh-sm: 0 1px 2px rgba(43,36,25,.09);
+    --sh-md: 0 1px 1px rgba(43,36,25,.06), 0 14px 26px -12px rgba(43,36,25,.28);
+    --sh-lg: 0 2px 3px rgba(43,36,25,.07), 0 30px 56px -16px rgba(43,36,25,.34);
+    /* Borda de card — vazia no tema CLARO (a profundidade vem só da sombra, como
+       no protótipo "Registro Vivo"); no ESCURO vira 1px sutil, porque sombra
+       sozinha não marca contorno em fundo escuro. */
+    --card-border: none;
+    /* Véu de hover para elementos pequenos (etiquetas/badges): escurece no claro,
+       clareia no escuro. Aplicado como box-shadow inset — sobrevive à máscara do
+       furo da etiqueta de brinco, que recortaria uma sombra externa. */
+    --tint-hover: rgba(43,36,25,.07);
+
+    /* ── Aliases legados — mantêm o restante do app (usos de --bg/--text/--green
+       etc. espalhados pelo arquivo) coerente com a paleta nova sem precisar
+       reescrever cada ocorrência. Não introduzir NOVOS usos destes aliases —
+       preferir os tokens de marca acima. ── */
+    --bg: var(--areia);
+    --bg2: var(--pergaminho);
+    --bg3: var(--pergaminho2);
+    --text: var(--ink);
+    --text2: var(--ink-70);
+    --text3: var(--ink-50);
+    --border: var(--ink-15);
+    --border2: var(--ink-30);
+    --green: var(--campo); --green-l: var(--campo-soft); --green-d: var(--campo-deep);
+    --ouro-l: var(--ouro-soft); --ouro-d: #8A6608;
+    --amber: var(--atencao); --amber-l: var(--atencao-soft); --amber-d: var(--atencao);
+    --red: var(--critico); --red-l: var(--critico-soft); --red-d: var(--critico);
+    --blue: #378ADD; --blue-l: #E6F1FB; --blue-d: #185FA5; /* mantido só como semântica informativa */
     --purple: #534AB7; --purple-l: #EEEDFE; --purple-d: #3C3489;
     --pink: #D4537E; --pink-l: #FBEAF0; --pink-d: #993356;
     --teal: #1D9E75; --teal-l: #E1F5EE; --teal-d: #0F6E56;
-    --gray-l: #F1EFE8; --gray-d: #5F5E5A;
-    --card-neutral: #F3F4F6; --card-neutral-border: #E5E7EB;
-    --radius: 8px; --radius-lg: 12px;
+    --gray-l: var(--ink-08); --gray-d: var(--ink-70);
+    --card-neutral: var(--pergaminho2); --card-neutral-border: var(--ink-15);
+    --radius: var(--r-sm); --radius-lg: var(--r-md);
     --radius-badge: 4px 4px 4px 2px; /* forma discreta e distinta do pill genérico, usada em badges/tags */
     --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --mono: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
-    --serif: 'Playfair Display', Georgia, serif;
+    /* Trocada de Playfair Display pra Manrope (2026-08-22, pedido do sócio via
+       comparativo /design-system) — a serifada lia como "antiga e romântica"; a
+       geométrica mantém peso pros títulos/números grandes sem o floreio. --serif
+       é o nome do token histórico (usado em centenas de lugares) — o valor mudou,
+       o nome ficou, pra não precisar tocar em cada regra que usa var(--serif). */
+    --serif: 'Manrope', -apple-system, sans-serif;
     /* Chrome de marca (sidebar, login) — alias dos tokens de tema, para seguir
        claro/escuro junto com o resto do app via prefers-color-scheme (não fica
        mais sempre escuro). Dourado (--ouro) continua reservado só pro
@@ -52,23 +86,42 @@
     --fs-md: 17px;
     --fs-lg: 20px;
     --fs-xl: 24px;
-    --fs-2xl: 29px;
+    --fs-2xl: 30px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1a1a18; --bg2: #252522; --bg3: #1f1f1c;
-      --text: #f0efe9; --text2: #a8a69e; --text3: #6b6963;
-      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
-      --green-l: #1a2e0a; --green-d: #9fcc56;
-      --ouro: #E8C547; --ouro-l: #2a2008; --ouro-d: #E8C547;
-      --amber-l: #2e1f08; --amber-d: #f0b94a;
-      --red-l: #2e0d0d; --red-d: #f07070;
+      /* Fundo preto/cinza neutro — nunca marrom/terroso em dark mode */
+      --ink: #F0EFE9;
+      --ink-70: rgba(240,239,233,.70);
+      --ink-50: rgba(240,239,233,.50);
+      --ink-30: rgba(240,239,233,.30);
+      --ink-15: rgba(240,239,233,.15);
+      --ink-08: rgba(240,239,233,.08);
+      --campo: #8FB35A; --campo-deep: #A9CD7A; --campo-soft: rgba(143,179,90,.16);
+      --terracota: #E08A54; --terracota-soft: rgba(224,138,84,.16); --terracota-ink: #E08A54;
+      --ouro: #E8C567; --ouro-soft: rgba(232,197,103,.16);
+      --critico: #E2776A; --critico-soft: rgba(226,119,106,.14);
+      --atencao: #E3B95E; --atencao-soft: rgba(227,185,94,.14);
+      --areia: #1A1A18; --pergaminho: #242422; --pergaminho2: #1F1F1C;
+      --sh-sm: 0 1px 2px rgba(0,0,0,.35);
+      --sh-md: 0 1px 0 rgba(255,255,255,.03) inset, 0 16px 30px -14px rgba(0,0,0,.6);
+      --sh-lg: 0 1px 0 rgba(255,255,255,.04) inset, 0 30px 56px -16px rgba(0,0,0,.72);
+      --card-border: 1px solid var(--ink-08);
+      --tint-hover: rgba(240,239,233,.09);
+
+      --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+      --text: var(--ink); --text2: var(--ink-70); --text3: var(--ink-50);
+      --border: var(--ink-15); --border2: var(--ink-30);
+      --green-l: var(--campo-soft); --green-d: var(--campo-deep);
+      --ouro-l: var(--ouro-soft); --ouro-d: var(--ouro);
+      --amber-l: var(--atencao-soft); --amber-d: var(--atencao);
+      --red-l: var(--critico-soft); --red-d: var(--critico);
       --blue-l: #0d1e2e; --blue-d: #7ab8f0;
       --purple-l: #1a1840; --purple-d: #a89ef0;
       --pink-l: #2e1020; --pink-d: #f08ab0;
       --teal-l: #0d2420; --teal-d: #5dd4a8;
-      --gray-l: #2a2a28; --gray-d: #b0aea6;
-      --card-neutral: #262626; --card-neutral-border: #3a3a3a;
+      --gray-l: var(--ink-08); --gray-d: var(--ink-70);
+      --card-neutral: var(--pergaminho2); --card-neutral-border: var(--ink-15);
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -108,26 +161,37 @@
   .nav-btn.active::before { height:18px; }
   .nav-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .nav-icon svg { width:19px; height:19px; }
-  .main { margin-left:230px; padding:1.75rem; min-height:100vh; min-height:100dvh; }
+  .main { margin-left:230px; padding:2rem 2.4rem; min-height:100vh; min-height:100dvh; }
   .page { display:none; }
   .page.active { display:block; }
-  .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:8px; }
-  .page-title { font-family:var(--serif); font-size:var(--fs-2xl); font-weight:800; color:var(--text); letter-spacing:-0.01em; }
-  .page-sub { font-size:12px; color:var(--text2); margin-top:3px; }
-  .btn { padding:7px 14px; border-radius:var(--radius); border:0.5px solid var(--border2); background:var(--bg2); font-size:12px; cursor:pointer; color:var(--text); font-family:var(--font); transition:background 0.12s; }
-  .btn:hover { background:var(--bg3); }
-  .btn-primary { background:var(--green); color:white; border-color:var(--green); font-weight:600; }
-  .btn-primary:hover { background:var(--green-d); }
-  .btn-sm { padding:4px 10px; font-size:11px; }
+  .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.6rem; flex-wrap:wrap; gap:10px; }
+  .page-title { font-family:var(--serif); font-size:32px; font-weight:900; color:var(--text); letter-spacing:-0.01em; line-height:1.1; }
+  .page-sub { font-family:var(--mono); font-size:11px; color:var(--text3); margin-top:5px; }
+  /* Botão com peso tátil (protótipo): raio maior, brilho interno no topo e sombra
+     que sobe no hover — em vez do retângulo achatado de antes. */
+  .btn { padding:8px 15px; border-radius:10px; border:1px solid var(--border2); background:var(--bg2); font-size:12.5px; font-weight:600; cursor:pointer; color:var(--text); font-family:var(--font); transition:background .14s ease, transform .15s ease, box-shadow .15s ease; }
+  .btn:hover { background:var(--bg3); transform:translateY(-1px); box-shadow:var(--sh-sm); }
+  .btn:active { transform:translateY(0); box-shadow:none; }
+  .btn-primary { background:linear-gradient(180deg,#5A7A38,var(--campo)); color:#fff; border-color:transparent; font-weight:700;
+    box-shadow:0 1px 0 rgba(255,255,255,.25) inset, var(--sh-sm); }
+  .btn-primary:hover { background:linear-gradient(180deg,var(--campo),var(--campo-deep)); box-shadow:0 1px 0 rgba(255,255,255,.2) inset, var(--sh-md); }
+  .btn-sm { padding:5px 11px; font-size:11.5px; border-radius:9px; }
+  @media (prefers-color-scheme: dark) {
+    /* Verde claro sobre texto escuro: em fundo escuro o verde-campo vívido só fica
+       legível com tinta escura por cima (mesma regra do protótipo escuro). */
+    .btn-primary { background:linear-gradient(180deg,#9CC968,#7EA84A); color:#182008; box-shadow:0 1px 0 rgba(255,255,255,.2) inset; }
+    .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
+  }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
   .sidebar .sidebar-icon-btn:hover { background:var(--border); color:var(--chrome-text); }
   .sidebar-logout-btn { width:100%; margin-top:8px; background:var(--red); color:#fff; border:none; padding:9px; border-radius:var(--radius); cursor:pointer; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
   .sidebar-logout-btn:hover { background:var(--red-d); }
-  .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:1.25rem; }
-  .metric { background:var(--bg3); border-radius:var(--radius); padding:1rem; }
-  .metric-label { font-size:11px; color:var(--text2); margin-bottom:5px; }
-  .metric-value { font-size:var(--fs-xl); font-weight:700; color:var(--text); font-family:var(--mono); }
+  .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:1.4rem; }
+  .metric { background:var(--bg2); border-radius:var(--r-md); padding:18px 20px; border:var(--card-border); box-shadow:var(--sh-sm); transition:transform .16s ease, box-shadow .16s ease; cursor:pointer; }
+  .metric:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .metric-label { font-size:11.5px; color:var(--text2); margin-bottom:8px; }
+  .metric-value { font-size:26px; font-weight:500; color:var(--text); font-family:var(--mono); line-height:1.1; }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:3px; }
   /* Skeleton de carregamento — shimmer animado, usado no dashboard enquanto os
      dados reais não chegam (evita o "flash" de zero/traço parado). */
@@ -137,14 +201,65 @@
   .skel-value { width:44px; height:22px; }
   .skel-line { width:100%; height:12px; margin:3px 0; }
   .skel-line.w60 { width:60%; } .skel-line.w80 { width:80%; } .skel-line.w40 { width:40%; }
-  .card { background:var(--bg2); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:1.1rem; margin-bottom:1rem; }
-  .card-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); margin-bottom:0.9rem; }
+  /* Card — superfície de pergaminho SEM borda no tema claro: a profundidade vem da
+     sombra (var(--sh-sm) em repouso, var(--sh-md) no hover), como no protótipo.
+     Borda dura + sombra fraca era o que deixava tudo com cara de desenho 2D. */
+  .card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:22px 24px; margin-bottom:1rem; box-shadow:var(--sh-sm); transition:transform .16s ease, box-shadow .16s ease; }
+  .card:hover { box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .card[onclick] { cursor:pointer; }
+  .card[onclick]:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  /* ── Selo de registro — círculo com anel pontilhado, glyph central, label mono.
+     Substitui badge/pill de status crítico em pontos-chave: vacina/exame
+     vencido, alertas prioritários do dashboard, timeline da ficha. ── */
+  .selo-registro { display:inline-flex; flex-direction:column; align-items:center; gap:3px; }
+  .selo-registro .selo-circ {
+    width:36px; height:36px; border-radius:50%; flex-shrink:0; position:relative;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--pergaminho); color:var(--campo); border:1.5px solid currentColor; box-shadow:var(--sh-sm);
+  }
+  .selo-registro .selo-circ::after {
+    content:''; position:absolute; inset:4px; border-radius:50%;
+    border:1.2px dashed currentColor; opacity:.5;
+  }
+  .selo-registro .selo-circ svg, .selo-registro .selo-circ span.glyph { position:relative; z-index:1; }
+  .selo-registro .selo-circ span.glyph { font-family:var(--serif); font-weight:900; font-size:15px; line-height:1; }
+  .selo-registro.lg .selo-circ { width:44px; height:44px; }
+  .selo-registro.lg .selo-circ span.glyph { font-size:18px; }
+  .selo-registro .selo-label { font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--text2); white-space:nowrap; }
+  .selo-registro.ok  .selo-circ { color:var(--campo); }
+  .selo-registro.warn .selo-circ { color:var(--atencao); }
+  .selo-registro.crit .selo-circ { color:var(--critico); }
+  /* ── Etiqueta de brinco — chip reto de um lado / arredondado do outro, com
+     furo recortado via mask. Usada nos badges de identificação do animal
+     (RP/SBB, situação, pelagem, ciclo) — grade de Animais e cabeçalho da ficha. ── */
+  .etq-brinco {
+    display:inline-flex; align-items:center; font-family:var(--mono); font-size:10.5px; font-weight:600;
+    padding:3px 9px 3px 15px; border-radius:5px 13px 13px 5px; white-space:nowrap;
+    background:var(--campo-soft); color:var(--campo-deep);
+    -webkit-mask-image: radial-gradient(circle 3.5px at 8px 50%, transparent 4px, black 4.5px);
+    mask-image: radial-gradient(circle 3.5px at 8px 50%, transparent 4px, black 4.5px);
+    transition:transform .14s ease, box-shadow .14s ease;
+  }
+  .etq-brinco:hover { transform:translateY(-1px); box-shadow:inset 0 0 0 2em var(--tint-hover), 0 0 0 1px var(--border2); }
+  .etq-brinco.terracota { background:var(--terracota-soft); color:var(--terracota-ink); }
+  .etq-brinco.neutro { background:var(--ink-08); color:var(--text2); }
+  .etq-brinco.critico { background:var(--critico-soft); color:var(--critico); }
+  .etq-brinco.atencao { background:var(--atencao-soft); color:var(--atencao); }
+  .card-title { font-size:var(--fs-base); font-weight:700; color:var(--text); margin-bottom:1.05rem; }
   .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
   th { text-align:left; font-weight:600; font-size:11px; color:var(--text2); padding:0 10px 8px 0; border-bottom:0.5px solid var(--border); }
-  td { padding:8px 10px 8px 0; border-bottom:0.5px solid var(--border); color:var(--text); vertical-align:middle; }
+  td { padding:9px 10px 9px 0; border-bottom:0.5px solid var(--border); color:var(--text); vertical-align:middle; transition:background .14s ease; }
   tr:last-child td { border-bottom:none; }
-  .badge { display:inline-block; font-size:var(--fs-caption); padding:2px 7px; border-radius:var(--radius-badge); font-weight:600; white-space:nowrap; }
+  /* Linha de tabela ganha realce no hover — antes não havia retorno nenhum ao
+     passar o mouse pela listagem de animais e demais tabelas. */
+  tbody tr { transition:background .14s ease; }
+  tbody tr:hover td { background:var(--tint-hover); }
+  tbody tr:hover td:first-child { border-top-left-radius:var(--r-sm); border-bottom-left-radius:var(--r-sm); }
+  tbody tr:hover td:last-child { border-top-right-radius:var(--r-sm); border-bottom-right-radius:var(--r-sm); }
+  .badge { display:inline-block; font-size:var(--fs-caption); padding:2px 7px; border-radius:var(--radius-badge); font-weight:600; white-space:nowrap;
+    transition:transform .14s ease, box-shadow .14s ease; }
+  .badge:hover { transform:translateY(-1px); box-shadow:inset 0 0 0 2em var(--tint-hover), 0 2px 4px rgba(43,36,25,.13), 0 0 0 1px var(--border2); }
   .bg { background:var(--green-l); color:var(--green-d); }
   .ba { background:var(--amber-l); color:var(--amber-d); }
   .br { background:var(--red-l); color:var(--red-d); }
@@ -154,8 +269,12 @@
   .bt { background:var(--teal-l); color:var(--teal-d); }
   .bgr { background:var(--gray-l); color:var(--gray-d); }
   .filter-row { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
-  input, select { padding:7px 10px; border-radius:var(--radius); border:0.5px solid var(--border2); background:var(--bg2); font-size:12px; color:var(--text); font-family:var(--font); outline:none; }
-  input:focus, select:focus { border-color:var(--green); }
+  /* Campo com leve afundamento (inset), como no protótipo — o oposto do card,
+     que sobe. Ajuda a distinguir superfície de entrada de superfície de conteúdo. */
+  input, select { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
+    box-shadow:inset 0 1px 2px rgba(43,36,25,.06); transition:border-color .14s ease, box-shadow .14s ease; }
+  input:focus, select:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+  input[type=checkbox], input[type=radio] { box-shadow:none; }
   .tab-row { display:flex; margin-bottom:1.1rem; border-bottom:0.5px solid var(--border); overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   .tab-row::-webkit-scrollbar { display:none; }
   .tab-row .tab { flex-shrink:0; }
@@ -177,7 +296,7 @@
   #modal-midia    { z-index:300; }
   #modal-foto-full{ z-index:400; }
   .modal-bg.open { display:flex; }
-  .modal { background:var(--bg2); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:1.4rem; width:620px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  .modal { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:1.6rem 1.7rem; width:620px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:var(--sh-lg); }
   .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.1rem; }
   .modal-title { font-size:var(--fs-md); font-weight:700; color:var(--text); font-family:var(--serif); }
   .modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--text2); padding:0 4px; }
@@ -194,7 +313,8 @@
   .estagio-grid { display:flex; gap:6px; flex-wrap:wrap; }
   .estagio-pill { display:flex; align-items:center; gap:6px; background:var(--bg3); border-radius:var(--radius); padding:6px 10px; flex:1; min-width:110px; }
   /* NUTRIÇÃO */
-  .nut-animal-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); margin-bottom:1rem; overflow:hidden; }
+  .nut-animal-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); margin-bottom:1rem; overflow:hidden; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
+  .nut-animal-card:hover { box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .nut-animal-header { display:flex; align-items:center; justify-content:space-between; padding:0.9rem 1.1rem; cursor:pointer; gap:12px; }
   .nut-animal-header:hover { background:var(--bg3); }
   .nut-animal-name { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
@@ -216,7 +336,8 @@
   .nut-empty { font-size:12px; color:var(--text3); font-style:italic; padding:8px 0; }
   .nut-add-btn { font-size:11px; color:var(--green-d); background:var(--green-l); border:none; padding:4px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; margin-top:6px; }
   .nut-add-btn:hover { background:#C0DD97; }
-  .template-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
+  .template-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
+  .template-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
   .compra-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .compra-item:last-child { border-bottom:none; }
@@ -233,7 +354,8 @@
   .nut-proj-sem-data { background:var(--gray-l); color:var(--gray-d); }
   .nut-proj-finalizado { background:var(--gray-l); color:var(--gray-d); }
   /* EVENTOS */
-  .evt-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
+  .evt-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
+  .evt-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .evt-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:12px; }
   .evt-title { font-size:var(--fs-base); font-weight:700; color:var(--text); }
   .evt-meta { font-size:var(--fs-caption); color:var(--text2); margin-top:2px; }
@@ -246,7 +368,8 @@
   .evt-animal-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .evt-animal-row:last-child { border-bottom:none; }
   /* GESTAÇÃO */
-  .gest-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
+  .gest-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
+  .gest-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .gest-prog { height:8px; border-radius:99px; background:var(--bg3); margin:8px 0 4px; overflow:hidden; }
   .gest-prog-fill { height:8px; border-radius:99px; transition:width 0.3s; }
   .gest-dias { font-size:11px; color:var(--text2); display:flex; justify-content:space-between; }
@@ -278,15 +401,21 @@
   .san-dot   { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .san-empty { font-size:12px; color:var(--text3); font-style:italic; }
   /* PENDÊNCIAS */
-  .pend-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
+  .pend-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
+  .pend-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .pend-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
   .pend-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
   .pend-sub { font-size:11px; color:var(--text2); margin-top:2px; }
   .pend-resolvida { opacity:0.5; }
   .pend-resolvida .pend-title { text-decoration:line-through; }
   /* FICHA COMPLETA */
-  .ficha-section { margin-bottom:1.4rem; }
-  .ficha-section-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.7rem; display:flex; align-items:center; gap:6px; padding-bottom:5px; border-bottom:0.5px solid var(--border); }
+  .ficha-section { margin-bottom:2.1rem; }
+  /* Título de seção da ficha — Playfair 20px/700, como os títulos de card do
+     protótipo. Antes era caption 10px em caixa alta: hierarquia editorial nenhuma
+     e praticamente ilegível. */
+  .ficha-section-title { font-family:var(--serif); font-size:var(--fs-lg); font-weight:700; color:var(--text); letter-spacing:-0.005em;
+    margin:0 0 0.9rem; display:flex; align-items:center; gap:9px; padding-bottom:9px; border-bottom:0.5px solid var(--border); }
+  .ficha-section-title svg { flex-shrink:0; color:var(--campo); }
   .ficha-row { display:flex; justify-content:space-between; align-items:flex-start; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; gap:8px; }
   .ficha-row:last-child { border-bottom:none; }
   .ficha-label { color:var(--text2); flex-shrink:0; width:130px; }
@@ -294,6 +423,29 @@
   .ficha-field-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
   .ficha-field-val { font-size:13px; color:var(--text); font-weight:600; word-break:break-word; }
   .ficha-field-val.mono { font-family:var(--mono); font-weight:500; } /* dado de registro oficial: RP/SBB/data */
+  /* ── Cabeçalho visual da ficha do animal — avatar placeholder + nome + etiquetas.
+     Fica acima da grade de Identificação existente, não a substitui. ── */
+  .ficha-header { display:flex; align-items:flex-start; gap:1.35rem; margin-bottom:1.9rem; flex-wrap:wrap; }
+  .ficha-avatar {
+    width:104px; height:104px; border-radius:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;
+    background:linear-gradient(155deg, var(--campo-soft), var(--pergaminho2)); color:var(--campo); box-shadow:var(--sh-sm);
+    font-family:var(--serif); font-weight:800; font-size:38px; line-height:1;
+    transition:box-shadow .16s ease, transform .16s ease;
+  }
+  .ficha-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+  .ficha-avatar[onclick] { cursor:pointer; }
+  .ficha-avatar[onclick]:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .ficha-header-info { flex:1 1 260px; min-width:200px; }
+  .ficha-header-nome { font-family:var(--serif); font-size:var(--fs-2xl); font-weight:800; color:var(--text); letter-spacing:-0.01em; line-height:1.15; }
+  .ficha-header-sbb { font-family:var(--mono); font-size:12px; color:var(--text3); margin-top:4px; }
+  .ficha-header-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  /* Barra de ações da ficha — Voltar/Editar/Excluir (e Salvar/Cancelar em edição)
+     juntos, à direita, na mesma linha do nome do animal. */
+  .ficha-header-acoes { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-left:auto; padding-top:5px; }
+  @media (max-width:768px) {
+    .ficha-header-acoes { margin-left:0; width:100%; padding-top:0; }
+    .ficha-avatar { width:76px; height:76px; font-size:28px; }
+  }
   /* HISTÓRICO SAÚDE */
   .hist-row { display:grid; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .hist-vac { grid-template-columns:90px 90px 1fr 1fr 80px; }
@@ -346,25 +498,34 @@
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   @media(max-width:900px){ .kanban-board { grid-template-columns:1fr; } }
-  .kanban-col { border-radius:var(--radius-lg); overflow:hidden; }
-  .kanban-col-header { padding:10px 14px; font-size:12px; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
-  .kanban-col-header .kanban-count { font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--radius-badge); }
-  .kanban-col-vencida  { background:var(--red-l); }
-  .kanban-col-vencida .kanban-col-header  { background:var(--red-l);   color:var(--red-d); border-bottom:2px solid var(--red); }
-  .kanban-col-vencida .kanban-count       { background:var(--red);    color:white; }
-  .kanban-col-avencer  { background:var(--amber-l); }
-  .kanban-col-avencer .kanban-col-header  { background:var(--amber-l); color:var(--amber-d); border-bottom:2px solid var(--amber); }
-  .kanban-col-avencer .kanban-count       { background:var(--amber);   color:white; }
-  .kanban-col-emdia    { background:var(--green-l); }
-  .kanban-col-emdia .kanban-col-header    { background:var(--green-l); color:var(--green-d); border-bottom:2px solid var(--green); }
-  .kanban-col-emdia .kanban-count         { background:var(--green);   color:white; }
-  .kanban-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:60px; }
-  .kanban-card { background:var(--bg2); border-radius:var(--radius); padding:10px 12px; border:0.5px solid var(--border); cursor:default; transition:box-shadow 0.15s; }
-  .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.10); }
+  /* Kanban — cabeçalho colorido (tokens de estado do "Registro Vivo"), corpo em
+     pergaminho2 e cards em pergaminho puro, sem borda no claro (só sombra). */
+  .kanban-col { border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); }
+  .kanban-col-header { padding:12px 16px; font-size:13px; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
+  .kanban-col-header .kanban-count { font-family:var(--mono); font-size:11px; font-weight:700; padding:2px 9px; border-radius:99px; }
+  .kanban-col-vencida, .kanban-col-avencer, .kanban-col-emdia { background:var(--pergaminho2); }
+  .kanban-col-vencida .kanban-col-header  { background:var(--critico-soft); color:var(--critico); }
+  .kanban-col-vencida .kanban-count       { background:var(--critico);      color:var(--pergaminho); }
+  .kanban-col-vencida .kanban-card:hover  { background:color-mix(in srgb, var(--critico-soft) 32%, var(--pergaminho)); }
+  .kanban-col-avencer .kanban-col-header  { background:var(--atencao-soft); color:var(--atencao); }
+  .kanban-col-avencer .kanban-count       { background:var(--atencao);      color:var(--pergaminho); }
+  .kanban-col-avencer .kanban-card:hover  { background:color-mix(in srgb, var(--atencao-soft) 32%, var(--pergaminho)); }
+  .kanban-col-emdia .kanban-col-header    { background:var(--campo-soft);   color:var(--campo-deep); }
+  .kanban-col-emdia .kanban-count         { background:var(--campo);        color:var(--pergaminho); }
+  .kanban-col-emdia .kanban-card:hover    { background:color-mix(in srgb, var(--campo-soft) 32%, var(--pergaminho)); }
+  .kanban-cards { padding:12px; display:flex; flex-direction:column; gap:10px; min-height:60px; }
+  .kanban-card { background:var(--pergaminho); border-radius:var(--r-md); padding:13px 14px; border:var(--card-border); cursor:default;
+    box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease, background .16s ease; }
+  .kanban-card:hover { box-shadow:var(--sh-md), 0 0 0 1px var(--border2); transform:translateY(-3px); }
+  .kanban-card-nome { font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .kanban-card-info { font-family:var(--mono); font-size:10.5px; color:var(--text2); line-height:1.5; }
+  .kanban-card-data { font-family:var(--mono); font-size:11px; font-weight:600; margin-top:5px; }
+  @keyframes abccc-spin { to { transform: rotate(360deg); } }
+  .abccc-spin { display:inline-block; animation: abccc-spin 1s linear infinite; }
+  #btn-abccc-update { position:relative; overflow:hidden; min-width:130px; transition:color 0.2s,border-color 0.2s; }
+  #btn-abccc-update .abccc-fill { position:absolute; left:0; top:0; height:100%; background:var(--green-l); transition:width 0.4s; z-index:0; }
+  #btn-abccc-update .abccc-label { position:relative; z-index:1; display:flex; align-items:center; gap:5px; }
   @keyframes ac-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-  .kanban-card-nome { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:3px; }
-  .kanban-card-info { font-size:11px; color:var(--text2); line-height:1.5; }
-  .kanban-card-data { font-size:11px; font-weight:600; margin-top:4px; }
   .kanban-card-data.vencida { color:var(--red-d); }
   .kanban-card-data.avencer { color:var(--amber-d); }
   .kanban-card-data.emdia   { color:var(--green-d); }
@@ -391,10 +552,11 @@
   .verm-animal-row.selected .verm-check { background:var(--green); border-color:var(--green); }
   .verm-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .verm-sel-count { background:var(--green-l); color:var(--green-d); border-radius:var(--radius-badge); padding:2px 10px; font-size:11px; font-weight:700; }
-  .verm-grupo-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.1rem; margin-bottom:0.75rem; }
+  .verm-grupo-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
+  .verm-grupo-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .verm-grupo-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
   .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:999;display:flex;align-items:center;justify-content:center; }
-  .login-box { background:var(--chrome-bg2);border:0.5px solid var(--chrome-border);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:380px;max-width:95vw; }
+  .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
@@ -405,19 +567,56 @@
   .login-field input { width:100%;padding:10px 12px;font-size:14px;border-radius:var(--radius);border:0.5px solid var(--chrome-border);background:var(--bg);color:var(--chrome-text);font-family:var(--font); }
   .login-field input::placeholder { color:var(--chrome-text3); }
   .login-field input:focus { outline:none;border-color:var(--chrome-accent); }
-  .login-btn { width:100%;padding:11px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:0.5rem; }
-  .login-btn:hover { background:var(--green-d); }
+  .login-btn { width:100%;padding:12px;background:linear-gradient(180deg,#5A7A38,var(--green));color:white;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:0.5rem;
+    box-shadow:0 1px 0 rgba(255,255,255,.25) inset, var(--sh-sm); transition:box-shadow .15s ease, transform .15s ease, background .15s ease; }
+  .login-btn:hover { background:linear-gradient(180deg,var(--green),var(--green-d)); transform:translateY(-1px); box-shadow:0 1px 0 rgba(255,255,255,.2) inset, var(--sh-md); }
   .login-error { background:var(--red-l);color:var(--red-d);border-radius:var(--radius);padding:8px 10px;font-size:12px;margin-top:8px;display:none; }
+  /* ── Login "Registro Vivo" — composição em duas colunas. O painel esquerdo é
+     hero de marca, sempre no gradiente escuro fixo (não segue light/dark). ── */
+  .login-screen.v2 { align-items:stretch; justify-content:stretch; background:var(--bg); }
+  .login-shell { display:flex; width:100%; min-height:100vh; min-height:100dvh; }
+  .login-hero {
+    flex:0 0 56%; max-width:56%; position:relative; overflow:hidden; color:#F4EFE6;
+    background: radial-gradient(120% 140% at 20% 15%, #3F5A28 0%, #22301A 48%, #1A1A18 100%);
+    padding:2.5rem 3rem; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .login-hero-top { display:flex; align-items:center; gap:10px; }
+  .login-hero-mono { width:38px; height:38px; border-radius:10px; background:rgba(244,239,230,.14); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:18px; flex-shrink:0; }
+  .login-hero-brand { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:rgba(244,239,230,.75); }
+  .login-hero-eyebrow { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:rgba(232,197,103,.85); margin-bottom:14px; }
+  .login-hero-headline { font-family:var(--serif); font-weight:900; font-size:clamp(32px,4vw,54px); line-height:1.08; letter-spacing:-0.01em; }
+  .login-hero-headline em { font-style:italic; color:#E8C567; }
+  .login-hero-desc { margin-top:16px; font-size:14px; line-height:1.6; color:rgba(244,239,230,.82); max-width:440px; }
+  .login-hero-stats { display:flex; gap:1.75rem; flex-wrap:wrap; padding-top:1.5rem; border-top:1px solid rgba(244,239,230,.18); }
+  .login-hero-stat-val { font-family:var(--mono); font-size:13px; font-weight:600; color:#F4EFE6; }
+  .login-hero-stat-lbl { font-size:11px; color:rgba(244,239,230,.65); margin-top:2px; }
+  .login-form-col { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1.5rem; background:var(--bg); }
+  /* Variantes (restaurando sessão / bloqueado / cancelado / definir senha) seguem
+     como overlay centralizado de tela cheia, independente do layout de duas
+     colunas do login padrão — não fazem parte do redesenho desta rodada. */
+  #login-restaurando, #login-bloqueado, #login-cancelado, #definir-senha-box {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1000;
+  }
+  .login-form-col .login-box { box-shadow:none; border:none; background:transparent; width:360px; padding:0; }
+  .login-form-wordmark { font-family:var(--serif); font-size:22px; font-weight:900; color:var(--ouro); margin-bottom:1.75rem; }
+  @media (max-width:860px){
+    .login-shell { flex-direction:column; }
+    .login-hero { flex:0 0 auto; max-width:100%; padding:1.75rem 1.5rem; }
+    .login-hero-headline { font-size:clamp(26px,7vw,36px); }
+    .login-hero-desc { display:none; }
+    .login-hero-stats { display:none; }
+    .login-form-col { padding:2rem 1.25rem; }
+  }
   .perfil-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--radius-badge);font-size:var(--fs-caption);font-weight:700;text-transform:uppercase; }
   .perfil-adm, .perfil-admin       { background:var(--purple-l);color:var(--purple-d); }
   .perfil-cab, .perfil-cabanheiro  { background:var(--green-l);color:var(--green-d); }
   .perfil-vet, .perfil-veterinario { background:var(--blue-l);color:var(--blue-d); }
   /* DASHBOARD DRILL-DOWN */
-  .stat-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; cursor:pointer; border-radius:var(--radius); padding:3px 4px; transition:background 0.12s; }
-  .stat-row:hover { background:var(--bg3); }
+  .stat-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; cursor:pointer; border-radius:var(--radius); padding:3px 4px; transition:background 0.12s, transform 0.12s ease; }
+  .stat-row:hover { background:var(--bg3); transform:translateX(2px); }
   .drill-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0; }
-  .drill-row { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.1s; }
-  .drill-row:hover { background:var(--bg3); }
+  .drill-row { display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.1s, transform 0.12s ease; }
+  .drill-row:hover { background:var(--bg3); transform:translateX(2px); }
   .drill-row:last-child { border-bottom:none; }
   .drill-nome { font-size:var(--fs-sm); font-weight:700; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .drill-info { font-size:11px; color:var(--text2); white-space:nowrap; }
@@ -429,7 +628,9 @@
   /* CALENDÁRIO DASHBOARD */
   .cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:10px; }
   .cal-header { text-align:center;padding:3px;font-weight:700;color:var(--text3);text-transform:uppercase; }
-  .cal-day { text-align:center;padding:3px 2px;border-radius:4px;min-height:26px;cursor:default; }
+  .cal-day { text-align:center;padding:3px 2px;border-radius:4px;min-height:26px;cursor:default; transition:background 0.12s; }
+  .cal-day.has-event { cursor:pointer; }
+  .cal-day.has-event:hover { background:var(--bg3); }
   .cal-day-num { font-size:10px;color:var(--text2); }
   .cal-day.today .cal-day-num { background:var(--green);color:white;border-radius:99px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center; }
   .cal-day.has-event { background:var(--blue-l);cursor:pointer; }
@@ -442,34 +643,77 @@
   .vac-protocolo-desc { font-size:11px;color:var(--text2);margin-top:2px; }
 
   /* ── LINHA DO TEMPO ──────────────────────────────────────────────── */
-  .tl-wrap { padding:0.5rem 0; }
-  .tl-year { font-size:var(--fs-caption);font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:8px 0 4px;margin-top:4px; }
-  .tl-item { display:flex;gap:12px;padding:10px 0;position:relative; }
-  .tl-item::before { content:'';position:absolute;left:17px;top:38px;bottom:-10px;width:1.5px;background:var(--border); }
-  .tl-item:last-child::before { display:none; }
-  .tl-dot { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:2px solid var(--border); }
-  .tl-dot.aniv  { background:var(--amber-d,#92400e);color:white;border-color:var(--amber,#d97706); }
-  .tl-dot.foto  { background:var(--blue,#378ADD);color:white;border-color:#1e6db5; }
-  .tl-dot.saude { background:#b91c1c;color:white;border-color:#991b1b; }
-  .tl-dot.evento{ background:var(--green,#2D6A4F);color:white;border-color:var(--green-l); }
-  .tl-dot.repro { background:#7c3aed;color:white;border-color:#6d28d9; }
-  .tl-dot.medida{ background:#0d9488;color:white;border-color:#0f766e; }
-  .tl-dot.nasc  { background:var(--green-l,#40916C);color:white;border-color:var(--green-xl,#52B788); }
-  .tl-content { flex:1;min-width:0; }
-  .tl-date { font-size:10px;color:var(--text3);margin-bottom:2px; }
-  .tl-title { font-size:13px;font-weight:600;color:var(--text);line-height:1.3; }
-  .tl-sub { font-size:12px;color:var(--text2);margin-top:2px;line-height:1.4; }
-  .tl-foto-grid { display:flex;flex-wrap:wrap;gap:8px;margin-top:8px; }
-  .tl-foto-thumb { width:88px;height:88px;object-fit:cover;border-radius:8px;cursor:pointer;
-    border:2px solid var(--border);transition:all 0.2s; }
-  .tl-foto-thumb:hover { border-color:var(--blue,#378ADD);transform:scale(1.04); }
+  /* ── Linha do Tempo — fita horizontal (redesign "Registro Vivo") ──
+     Mesma fonte de dados que antes (eventos_tl), só a estrutura visual muda:
+     de lista vertical de bolinhas para uma fita horizontal com selo+card. */
+  .tl-wrap { padding:0.75rem 0 0.25rem; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; cursor:grab; }
+  .tl-wrap::-webkit-scrollbar { display:none; }
+  .tl-wrap.tl-dragging { cursor:grabbing; }
+  .tl-fita { display:flex; align-items:flex-start; gap:20px; min-width:min-content; padding-bottom:6px; }
+  .tl-item { display:flex; flex-direction:column; align-items:center; flex-shrink:0; width:172px; position:relative; }
+  .tl-year { font-family:var(--serif); font-weight:700; font-size:15px; color:var(--text); height:20px; display:flex; align-items:center; margin-bottom:4px; }
+  .tl-fio-row { position:relative; width:100%; height:44px; display:flex; align-items:center; justify-content:center; }
+  .tl-fio { position:absolute; top:50%; left:0; right:0; height:2px; transform:translateY(-1px);
+    background:linear-gradient(90deg, var(--campo-soft), var(--terracota-soft) 50%, var(--atencao-soft)); opacity:.7; z-index:0; }
+  .tl-item:first-child .tl-fio { left:50%; }
+  .tl-item:last-child .tl-fio { right:50%; }
+  .tl-dot { width:44px; height:44px; border-radius:50%; flex-shrink:0; position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:center; background:var(--pergaminho); box-shadow:var(--sh-sm);
+    border:1.5px solid currentColor; color:var(--campo); }
+  .tl-dot::after { content:''; position:absolute; inset:4px; border-radius:50%; border:1.2px dashed currentColor; opacity:.5; }
+  .tl-dot svg { position:relative; z-index:1; }
+  .tl-dot.aniv, .tl-dot.nasc, .tl-dot.evento { color:var(--campo); }
+  .tl-dot.foto  { color:var(--terracota); }
+  .tl-dot.saude { color:var(--critico); }
+  .tl-dot.repro { color:var(--terracota); }
+  .tl-dot.medida{ color:var(--campo-deep); }
+  .tl-conector { width:2px; height:14px; background:var(--ink-15); flex-shrink:0; }
+  .tl-content { width:100%; background:var(--pergaminho); border:var(--card-border); border-radius:14px; box-shadow:var(--sh-sm); padding:12px 13px; min-height:76px;
+    transition:box-shadow .16s ease, transform .16s ease; }
+  .tl-item:hover .tl-content { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .tl-dot { transition:transform .16s ease, box-shadow .16s ease; }
+  .tl-item:hover .tl-dot { transform:scale(1.06); box-shadow:var(--sh-md); }
+  .tl-date { font-family:var(--mono); font-size:10px; color:var(--text3); margin-bottom:2px; }
+  .tl-title { font-size:12.5px; font-weight:700; color:var(--text); line-height:1.3; }
+  .tl-sub { font-size:11px; color:var(--text2); margin-top:2px; line-height:1.4; }
+  .tl-foto-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .tl-foto-thumb { width:100%; height:84px; object-fit:cover; border-radius:8px; cursor:pointer;
+    border:1px solid var(--border); transition:all 0.2s; }
+  .tl-foto-thumb:hover { border-color:var(--terracota); transform:scale(1.02); }
+  .tl-foto-placeholder { width:100%; height:56px; border-radius:8px; background:var(--bg3); color:var(--text3);
+    display:flex; align-items:center; justify-content:center; margin-top:6px; }
   .tl-empty { text-align:center;padding:2rem 1rem;color:var(--text3);font-size:13px;line-height:1.6; }
   @media(max-width:600px){
-    .tl-foto-thumb{width:72px;height:72px;}
+    .tl-item{width:150px;}
+    .tl-foto-thumb{height:64px;}
     .tl-title{font-size:12px;}
     #modal-midia .modal{width:100%!important;max-width:100vw;border-radius:12px 12px 0 0;max-height:88vh;}
     #modal-foto-full img{max-width:95vw;max-height:70vh;}
   }
+
+  /* ── Retorno visual em elementos pequenos ────────────────────────────
+     Vários blocos clicáveis não tinham :hover nenhum — a app parecia sem vida.
+     O véu usa box-shadow inset (--tint-hover), que funciona sobre qualquer cor de
+     fundo e nos dois temas, sem precisar de uma cor de hover por variante. */
+  .agenda-item[onclick], .detail-item[onclick], .med-card[onclick], .med-item[onclick],
+  .compra-item[onclick], .est-row[onclick], .evt-animal-row[onclick], .hist-row[onclick],
+  .ficha-row[onclick], .sangue-bar[onclick], .nut-item[onclick], .nut-supl[onclick],
+  .selo-registro[onclick], .etq-brinco[onclick] {
+    cursor:pointer; transition:box-shadow .14s ease, transform .14s ease;
+  }
+  .agenda-item[onclick]:hover, .detail-item[onclick]:hover, .med-card[onclick]:hover, .med-item[onclick]:hover,
+  .compra-item[onclick]:hover, .est-row[onclick]:hover, .evt-animal-row[onclick]:hover, .hist-row[onclick]:hover,
+  .ficha-row[onclick]:hover, .sangue-bar[onclick]:hover, .nut-item[onclick]:hover, .nut-supl[onclick]:hover {
+    box-shadow:inset 0 0 0 2em var(--tint-hover); border-radius:var(--r-sm);
+  }
+  .selo-registro { transition:transform .16s ease; }
+  .selo-registro[onclick]:hover, .selo-registro:hover .selo-circ { transform:scale(1.05); }
+  .nav-btn.active { box-shadow:var(--sh-sm); }
+  .tab { transition:color .14s ease, background .14s ease; border-radius:8px 8px 0 0; }
+  .tab:hover { color:var(--text); background:var(--bg3); }
+  .alert { transition:transform .14s ease, box-shadow .14s ease; }
+  .alert[onclick] { cursor:pointer; }
+  .alert[onclick]:hover { transform:translateX(2px); box-shadow:var(--sh-sm), 0 0 0 1px var(--border2); }
 
   /* V1.5 (Fase 4): Relatórios em PDF via impressão nativa do navegador. #print-area fica
      fora da tela normal; ao imprimir, ela vira a única coisa visível na página. */
@@ -516,48 +760,65 @@
 </div>
 
 <!-- TELA DE LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-box" id="login-box-main">
-    <div class="login-logo">
-      <div class="login-logo-title">Mimba.</div>
-      <div class="login-logo-sub">Gestão Crioulos · A inteligência da sua cabanha</div>
-    </div>
-    <div id="login-campos-normais">
-      <div class="login-field">
-        <label>Email</label>
-        <input type="email" id="login-user" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+<div id="login-screen" class="login-screen v2">
+  <div class="login-shell" id="login-shell-main">
+    <div class="login-hero">
+      <div class="login-hero-top">
+        <div class="login-hero-mono">M</div>
+        <div class="login-hero-brand">Gestão Crioulos</div>
       </div>
-      <div class="login-field">
-        <label>Senha</label>
-        <div style="position:relative">
-          <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password" style="width:100%;padding-right:38px" onkeydown="if(event.key==='Enter')fazerLogin()">
-          <button type="button" onclick="_toggleLoginSenha()" title="Mostrar/ocultar senha" aria-label="Mostrar/ocultar senha"
-            style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex">
-            <svg id="login-senha-icon-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg id="login-senha-icon-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.9 18.9 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
+      <div>
+        <div class="login-hero-eyebrow">Livro de registro · desde o primeiro acesso</div>
+        <div class="login-hero-headline">O sangue da sua cabanha, sob <em>controle.</em></div>
+        <div class="login-hero-desc">Genealogia até a 5ª geração, histórico de cada animal e o dia a dia da criação — integrados à ABCCC.</div>
+      </div>
+      <div class="login-hero-stats">
+        <div><div class="login-hero-stat-val">10 · módulos completos</div></div>
+        <div><div class="login-hero-stat-val">5ª ger. · genealogia automática</div></div>
+        <div><div class="login-hero-stat-val">ABCCC · integrado nativamente</div></div>
+      </div>
+    </div>
+    <div class="login-form-col">
+      <div class="login-box" id="login-box-main">
+        <div class="login-form-wordmark">Mimba.</div>
+        <div id="login-campos-normais">
+          <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="login-user" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+          </div>
+          <div class="login-field">
+            <label>Senha</label>
+            <div style="position:relative">
+              <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password" style="width:100%;padding-right:38px" onkeydown="if(event.key==='Enter')fazerLogin()">
+              <button type="button" onclick="_toggleLoginSenha()" title="Mostrar/ocultar senha" aria-label="Mostrar/ocultar senha"
+                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex">
+                <svg id="login-senha-icon-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg id="login-senha-icon-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.9 18.9 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="login-btn" onclick="fazerLogin()">Entrar</button>
+          <div class="login-error" id="login-error" style="display:none"></div>
+          <div id="login-seletor" style="display:none;margin-top:10px"></div>
+          <div style="margin-top:10px;text-align:center">
+            <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">Tenho um código de acesso</a>
+          </div>
         </div>
-      </div>
-      <button class="login-btn" onclick="fazerLogin()">Entrar</button>
-      <div class="login-error" id="login-error" style="display:none"></div>
-      <div id="login-seletor" style="display:none;margin-top:10px"></div>
-      <div style="margin-top:10px;text-align:center">
-        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">Tenho um código de acesso</a>
-      </div>
-    </div>
-    <div id="login-codigo-box" style="display:none">
-      <div class="login-field">
-        <label>Email</label>
-        <input type="email" id="cod-email" placeholder="seu@email.com" autocomplete="email">
-      </div>
-      <div class="login-field">
-        <label>Código recebido por e-mail</label>
-        <input type="text" id="cod-codigo" placeholder="000000" inputmode="numeric" style="letter-spacing:4px;font-size:18px;text-align:center" onkeydown="if(event.key==='Enter')confirmarCodigoAcesso()">
-      </div>
-      <button class="login-btn" onclick="confirmarCodigoAcesso()">Confirmar código</button>
-      <div class="login-error" id="cod-error" style="display:none"></div>
-      <div style="margin-top:10px;text-align:center">
-        <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
+        <div id="login-codigo-box" style="display:none">
+          <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="cod-email" placeholder="seu@email.com" autocomplete="email">
+          </div>
+          <div class="login-field">
+            <label>Código recebido por e-mail</label>
+            <input type="text" id="cod-codigo" placeholder="000000" inputmode="numeric" style="letter-spacing:4px;font-size:18px;text-align:center" onkeydown="if(event.key==='Enter')confirmarCodigoAcesso()">
+          </div>
+          <button class="login-btn" onclick="confirmarCodigoAcesso()">Confirmar código</button>
+          <div class="login-error" id="cod-error" style="display:none"></div>
+          <div style="margin-top:10px;text-align:center">
+            <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -626,7 +887,9 @@
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
   </div>
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Dashboard</span></button>
-  <button class="nav-btn" onclick="showPage('animais')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="6" cy="8" r="2.1"/><circle cx="11" cy="5.3" r="2.1"/><circle cx="16" cy="5.3" r="2.1"/><circle cx="19" cy="9" r="2.1"/></svg></span><span>Animais</span></button>
+  <!-- Animais: silhueta do CAVALO DE XADREZ (peça de knight) — contorno fechado da peça,
+       stroke 1.7 pra o interior não fechar nos tamanhos pequenos do menu. -->
+  <button class="nav-btn" onclick="showPage('animais')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21.5H20V19H18C18.3 14 17.8 8.5 16.8 5.2L17.6 2.6 15.8 4.1 14.6 2.2 13.3 4.9C10.8 5.8 8.2 7.4 5.6 10c-.6.6-.3 1.4.6 1.5C8.6 11.8 10.2 13.4 10.6 15.6c.3 1.6-.6 2.7-2 3.4H6Z"/><circle cx="14.3" cy="7.6" r="0.8" fill="currentColor" stroke="none"/></svg></span><span>Animais</span></button>
   <button class="nav-btn" onclick="showPage('saude')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span>Saúde & Vacinas</span></button>
   <button class="nav-btn" onclick="showPage('reprodutivo')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.9-9C0.7 8.4 2 5 5.3 5c2 0 3.4 1.2 4.2 2.4C10.3 6.2 11.7 5 13.7 5 17 5 18.3 8.4 16.9 12 14.5 16.4 12 21 12 21z"/></svg></span><span>Reprodutivo</span></button>
   <button class="nav-btn" onclick="showPage('financeiro')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.2"/></svg></span><span>Financeiro</span></button>
@@ -775,6 +1038,10 @@
   <div class="page-header">
     <div><div class="page-title">Animais</div><div class="page-sub">Plantel completo · dados ABCCC integrados</div></div>
     <div style="display:flex;gap:8px">
+      <button id="btn-abccc-update" class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">
+        <div class="abccc-fill" style="width:0%"></div>
+        <span class="abccc-label"><svg width="13" height="13" id="abccc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;flex-shrink:0"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg><span id="abccc-label-txt">Atualizar ABCCC</span></span>
+      </button>
       <button class="btn" onclick="abrirModalImportarSBB()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Importar por SBB</button>
       <button class="btn btn-primary" onclick="_limparFormNovoAnimal();openModal('modal-novo')">+ Novo animal</button>
     </div>
@@ -820,23 +1087,12 @@
 <!-- Detalhe do animal — página cheia (era modal; texto colado/espaçamento
      inconsistente + pouco espaço eram sintoma de ficar espremido em 900px) -->
 <div class="page" id="page-detalhe-animal">
-  <div class="page-header">
-    <div style="display:flex;align-items:center;gap:10px;min-width:0">
-      <button class="btn btn-sm" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
-      <div id="det-foto-wrap" style="flex-shrink:0"></div>
-      <div style="min-width:0">
-        <div class="page-title" id="det-titulo" style="font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Animal</div>
-        <div class="page-sub">Ficha completa do animal</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="btn btn-sm" id="det-btn-editar" onclick="alternarEdicaoAnimal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar</button>
-      <button class="btn btn-sm btn-primary" id="det-btn-salvar" onclick="salvarEdicaoAnimal()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Salvar</button>
-      <button class="btn btn-sm" id="det-btn-cancelar" onclick="cancelarEdicaoAnimal()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</button>
-      <button class="btn btn-sm" id="det-btn-excluir" title="Excluir animal" style="color:var(--red-d)" onclick="excluirAnimal(window._detIdx)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-    </div>
-  </div>
-  <div id="det-corpo" style="max-width:980px"></div>
+  <!-- Cabeçalho único: o antigo .page-header (avatar + nome + "Ficha completa do
+       animal") duplicava a foto e o nome que o .ficha-header já mostrava. Agora o
+       cabeçalho inteiro — incluindo a barra de ações (Voltar/Editar/Excluir e
+       Salvar/Cancelar) — é renderizado dentro de #det-corpo por _fichaCabecalho(),
+       na mesma linha do nome do animal. -->
+  <div id="det-corpo" style="max-width:1040px"></div>
 </div>
 
 <!-- SAUDE -->
@@ -1083,7 +1339,7 @@
   <div class="tab-row">
     <button class="tab active" onclick="switchTab(this,'gest-gestacoes')">Gestações ativas</button>
     <button class="tab" onclick="switchTab(this,'tab-planejador')">Planejador de ciclo</button>
-    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Acasalamentos</button>
+    <button class="tab" id="tab-btn-acasalamentos" onclick="switchTab(this,'gest-acasalamentos')">Cruzamentos</button>
     <button class="tab" onclick="switchTab(this,'gest-protocolos')">Protocolos</button>
     <button class="tab" onclick="switchTab(this,'tab-ciclos')">Crias por ciclo</button>
     <button class="tab" onclick="switchTab(this,'tab-matrizes')">Plantel</button>
@@ -1187,7 +1443,7 @@
         <div id="ac-match-eguas" class="kanban-cards"></div>
       </div>
     </div>
-    <div class="card-title" style="margin:22px 0 8px">Acasalamentos deste ciclo</div>
+    <div class="card-title" style="margin:22px 0 8px">Cruzamentos deste ciclo</div>
     <div id="ac-kanban-content"></div>
     <div id="ac-cancelados-wrap" style="margin-top:1rem">
       <div class="card" style="cursor:pointer" onclick="_toggleCanceladosAcasalamentos()">
@@ -2468,7 +2724,7 @@
       <div class="form-group"><label>Contexto</label>
         <select id="rm-contexto"><option value="Rotina">Rotina</option><option value="Início projeto nutricional">Início projeto nutricional</option><option value="Fim projeto nutricional">Fim projeto nutricional</option><option value="Pré-prova">Pré-prova</option><option value="Pós-prova">Pós-prova</option></select>
       </div>
-      <div class="form-group"><label>Altura cernelha (m)</label><input type="number" id="rm-cernelha" placeholder="Ex: 1.43" step="0.01" min="0.8" max="1.8"></div>
+      <div class="form-group"><label>Altura cernelha (m)</label><input type="number" id="rm-cernelha" placeholder="Ex: 1.430" step="0.001" min="0.8" max="1.8"></div>
       <div class="form-group"><label>Perímetro tórax (m)</label><input type="number" id="rm-torax" placeholder="Ex: 1.75" step="0.01" min="1.0" max="2.5"></div>
       <div class="form-group"><label>Perímetro canela (m)</label><input type="number" id="rm-canela" placeholder="Ex: 0.19" step="0.001" min="0.1" max="0.35"></div>
       <div class="form-group"><label>Peso (kg)</label><input type="number" id="rm-peso" placeholder="Ex: 420" step="1" min="50" max="800"></div>
@@ -3058,8 +3314,8 @@ function fd(s){const d=pd(s);if(!d)return'—';return d.toLocaleDateString('pt-B
 function da(s){const d=pd(s);if(!d)return null;return Math.round((d-HOJE)/864e5);}
 function svac(p){const d=da(p);if(d===null)return{l:'Sem dados',c:'bgr'};if(d<0)return{l:`Vencida (${Math.abs(d)}d)`,c:'br'};if(d<=30)return{l:`${d}d para vencer`,c:'br'};if(d<=60)return{l:`${d}d p/ vencer`,c:'ba'};return{l:'Em dia',c:'bg'};}
 function sexm(s){if(!s)return'<span class="badge bgr">—</span>';return s==='Fêmea'?`<span class="badge bpk">${s}</span>`:`<span class="badge bb">${s}</span>`;}
-function sitb(s){if(!s)return'<span class="badge bgr">—</span>';const m={'NA CABANHA':'bg','MORTO':'br','TRANSFERIDO':'ba','VENDIDO':'bp','EMPRESTIMO':'bp'};return`<span class="badge ${m[s]||'bgr'}">${s}</span>`;}
-function estb(e){if(!e||e==='-')return'—';const m={'PISTA MORFOLOGIA':'bb','PISTA FUNCIONAL':'bp','CAMPO':'bg','LAÇO':'ba','ARREIO CABANHA':'bpk','DOMA':'ba','CRIA':'bt'};return`<span class="badge ${m[e]||'bgr'}">${e}</span>`;}
+function sitb(s){if(!s)return'<span class="etq-brinco neutro">—</span>';const m={'NA CABANHA':'',   'MORTO':'critico','TRANSFERIDO':'atencao','VENDIDO':'terracota','EMPRESTIMO':'terracota'};return`<span class="etq-brinco ${m[s]!==undefined?m[s]:'neutro'}">${s}</span>`;}
+function estb(e){if(!e||e==='-')return'—';const m={'PISTA MORFOLOGIA':'terracota','PISTA FUNCIONAL':'terracota','CAMPO':'','LAÇO':'atencao','ARREIO CABANHA':'terracota','DOMA':'atencao','CRIA':''};return`<span class="etq-brinco ${m[e]!==undefined?m[e]:'neutro'}">${e}</span>`;}
 function sbbL(s){
   if(!s||s==='-') return '—';
   return `<a class="sbb-link" href="#" onclick="abrirAbccc('${s}');return false;" title="Pesquisar ${s} na ABCCC">${s} ↗</a>`;
@@ -3266,11 +3522,11 @@ function renderAnimais(){
     const i=animais.indexOf(a);
     return`<tr>
       <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':_badgeConfirmacao(a)}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${a.rp}</td>
+      <td>${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:''}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
-      <td style="font-size:11px">${a.pelagem||'<span style="color:var(--text3)">—</span>'}</td>
-      <td>${a.ciclo?`<span class="badge bgr">${a.ciclo}</span>`:'—'}</td>
+      <td style="font-size:11px">${a.pelagem?`<span class="etq-brinco terracota">${a.pelagem}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+      <td>${a.ciclo?`<span class="etq-brinco atencao">${a.ciclo}</span>`:'—'}</td>
       <td style="font-size:11px;color:var(--text2);font-family:var(--mono)">${fd(a.nasc)}</td>
       <td>${sitb(a.situacao)}</td>
       <td>${estb(a.estagio)}</td>
@@ -3280,7 +3536,7 @@ function renderAnimais(){
 
   document.getElementById('animais-grade-wrap').innerHTML = lista.map(a => {
     const i = animais.indexOf(a);
-    return `<div class="card" style="padding:12px">
+    return `<div class="card" style="padding:16px 18px">
       <div style="display:flex;gap:10px;align-items:center">
         ${_animalAvatarHtml(a)}
         <div style="min-width:0;flex:1">
@@ -3291,7 +3547,7 @@ function renderAnimais(){
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">
         ${sitb(a.situacao)}
         ${a.estagio ? estb(a.estagio) : ''}
-        ${a.ciclo ? `<span class="badge bgr">${a.ciclo}</span>` : ''}
+        ${a.ciclo ? `<span class="etq-brinco atencao">${a.ciclo}</span>` : ''}
         ${!a.confirmado && a.confirmacao_status !== 'nao_confirmado' ? _badgeConfirmacao(a) : ''}${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
@@ -3300,7 +3556,7 @@ function renderAnimais(){
       <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
         <div>Nasc.: ${fd(a.nasc)||'—'}</div>
-        <div style="grid-column:1/-1">RP: ${a.rp||'—'}</div>
+        <div style="grid-column:1/-1">RP: ${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'}</div>
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm" style="flex:1" onclick="verDetalhe(${i})">Ver</button>
@@ -4013,15 +4269,12 @@ function abrirLaudo(b64, nome, tipo) {
 function _emh(btn) {
   const ai = parseInt(btn.getAttribute('data-ai'));
   const di = btn.getAttribute('data-di');
-  console.log('[_emh] ai=', ai, 'di=', di);
   if (!di) { console.log('[_emh] sem db_id'); return; }
-  console.log('[_emh] medidas keys:', Object.keys(medidas));
   for (const [ki, lista] of Object.entries(medidas)) {
-    console.log('[_emh] lista['+ki+'] db_ids:', lista.map(m=>m.db_id));
     const mi = lista.findIndex(m => m.db_id === di);
-    if (mi >= 0) { console.log('[_emh] encontrado ki='+ki+' mi='+mi); abrirEditarMedida(parseInt(ki), mi); return; }
+    if (mi >= 0) { abrirEditarMedida(parseInt(ki), mi); return; }
   }
-  toast('Medição não encontrada. Recarregue a página.');
+  _mostrarStatusSync('⚠️ Medição não encontrada. Recarregue a página.', 'amber');
 }
 
 function abrirEditarMedida(animalIdx, medIdx) {
@@ -4075,9 +4328,7 @@ async function salvarEdicaoMedida() {
   reg.resp     = document.getElementById('rm-resp').value || null;
   reg.obs      = document.getElementById('rm-obs').value || null;
   // Persistir no banco
-  console.log('[salvarEdicaoMedida] reg.db_id=', reg?.db_id, 'data=', data);
   if (reg.db_id) {
-    console.log('[salvarEdicaoMedida] enviando PATCH');
     await _supa('PATCH', 'medidas', {
       data: reg.data, contexto: reg.contexto,
       cernelha: reg.cernelha ? Number(reg.cernelha) : null,
@@ -4099,7 +4350,7 @@ async function salvarEdicaoMedida() {
   renderMedLista(); renderMedHistorico();
   // Re-inicializar gráfico se na ficha do animal
   if (window._detIdx !== undefined) setTimeout(() => _initMedChart(window._detIdx), 100);
-  toast('Medição atualizada.');
+  _mostrarStatusSync('✅ Medição atualizada', 'green');
 }
 
 function abrirModalMedida(preIdx) {
@@ -5264,19 +5515,51 @@ function verDetalhe(i){
   document.querySelector('.nav-btn[onclick*="\'animais\'"]')?.classList.add('active');
 }
 
+// Barra de ações da ficha (Voltar / Editar / Salvar / Cancelar / Excluir). Fica dentro
+// do cabeçalho renderizado, alinhada à direita na mesma linha do nome do animal. Os ids
+// continuam os mesmos que alternarEdicaoAnimal/cancelarEdicaoAnimal/salvarEdicaoAnimal
+// manipulam — só mudaram de lugar no DOM.
+function _fichaAcoesHtml(editando) {
+  const ed = editando ? 'none' : '';
+  const sv = editando ? '' : 'none';
+  return `<div class="ficha-header-acoes">
+    <button class="btn btn-sm" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
+    <button class="btn btn-sm" id="det-btn-editar" style="display:${ed}" onclick="alternarEdicaoAnimal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar</button>
+    <button class="btn btn-sm btn-primary" id="det-btn-salvar" onclick="salvarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Salvar</button>
+    <button class="btn btn-sm" id="det-btn-cancelar" onclick="cancelarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</button>
+    <button class="btn btn-sm" id="det-btn-excluir" title="Excluir animal" style="color:var(--red-d)" onclick="excluirAnimal(window._detIdx)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+  </div>`;
+}
+
+// Cabeçalho único da ficha: avatar (foto real quando existe, senão a inicial),
+// nome, SBB/RP, etiquetas de brinco e a barra de ações. Substitui o antigo
+// .page-header, que duplicava foto e nome.
+function _fichaCabecalho(a, editando, sitLabel) {
+  const nomeEsc = (a.nome||'').replace(/'/g,"\\'");
+  const avatar = a.foto_url
+    ? `<div class="ficha-avatar" title="Clique para ampliar" onclick="verFotoAmpliada('${a.foto_url}','${nomeEsc}','')"><img src="${a.foto_url}" alt=""></div>`
+    : `<div class="ficha-avatar">${(a.nome||'?').trim().charAt(0).toUpperCase()}</div>`;
+  const tags = editando ? '' : `<div class="ficha-header-tags">
+          ${a.sexo?`<span class="etq-brinco neutro">${a.sexo}</span>`:''}
+          ${a.situacao?`<span class="etq-brinco">${sitLabel(a.situacao)}</span>`:''}
+          ${a.estagio?`<span class="etq-brinco atencao">${a.estagio}</span>`:''}
+          ${a.pelagem?`<span class="etq-brinco terracota">${a.pelagem}</span>`:''}
+          ${a.ciclo?`<span class="etq-brinco">${a.ciclo}</span>`:''}
+          ${a.status_cadastro==='rascunho'?'<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}
+        </div>`;
+  return `<div class="ficha-header">
+      ${avatar}
+      <div class="ficha-header-info">
+        <div class="ficha-header-nome">${a.nome||'—'}</div>
+        <div class="ficha-header-sbb">${a.sbb?`SBB ${a.sbb}`:(a.rp?`RP ${a.rp}`:'—')}</div>
+        ${tags}
+      </div>
+      ${_fichaAcoesHtml(editando)}
+    </div>`;
+}
+
 function _renderDetCorpo(i, editando) {
   const a = animais[i];
-  document.getElementById('det-titulo').innerHTML = `${a.nome}${a.sbb ? ` · SBB ${a.sbb}` : ''}${a.status_cadastro==='rascunho' ? ' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>' : ''}`;
-
-  // Foto no cabeçalho da ficha — maior que a miniatura da lista/edição, com expandir em
-  // tela cheia (mesmo lightbox já usado na linha do tempo). Só aparece no modo visualização;
-  // no modo edição o upload já tem seu próprio preview dentro da seção Identificação.
-  const fotoWrap = document.getElementById('det-foto-wrap');
-  if (fotoWrap) {
-    fotoWrap.innerHTML = editando ? '' : (a.foto_url
-      ? `<img src="${a.foto_url}" alt="" title="Clique para ampliar" onclick="verFotoAmpliada('${a.foto_url}','${(a.nome||'').replace(/'/g,"\\'")}','')" style="width:64px;height:64px;border-radius:50%;object-fit:cover;cursor:pointer;border:1.5px solid var(--border)">`
-      : `<div style="width:64px;height:64px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${(a.nome||'?').trim().charAt(0).toUpperCase()}</div>`);
-  }
 
   // ── IDENTIFICAÇÃO ─────────────────────────────────────────────────
   const SITS = [{v:'NA CABANHA',l:'Na Cabanha'},{v:'EMPRESTIMO',l:'Empréstimo'},{v:'VENDIDO',l:'Vendido(a)'},{v:'TRANSFERIDO',l:'Transferido/Doado'},{v:'MORTO',l:'Morto(a)'}];
@@ -5286,7 +5569,7 @@ function _renderDetCorpo(i, editando) {
   let S1;
   if(editando) {
     S1=`<div class="ficha-section">
-      <div class="ficha-section-title">${_iconCavalo(14)} Identificação
+      <div class="ficha-section-title">${_iconCavalo(17)} Identificação
         <button class="btn btn-sm" style="margin-left:auto;font-size:10px;background:var(--blue-l);color:var(--blue-d);border:none" onclick="_buscarAbccc('edit')">${_iconLupa(12)} Buscar no ABCCC pelo SBB</button>
       </div>
       <div id="abccc-status" style="font-size:11px;color:var(--text2);margin-bottom:6px;display:none"></div>
@@ -5355,14 +5638,16 @@ function _renderDetCorpo(i, editando) {
     // Grid de cards independentes (não .ficha-row dentro de grid — cada linha flex
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
-    S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(14)} Identificação
+    S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(17)} Identificação
       ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 18px">
-      ${[['RP',a.rp||'—'],['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
-         ['Sexo',a.sexo||'—'],['Pelagem',a.pelagem||'—'],['Nascimento',fd(a.nasc)||'—'],['Ciclo',a.ciclo||'—'],
+      ${[['RP',a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'],
+         ['SBB ABCCC',a.sbb?`<a class="sbb-link" href="#" onclick="abrirAbccc('${a.sbb}');return false;">${a.sbb} ↗</a>`:'—'],
+         ['Sexo',a.sexo||'—'],['Pelagem',a.pelagem?`<span class="etq-brinco terracota">${a.pelagem}</span>`:'—'],
+         ['Nascimento',fd(a.nasc)||'—'],['Ciclo',a.ciclo?`<span class="etq-brinco atencao">${a.ciclo}</span>`:'—'],
          ['Situação',sitLabel(a.situacao)],['Estágio',a.estagio||'—'],['Piquete',_nomePiquete(a.piquete_id)||'—'],['Mãe',a.mae||'—'],['Pai',a.pai||'—']]
         .map(([l,v])=>`<div><div class="ficha-field-label">${l}</div><div class="ficha-field-val${['RP','SBB ABCCC','Nascimento'].includes(l)?' mono':''}">${v}</div></div>`).join('')}
       </div>${a.obs?`<div style="margin-top:12px;font-size:12px;color:var(--text2)">Obs: ${a.obs}</div>`:''}</div>`;
@@ -5370,7 +5655,7 @@ function _renderDetCorpo(i, editando) {
 
   // ── VACINAS ───────────────────────────────────────────────────────
   const hv=getHistVac(i);
-  const S2=`<div class="ficha-section"><div class="ficha-section-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas
+  const S2=`<div class="ficha-section"><div class="ficha-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas
     <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalVac(${i})">+ Vacinar</button></div>
     ${!hv.length?`<div style="font-size:12px;color:var(--text2)">Última: ${fd(a.ult_vac)||'—'} · Próxima: ${fd(a.prox_vac)||'—'} <span class="badge ${svac(a.prox_vac).c}">${svac(a.prox_vac).l}</span></div>`
     :`<div class="card" style="padding:0;overflow:hidden;overflow-x:auto;margin:0"><table><thead><tr>
@@ -5385,7 +5670,7 @@ function _renderDetCorpo(i, editando) {
 
   // ── EXAMES ────────────────────────────────────────────────────────
   const he=getHistExam(i);
-  const S3=`<div class="ficha-section"><div class="ficha-section-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames Sanitários
+  const S3=`<div class="ficha-section"><div class="ficha-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames Sanitários
     <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalExame(${i})">+ Exame</button></div>
     ${!he.length?`<div style="font-size:12px;color:var(--text2)">Validade: ${fd(a.val_exame)||'—'} ${a.val_exame?`<span class="badge ${svac(a.val_exame).c}">${svac(a.val_exame).l}</span>`:''}</div>`
     :`<div class="card" style="padding:0;overflow:hidden;overflow-x:auto;margin:0"><table><thead><tr>
@@ -5458,7 +5743,7 @@ function _renderDetCorpo(i, editando) {
     </div>` : '';
 
   const S4=`${S4conf}<div class="ficha-section">
-    <div class="ficha-section-title">${_iconRegua(14)} Medidas Biométricas
+    <div class="ficha-section-title">${_iconRegua(17)} Medidas Biométricas
       <button class="btn btn-sm" style="margin-left:auto;font-size:10px" onclick="abrirModalMedida(${i})">+ Medir</button>
     </div>
     ${!hm.length ? '<div class="nut-empty">Nenhuma medição registrada.</div>' : `
@@ -5479,7 +5764,7 @@ function _renderDetCorpo(i, editando) {
 
   // ── NUTRIÇÃO ──────────────────────────────────────────────────────
   const n=getNut(i); const ps=projStatus(n);
-  const S5=`<div class="ficha-section"><div class="ficha-section-title">${_iconTrigo(14)} Projeto Nutricional <span class="nut-proj-status ${ps.cls}" style="margin-left:6px">${ps.label}</span></div>
+  const S5=`<div class="ficha-section"><div class="ficha-section-title">${_iconTrigo(17)} Projeto Nutricional <span class="nut-proj-status ${ps.cls}" style="margin-left:6px">${ps.label}</span></div>
     ${(n.dt_inicio||n.racao.produto||n.aveia.qty)?`
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
       ${[['Ração',n.racao.produto,n.racao.qty],['Aveia','Aveia',n.aveia.qty],['Alfafa','Alfafa',n.alfafa.qty],
@@ -5495,7 +5780,7 @@ function _renderDetCorpo(i, editando) {
   // Gestações reais (Reprodutivo v3) — sistema vigente, prioridade no card.
   const gestAtivas=gestacoes.filter(g=>g.status==='gestando'&&g.egua_nome===a.nome);
   const gestHist=gestacoes.filter(g=>g.egua_nome===a.nome&&g.status!=='gestando');
-  const S6=a.sexo==='Fêmea'?`<div class="ficha-section"><div class="ficha-section-title">${_iconGestacao(14)} Reprodução</div>
+  const S6=a.sexo==='Fêmea'?`<div class="ficha-section"><div class="ficha-section-title">${_iconGestacao(17)} Reprodução</div>
     ${gestAtivas.map(g=>{const dCob=pd(g.data_cobertura),dG=dCob?Math.round((HOJE-dCob)/864e5):0,pct=Math.min(100,Math.max(0,Math.round(dG/GESTACAO_DIAS*100)));
       const dtP=pd(g.parto_previsto);
       return`<div style="background:var(--green-l);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px">
@@ -5509,14 +5794,14 @@ function _renderDetCorpo(i, editando) {
 
   // ── DESCENDENTES ─────────────────────────────────────────────────
   const filhos=animais.filter(f=>(f.mae===a.nome||f.pai===a.nome)&&f.nome!==a.nome);
-  const S7=filhos.length?`<div class="ficha-section"><div class="ficha-section-title">👶 Descendentes (${filhos.length})</div>
+  const S7=filhos.length?`<div class="ficha-section"><div class="ficha-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg> Descendentes (${filhos.length})</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px">${filhos.map(f=>`<span style="background:var(--bg3);border-radius:var(--radius);padding:5px 9px;font-size:11px">
       <strong>${f.nome}</strong> <span style="color:var(--text3)">${f.mae===a.nome?'filho(a)':'pelo pai'} · ${f.sexo||'—'} · ${sitb(f.situacao)}</span>
     </span>`).join('')}</div></div>`:'';
 
   // ── EVENTOS ───────────────────────────────────────────────────────
   const evts=(eventosEsp||[]).filter(e=>e.participantes?.some(p=>p.nome===a.nome));
-  const S8=evts.length?`<div class="ficha-section"><div class="ficha-section-title">${_iconTrofeu(14)} Eventos (${evts.length})</div>
+  const S8=evts.length?`<div class="ficha-section"><div class="ficha-section-title">${_iconTrofeu(17)} Eventos (${evts.length})</div>
     ${evts.slice().sort((ea,eb)=>(eb.data||'').localeCompare(ea.data||'')).map(e=>{
       const p=e.participantes.find(x=>x.nome===a.nome)||{};
       const isTop=p.resultado&&!['Sem resultado','Participou','Não aprovado(a)','Eliminado(a)'].includes(p.resultado);
@@ -5529,7 +5814,7 @@ function _renderDetCorpo(i, editando) {
   // ── S9: LINHA DO TEMPO ─────────────────────────────────────────────
   const S9 = `<div class="ficha-section">
     <div class="ficha-section-title" style="display:flex;align-items:center">
-      📸 Linha do Tempo
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.4a1 1 0 0 1 .8-.6h5.2a1 1 0 0 1 .8.6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.5"/></svg> Linha do Tempo
       <button class="btn btn-sm" style="margin-left:auto;font-size:10px"
         onclick="abrirModalFoto('${a.db_id}','${a.nome.replace(/'/g,"\\'")}','${a.nasc||''}')">
         + Adicionar foto / vídeo
@@ -5540,7 +5825,7 @@ function _renderDetCorpo(i, editando) {
     </div>
   </div>`;
 
-  document.getElementById('det-corpo').innerHTML = S1+S2+S3+S4+S5+S6+S7+S8+S9;
+  document.getElementById('det-corpo').innerHTML = _fichaCabecalho(a, editando, sitLabel)+S1+S2+S3+S4+S5+S6+S7+S8+S9;
 
   // Carregar linha do tempo e gráfico de medidas após render
   if(a.db_id) _carregarLinhaTempo(a.db_id, a.nome, a.nasc||'');
@@ -6609,6 +6894,10 @@ function showPage(id){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes(id))b.classList.add('active');});
+  // Trocar de página sempre volta ao topo — sem isso, a página nova abre com
+  // o scroll que a anterior tinha, cortando o início do conteúdo (ex.: abrir
+  // a ficha de um animal a partir do meio da grade de Animais).
+  window.scrollTo(0, 0);
   if(id==='animais')renderAnimais();
   if(id==='saude')renderSaude();
   if(id==='reprodutivo'){renderReprodutivo();renderPlanejadorReprodutivo();}
@@ -8833,6 +9122,114 @@ function _initMedChart(animalIdx) {
   _medChartSel(chartId, legendId, toggleId, inicial, animalIdx);
 }
 
+
+// ── ATUALIZAÇÃO ABCCC EM LOTE ─────────────────────────────────────────────────
+async function _atualizarTodosAbccc() {
+  const comSbb = animais.filter(a => a.sbb && a.sbb.trim() && isNaCabanha(a));
+  if (!comSbb.length) { _mostrarStatusSync('Nenhum animal com SBB cadastrado.', 'amber'); return; }
+
+  const LOTE_MAX = 30;
+  const avisoLote = comSbb.length > LOTE_MAX ? '\n\nAtenção: apenas os primeiros ' + LOTE_MAX + ' serão processados.' : '';
+  if (!confirm('Atualizar dados de ' + comSbb.length + ' animal(is) via ABCCC?' + avisoLote)) return;
+
+  const alvo = comSbb.slice(0, LOTE_MAX);
+
+  // Controle visual do botão
+  const btn = document.getElementById('btn-abccc-update');
+  const fillEl = btn?.querySelector('.abccc-fill');
+  const iconEl = document.getElementById('abccc-icon');
+  const labelEl = document.getElementById('abccc-label-txt');
+  if (btn) { btn.disabled = true; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green-d)'; }
+  if (iconEl) iconEl.classList.add('abccc-spin');
+
+  let ok = 0, erros = 0, confirmados = 0;
+
+  for (let idx = 0; idx < alvo.length; idx++) {
+    const a = alvo[idx];
+    const pct = Math.round(((idx+1)/alvo.length)*100);
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (labelEl) labelEl.textContent = 'Atualizando... ' + (idx+1) + '/' + alvo.length;
+    if (idx > 0 && idx % 5 === 0) { try { await _garantirTokenValido(); } catch(e) {} }
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/functions/v1/buscar-abccc?sbb=' + encodeURIComponent(a.sbb.trim()),
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + AUTH_TOKEN }, signal: AbortSignal.timeout(15000) }
+      );
+      if (!res.ok) { console.log('[ABCCC] HTTP', res.status, a.nome); erros++; continue; }
+      const d = await res.json();
+      console.log('[ABCCC]', a.nome, d?.encontrado, d?.situacao||'');
+      if (d?.encontrado !== 'sim') { erros++; continue; }
+      // Proteção crítica contra animal errado:
+      // 1. Se a ABCCC retornou um SBB diferente do enviado → ignorar
+      if (d.sbb && d.sbb.toUpperCase() !== a.sbb.toUpperCase()) {
+        console.warn('[ABCCC] SBB divergente:', a.sbb, '→', d.sbb, 'para', a.nome, '— ignorando');
+        erros++; continue;
+      }
+      // 2. Se o nome retornado for completamente diferente do cadastrado → ignorar
+      // (evita sobrescrever quando a ABCCC retorna outro animal)
+      if (d.nome && a.nome) {
+        const nomeAbccc = d.nome.toUpperCase().trim();
+        const nomeCad  = a.nome.toUpperCase().trim();
+        // Pegar a primeira palavra de cada nome para comparar
+        const p1Abccc = nomeAbccc.split(' ')[0];
+        const p1Cad   = nomeCad.split(' ')[0];
+        if (p1Abccc !== p1Cad && !nomeAbccc.includes(p1Cad) && !nomeCad.includes(p1Abccc)) {
+          console.warn('[ABCCC] Nome divergente:', a.nome, '→', d.nome, '— ignorando');
+          erros++; continue;
+        }
+      }
+
+      const patch = { abccc_atualizado_em: new Date().toISOString() };
+      if (d.nome  && d.nome  !== a.nome)  { a.nome  = d.nome;  patch.nome  = d.nome; }
+      if (d.rp    && d.rp    !== a.rp)    { a.rp    = d.rp;    patch.rp    = d.rp; }
+      if (d.pai   && d.pai   !== a.pai)   { a.pai   = d.pai;   patch.pai   = d.pai; }
+      if (d.mae   && d.mae   !== a.mae)   { a.mae   = d.mae;   patch.mae   = d.mae; }
+      if (d.status_abccc) { a.status_abccc = d.status_abccc; patch.status_abccc = d.status_abccc; }
+      if (d.tem_rm !== undefined) { a.tem_rm = !!d.tem_rm; patch.tem_rm = !!d.tem_rm; }
+      if (d.ultima_transferencia) { a.ultima_transferencia = d.ultima_transferencia; patch.ultima_transferencia = d.ultima_transferencia; }
+      if (d.sbb_pai && !a.sbb_pai) { a.sbb_pai = d.sbb_pai; patch.sbb_pai = d.sbb_pai; }
+      if (d.sbb_mae && !a.sbb_mae) { a.sbb_mae = d.sbb_mae; patch.sbb_mae = d.sbb_mae; }
+      if (d.pelagem && !a.pelagem) { a.pelagem = d.pelagem; patch.pelagem = d.pelagem; }
+      if (d.nasc   && !a.nasc)    { a.nasc   = d.nasc;   patch.nasc   = d.nasc; }
+      if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
+        a.confirmacao_status = 'confirmado'; a.confirmado = true;
+        patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+      }
+      if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
+      if (d.situacao === 'Confirmado' && (d.altura || d.torax || d.canela)) {
+        const ai = animais.indexOf(a);
+        const jaTem = getMedidas(ai).some(m => m.contexto === 'ABCCC' || m.resp === 'ABCCC');
+        if (!jaTem && a.db_id) {
+          const nm = { animal_id:a.db_id, data:d.confirmacao_data||new Date().toISOString().slice(0,10),
+            cernelha:d.altura?Number(d.altura):null, torax:d.torax?Number(d.torax):null,
+            canela:d.canela?Number(d.canela):null, contexto:'ABCCC', resp:'ABCCC' };
+          const mr = await _supa('POST','medidas',nm);
+          if (mr?.[0]?.id) { if(!medidas[ai])medidas[ai]=[]; medidas[ai].push({...nm,db_id:mr[0].id}); }
+        }
+      }
+      if (a.db_id && Object.keys(patch).length > 1) await _supa('PATCH','animais',patch,'?id=eq.'+a.db_id);
+      ok++;
+    } catch(e) { console.log('[ABCCC] erro', a.nome, e?.message); erros++; }
+    if (idx < alvo.length-1) await new Promise(r => setTimeout(r, 1500));
+  }
+  // Estado concluído
+  if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="20 6 9 17 4 12"/>'; }
+  if (fillEl) fillEl.style.width = '100%';
+  if (labelEl) labelEl.textContent = ok + ' atualizados' + (erros ? ' (' + erros + ' erros)' : '');
+  if (btn) btn.style.borderColor = 'var(--green-d)';
+
+  renderAnimais();
+  _mostrarStatusSync('✅ ABCCC: '+ok+' atualizados'+(confirmados?' · '+confirmados+' confirmações':'')+(erros?' · '+erros+' erros':''), 'green');
+
+  // Voltar ao estado normal após 4s
+  setTimeout(() => {
+    if (btn) { btn.disabled = false; btn.style.borderColor = ''; btn.style.color = ''; }
+    if (fillEl) fillEl.style.width = '0%';
+    if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>'; }
+    if (labelEl) labelEl.textContent = 'Atualizar ABCCC';
+  }, 4000);
+}
+
 // ─── CONFIRMAÇÃO ABCCC ────────────────────────────────────────────────────────
 
 // Tabela real de desenvolvimento Crioulo — dados Thiago Persici / técnicos ABCCC
@@ -9111,7 +9508,7 @@ async function _registrarMarcacaoRP(i) {
     criado_por: usuarioAtual?.id
   });
   _renderDetCorpo(i, false);
-  toast('Marcação RP registrada na linha do tempo.');
+  _mostrarStatusSync('Marcação RP registrada na linha do tempo.', 'green');
 }
 
 async function _marcarParaConfirmacao(i) {
@@ -9122,7 +9519,7 @@ async function _marcarParaConfirmacao(i) {
   a.confirmado = false;
   _renderDetCorpo(i, false);
   renderAnimais();
-  toast('Animal marcado para confirmação.');
+  _mostrarStatusSync('Animal marcado para confirmação.', 'green');
 }
 
 function _abrirModalNaoConfirmar(i) {
@@ -9148,7 +9545,7 @@ async function _confirmarNaoConfirmacao() {
   closeModal('modal-nao-confirmar');
   _renderDetCorpo(i, false);
   renderAnimais();
-  toast('Animal marcado como não confirmado — removido do controle de confirmação.');
+  _mostrarStatusSync('Animal marcado como não confirmado — removido do controle de confirmação.', 'green');
 }
 
 // ─── PIQUETES ─────────────────────────────────────────────────────────────────
@@ -9517,6 +9914,21 @@ let _acAprovarIdx = -1;
 function acasAprovar(i) {
   const a = acasalamentos[i];
   if(!a || a.status !== 'simulado') return;
+
+  // Bloquear se égua tem gestação ativa
+  const gestacaoAtiva = gestacoes.find(g =>
+    String(g.egua_id) === String(a.egua_id) &&
+    g.status !== 'concluida' && g.status !== 'perdida'
+  );
+  if (gestacaoAtiva) {
+    alert(
+      'Não é possível aprovar este cruzamento.\n\n' +
+      a.egua_nome + ' tem uma gestação ativa do ciclo ' + (gestacaoAtiva.ciclo || '—') + '.\n\n' +
+      'Registre o nascimento da cria ou a perda da gestação antes de iniciar um novo cruzamento.'
+    );
+    return;
+  }
+
   _acAprovarIdx = i;
   document.getElementById('ac-aprovar-idx').value = i;
   const selVet = document.getElementById('ac-aprovar-vet');
@@ -9620,7 +10032,7 @@ async function _reproLiEntendi(ei) {
   reproducaoEstagios.splice(ei, 1);
   renderReprodutivoVet();
   _renderPendenciasRepro();
-  toast('Cruzamento removido do funil veterinário.');
+  _mostrarStatusSync('Cruzamento removido do funil veterinário.', 'green');
 }
 
 function _toggleCanceladosAcasalamentos() {
@@ -10798,6 +11210,12 @@ function _mostrarDashboardSkeleton(){
   if(estEl) estEl.innerHTML='<div class="estagio-grid">'+[0,1,2,3].map(()=>'<div class="skel skel-line" style="height:28px"></div>').join('')+'</div>';
 }
 
+// Selo de registro — círculo com anel pontilhado + glyph (svg ou texto), usado
+// em resultados oficiais que validam algo: vacina/exame vencido, alertas do dashboard.
+function _seloHTML(estado, glyphHtml, label){
+  const cls = estado==='crit'?'crit':estado==='warn'?'warn':'ok';
+  return `<span class="selo-registro ${cls}"><span class="selo-circ">${glyphHtml}</span>${label?`<span class="selo-label">${label}</span>`:''}</span>`;
+}
 function renderDashboard(){
   document.getElementById('data-hoje').textContent=(((TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '') ? (((TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '')+' · ') : '')+HOJE.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   const ativos=animais.filter(a=>isNaCabanha(a));
@@ -10812,11 +11230,11 @@ function renderDashboard(){
   const als=[];
   ativos.forEach(a=>{
     const dv=da(a.prox_vac);
-    if(dv!==null&&dv<0)       als.push({t:'r',m:`${_iconVacina(13)} Vacina VENCIDA — ${a.nome}`,     fn:"dashDrill('vac')"});
-    else if(dv!==null&&dv<=30) als.push({t:'a',m:`${_iconVacina(13)} Vacina vence em ${dv}d — ${a.nome}`, fn:"dashDrill('vac')"});
+    if(dv!==null&&dv<0)       als.push({t:'r',selo:_seloHTML('crit',_iconVacina(15)),m:`Vacina VENCIDA — ${a.nome}`,     fn:"dashDrill('vac')"});
+    else if(dv!==null&&dv<=30) als.push({t:'a',selo:_seloHTML('warn',_iconVacina(15)),m:`Vacina vence em ${dv}d — ${a.nome}`, fn:"dashDrill('vac')"});
     const de=da(a.val_exame);
-    if(de!==null&&de<0)       als.push({t:'r',m:`${_iconExame(13)} Exame VENCIDO — ${a.nome}`,        fn:"dashDrill('exames')"});
-    else if(de!==null&&de<=14) als.push({t:'a',m:`${_iconExame(13)} Exame vence em ${de}d — ${a.nome}`, fn:"dashDrill('exames')"});
+    if(de!==null&&de<0)       als.push({t:'r',selo:_seloHTML('crit',_iconExame(15)),m:`Exame VENCIDO — ${a.nome}`,        fn:"dashDrill('exames')"});
+    else if(de!==null&&de<=14) als.push({t:'a',selo:_seloHTML('warn',_iconExame(15)),m:`Exame vence em ${de}d — ${a.nome}`, fn:"dashDrill('exames')"});
   });
   animais.forEach((a,i)=>{
     if(!isNaCabanha(a)) return;
@@ -10849,7 +11267,7 @@ function renderDashboard(){
     if(als.length===0){
       alertasEl.innerHTML='<div class="alert alert-g">✅ Nenhum alerta crítico no momento.</div>';
     } else {
-      alertasEl.innerHTML=als.slice(0,12).map(a=>`<div class="alert alert-${a.t}" style="${a.fn?'cursor:pointer;':''}display:flex;justify-content:space-between;align-items:center" ${a.fn?`onclick="${a.fn}"`:''}><span>${a.m}</span>${a.fn?'<span style="font-size:10px;background:rgba(0,0,0,0.07);padding:2px 7px;border-radius:var(--radius-badge);white-space:nowrap;margin-left:6px">ver →</span>':''}</div>`).join('');
+      alertasEl.innerHTML=als.slice(0,12).map(a=>`<div class="alert alert-${a.t}" style="${a.fn?'cursor:pointer;':''}display:flex;justify-content:space-between;align-items:center;gap:8px" ${a.fn?`onclick="${a.fn}"`:''}><span style="display:flex;align-items:center;gap:8px">${a.selo||''}<span>${a.m}</span></span>${a.fn?'<span style="font-size:10px;background:rgba(0,0,0,0.07);padding:2px 7px;border-radius:var(--radius-badge);white-space:nowrap;margin-left:6px">ver →</span>':''}</div>`).join('');
     }
   }
 
@@ -10945,7 +11363,7 @@ function dashDrill(tipo, filtro){
         return`<div class="drill-row" onclick="abrirModalVac(${i})">
           <div class="drill-nome">${a.nome}</div>
           <div class="drill-info">${a.prox_vac?fd(a.prox_vac):'sem registro'}</div>
-          <span class="badge ${cls}" style="font-size:10px">${d!==null&&d<0?Math.abs(d)+'d atrás':d!==null?d+'d':'—'}</span>
+          ${d!==null&&d<0?_seloHTML('crit',_iconVacina(14),'vencida'):`<span class="badge ${cls}" style="font-size:10px">${d!==null?d+'d':'—'}</span>`}
           <span style="font-size:10px;color:var(--green-d)">+ Vacinar →</span></div>`;};
       rows=(venc.length?_secHeader(`VENCIDAS (${venc.length})`,'var(--red-l)','var(--red-d)')+venc.map(vRow).join(''):'')
           +(aVenc.length?_secHeader(`A VENCER (${aVenc.length})`,'var(--amber-l)','var(--amber-d)')+aVenc.map(vRow).join(''):'')
@@ -10962,7 +11380,7 @@ function dashDrill(tipo, filtro){
         return`<div class="drill-row" onclick="abrirModalExame(${i})">
           <div class="drill-nome">${a.nome}</div>
           <div class="drill-info">${a.val_exame?fd(a.val_exame):'sem exame'}</div>
-          <span class="badge ${cls}" style="font-size:10px">${d!==null&&d<0?Math.abs(d)+'d atrás':d!==null?d+'d':'—'}</span>
+          ${d!==null&&d<0?_seloHTML('crit',_iconExame(14),'vencido'):`<span class="badge ${cls}" style="font-size:10px">${d!==null?d+'d':'—'}</span>`}
           <span style="font-size:10px;color:var(--green-d)">+ Exame →</span></div>`;};
       rows=(venc.length?_secHeader(`VENCIDOS (${venc.length})`,'var(--red-l)','var(--red-d)')+venc.map(eRow).join(''):'')
           +(aVenc.length?_secHeader(`A VENCER (${aVenc.length})`,'var(--amber-l)','var(--amber-d)')+aVenc.map(eRow).join(''):'')
@@ -11914,7 +12332,7 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
 
   // Nascimento do próprio animal
   if(animalNasc) {
-    eventos_tl.push({ data:animalNasc, tipo:'nasc', icone:_iconCavalo(14),
+    eventos_tl.push({ data:animalNasc, tipo:'nasc', icone:_iconCavalo(18),
       titulo:'Nascimento', sub:fd(animalNasc) });
     // Aniversários até hoje
     const nascDt = new Date(animalNasc+'T00:00:00');
@@ -11923,7 +12341,7 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
     for(let a=1;a<=anos;a++){
       const dt = new Date(nascDt.getFullYear()+a, nascDt.getMonth(), nascDt.getDate());
       eventos_tl.push({ data:dt.toISOString().slice(0,10),
-        tipo:'aniv', icone:'🎂', titulo:a+'º aniversário', sub:'' });
+        tipo:'aniv', icone:_iconCavalo(18), titulo:a+'º aniversário', sub:'' });
     }
   }
 
@@ -11934,7 +12352,7 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
   ).forEach(cria => {
     if(!cria.nasc) return;
     const eMae = cria.mae && cria.mae.toUpperCase()===animalNome.toUpperCase();
-    eventos_tl.push({ data:cria.nasc, tipo:'nasc', icone: eMae?'🐣':'👶',
+    eventos_tl.push({ data:cria.nasc, tipo:'nasc', icone: _iconCavalo(18),
       titulo:'Nasceu '+cria.nome,
       sub:(eMae?'Cria (mãe)':'Cria (pai)')+(cria.sexo?' · '+sexm(cria.sexo):'')+
           (cria.pelagem?' · '+cria.pelagem:'') });
@@ -11950,19 +12368,19 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
     _supa('GET','animal_midia','','?animal_id=eq.'+animalId+'&order=data_midia.desc&select=*') || [],
   ]);
 
-  (vacsDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconVacina(13),
+  (vacsDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconVacina(18),
     titulo:'Vacinação: '+v.vacina, sub:(v.dose?v.dose+' · ':'')+(v.vet||'') }));
-  (examsDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconExame(13),
+  (examsDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconExame(18),
     titulo:'Exame: '+v.tipo, sub:v.resultado+(v.vet?' · '+v.vet:'') }));
-  (vermDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconComprimido(14),
+  (vermDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'saude', icone:_iconComprimido(18),
     titulo:'Vermifugação: '+v.produto, sub:'' }));
   (gestDB||[]).forEach(v => {
-    if(v.data_cobertura) eventos_tl.push({ data:v.data_cobertura, tipo:'repro', icone:'🍀',
+    if(v.data_cobertura) eventos_tl.push({ data:v.data_cobertura, tipo:'repro', icone:_iconGestacao(18),
       titulo:'Cobertura', sub:GEST_STATUS_LABEL[v.status]||v.status||'' });
-    if(v.parto_real) eventos_tl.push({ data:v.parto_real, tipo:'repro', icone:'🐣',
+    if(v.parto_real) eventos_tl.push({ data:v.parto_real, tipo:'repro', icone:_iconCavalo(18),
       titulo:'Parto', sub:'' });
   });
-  (medidasDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'medida', icone:_iconRegua(14),
+  (medidasDB||[]).forEach(v => eventos_tl.push({ data:v.data, tipo:'medida', icone:_iconRegua(18),
     titulo:'Biometria', sub:[v.peso?'Peso: '+v.peso+'kg':null, v.escore?'Escore: '+v.escore:null, v.contexto||null].filter(Boolean).join(' · ') }));
 
   // Eventos/provas
@@ -11970,13 +12388,13 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
     .forEach(e => {
       const part=(e.participantes||e.animais||[]).find(p=>(p.nome||p.animal)===animalNome)||{};
       const res=part.resultado&&part.resultado!=='Sem resultado'?' · '+part.resultado:'';
-      eventos_tl.push({ data:e.data||'', tipo:'evento', icone:_iconTrofeu(14),
+      eventos_tl.push({ data:e.data||'', tipo:'evento', icone:_iconTrofeu(18),
         titulo:e.nome, sub:e.tipo+res });
     });
 
   // Mídias cadastradas
   (midiasDB||[]).forEach(m => eventos_tl.push({
-    data:m.data_midia, tipo:'foto', icone:_iconMidia(m.tipo,13),
+    data:m.data_midia, tipo:'foto', icone:_iconMidia(m.tipo,18),
     titulo:m.titulo||_midiaCategLabel(m.categoria), sub:m.descricao||'', midia:m
   }));
 
@@ -11985,44 +12403,77 @@ async function _carregarLinhaTempo(animalId, animalNome, animalNasc) {
     return;
   }
 
-  // Ordenar por data desc
-  eventos_tl.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  // Ordenar cronologicamente (mais antigo → mais recente) — leitura natural
+  // da esquerda para a direita na fita horizontal.
+  eventos_tl.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
 
-  // Agrupar por ano
-  const porAno={};
-  eventos_tl.forEach(ev=>{ const ano=(ev.data||'').slice(0,4)||'—'; if(!porAno[ano])porAno[ano]=[]; porAno[ano].push(ev); });
-
-  let html='';
-  Object.keys(porAno).sort((a,b)=>b.localeCompare(a)).forEach(ano=>{
-    html+='<div class="tl-year">'+ano+'</div>';
-    porAno[ano].forEach(ev=>{
-      html+='<div class="tl-item">'
-        +'<div class="tl-dot '+ev.tipo+'">'+ev.icone+'</div>'
-        +'<div class="tl-content">'
-        +'<div class="tl-date">'+fd(ev.data)+'</div>'
-        +'<div class="tl-title">'+ev.titulo+'</div>'
-        +(ev.sub?'<div class="tl-sub">'+ev.sub+'</div>':'');
-      // Foto
-      if(ev.midia?.arquivo_data&&ev.midia.tipo==='foto') {
-        html+='<div class="tl-foto-grid">'
-          +'<img class="tl-foto-thumb" src="'+ev.midia.arquivo_data+'"'
-          +' onclick="verFotoAmpliada(this.src,\''+( ev.titulo||'').replace(/'/g,"\\'")
-          +'\',\''+(ev.midia.descricao||'').replace(/'/g,"\\'")+'\')"></div>';
-      }
-      if(ev.midia) {
-        html+='<div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
-          +_midiaBadgeHTML(ev.midia.categoria)
-          +(ev.midia.evento_nome?'<span style="font-size:11px;color:var(--text3)">'+ev.midia.evento_nome+'</span>':'')
-          +(ev.midia.resultado_evento?'<span class="badge bg" style="font-size:9px">'+ev.midia.resultado_evento+'</span>':'')
-          +'<button class="btn btn-sm" style="font-size:10px;color:var(--red-d);padding:1px 6px;margin-left:auto"'
-          +' onclick="excluirMidia(\''+ev.midia.id+'\',\''+animalId+'\''+
-          ',\''+animalNome.replace(/'/g,"\\'")+'\',\''+animalNasc+'\')">🗑</button>'
-          +'</div>';
-      }
-      html+='</div></div>';
-    });
+  // Marcador de ano só quando o ano muda entre eventos consecutivos (mesmos
+  // dados, só o agrupamento visual muda de forma vertical→sequencial).
+  let anoAnterior=null;
+  let html='<div class="tl-fita">';
+  eventos_tl.forEach(ev=>{
+    const ano=(ev.data||'').slice(0,4)||'—';
+    const mostraAno = ano!==anoAnterior;
+    anoAnterior=ano;
+    html+='<div class="tl-item">'
+      +'<div class="tl-year">'+(mostraAno?ano:'')+'</div>'
+      +'<div class="tl-fio-row"><div class="tl-fio"></div><div class="tl-dot '+ev.tipo+'">'+ev.icone+'</div></div>'
+      +'<div class="tl-conector"></div>'
+      +'<div class="tl-content">'
+      +'<div class="tl-date">'+fd(ev.data)+'</div>'
+      +'<div class="tl-title">'+ev.titulo+'</div>'
+      +(ev.sub?'<div class="tl-sub">'+ev.sub+'</div>':'');
+    // Foto — miniatura real, ou placeholder com ícone genérico de imagem (nunca desenho de cavalo)
+    if(ev.midia?.tipo==='foto') {
+      html+='<div class="tl-foto-grid">'
+        +(ev.midia.arquivo_data
+          ? '<img class="tl-foto-thumb" src="'+ev.midia.arquivo_data+'"'
+            +' onclick="verFotoAmpliada(this.src,\''+( ev.titulo||'').replace(/'/g,"\\'")
+            +'\',\''+(ev.midia.descricao||'').replace(/'/g,"\\'")+'\')">'
+          : '<div class="tl-foto-placeholder">'+_iconMidia('foto',20)+'</div>')
+        +'</div>';
+    }
+    if(ev.midia) {
+      html+='<div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+        +_midiaBadgeHTML(ev.midia.categoria)
+        +(ev.midia.evento_nome?'<span style="font-size:11px;color:var(--text3)">'+ev.midia.evento_nome+'</span>':'')
+        +(ev.midia.resultado_evento?'<span class="badge bg" style="font-size:9px">'+ev.midia.resultado_evento+'</span>':'')
+        +'<button class="btn btn-sm" style="font-size:10px;color:var(--red-d);padding:1px 6px;margin-left:auto"'
+        +' onclick="excluirMidia(\''+ev.midia.id+'\',\''+animalId+'\''+
+        ',\''+animalNome.replace(/'/g,"\\'")+'\',\''+animalNasc+'\')">'+_iconLixeira(11)+'</button>'
+        +'</div>';
+    }
+    html+='</div></div>';
   });
+  html+='</div>';
   el.innerHTML=html;
+  _ativarDragScroll(el);
+}
+
+// Arrastar-pra-rolar horizontal na linha do tempo (tipo Google Maps) — puramente
+// de interação/UX, não mexe em nenhum dado. Só ativa o "modo arrasto" depois de
+// >5px de deslocamento, pra não atrapalhar o clique normal nos cards/fotos.
+function _ativarDragScroll(el){
+  if(!el || el._dragScrollAtivo) return;
+  el._dragScrollAtivo = true;
+  let down=false, arrastando=false, startX=0, startScroll=0;
+  el.addEventListener('mousedown', e=>{
+    down=true; arrastando=false; startX=e.pageX; startScroll=el.scrollLeft;
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!down) return;
+    const dx = e.pageX - startX;
+    if(!arrastando && Math.abs(dx) > 5){ arrastando=true; el.classList.add('tl-dragging'); }
+    if(arrastando){ e.preventDefault(); el.scrollLeft = startScroll - dx; }
+  });
+  window.addEventListener('mouseup', ()=>{
+    down=false;
+    if(arrastando){ arrastando=false; el.classList.remove('tl-dragging'); }
+  });
+  el.addEventListener('mouseleave', ()=>{
+    if(down && arrastando){ el.classList.remove('tl-dragging'); }
+    down=false; arrastando=false;
+  });
 }
 
 function _midiaCategLabel(cat){
@@ -13310,6 +13761,19 @@ function _lerSessaoSalva() {
   try { const s = localStorage.getItem(SESSAO_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; }
 }
 
+// Mostra/esconde a tela de login padrão. Precisa alcançar o SHELL inteiro
+// (#login-shell-main), não só o formulário: esconder apenas #login-box-main deixava
+// o painel hero da esquerda visível ATRÁS dos overlays centralizados ("Restaurando
+// sua sessão", bloqueado, cancelado, definir senha).
+function _mostrarLoginShell(mostrar) {
+  const shell = document.getElementById('login-shell-main');
+  if (shell) shell.style.display = mostrar ? '' : 'none';
+  // Compatibilidade: garante que o box interno nunca fique preso em display:none
+  // por algum estado antigo salvo inline.
+  const box = document.getElementById('login-box-main');
+  if (box && mostrar) box.style.display = '';
+}
+
 // Tenta retomar a sessão salva ao carregar a página. Se o access_token já
 // expirou (ou está perto disso), renova com o refresh_token antes de tentar
 // entrar. Falhando em qualquer etapa, cai de volta na tela de login normal.
@@ -13317,7 +13781,7 @@ async function _tentarRetomarSessao() {
   const sessao = _lerSessaoSalva();
   if(!sessao || !sessao.access_token) return false;
 
-  document.getElementById('login-box-main').style.display = 'none';
+  _mostrarLoginShell(false);
   document.getElementById('login-restaurando').style.display = '';
 
   let token = sessao.access_token;
@@ -13350,7 +13814,7 @@ async function _tentarRetomarSessao() {
     if(!cabs || cabs.length === 0) { AUTH_TOKEN = null; AUTH_USER = null; _limparSessaoSalva(); return _cancelarRetomada(); }
     document.getElementById('login-restaurando').style.display = 'none';
     if(cabs.length === 1) { await _entrarCabanha(cabs[0]); }
-    else { document.getElementById('login-box-main').style.display = ''; _mostrarSeletor(cabs); }
+    else { _mostrarLoginShell(true); _mostrarSeletor(cabs); }
     return true;
   } catch(e) {
     AUTH_TOKEN = null; AUTH_USER = null; _limparSessaoSalva(); return _cancelarRetomada();
@@ -13358,7 +13822,7 @@ async function _tentarRetomarSessao() {
 }
 function _cancelarRetomada() {
   document.getElementById('login-restaurando').style.display = 'none';
-  document.getElementById('login-box-main').style.display = '';
+  _mostrarLoginShell(true);
   _carregarEmailLembrado();
   return false;
 }
@@ -13413,7 +13877,7 @@ async function _entrarCabanha(cab) {
   // ou o próprio admin cancelou o trial antes da cobrança -> cancelado. Nenhum dos dois
   // acessa dado nenhum da cabanha. 'trial' e 'ativo' entram normalmente.
   if (cab.status === 'bloqueado' || cab.status === 'cancelado') {
-    document.getElementById('login-box-main').style.display = 'none';
+    _mostrarLoginShell(false);
     document.getElementById('login-restaurando').style.display = 'none';
     const idBox = cab.status === 'bloqueado' ? 'login-bloqueado' : 'login-cancelado';
     const idNome = cab.status === 'bloqueado' ? 'bloqueado-nome-cabanha' : 'cancelado-nome-cabanha';
@@ -13732,7 +14196,7 @@ function fazerLogout() {
   _loadUsuarios();
   document.getElementById('login-screen').style.display='flex';
   // restaurar a tela normal de login (pode estar escondida por causa da tela de bloqueio)
-  document.getElementById('login-box-main').style.display='';
+  _mostrarLoginShell(true);
   const bloq = document.getElementById('login-bloqueado'); if(bloq) bloq.style.display='none';
   const canc = document.getElementById('login-cancelado'); if(canc) canc.style.display='none';
   fecharPainelMimba();
@@ -13970,7 +14434,7 @@ function _checkRecovery(){
   const _limpaHash=()=>{ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} };
   if(q.access_token && (q.type==='recovery' || q.type==='invite')){
     _recoveryToken=q.access_token; _limpaHash();
-    const main=document.getElementById('login-box-main'); if(main) main.style.display='none';
+    _mostrarLoginShell(false);
     const ds=document.getElementById('definir-senha-box'); if(ds) ds.style.display='';
     setTimeout(()=>{ const el=document.getElementById('ds-nova'); if(el) el.focus(); },50);
     return true;
@@ -14025,7 +14489,7 @@ async function confirmarCodigoAcesso(){
     if(!r.ok || !d.access_token){ _reset(); return _e('Código inválido ou expirado. Confira se digitou certo, ou peça um novo convite/acesso.'); }
     // Mesma sessão que o link de recovery entregaria — funil pra tela de definir senha
     _recoveryToken=d.access_token; AUTH_USER=d.user||null;
-    document.getElementById('login-box-main').style.display='none';
+    _mostrarLoginShell(false);
     document.getElementById('definir-senha-box').style.display='';
     setTimeout(()=>{ const el=document.getElementById('ds-nova'); if(el) el.focus(); },50);
   }catch(e){ _reset(); _e('Falha ao conectar. Tente novamente.'); }
@@ -14060,7 +14524,7 @@ async function definirSenhaRecovery(){
     if(cabs.length===1){ await _entrarCabanha(cabs[0]); }
     else {
       document.getElementById('definir-senha-box').style.display='none';
-      document.getElementById('login-box-main').style.display='';
+      _mostrarLoginShell(true);
       _mostrarSeletor(cabs);
     }
   }catch(e){ _reset(); _e('Falha ao conectar. Tente novamente.'); }
