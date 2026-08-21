@@ -172,6 +172,7 @@
       <div class="tab-row">
         <button class="tab active" onclick="pmTab(this,'pm-aba-dados')">Dados</button>
         <button class="tab" onclick="pmTab(this,'pm-aba-intel')">Inteligência</button>
+        <button class="tab" onclick="pmTab(this,'pm-aba-cruz')">Cruzamentos</button>
       </div>
 
       <!-- ── ABA DADOS — landing zone analítica ── -->
@@ -291,6 +292,56 @@
           </div>
           <div id="pi-busca-res" style="margin-top:12px"></div>
         </div>
+      </div>
+
+      <!-- ── ABA CRUZAMENTOS — genealogia + score competitivo + consanguinidade ── -->
+      <div id="pm-aba-cruz" style="display:none">
+        <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:1.25rem">
+          <div class="metric"><div class="metric-label">Animais com genealogia</div><div class="metric-value" id="pc-m-genealogia">—</div></div>
+          <div class="metric"><div class="metric-label">Resultados por catálogo</div><div class="metric-value" id="pc-m-catalogo">—</div></div>
+          <div class="metric"><div class="metric-label">Animais total</div><div class="metric-value" id="pc-m-animais">—</div></div>
+          <div class="metric"><div class="metric-label">Posições calculadas</div><div class="metric-value" id="pc-m-posicoes">—</div></div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">Carregar catálogo com genealogia</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:14px">
+            CSV com colunas <code>sbb, nome, sexo, nasc, sbb_pai, nome_pai, sbb_mae, nome_mae, prova, ciclo, criador</code>
+            (nasc em DD/MM/AAAA). Diferente do upload da aba Dados: aqui <code>sbb_pai</code>/<code>sbb_mae</code>
+            são SBB de verdade, não só nome — é o que alimenta a análise de cruzamento.
+          </div>
+          <div id="pc-drop" style="border:1.5px dashed var(--border2);border-radius:var(--r-md);padding:22px;text-align:center;cursor:pointer;transition:background .15s ease,border-color .15s ease">
+            <div style="font-size:13px;font-weight:600" id="pc-drop-titulo">Arraste o arquivo aqui ou clique para escolher</div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:4px" id="pc-drop-sub">Nenhum arquivo selecionado</div>
+          </div>
+          <input type="file" id="pc-file" accept=".csv,.tsv,.txt" style="display:none">
+          <div id="pc-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:10px">Analisar cruzamento</div>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div><label style="font-size:11.5px;color:var(--text2)">SBB do garanhão</label>
+              <input type="text" id="pc-sbb-garanhao" placeholder="B688473" style="width:130px"></div>
+            <div><label style="font-size:11.5px;color:var(--text2)">SBB da égua</label>
+              <input type="text" id="pc-sbb-egua" placeholder="B597035" style="width:130px"></div>
+            <div><label style="font-size:11.5px;color:var(--text2)">Objetivo</label>
+              <select id="pc-objetivo" style="width:140px">
+                <option value="completo">Completo</option>
+                <option value="morfologia">Morfologia</option>
+                <option value="freio">Freio</option>
+                <option value="doma">Doma</option>
+                <option value="resistencia">Resistência</option>
+              </select></div>
+            <button class="btn btn-primary" onclick="pcAnalisar()">Analisar</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px">
+            Estimativa limitada a 2 gerações (pais + avós) — ancestral comum mais antigo que isso
+            não entra na conta de consanguinidade.
+          </div>
+        </div>
+
+        <div id="pc-resultado"></div>
       </div>
     </div>
   </div>
@@ -416,14 +467,17 @@ async function _rpcD(fn, args) {
   try { return txt ? JSON.parse(txt) : null; } catch(e) { return txt; }
 }
 
+let PC_CARREGADO = false;
+
 function pmTab(btn, id) {
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  ['pm-aba-dados','pm-aba-intel'].forEach(x=>{
+  ['pm-aba-dados','pm-aba-intel','pm-aba-cruz'].forEach(x=>{
     const el = document.getElementById(x);
     if (el) el.style.display = x===id ? 'block' : 'none';
   });
   if (id==='pm-aba-intel' && !PI_CARREGADO) { PI_CARREGADO = true; piCarregar(); }
+  if (id==='pm-aba-cruz' && !PC_CARREGADO) { PC_CARREGADO = true; _pcLigarUpload(); pcCarregarMetricas(); }
 }
 
 // ─── Catálogo de bases ──────────────────────────────────────────────────────
@@ -772,6 +826,128 @@ function _pdLigarUpload() {
     e.preventDefault(); drop.style.background = ''; drop.style.borderColor = '';
   }));
   drop.addEventListener('drop', e => { if (e.dataTransfer.files[0]) pdArquivoEscolhido(e.dataTransfer.files[0]); });
+}
+
+// ─── Cruzamentos — genealogia + score competitivo + IC ─────────────────────
+async function pcCarregarMetricas() {
+  try {
+    const r = await _rpcD('genealogia_resumo', {});
+    document.getElementById('pc-m-genealogia').textContent = _pdNum(r?.animais_com_genealogia);
+    document.getElementById('pc-m-catalogo').textContent   = _pdNum(r?.resultados_catalogo);
+    document.getElementById('pc-m-animais').textContent    = _pdNum(r?.animais_total);
+    document.getElementById('pc-m-posicoes').textContent   = _pdNum(r?.posicoes);
+  } catch(e) { /* ignora — a métrica é só informativa */ }
+}
+
+function _pcLigarUpload() {
+  const drop = document.getElementById('pc-drop'), input = document.getElementById('pc-file');
+  if (!drop || !input || drop.dataset.ligado) return;
+  drop.dataset.ligado = '1';
+  drop.onclick = () => input.click();
+  input.onchange = () => pcArquivoEscolhido(input.files[0]);
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.style.background = 'var(--bg3)'; drop.style.borderColor = 'var(--green)';
+  }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.style.background = ''; drop.style.borderColor = '';
+  }));
+  drop.addEventListener('drop', e => { if (e.dataTransfer.files[0]) pcArquivoEscolhido(e.dataTransfer.files[0]); });
+}
+
+// Carrega um catálogo com genealogia real (sbb_pai/sbb_mae). Reaproveita o parser
+// de CSV/TSV já usado na aba Dados (aspas, delimitador auto-detectado) — mas envia
+// pra carregar_catalogo_genealogia em vez de dados_inserir_lote, em lotes de 100
+// (o Postgres aceita payload maior, mas manter lotes pequenos deixa o progresso
+// visível e qualquer erro no meio não perde o que já foi enviado).
+async function pcArquivoEscolhido(file) {
+  if (!file) return;
+  const st = document.getElementById('pc-status');
+  document.getElementById('pc-drop-titulo').textContent = file.name;
+  document.getElementById('pc-drop-sub').textContent = 'Lendo arquivo...';
+  try {
+    const matriz = _pdParseDelimitado(await file.text());
+    const { colunas, linhas } = _pdMatrizParaObjetos(matriz);
+    if (!linhas.length) throw new Error('O arquivo não tem nenhuma linha de dados abaixo do cabeçalho.');
+    document.getElementById('pc-drop-sub').textContent = `${_pdNum(linhas.length)} linhas · ${colunas.length} colunas`;
+
+    const LOTE = 100;
+    let totalAnimais = 0, totalResultados = 0;
+    for (let i = 0; i < linhas.length; i += LOTE) {
+      st.textContent = `Carregando... ${_pdNum(Math.min(i+LOTE,linhas.length))} de ${_pdNum(linhas.length)}`;
+      const r = await _rpcD('carregar_catalogo_genealogia', { p_linhas: linhas.slice(i, i+LOTE) });
+      totalAnimais += r?.animais || 0; totalResultados += r?.resultados || 0;
+    }
+    st.textContent = 'Atualizando posições genealógicas...';
+    await _rpcD('genealogia_atualizar_posicoes', {});
+    st.textContent = `Pronto — ${_pdNum(totalAnimais)} animais, ${_pdNum(totalResultados)} resultados.`;
+    document.getElementById('pc-file').value = '';
+    await pcCarregarMetricas();
+  } catch(e) {
+    st.innerHTML = `<span style="color:var(--red-d)">${_pdEsc(e.message)}</span>`;
+  }
+}
+
+async function pcAnalisar() {
+  const sbbG = document.getElementById('pc-sbb-garanhao').value.trim().toUpperCase();
+  const sbbE = document.getElementById('pc-sbb-egua').value.trim().toUpperCase();
+  const objetivo = document.getElementById('pc-objetivo').value;
+  const box = document.getElementById('pc-resultado');
+  if (!sbbG || !sbbE) { alert('Informe o SBB do garanhão e da égua.'); return; }
+  box.innerHTML = '<div class="card" style="font-size:12px;color:var(--text3)">Analisando...</div>';
+  try {
+    const r = await _rpcD('analisar_cruzamento', { p_sbb_garanhao: sbbG, p_sbb_egua: sbbE, p_objetivo: objetivo });
+    const corNota = r.nota_geral >= 70 ? 'var(--green-d)' : r.nota_geral >= 40 ? 'var(--amber-d)' : 'var(--red-d)';
+    box.innerHTML = `
+      <div class="card">
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--text3)">Nota geral</div>
+            <div style="font-size:34px;font-weight:700;font-family:var(--mono);color:${corNota}">${_pdNum(r.nota_geral)}</div>
+          </div>
+          <div style="flex:1;min-width:200px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+            <div><div style="color:var(--text3)">Score competitivo</div><div style="font-weight:700">${_pdNum(r.score_competitivo)}</div></div>
+            <div><div style="color:var(--text3)">Score de limpeza</div><div style="font-weight:700">${_pdNum(r.score_limpeza)}</div></div>
+            <div><div style="color:var(--text3)">IC estimado</div><div style="font-weight:700">${r.ic_estimado}%</div></div>
+            <div><div style="color:var(--text3)">Objetivo</div><div style="font-weight:700">${_pdEsc(r.objetivo)}</div></div>
+          </div>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px">${_pdEsc(r.ic_aviso)}</div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Genealogia conhecida</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px">
+          <div>
+            <div style="font-weight:600;margin-bottom:4px">Garanhão — ${_pdEsc(r.posicoes.garanhao.sbb)}</div>
+            <div style="color:var(--text2)">Pai: ${_pdEsc(r.posicoes.garanhao.pai || '—')}</div>
+            <div style="color:var(--text2)">Avô paterno: ${_pdEsc(r.posicoes.garanhao.avo_paterno || '—')}</div>
+            <div style="color:var(--text2)">Avô materno (do pai): ${_pdEsc(r.posicoes.garanhao.avo_materno_do_pai || '—')}</div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:4px">Égua — ${_pdEsc(r.posicoes.egua.sbb)}</div>
+            <div style="color:var(--text2)">Mãe: ${_pdEsc(r.posicoes.egua.mae || '—')}</div>
+            <div style="color:var(--text2)">Avô paterno (da mãe): ${_pdEsc(r.posicoes.egua.avo_paterno_da_mae || '—')}</div>
+            <div style="color:var(--text2)">Avô materno: ${_pdEsc(r.posicoes.egua.avo_materno || '—')}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+        <div style="padding:12px 14px;font-size:13px;font-weight:700">Matches históricos (${r.matches.length})</div>
+        ${!r.matches.length ? '<div style="padding:0 14px 14px;font-size:12px;color:var(--text3)">Nenhum animal com essa combinação de linhagem competiu ainda nos dados carregados.</div>' : `
+        <table><thead><tr>
+          <th style="padding:7px 9px">Animal</th><th>Prova</th><th>Tier</th><th>Ciclo</th><th>Colocação</th><th>Posições</th><th>Score</th>
+        </tr></thead><tbody>${r.matches.map(m => `<tr>
+          <td style="padding:6px 9px;font-weight:600">${_pdEsc(m.nome_animal)}</td>
+          <td style="font-size:11.5px">${_pdEsc(m.prova)}</td>
+          <td style="text-align:center">${m.tier}</td>
+          <td style="font-size:11.5px">${_pdEsc(m.ciclo)}</td>
+          <td style="font-size:11.5px;color:var(--text2)">${_pdEsc(m.colocacao)}</td>
+          <td style="text-align:center">${m.posicoes_coincidentes}</td>
+          <td style="text-align:right;font-weight:700">${_pdNum(m.score)}</td>
+        </tr>`).join('')}</tbody></table>`}
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div class="card" style="color:var(--red-d);font-size:12px">${_pdEsc(e.message)}</div>`;
+  }
 }
 
 // ─── Boot ────────────────────────────────────────────────────────────────
