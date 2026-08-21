@@ -9,10 +9,10 @@
 
 | # | Frente | Prioridade | Status |
 |---|---|---|---|
-| 1 | Ajuste de tipografia do design system | Alta (destrava o resto) | A fazer — escopado abaixo |
-| 2 | Cruzamentos com dois modos (rápido / imersivo) | **A mais importante** | A fazer — precisa de 2-3 decisões antes de implementar |
-| 3 | Avaliar app mobile nativo + loja | Média | Não escopado — discovery |
-| 4 | Agente de IA interno de apoio | Média | Não escopado — discovery |
+| 1 | Ajuste de tipografia do design system | Alta (destrava o resto) | ✅ Feito — Manrope aplicada em tudo, mergeado na `main` |
+| 2 | Cruzamentos com dois modos (rápido / imersivo) | **A mais importante** | ✅ Implementado, em `staging` — aguardando validação do Luciano antes de mergear |
+| 3 | Avaliar app mobile nativo + loja | Média | ✅ Decidido (2026-08-22) — ver seção 3 |
+| 4 | Agente de IA interno de apoio | Média | Em discovery |
 
 ---
 
@@ -80,26 +80,35 @@ confirmaram a direção — evita reabrir a tela duas vezes.
 
 ---
 
-## 3. Avaliar app mobile nativo + publicação em loja
+## 3. App mobile — decisão em 3 fases (2026-08-22)
 
-**Ainda não escopado.** Perguntas que precisam de resposta antes de eu
-conseguir dar uma recomendação séria:
+**Público:** dono/cabanheiro no campo + veterinário. **Offline:** desejável,
+não bloqueante — o app já entrega valor exigindo conexão a maior parte do
+tempo, offline de verdade não é o que trava o lançamento.
 
-- Pra quem é o app — cliente final (dono de cabanha no campo, uso offline
-  importa?) ou também staff/veterinário?
-- O que muda tecnicamente: hoje o Mimba é um `index.html` único, sem
-  framework/bundler (decisão deliberada, ver `CLAUDE.md`) — publicar em loja
-  normalmente significa ou (a) empacotar esse mesmo HTML num wrapper nativo
-  (Capacitor/Cordova — menor esforço, mas experiência ainda é "web dentro de
-  um app"), ou (b) reescrever telas-chave em nativo/React Native (esforço
-  bem maior, mas melhor UX/performance/notificações push).
-- Prazo e orçamento — publicar na App Store/Play Store tem custo recorrente
-  (contas de desenvolvedor) e processo de revisão que precisa entrar no
-  planejamento.
+**Estratégia decidida com o Pedro** (prazo/impacto pesaram mais que a forma
+"ideal" agora):
 
-**Próximo passo:** uma sessão de discovery dedicada (posso conduzir) pra
-sair com uma recomendação real de abordagem — não vale eu chutar arquitetura
-sem entender pra quem é e o que o app precisa fazer offline vs. online.
+1. **Agora — empacotar o `index.html` com Capacitor.** Menor esforço, publica
+   rápido nas lojas. Continua sendo "o site dentro de um app" (sem push
+   nativo de verdade, sem offline real) — aceito conscientemente como troca
+   pelo prazo.
+2. **Depois — offline leve.** O próprio app percebe quando está sem conexão
+   (o Pedro já viu esse padrão funcionar bem em outro contexto) — sem
+   sincronização complexa, só detectar e avisar/segurar ações que precisam
+   de rede.
+3. **Futuro — projeto nativo de verdade**, "como manda o figurino", pensando
+   no agente de IA (item 4) rodando dentro do app.
+
+**Isso muda a convenção do projeto:** Capacitor introduz `npm`/build step
+num repo que hoje é deliberadamente `index.html` puro sem framework (ver
+`CLAUDE.md`, "Frontend sem framework/bundler"). Por ser uma decisão
+estrutural, o `arquiteto` está registrando isso como ADR antes de eu tocar
+em estrutura de projeto — ver `docs/adr/`.
+
+**Próximo passo real:** depois do ADR, um branch/worktree separado pra não
+misturar o setup do Capacitor com o `index.html` de produção — plano de
+implementação vem numa sessão dedicada a isso.
 
 ---
 
