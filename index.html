@@ -12500,10 +12500,22 @@ function abrirTelaConta() {
   document.getElementById('conta-tab-cabanha').style.display = '';
   document.getElementById('conta-tab-usuarios').style.display = 'none';
   document.getElementById('conta-tab-faturamento').style.display = 'none';
-  // V1.5 (Fase 4): Faturamento é admin-only, mesmo padrão da aba Usuários.
+  // Usuários e Faturamento são admin-only — vet/cab não têm permissão de ver, editar
+  // ou excluir usuário nenhum aqui (nem o próprio perfil), então a aba nem aparece em
+  // vez de abrir vazia (achado real, 2026-08-22: cabanheiro via "0 administradores /
+  // 0 veterinários / 0 cabanheiros / Nenhum usuário cadastrado").
   const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
+  const usrBtn = document.querySelector('#modal-conta .tab-row .tab[onclick*="conta-tab-usuarios"]');
+  if (usrBtn) usrBtn.style.display = isAdm ? '' : 'none';
   const fatBtn = document.getElementById('conta-tab-btn-faturamento');
   if (fatBtn) fatBtn.style.display = isAdm ? '' : 'none';
+  // Se a pessoa não é admin, garante que a aba ativa seja sempre Cabanha (a única
+  // que ela pode ver) — nunca deixa a Usuários marcada como ativa por engano.
+  if (!isAdm) {
+    document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
+    document.getElementById('conta-tab-cabanha').style.display = '';
+    document.getElementById('conta-tab-usuarios').style.display = 'none';
+  }
   renderUsuarios();
   _carregarStatusPendente();
   _aplicarPermissoes();
