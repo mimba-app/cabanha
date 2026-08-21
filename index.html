@@ -795,7 +795,8 @@
           <button class="login-btn" onclick="fazerLogin()">Entrar</button>
           <div class="login-error" id="login-error" style="display:none"></div>
           <div id="login-seletor" style="display:none;margin-top:10px"></div>
-          <div style="margin-top:10px;text-align:center">
+          <div style="margin-top:10px;text-align:center;display:flex;flex-direction:column;gap:6px">
+            <a href="#" onclick="_toggleRecovery();return false;" style="font-size:12px;color:var(--chrome-text2)">Esqueci minha senha</a>
             <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">Tenho um código de acesso</a>
           </div>
         </div>
@@ -812,6 +813,23 @@
           <div class="login-error" id="cod-error" style="display:none"></div>
           <div style="margin-top:10px;text-align:center">
             <a href="#" onclick="_toggleCodigoAcesso();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
+          </div>
+        </div>
+        <!-- "Esqueci minha senha": dispara o recovery padrão da Supabase Auth (POST
+             /auth/v1/recover) — é o mesmo e-mail de "definir senha" que o convite usa,
+             então o link e o código de 6 dígitos que chegam já são atendidos pelos fluxos
+             que já existem (_checkRecovery / confirmarCodigoAcesso), sem nada novo no
+             backend. -->
+        <div id="login-recovery-box" style="display:none">
+          <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="rec-email" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')solicitarRecuperacaoSenha()">
+          </div>
+          <button class="login-btn" onclick="solicitarRecuperacaoSenha()">Enviar link de recuperação</button>
+          <div class="login-error" id="rec-error" style="display:none"></div>
+          <div class="login-error" id="rec-sucesso" style="display:none;background:var(--green-l);color:var(--green-d)"></div>
+          <div style="margin-top:10px;text-align:center">
+            <a href="#" onclick="_toggleRecovery();return false;" style="font-size:12px;color:var(--chrome-text2)">← Voltar para login normal</a>
           </div>
         </div>
       </div>
@@ -14487,6 +14505,51 @@ async function confirmarCodigoAcesso(){
     _mostrarLoginShell(false);
     document.getElementById('definir-senha-box').style.display='';
     setTimeout(()=>{ const el=document.getElementById('ds-nova'); if(el) el.focus(); },50);
+  }catch(e){ _reset(); _e('Falha ao conectar. Tente novamente.'); }
+}
+
+// ── "Esqueci minha senha" — self-service, sem precisar de outro admin da cabanha
+// nem de alguém com acesso ao Supabase pra disparar na mão. Chama o endpoint padrão
+// de recovery da Supabase Auth; o e-mail que chega é o mesmo template de "definir
+// senha" do convite, então tanto o link quanto o código de 6 dígitos já são atendidos
+// pelos fluxos que já existem (_checkRecovery / confirmarCodigoAcesso) — nada novo no
+// backend, só o gatilho que faltava na tela de login.
+function _toggleRecovery(){
+  const box=document.getElementById('login-recovery-box');
+  const normal=document.getElementById('login-campos-normais');
+  if(!box || !normal) return;
+  const abrirRecovery = box.style.display==='none';
+  box.style.display = abrirRecovery?'':'none';
+  normal.style.display = abrirRecovery?'none':'';
+  const err=document.getElementById('rec-error'); if(err) err.style.display='none';
+  const suc=document.getElementById('rec-sucesso'); if(suc) suc.style.display='none';
+  if(abrirRecovery){
+    const em=document.getElementById('login-user')?.value||'';
+    const emR=document.getElementById('rec-email'); if(emR){ if(em && !emR.value) emR.value=em; setTimeout(()=>emR.focus(),50); }
+  }
+}
+async function solicitarRecuperacaoSenha(){
+  const err=document.getElementById('rec-error');
+  const suc=document.getElementById('rec-sucesso');
+  const _e=(m)=>{ if(suc) suc.style.display='none'; if(err){ err.textContent=m; err.style.display='block'; } };
+  if(err) err.style.display='none';
+  if(suc) suc.style.display='none';
+  const email=(document.getElementById('rec-email')?.value||'').trim();
+  if(!email) return _e('Informe o e-mail.');
+  const btn=document.querySelector('#login-recovery-box .login-btn');
+  const _reset=()=>{ if(btn){ btn.disabled=false; btn.textContent='Enviar link de recuperação'; } };
+  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  try{
+    const r=await fetch(`${SUPABASE_URL}/auth/v1/recover`,{
+      method:'POST',
+      headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ email })
+    });
+    _reset();
+    // A Supabase sempre responde 200 aqui, exista ou não o e-mail — não dá (e não deve)
+    // dar pra descobrir se um e-mail está cadastrado por essa tela. Mensagem igual pros
+    // dois casos.
+    if(suc){ suc.textContent='Se esse e-mail tiver uma conta Mimba, enviamos um link e um código de recuperação — confira sua caixa de entrada.'; suc.style.display='block'; }
   }catch(e){ _reset(); _e('Falha ao conectar. Tente novamente.'); }
 }
 
