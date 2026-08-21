@@ -30,7 +30,7 @@ tratados como primeiros-cidadãos desde a origem. A troca é automática via
 | `--ink` | `#2B2419` | `#F0EFE9` | Texto principal |
 | `--campo` / `--campo-deep` | `#4F6B2E` / `#33461C` | `#8FB35A` / `#A9CD7A` | Verde da marca — ação primária, positivo, "aprovado" |
 | `--terracota` / `--terracota-ink` | `#B15A2E` / `#7A3B1C` | `#E08A54` / `#E08A54` | Acento secundário — eyebrows, links, destaque editorial |
-| `--ouro` | `#B8860B` | `#E8C567` | **Reservado.** Só no wordmark "Mimba." (login, rodapé da sidebar) e no núcleo/selo da cerimônia de acasalamento. Nunca em fundo, UI ou hover — dourado em excesso vira "app de cassino", não "livro de registro". |
+| `--ouro` | `#B8860B` | `#E8C567` | **Reservado.** Só no ponto final do wordmark "Mimba." e do monograma "M." (login, rodapé da sidebar, sidebar) — a palavra/letra em si usa a cor de texto do contexto, só o ponto é sempre dourado — e no núcleo/selo da cerimônia de acasalamento. Nunca em fundo, UI ou hover — dourado em excesso vira "app de cassino", não "livro de registro". |
 | `--critico` | `#9B3226` | `#E2776A` | Erro, proibido, consanguinidade alta |
 | `--atencao` | `#A9791E` | `#E3B95E` | Alerta, vencimento próximo |
 | `--areia` / `--pergaminho` / `--pergaminho2` | `#F4EFE6` / `#FCF9F3` / `#F8F3EA` | `#1A1A18` / `#242422` / `#1F1F1C` | Fundo de página / superfície de card / superfície aninhada |
