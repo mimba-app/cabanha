@@ -447,6 +447,18 @@ na tabela `coberturas_arquivadas_legado`). Dois problemas distintos, corrigidos:
   **falta QA de ponta a ponta em `mimba-hml.pages.dev` com login/dado reais** (planejar ciclo do zero,
   negociar cobertura entre duas cabanhas de teste de verdade) **antes de considerar pronto pra produção**.
 
+## 🥕 Nutrição — refactor pendente (spec fechada, 2026-08-21)
+Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
+nutricional não persiste no banco (o módulo inteiro roda em memória — `nutProj` é recriado vazio
+a cada load, zero chamadas ao Supabase em toda a seção de Nutrição), não dá pra criar novos
+templates (`NUT_TEMPLATES` é uma constante JS fixa de 7 chaves), e não dá pra ter dois itens do
+mesmo tipo num template/projeto (ração/aveia/alfafa/verde/sal são campos únicos, não listas — só
+suplementos já era array). Spec completa com schema novo (`nutricao_templates`/
+`nutricao_template_itens`/`nutricao_projetos`/`nutricao_projeto_itens`, seguindo o padrão
+cabeçalho+itens já usado em `tratamentos`/`reproducao_atividades`), plano de seed dos 7 templates
+atuais, e 5 fases de implementação em `docs/spec-nutricao-refactor.md`. **Nada implementado
+ainda** — só a spec, pronta pro Pedro construir.
+
 ## 🚀 Meta V1.5 até 29/08/2026 (definida com o Pedro em 2026-08-02)
 Plano completo em `docs/roadmap-v15.md`. Origem: `docs/roadmap-gestao-crioulo.pdf` (roadmap geral), marco
 "V1.5 · Agosto 2026" — 6 itens: personalização de cores, trial automático 30d, painel admin da plataforma,
