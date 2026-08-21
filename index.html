@@ -549,9 +549,10 @@
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
+  .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
   .kanban-board.cols-4 { grid-template-columns:repeat(4,1fr); }
   .kanban-board.cols-5 { grid-template-columns:repeat(5,1fr); }
-  @media(max-width:900px){ .kanban-board, .kanban-board.cols-4, .kanban-board.cols-5 { grid-template-columns:1fr; } }
+  @media(max-width:900px){ .kanban-board, .kanban-board.cols-2, .kanban-board.cols-4, .kanban-board.cols-5 { grid-template-columns:1fr; } }
   /* Kanban — cabeçalho colorido (tokens de estado do "Registro Vivo"), corpo em
      pergaminho2 e cards em pergaminho puro, sem borda no claro (só sombra). */
   .kanban-col { border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); }
@@ -816,6 +817,16 @@
   .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-ink-50);}
   .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
   .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
+
+  /* Pill toggle genérico (estado ativo destacado) — usado no seletor de modo de Cruzamentos
+     (Rápido × Inteligência) e no toggle de tema (Claro × Escuro) em Conta. Componente
+     independente, sem escopo de ancestral — usa os tokens reais direto. */
+  .pill-switch{display:inline-flex;gap:2px;background:var(--pergaminho2);border:var(--card-border);border-radius:99px;padding:3px;}
+  .pill-switch-btn{border:none;background:none;font-family:var(--font);font-weight:700;font-size:12px;padding:8px 16px;border-radius:99px;cursor:pointer;color:var(--ink-50);transition:background .15s,color .15s;}
+  .pill-switch-btn.on{background:var(--pergaminho);color:var(--ink);box-shadow:var(--sh-sm);}
+  .pill-switch-hint{font-size:12px;color:var(--ink-50);}
+  #ja-modo-wrap .pill-switch{margin-bottom:18px;}
+  #ja-modo-wrap .pill-switch-hint{margin:-10px 0 18px;}
 
   .jornada-ac .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:20px;padding:18px 22px;border:var(--card-border);box-shadow:var(--ja-sh-md);}
   .jornada-ac .ja-alvo-av{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:linear-gradient(140deg,var(--ja-campo-soft),var(--ja-pergaminho2));
@@ -1672,12 +1683,39 @@
        docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
        lugar, só o menu. -->
   <div id="gest-acasalamentos" style="display:none">
-    <!-- Jornada de Acasalamento (docs/spec-acasalamento-jornada-tres-direcoes.md), Fase 1 (C ·
-         O Conselho): substitui a antiga tela de duas colunas (garanhão × égua, clique-clique).
-         Agora começa escolhendo a égua; o Conselho ranqueia as fontes do ciclo por nota. B
-         (Confluência de Sangues) e A (Dossiê Selado) entram nas fases seguintes. -->
+    <!-- Cruzamentos tem dois modos (pedido do Luciano, 2026-08-22): Rápido é a tela clássica
+         de duas colunas (garanhão/fonte × égua, clique-clique, sem ranking nem cerimônia) —
+         igual ao que existia antes da jornada, só com os componentes visuais atuais
+         (.kanban-col/.kanban-card/.badge já são o design system vigente). Inteligência é a
+         jornada completa (docs/spec-acasalamento-jornada-tres-direcoes.md): Conselho ranqueia
+         as fontes por nota, Confluência de Sangues e Dossiê Selado seguem depois. -->
+    <div id="ja-modo-wrap">
+      <div class="pill-switch" id="ja-modo-switch">
+        <button class="pill-switch-btn" id="ja-modo-btn-rapido" onclick="jaSelecionarModo('rapido')">⚡ Rápido</button>
+        <button class="pill-switch-btn" id="ja-modo-btn-inteligencia" onclick="jaSelecionarModo('inteligencia')">✨ Inteligência</button>
+      </div>
+      <div class="pill-switch-hint" id="ja-modo-hint"></div>
+    </div>
+
+    <!-- MODO RÁPIDO: duas colunas, clique-clique, sem ranking — pra quem despacha volume alto. -->
+    <div id="ac-match-rapido" style="display:none">
+      <div class="page-sub" style="margin:-6px 0 10px">Clique num garanhão/fonte à esquerda, depois numa égua à direita, pra criar o acasalamento deste ciclo (<span id="ac-match-ciclo-label">—</span>).</div>
+      <div id="ac-match-resumo-sel" style="display:none;margin-bottom:10px"></div>
+      <div class="kanban-board cols-2">
+        <div class="kanban-col kanban-col-emdia">
+          <div class="kanban-col-header"><span>Garanhões / Fontes</span></div>
+          <div id="ac-match-fontes" class="kanban-cards"></div>
+        </div>
+        <div class="kanban-col kanban-col-emdia">
+          <div class="kanban-col-header"><span>Éguas</span></div>
+          <div id="ac-match-eguas" class="kanban-cards"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODO INTELIGÊNCIA: jornada completa (Conselho → Confluência de Sangues → Dossiê Selado). -->
     <div class="jornada-ac" id="ja-conselho">
-      <div class="ja-eyebrow">Passo 1 de 3 · Escolher a égua</div>
+      <div class="ja-eyebrow" id="ja-passo-label">Passo 1 de 3 · Escolher a égua</div>
       <div class="ja-titulo">Escolha a égua e veja quem combina com ela.</div>
       <div class="ja-sub">Aponte a égua e o Mimba ranqueia as fontes de cobertura disponíveis no ciclo <b id="ja-ciclo-label">—</b>, cruzando consanguinidade, diversidade de sangue e saldo/sanidade da fonte.</div>
 
@@ -10597,15 +10635,115 @@ function _acCard(a, i, col) {
     + '</div>';
 }
 
-// Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
-// éguas disponíveis no ciclo do Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem
-// remover) fonte sem saldo ou égua já com match feito nesse ciclo, em vez de escondê-las.
-// Jornada de Acasalamento — Fase 1 (docs/spec-acasalamento-jornada-tres-direcoes.md).
-// Direção C · O Conselho: escolhe a égua primeiro, depois o Mimba ranqueia as fontes do
-// ciclo. Substitui a antiga tela de duas colunas garanhão×égua (_acMatchSelecionarFonte/
-// _acMatchSelecionarEgua) — B (Confluência de Sangues) e A (Dossiê Selado) vêm nas fases
-// seguintes, encaixando entre "escolher uma linha do ranking" e "abrir o modal de confirmação".
+// Modo da jornada (Rápido × Inteligência) — decidido com o Pedro/Luciano 2026-08-22,
+// ajustado a pedido explícito do Luciano em seguida: Rápido NÃO reaproveita o Conselho —
+// é a tela clássica de duas colunas (garanhão/fonte × égua, clique-clique, sem ranking, sem
+// cerimônia), do jeito que já era antes da jornada existir, só com os componentes visuais
+// atuais. Inteligência é a jornada completa (Conselho → Confluência de Sangues → Dossiê
+// Selado), sempre com a cerimônia (não há mais atalho "sem animação" — quem quer rapidez
+// usa o modo Rápido). Preferência salva por PESSOA, igual o toggle de tema.
+const JA_MODO_KEY = 'mimba_modo_cruzamento';
+function _jaModoAtual() {
+  if (!window._jaModo) {
+    let salvo = null;
+    try { salvo = localStorage.getItem(JA_MODO_KEY); } catch (e) {}
+    window._jaModo = (salvo === 'rapido' || salvo === 'inteligencia') ? salvo : 'inteligencia';
+  }
+  return window._jaModo;
+}
+function jaSelecionarModo(modo) {
+  window._jaModo = modo;
+  try { localStorage.setItem(JA_MODO_KEY, modo); } catch (e) {}
+  renderAcasalamentosMatch();
+}
+
+// Despacha pro render do modo ativo — chamado por tudo que precisa re-renderizar a tela de
+// Cruzamentos (troca de modo, seleção de égua/fonte, voltar de uma fase, etc.).
 function renderAcasalamentosMatch() {
+  const modo = _jaModoAtual();
+  document.getElementById('ja-modo-btn-rapido').classList.toggle('on', modo === 'rapido');
+  document.getElementById('ja-modo-btn-inteligencia').classList.toggle('on', modo === 'inteligencia');
+  const hint = document.getElementById('ja-modo-hint');
+  if (hint) hint.textContent = modo === 'rapido'
+    ? 'Garanhão/fonte à esquerda, égua à direita — clique nos dois pra criar o acasalamento.'
+    : 'A jornada completa: Conselho, Confluência de Sangues e Dossiê Selado.';
+  document.getElementById('ac-match-rapido').style.display = modo === 'rapido' ? '' : 'none';
+  document.getElementById('ja-conselho').style.display = modo === 'inteligencia' ? '' : 'none';
+  if (modo === 'rapido') { _acMatchRapidoRender(); return; }
+  _jaConselhoRender();
+}
+
+// MODO RÁPIDO — tela clássica de duas colunas (fontes × éguas disponíveis no ciclo do
+// Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem remover) fonte sem saldo ou
+// égua já com match feito nesse ciclo, em vez de escondê-las. Ao escolher os dois lados, abre
+// o modal de confirmação de sempre (ciclo/receptora/observações + consanguinidade), igual
+// funcionava antes da jornada existir.
+function _acMatchRapidoRender() {
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  const cicloLabel = document.getElementById('ac-match-ciclo-label');
+  if (cicloLabel) cicloLabel.textContent = ciclo;
+
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const elF = document.getElementById('ac-match-fontes');
+  if (elF) {
+    elF.innerHTML = fontes.length ? fontes.map(f => {
+      const saldo = _saldoFonteCobertura(f);
+      const semSaldo = saldo.disponivel <= 0;
+      const key = _fonteKey(f);
+      const sel = window._acMatchFonteId && window._acMatchFonteId === key;
+      return `<div class="kanban-card" style="cursor:${semSaldo ? 'default' : 'pointer'};opacity:${semSaldo ? 0.45 : 1};${sel ? 'outline:2px solid var(--green-d)' : ''}" ${semSaldo ? '' : `onclick="_acMatchSelecionarFonte('${key}')"`}>
+        <div class="kanban-card-nome">${f.garanhao_nome}${sel ? ' <span class="badge bg" style="font-size:9px">Selecionado</span>' : ''}</div>
+        <div class="kanban-card-info">${FC_TIPO_LABEL[f.tipo] || f.tipo} · ${saldo.disponivel} de ${saldo.total} disponível${semSaldo ? ' <span class="badge br" style="font-size:9px">Sem saldo</span>' : ''}</div>
+      </div>`;
+    }).join('') : '<div class="kanban-empty">Nenhuma fonte neste ciclo. Cadastre em "Garanhões e Coberturas".</div>';
+  }
+
+  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && (a.estagio || '').toUpperCase() === 'CRIA');
+  const elE = document.getElementById('ac-match-eguas');
+  if (elE) {
+    elE.innerHTML = eguas.length ? eguas.map(a => {
+      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_acMatchSelecionarEgua('${a.db_id}')"`}>
+        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
+        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+      </div>`;
+    }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
+  }
+
+  _acMatchAtualizarResumoSel();
+}
+
+async function _acMatchSelecionarFonte(fonteKey) {
+  if (!fonteKey) { window._acMatchFonteId = null; renderAcasalamentosMatch(); return; }
+  const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
+  const f = fontesCobertura[idx];
+  if (!f) return;
+  // Fonte recém-criada automaticamente (ex.: "Próprio" do ciclo) cujo POST ainda não
+  // terminou — tenta persistir agora antes de deixar selecionar, pra nunca fechar um
+  // acasalamento com uma fonte sem id real no banco.
+  if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
+  window._acMatchFonteId = _fonteKey(f);
+  renderAcasalamentosMatch();
+}
+
+function _acMatchSelecionarEgua(eguaDbId) {
+  if (!window._acMatchFonteId) return alert('Selecione primeiro um garanhão/fonte à esquerda.');
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  abrirModalAcasalamentoMatch(window._acMatchFonteId, eguaDbId, ciclo);
+}
+
+function _acMatchAtualizarResumoSel() {
+  const el = document.getElementById('ac-match-resumo-sel');
+  if (!el) return;
+  const f = window._acMatchFonteId && fontesCobertura.find(x => _fonteKey(x) === window._acMatchFonteId);
+  if (!f) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = `<div class="alert alert-b" style="font-size:12px">Selecionado: <b>${f.garanhao_nome}</b> — clique agora numa égua à direita pra criar o acasalamento. <button class="btn btn-sm" style="margin-left:8px" onclick="_acMatchSelecionarFonte(null)">cancelar seleção</button></div>`;
+}
+
+// MODO INTELIGÊNCIA — Direção C · O Conselho: escolhe a égua primeiro, depois o Mimba
+// ranqueia as fontes do ciclo. B (Confluência de Sangues) e A (Dossiê Selado) seguem depois.
+function _jaConselhoRender() {
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
   document.querySelectorAll('#ja-ciclo-label, #ja-ranking-ciclo').forEach(el => el.textContent = ciclo);
 
@@ -10629,6 +10767,9 @@ function renderAcasalamentosMatch() {
   document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
   document.getElementById('ja-passo-dossie').style.display = fase === 4 ? '' : 'none';
   if (fase >= 0 && fase !== 3) _jaRenderAlvo();
+  // Seletor de modo só faz sentido antes de começar a análise — trocar de modo no meio do
+  // ranking/confluência/dossiê seria confuso (a essa altura já se está "dentro" da jornada).
+  document.getElementById('ja-modo-wrap').style.display = fase <= 0 ? '' : 'none';
 }
 
 function _jaEscolherEgua(eguaDbId) {
@@ -10757,10 +10898,10 @@ async function _jaAnalisar() {
   const ranking = analises.filter(x => x.consang.nivel !== 1).sort((a, b) => b.nota - a.nota);
   window._jaRanking = ranking;
 
+  clearTimeout(window._jaTimer);
   // Deixa a animação do baralho rodar pelo menos ~2.2s mesmo se o cálculo terminar
   // rápido (é síncrono/local, sem round-trip de rede) — senão o efeito nem aparece.
   const decorrido = Date.now() - window._jaAnaliseInicio;
-  clearTimeout(window._jaTimer);
   window._jaTimer = setTimeout(() => { window._jaFase = 2; renderAcasalamentosMatch(); _jaRenderRanking(); }, Math.max(300, 2200 - decorrido));
 }
 
