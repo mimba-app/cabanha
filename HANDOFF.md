@@ -6,10 +6,32 @@
 - **App/produto Mimba:** sessão em `projetos/cabanha` → *"lê o HANDOFF.md e vamos continuar"*. Carregam sozinhos: CLAUDE.md, memória (`MEMORY.md`), subagentes (`revisor-isolamento`, `arquiteto`, `engenheiro-frontend`) e skills (`nova-migration-tenant`, `deploy`, `testar-provisionamento`).
 - **Landing:** sessão em `projetos/mimba-landing` (repo `mimba-app/mimba-landing`, clonado). O `index.html` é um bundle gerado; as páginas `/assinar` e `/obrigado` são hand-authored (editáveis à vontade).
 
-## 🔴 O MAIS IMPORTANTE PRA SABER AGORA
-Toda a maratona de correções desde a apresentação (ver `ROADMAP.md` + seções abaixo) está **só na branch `staging`**, publicada em **`https://mimba-hml.pages.dev/`** via Cloudflare Pages — **nada disso está em produção** (`app.mimba.com.br`, branch `main`) ainda. A `main` só tem o que foi feito antes da `staging` existir. **Decisão pendente há várias sessões: promover `staging` → `main`?** (`git checkout main && git merge staging` + skill `deploy`, depois de testar tudo na URL de staging).
+## ✅ ATUALIZAÇÃO (2026-08-21): `staging` foi promovida pra `main` — item resolvido
+A seção abaixo ficou desatualizada por várias sessões e foi corrigida depois de uma verificação
+direta no código (não só na leitura deste documento). **`staging` já está 100% mergeada em
+`main`** desde o commit `097dbce` ("merge: promove staging pra main — Cruzamentos dois modos
+validado pelo Luciano"). Confirmado com `git merge-base --is-ancestor origin/staging main` (true)
+e `git diff main origin/staging -- index.html` (zero diferença de código — só um arquivo
+histórico em `versions/`). Toda a maratona de correções (Prioridades 1-6, Reprodução Equina v2,
+Reprodutivo v3/v4 completo incluindo Fase 8b, redesign "Registro Vivo", Cruzamentos dois modos)
+**está em produção** (`app.mimba.com.br`) hoje. **Não presuma mais que algo "só existe em
+staging" sem checar — esse texto era a causa raiz da confusão.**
 
-Isso já mordeu na prática: quando o Thiago (sócio, admin da Cabanha Santa Adelina — cliente real) precisou de um reenvio de convite, o botão que resolve isso só existe na `staging`, e a `staging` só mostra cabanhas com `ambiente_teste=true` — foi preciso marcar a cabanha dele como teste temporariamente pra usar o fluxo. **Enquanto a promoção não acontece, todo suporte a cliente real por esse tipo de fluxo depende desse contorno.**
+**Pontas soltas que sobraram dessa promoção, verificadas no banco em 2026-08-21:**
+- `tenants.ambiente_teste` da **Cabanha Santa Adelina continua `true`** (não foi revertido na
+  promoção). Não é mais uma trava de suporte — a `main` já tem tudo — mas continua misturando o
+  admin real (Thiago) com o filtro de ambiente de teste. Decisão pendente: reverter agora ou
+  manter (ele usa pra testar features novas antes de virarem gerais).
+- **RLS permissiva por perfil ainda não foi corrigida** — confirmado via `pg_policies` em
+  `cab_mae_de_deus.animais`: a policy `memb_all` (cmd `ALL`) só checa `tem_acesso_tenant()`, sem
+  filtrar por `perfil`. Segue precisando do `arquiteto`. (Ver achado original abaixo.)
+- Rename do repo `cabanha` → `mimba`: ainda não feito (segue como estava).
+- Cutover do Asaas sandbox → produção: ainda não feito (segue como estava).
+
+## Histórico do que motivou a seção acima (contexto, já resolvido — não é mais o estado atual)
+Toda a maratona de correções desde a apresentação (ver `ROADMAP.md` + seções abaixo) ficou **só na branch `staging`**, publicada em **`https://mimba-hml.pages.dev/`** via Cloudflare Pages — por um bom tempo nada disso estava em produção (`app.mimba.com.br`, branch `main`). A decisão de promover ficou pendente por várias sessões.
+
+Isso mordeu na prática: quando o Thiago (sócio, admin da Cabanha Santa Adelina — cliente real) precisou de um reenvio de convite, o botão que resolve isso só existia na `staging`, e a `staging` só mostrava cabanhas com `ambiente_teste=true` — foi preciso marcar a cabanha dele como teste temporariamente pra usar o fluxo. Isso foi o gatilho que levou à promoção que aconteceu depois (ver atualização no topo desta seção).
 
 ## 🎨 Paleta de cores revertida pra skin verde-oliva/creme (2026-08-12, staging apenas)
 Pedido do Pedro: recuperar exatamente a paleta de um arquivo de referência (`index_7.html`, anexado por
@@ -264,9 +286,10 @@ cabanhas), mais as abas herdadas da Gestação.
   avatar/foto ou iniciais, badges) como padrão, com toggle pra tabela densa (persiste em localStorage).
   Mudança de fluxo/UI + coluna nova de baixo risco (mesmo padrão já existente) — não precisou de
   `revisor-isolamento`. Detalhe completo em `docs/spec-reprodutivo-v4-saude-vet.md` (Fase 7).
-  **Falta**: QA em staging real com dado/login de verdade, e a promoção `staging`→`main` (Fase 0 do
-  roadmap geral, deliberadamente adiada até aqui) — nada disso foi feito ainda, só construção + teste
-  local em todas as 8 fases.
+  **Falta (na época, 2026-08-13)**: QA em staging real com dado/login de verdade, e a promoção
+  `staging`→`main` (Fase 0 do roadmap geral, deliberadamente adiada até aqui) — nada disso tinha sido
+  feito ainda, só construção + teste local em todas as 8 fases. *(Ambos resolvidos depois — ver
+  "✅ ATUALIZAÇÃO (2026-08-21)" no topo deste documento.)*
 - **Fase 8 — revisão pós-feedback (2026-08-13)**, construída em staging depois que o dono do produto
   usou o fluxo: (3a) `tipo_cobertura` saiu do modal do criador — nasce `null`, só o veterinário
   decide no Controle do Kanban; o gatilho do campo Receptora virou "fonte é Embrião" em vez de "tipo
@@ -484,15 +507,15 @@ Asaas → asaas-webhook (valida token) → provisionar-cabanha → cabanha isola
 ## Estado por frente
 | Frente | Estado |
 |---|---|
-| Login identity-first + isolamento + sessão persistente | ✅ no ar (staging) / parcial em prod |
+| Login identity-first + isolamento + sessão persistente | ✅ no ar em produção (promovido em `097dbce`) |
 | Provisionamento automático | ✅ testado |
 | E-mail de acesso / convite de usuário (código, sem link, reenvio) | ✅ v7, testado com caso real (Thiago) |
 | Checkout self-serve (sandbox) | ✅ testado ponta a ponta |
-| ROADMAP Prioridades 1-6 + Reprodução Equina v2 | ✅ concluídas — **só na staging** |
+| ROADMAP Prioridades 1-6 + Reprodução Equina v2 | ✅ concluídas — **em produção** (promovido em `097dbce`, ver atualização 2026-08-21 no topo) |
 | Redesign visual da casca | ✅ implementado, ⏳ aguardando validação do sócio |
 | Segregação staging/produção (`ambiente_teste`) | ✅ construído, ⚠️ Santa Adelina marcada teste temporariamente |
 | RLS permissiva por perfil (achado de segurança) | ❌ registrado, não corrigido |
-| **Promover `staging` → `main`** | ❌ decisão pendente há várias sessões, trava suporte a cliente real |
+| **Promover `staging` → `main`** | ✅ feito (`097dbce`, verificado 2026-08-21 direto no código) — Santa Adelina segue `ambiente_teste=true`, decisão de reverter pendente |
 | Rename repo `cabanha`→`mimba` | ⏳ adiado |
 | Cutover Asaas p/ produção | ❌ trocar `ASAAS_API_KEY`/`ASAAS_BASE_URL` + domínio + redeploy |
 | Rate-limit no `criar-checkout`/`criar-checkout-trial` | ✅ 8/60min e 5/60min por IP (2026-08-02) — reCAPTCHA ainda não |
