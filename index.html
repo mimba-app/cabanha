@@ -7,7 +7,7 @@
 <script>
   // Aplica o tema salvo (se houver) ANTES do CSS pintar a tela — sem isso, a página
   // pinta primeiro com prefers-color-scheme e só depois troca pro tema escolhido,
-  // gerando um flash visível. Ver _alternarTema() no script principal.
+  // gerando um flash visível. Ver _definirTema() no script principal.
   try {
     const t = localStorage.getItem('mimba_tema');
     if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
@@ -98,7 +98,7 @@
     --fs-2xl: 30px;
   }
   /* Tema escuro — via preferência do sistema (prefers-color-scheme) OU escolha manual
-     (data-theme, toggle na sidebar, persistida em localStorage — ver _alternarTema()).
+     (data-theme, toggle em Conta > Cabanha, persistida em localStorage — ver _definirTema()).
      O media query só vale quando não há escolha manual explícita pra CLARO
      (:not([data-theme="light"])); o bloco [data-theme="dark"] repete os mesmos valores
      pra a escolha manual de escuro valer mesmo com o sistema em claro. */
@@ -317,6 +317,8 @@
   .bpk { background:var(--pink-l); color:var(--pink-d); }
   .bt { background:var(--teal-l); color:var(--teal-d); }
   .bgr { background:var(--gray-l); color:var(--gray-d); }
+  .bg-solid { background:var(--green-d); color:#fff; }
+  .br-solid { background:var(--red-d); color:#fff; }
   .filter-row { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
   /* Campo com leve afundamento (inset), como no protótipo — o oposto do card,
      que sobe. Ajuda a distinguir superfície de entrada de superfície de conteúdo. */
@@ -546,7 +548,9 @@
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
-  @media(max-width:900px){ .kanban-board { grid-template-columns:1fr; } }
+  .kanban-board.cols-4 { grid-template-columns:repeat(4,1fr); }
+  .kanban-board.cols-5 { grid-template-columns:repeat(5,1fr); }
+  @media(max-width:900px){ .kanban-board, .kanban-board.cols-4, .kanban-board.cols-5 { grid-template-columns:1fr; } }
   /* Kanban — cabeçalho colorido (tokens de estado do "Registro Vivo"), corpo em
      pergaminho2 e cards em pergaminho puro, sem borda no claro (só sombra). */
   .kanban-col { border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); }
@@ -580,7 +584,6 @@
   .kanban-card-data.emdia   { color:var(--green-d); }
   .kanban-card-actions { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
   .kanban-empty { font-size:11px; color:var(--text3); font-style:italic; padding:8px 4px; text-align:center; }
-  .kanban-filter-row { display:flex; gap:8px; margin-bottom:0.75rem; flex-wrap:wrap; align-items:center; }
   /* LAUDO ANEXO */
   .laudo-dropzone { border:2px dashed var(--border2); border-radius:var(--radius); padding:16px; text-align:center; cursor:pointer; transition:border-color 0.15s, background 0.15s; background:var(--bg); }
   .laudo-dropzone:hover, .laudo-dropzone.drag-over { border-color:var(--green); background:var(--green-l); }
@@ -673,7 +676,7 @@
   .drill-empty { padding:1.5rem; text-align:center; font-size:12px; color:var(--text3); }
   /* ESTAGIO-PILL clicável */
   .estagio-pill { cursor:pointer; transition:background 0.12s, box-shadow 0.12s; }
-  .estagio-pill:hover { background:var(--bg2); box-shadow:0 1px 4px rgba(0,0,0,0.10); }
+  .estagio-pill:hover { background:var(--bg2); box-shadow:var(--sh-sm); }
   /* CALENDÁRIO DASHBOARD */
   .cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:10px; }
   .cal-header { text-align:center;padding:3px;font-weight:700;color:var(--text3);text-transform:uppercase; }
@@ -786,6 +789,12 @@
      construção, os mesmos do sistema já em produção. Aliasar (em vez de repetir
      var(--ink) etc. em cada regra) mantém as classes .ja-* deste bloco portáveis,
      mas herda claro/escuro (prefers-color-scheme) de graça, igual o resto do app. */
+  /* Pill toggle genérico (estado ativo destacado) — usado no toggle de tema
+     (Claro × Escuro) em Conta > Cabanha. */
+  .pill-switch{display:inline-flex;gap:2px;background:var(--pergaminho2);border:var(--card-border);border-radius:99px;padding:3px;}
+  .pill-switch-btn{border:none;background:none;font-family:var(--font);font-weight:700;font-size:12px;padding:8px 16px;border-radius:99px;cursor:pointer;color:var(--ink-50);transition:background .15s,color .15s;}
+  .pill-switch-btn.on{background:var(--pergaminho);color:var(--ink);box-shadow:var(--sh-sm);}
+
   .jornada-ac {
     --ja-ink:var(--ink); --ja-ink-70:var(--ink-70); --ja-ink-50:var(--ink-50);
     --ja-ink-30:var(--ink-30); --ja-ink-15:var(--ink-15); --ja-ink-08:var(--ink-08);
@@ -800,7 +809,7 @@
     font-family:var(--ja-sans); color:var(--ja-ink); background:var(--ja-areia);
     border-radius:var(--radius-lg); padding:26px 28px; margin-bottom:18px;
   }
-  .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-terracota-ink);}
+  .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-ink-50);}
   .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
   .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
 
@@ -1100,18 +1109,11 @@
 <div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
 
 <div class="sidebar" id="sidebar-main">
-  <div class="logo" style="position:relative">
+  <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
     <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M</span></div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
-    <!-- Fora do card de conta (rodapé da sidebar) de propósito: lá só cabe um ícone
-         a mais sem a badge de perfil (ex.: "ADMINISTRADOR") estourar o card e ficar
-         embaixo do botão — achado real, 2026-08-22. Aqui no topo sobra espaço. -->
-    <button class="sidebar-icon-btn" onclick="_alternarTema()" id="btn-tema" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro" style="position:absolute;top:0;right:0;color:var(--chrome-text3)">
-      <svg id="icon-tema-sol" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5.6" y1="5.6" x2="4.2" y2="4.2"/><line x1="19.8" y1="19.8" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/></svg>
-      <svg id="icon-tema-lua" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
   </div>
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Dashboard</span></button>
   <!-- Animais: silhueta do CAVALO DE XADREZ (peça de knight) — contorno fechado da peça,
@@ -1252,7 +1254,7 @@
     <div class="card" id="dash-pendencias-card" style="display:none">
       <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
         <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg> Pendências sanitárias</span>
-        <button class="btn btn-sm" onclick="showPage('saude');setTimeout(()=>{const t=document.querySelector('#page-saude .tab-row .tab:last-child');if(t)switchTab(t,'tab-pendencias')},100)">Ver todas →</button>
+        <button class="btn btn-sm" onclick="showPage('saude');setTimeout(()=>{const t=document.getElementById('saude-tab-pend');if(t)saudeTabGrupo(t,'tab-pendencias',null)},100)">Ver todas →</button>
       </div>
       <div id="dash-pendencias-lista"></div>
     </div>
@@ -1335,15 +1337,25 @@
     </div>
   </div>
   <div class="tab-row">
-    <button class="tab active" onclick="switchTab(this,'tab-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
-    <button class="tab" onclick="switchTab(this,'tab-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
-    <button class="tab" onclick="switchTab(this,'tab-verm')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
-    <button class="tab" onclick="switchTab(this,'tab-tratamentos')">Tratamentos</button>
-    <button class="tab" onclick="switchTab(this,'tab-hist-vac')">Histórico Vacinas</button>
-    <button class="tab" onclick="switchTab(this,'tab-hist-exam')">Histórico Exames</button>
-    <button class="tab" onclick="switchTab(this,'tab-pendencias')">Pendências <span id="pend-count-badge"></span></button>
-    <button class="tab" onclick="switchTab(this,'tab-reprodutivo-vet')">Reprodutivo</button>
-    <button class="tab" onclick="switchTab(this,'tab-proto-repro')">🧬 Protocolo Reprodutivo</button>
+    <button class="tab active" id="saude-tab-vac" onclick="saudeTabGrupo(this,'tab-vac','saude-sub-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
+    <button class="tab" id="saude-tab-exam" onclick="saudeTabGrupo(this,'tab-exam','saude-sub-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
+    <button class="tab" id="saude-tab-verm" onclick="saudeTabGrupo(this,'tab-verm',null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
+    <button class="tab" id="saude-tab-repro" onclick="saudeTabGrupo(this,'tab-reprodutivo-vet','saude-sub-repro')">🐎 Reprodutivo</button>
+    <button class="tab" id="saude-tab-trat" onclick="saudeTabGrupo(this,'tab-tratamentos',null)">Tratamentos</button>
+    <button class="tab" id="saude-tab-pend" onclick="saudeTabGrupo(this,'tab-pendencias',null)">Pendências <span id="pend-count-badge"></span></button>
+  </div>
+  <div id="saude-sub-vac" class="tab-row" style="margin-bottom:0.75rem">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-vac','tab-vac',this)">Aplicadas</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-vac','tab-hist-vac',this)">Histórico</button>
+  </div>
+  <div id="saude-sub-exam" class="tab-row" style="display:none;margin-bottom:0.75rem">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-exam','tab-exam',this)">Registrados</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-exam','tab-hist-exam',this)">Histórico</button>
+  </div>
+  <div id="saude-sub-repro" class="tab-row" style="display:none;margin-bottom:0.75rem">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-repro','tab-reprodutivo-vet',this)">Funil veterinário</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-repro','tab-repro-gestacoes',this)">Gestações ativas</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-repro','tab-proto-repro',this)">Protocolo reprodutivo</button>
   </div>
 
   <!-- KANBAN VACINAS -->
@@ -1351,7 +1363,7 @@
     <!-- VACINAS OBRIGATÓRIAS -->
     <div id="vac-obrigatorias-painel" style="margin-bottom:1rem"></div>
 
-    <div class="kanban-filter-row">
+    <div class="filter-row">
       <select id="kvac-estagio" onchange="renderKanbanVac()" style="width:180px">
         <option value="">Todos os estágios</option>
         <option>CAMPO</option><option>PISTA MORFOLOGIA</option><option>PISTA FUNCIONAL</option>
@@ -1366,7 +1378,7 @@
 
   <!-- KANBAN EXAMES -->
   <div id="tab-exam" style="display:none">
-    <div class="kanban-filter-row">
+    <div class="filter-row">
       <select id="kexam-estagio" onchange="renderKanbanExam()" style="width:180px">
         <option value="">Todos os estágios</option>
         <option>CAMPO</option><option>PISTA MORFOLOGIA</option><option>PISTA FUNCIONAL</option>
@@ -1546,9 +1558,11 @@
        Ovuladas → DG precoce aguardando definitivo. Ao confirmar o DG definitivo, a gestação real
        nasce e passa a aparecer também na aba Reprodutivo do criador (mesma tabela `gestacoes`). -->
   <div id="tab-reprodutivo-vet" style="display:none">
-    <div class="page-sub" style="margin:-6px 0 14px">Acompanhamento do que o criador liberou no planejamento — do controle inicial até a confirmação de prenhez, e as gestações ativas em andamento.</div>
-    <div class="kanban-board" id="kanban-reprodutivo-vet-board" style="grid-template-columns:repeat(4,1fr)"></div>
-    <div class="card-title" style="margin:22px 0 8px">Gestações ativas</div>
+    <div class="page-sub" style="margin:-6px 0 14px">Acompanhamento do que o criador liberou no planejamento — do controle inicial até a confirmação de prenhez.</div>
+    <div class="kanban-board cols-4" id="kanban-reprodutivo-vet-board"></div>
+  </div>
+  <div id="tab-repro-gestacoes" style="display:none">
+    <div class="page-sub" style="margin:-6px 0 14px">Gestações ativas em andamento — mesmo acompanhamento da aba Reprodutivo do criador.</div>
     <div id="reprodutivo-vet-gestacoes-content"></div>
   </div>
 </div>
@@ -1559,8 +1573,8 @@
     <div><div class="page-title">Reprodutivo</div><div class="page-sub">Planejamento por ciclo reprodutivo · acasalamentos, gestações e plantel</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="abrirModalFonteCobertura()">+ Nova cota / cobertura</button>
-      <button class="btn btn-primary" onclick="switchTab(document.getElementById('tab-btn-acasalamentos'),'gest-acasalamentos')">+ Novo acasalamento</button>
-      <button class="btn btn-primary" onclick="abrirModalProtocolo()">+ Novo protocolo</button>
+      <button class="btn" onclick="switchTab(document.getElementById('tab-btn-acasalamentos'),'gest-acasalamentos')">+ Novo acasalamento</button>
+      <button class="btn" onclick="abrirModalProtocolo()">+ Novo protocolo</button>
     </div>
   </div>
   <div class="tab-row">
@@ -2185,6 +2199,16 @@
             <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
             <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
             <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
+          </div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Tema</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="pill-switch" id="conta-tema-switch">
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
+            </div>
+            <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
           </div>
         </div>
       </div>
@@ -3858,7 +3882,7 @@ function renderAnimais(){
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':_badgeConfirmacao(a)}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':_badgeConfirmacao(a)}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
       <td>${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:''}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -3888,7 +3912,7 @@ function renderAnimais(){
         ${!a.confirmado && a.confirmacao_status !== 'nao_confirmado' ? _badgeConfirmacao(a) : ''}${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
-        ${a.receptora_externa ? '<span class="badge" style="background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
+        ${a.receptora_externa ? '<span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
       <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
@@ -5978,7 +6002,7 @@ function _renderDetCorpo(i, editando) {
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(17)} Identificação
       ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
-      ${a.receptora_externa?'<span class="badge" style="margin-left:6px;background:var(--purple);color:#fff" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
+      ${a.receptora_externa?'<span class="badge bp" style="margin-left:6px" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 18px">
       ${[['RP',a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'],
@@ -6617,7 +6641,7 @@ function renderEguasCriaPlanejador() {
       if (acReceptora) {
         return `<div class="card" style="background:var(--purple-l);border-color:var(--purple)">
           <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--purple-d)">
-            ${a.nome} <span class="badge" style="font-size:9px;background:var(--purple);color:#fff">Receptora</span>
+            ${a.nome} <span class="badge bp" style="font-size:9px">Receptora</span>
           </div>
           <div style="font-size:11px;color:var(--purple-d);margin:4px 0 8px">${a.sbb ? 'SBB ' + a.sbb + ' · ' : ''}Ciclo ${ciclo}</div>
           <div style="font-size:12px;color:var(--purple-d)">Receptora com embrião de <b>${acReceptora.egua_nome || '—'}</b></div>
@@ -7254,7 +7278,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-repro-gestacoes','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -7274,8 +7298,17 @@ function switchTab(btn,tid){
   if(tid==='gest-protocolos') renderProtocolos();
   if(tid==='tab-proto-repro') renderKanbanProtoRepro();
   if(tid==='tab-reprodutivo-vet') renderReprodutivoVet();
+  if(tid==='tab-repro-gestacoes') renderReprodutivoVet();
   if(tid==='tab-tratamentos') renderTratamentos();
 }
+function saudeTabGrupo(btn,tabId,subId){
+  btn.closest('.tab-row').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['saude-sub-vac','saude-sub-exam','saude-sub-repro'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  if(subId){const sub=document.getElementById(subId);if(sub){sub.style.display='';const fb=sub.querySelector('.tab.active')||sub.querySelector('.tab');if(fb){const m=(fb.getAttribute('onclick')||'').match(/'([^']+)'\s*,\s*this/);if(m){switchTab(fb,m[1]);return;}}}}
+  switchTab(btn,tabId);
+}
+function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
@@ -8261,8 +8294,8 @@ function irParaPendencia(idx) {
   // Navegar para saúde > pendências e abrir modal de resolução
   showPage('saude');
   // Ativar aba pendências
-  const tabBtn = document.querySelector('#page-saude .tab-row .tab:last-child');
-  if(tabBtn) { switchTab(tabBtn, 'tab-pendencias'); }
+  const tabBtn = document.getElementById('saude-tab-pend');
+  if(tabBtn) { saudeTabGrupo(tabBtn, 'tab-pendencias', null); }
   setTimeout(()=>resolverPendencia(idx), 150);
 }
 
@@ -9697,11 +9730,11 @@ function _badgeConfirmacao(animal) {
   if (status === 'nao_confirmado') return ''; // sai do controle
   if (status === 'confirmado') return '';
   if (status === 'aguardando_confirmacao')
-    return '<span class="badge" style="background:var(--green-d);color:#fff" title="Aguardando confirmação com técnico ABCCC">Confirmação marcada</span>';
+    return '<span class="badge bg-solid" title="Aguardando confirmação com técnico ABCCC">Confirmação marcada</span>';
   if (status === 'em_risco')
-    return '<span class="badge" style="background:var(--red-d);color:#fff" title="Projeção indica risco de não atingir medidas mínimas ABCCC">⚠ Em risco</span>';
+    return '<span class="badge br-solid" title="Projeção indica risco de não atingir medidas mínimas ABCCC">⚠ Em risco</span>';
   if (status === 'apto_confirmacao')
-    return '<span class="badge" style="background:var(--green-d);color:#fff" title="Medidas atingidas — pronto para confirmação">Apto — confirmar</span>';
+    return '<span class="badge bg-solid" title="Medidas atingidas — pronto para confirmação">Apto — confirmar</span>';
   // em_desenvolvimento
   const mesesLabel = meses !== null ? ` · ${meses}m` : '';
   return `<span class="badge ba" title="Em desenvolvimento${mesesLabel}">Em desenv.${mesesLabel}</span>`;
@@ -11067,7 +11100,7 @@ function renderAcasalamentos() {
   if(doCiclo.length === 0) {
     el.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--text3)">Nenhum acasalamento planejado. Clique em "+ Novo acasalamento".</div>';
   } else {
-    el.innerHTML = '<div class="kanban-board" style="grid-template-columns:repeat(5,1fr)">' +
+    el.innerHTML = '<div class="kanban-board cols-5">' +
       AC_STATUS_COLS.map(col => {
         const cards = ativos.filter(a => a.status === col.status);
         const borda = col.destaque ? `2px solid ${col.border}` : `0.5px solid ${col.border}`;
@@ -12028,7 +12061,7 @@ function renderDashboard(){
     if(als.length===0){
       alertasEl.innerHTML='<div class="alert alert-g">✅ Nenhum alerta crítico no momento.</div>';
     } else {
-      alertasEl.innerHTML=als.slice(0,12).map(a=>`<div class="alert alert-${a.t}" style="${a.fn?'cursor:pointer;':''}display:flex;justify-content:space-between;align-items:center;gap:8px" ${a.fn?`onclick="${a.fn}"`:''}><span style="display:flex;align-items:center;gap:8px">${a.selo||''}<span>${a.m}</span></span>${a.fn?'<span style="font-size:10px;background:rgba(0,0,0,0.07);padding:2px 7px;border-radius:var(--radius-badge);white-space:nowrap;margin-left:6px">ver →</span>':''}</div>`).join('');
+      alertasEl.innerHTML=als.slice(0,12).map(a=>`<div class="alert alert-${a.t}" style="${a.fn?'cursor:pointer;':''}display:flex;justify-content:space-between;align-items:center;gap:8px" ${a.fn?`onclick="${a.fn}"`:''}><span style="display:flex;align-items:center;gap:8px">${a.selo||''}<span>${a.m}</span></span>${a.fn?'<span style="font-size:10px;background:var(--tint-hover);padding:2px 7px;border-radius:var(--radius-badge);white-space:nowrap;margin-left:6px">ver →</span>':''}</div>`).join('');
     }
   }
 
@@ -12054,18 +12087,18 @@ function renderDashboard(){
 
   // Gráficos — barras e pills clicáveis
   const sits={};animais.forEach(a=>{const s=a.situacao||'Sem info';sits[s]=(sits[s]||0)+1;});
-  const sC={'NA CABANHA':'#639922','MORTO(A)':'#E24B4A','DOADO(A)':'#EF9F27','EMPRESTIMO':'#534AB7','Sem info':'#888780'};
+  const sC={'NA CABANHA':'var(--campo)','MORTO(A)':'var(--critico)','DOADO(A)':'var(--atencao)','EMPRESTIMO':'var(--purple)','Sem info':'var(--text3)'};
   const tot=animais.length||1;
-  document.getElementById('sit-chart').innerHTML=Object.entries(sits).map(([k,v])=>`<div class="stat-row" onclick="dashDrill('situacao',\`${k}\`)"><span class="bar-label">${k}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/tot*100)}%;background:${sC[k]||'#888'}"></div></div><span class="bar-val">${v}</span></div>`).join('');
+  document.getElementById('sit-chart').innerHTML=Object.entries(sits).map(([k,v])=>`<div class="stat-row" onclick="dashDrill('situacao',\`${k}\`)"><span class="bar-label">${k}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/tot*100)}%;background:${sC[k]||'var(--text3)'}"></div></div><span class="bar-val">${v}</span></div>`).join('');
 
   const pels={};ativos.filter(a=>a.pelagem).forEach(a=>{const p=a.pelagem.split(' ')[0];pels[p]=(pels[p]||0)+1;});
-  const pC={'Gateada':'#639922','Zaina':'#5F5E5A','Colorada':'#D85A30','Douradilha':'#BA7517','Moura':'#666','Lobuna':'#444','Oveira':'#97C459','Picaça':'#534AB7','Tostada':'#EF9F27'};
+  const pC={'Gateada':'var(--campo)','Zaina':'var(--text2)','Colorada':'var(--terracota)','Douradilha':'var(--atencao)','Moura':'var(--text)','Lobuna':'var(--ink)','Oveira':'var(--campo-deep)','Picaça':'var(--purple)','Tostada':'var(--atencao)'};
   const pTot=Object.values(pels).reduce((a,b)=>a+b,0)||1;
-  document.getElementById('pel-chart').innerHTML=Object.entries(pels).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="stat-row" onclick="dashDrill('pelagem',\`${k}\`)"><span class="bar-label">${k}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/pTot*100)}%;background:${pC[k]||'#888780'}"></div></div><span class="bar-val">${v}</span></div>`).join('');
+  document.getElementById('pel-chart').innerHTML=Object.entries(pels).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="stat-row" onclick="dashDrill('pelagem',\`${k}\`)"><span class="bar-label">${k}</span><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/pTot*100)}%;background:${pC[k]||'var(--text3)'}"></div></div><span class="bar-val">${v}</span></div>`).join('');
 
   const ests={};animais.filter(a=>a.estagio&&a.estagio!=='-').forEach(a=>{ests[a.estagio]=(ests[a.estagio]||0)+1;});
-  const eC={'PISTA MORFOLOGIA':'#378ADD','PISTA FUNCIONAL':'#534AB7','CAMPO':'#639922','LAÇO':'#EF9F27','ARREIO CABANHA':'#D4537E','DOMA':'#BA7517','CRIA':'#1D9E75'};
-  document.getElementById('est-chart').innerHTML='<div class="estagio-grid">'+Object.entries(ests).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="estagio-pill" onclick="dashDrill('estagio',\`${k}\`)"><div style="width:7px;height:7px;border-radius:50%;background:${eC[k]||'#888'};flex-shrink:0"></div><span style="font-size:11px;flex:1">${k}</span><span style="font-size:12px;font-weight:700">${v}</span></div>`).join('')+'</div>';
+  const eC={'PISTA MORFOLOGIA':'var(--blue)','PISTA FUNCIONAL':'var(--purple)','CAMPO':'var(--campo)','LAÇO':'var(--atencao)','ARREIO CABANHA':'var(--pink)','DOMA':'var(--terracota)','CRIA':'var(--teal)'};
+  document.getElementById('est-chart').innerHTML='<div class="estagio-grid">'+Object.entries(ests).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="estagio-pill" onclick="dashDrill('estagio',\`${k}\`)"><div style="width:7px;height:7px;border-radius:50%;background:${eC[k]||'var(--text3)'};flex-shrink:0"></div><span style="font-size:11px;flex:1">${k}</span><span style="font-size:12px;font-weight:700">${v}</span></div>`).join('')+'</div>';
 }
 
 // ─── DASHBOARD DRILL-DOWN ─────────────────────────────────────────────────────
@@ -12076,7 +12109,7 @@ function fecharDrill(){
 function _drillRow(a){
   const i=animais.indexOf(a);
   return `<div class="drill-row" onclick="verDetalhe(${i})">
-    <div style="width:7px;height:7px;border-radius:50%;background:${a.sexo==='Fêmea'?'#D4537E':'#378ADD'};flex-shrink:0"></div>
+    <div style="width:7px;height:7px;border-radius:50%;background:${a.sexo==='Fêmea'?'var(--pink)':'var(--blue)'};flex-shrink:0"></div>
     <div class="drill-nome">${a.nome}</div>
     <div class="drill-info">${a.pelagem?.split(' ')[0]||'—'}</div>
     <span class="badge bgr drill-badge">${a.estagio||'—'}</span>
@@ -12168,7 +12201,6 @@ function dashDrill(tipo, filtro){
         rows=grupo.length?'<div class="drill-grid">'+grupo.map(_drillRow).join('')+'</div>':'<div class="drill-empty">Nenhum animal.</div>';
       } else {
         label=`Situação do plantel — ${animais.length} animais`;
-        const sC={'NA CABANHA':'#639922','MORTO(A)':'#E24B4A','DOADO(A)':'#EF9F27','EMPRESTIMO':'#534AB7','Sem info':'#888780'};
         rows=Object.entries(sits).map(([k,v])=>
           `<div style="padding:6px 14px;font-size:10px;font-weight:700;cursor:pointer;background:var(--bg3);color:var(--text2)" onclick="dashDrill('situacao',\`${k}\`)">${k} (${v}) — ver todos →</div>`
           +animais.filter(a=>(a.situacao||'Sem info')===k).map(_drillRow).join('')
@@ -12501,6 +12533,7 @@ function abrirTelaConta() {
   else { logoImg.style.display='none'; logoPh.style.display='flex'; }
   window._contaNovoLogo = undefined;
   document.getElementById('conta-cor-primaria').value = TENANT_INFO?.cor_primaria || '#2D6A4F';
+  _atualizarIconeTema();
   document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
   document.getElementById('conta-tab-cabanha').style.display = '';
   document.getElementById('conta-tab-usuarios').style.display = 'none';
@@ -14710,11 +14743,12 @@ function _misturarComBranco(hex, pct) {
   return `rgb(${mix(rgb.r)},${mix(rgb.g)},${mix(rgb.b)})`;
 }
 
-// Toggle de tema claro/escuro (sidebar) — por padrão o app segue prefers-color-scheme
-// (:root e o media query no <style>); escolher aqui grava data-theme no <html> e persiste
-// em localStorage, sobrepondo o sistema até a pessoa trocar de novo. O script inline no
-// <head> (antes do <style>) já aplica esse valor salvo cedo, pra não piscar o tema errado
-// no primeiro paint.
+// Toggle de tema claro/escuro — vive em Conta > Cabanha (pill "Claro"/"Escuro", junto da cor
+// da marca), não mais na sidebar. Por padrão o app segue prefers-color-scheme (:root e o
+// media query no <style>); escolher aqui grava data-theme no <html> e persiste em
+// localStorage, sobrepondo o sistema até a pessoa trocar de novo. O script inline no <head>
+// (antes do <style>) já aplica esse valor salvo cedo, pra não piscar o tema errado no
+// primeiro paint.
 const TEMA_KEY = 'mimba_tema';
 function _temaEfetivo() {
   const salvo = document.documentElement.getAttribute('data-theme');
@@ -14723,16 +14757,13 @@ function _temaEfetivo() {
 }
 function _atualizarIconeTema() {
   const escuro = _temaEfetivo() === 'dark';
-  const sol = document.getElementById('icon-tema-sol');
-  const lua = document.getElementById('icon-tema-lua');
-  if (!sol || !lua) return;
-  // Mostra o sol quando o tema atual é escuro (clicar leva pro claro) e vice-versa —
-  // o ícone representa o destino do clique, não o estado atual.
-  sol.style.display = escuro ? '' : 'none';
-  lua.style.display = escuro ? 'none' : '';
+  const btnLight = document.getElementById('conta-tema-btn-light');
+  const btnDark = document.getElementById('conta-tema-btn-dark');
+  if (!btnLight || !btnDark) return;
+  btnLight.classList.toggle('on', !escuro);
+  btnDark.classList.toggle('on', escuro);
 }
-function _alternarTema() {
-  const novo = _temaEfetivo() === 'dark' ? 'light' : 'dark';
+function _definirTema(novo) {
   document.documentElement.setAttribute('data-theme', novo);
   document.documentElement.style.colorScheme = novo;
   try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
