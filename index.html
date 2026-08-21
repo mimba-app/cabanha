@@ -726,31 +726,31 @@
   }
 
   /* ── Jornada de Acasalamento (C·Conselho → B·Confluência → A·Dossiê Selado) ──
-     docs/spec-acasalamento-jornada-tres-direcoes.md. Tema paralelo — tokens e
-     tipografia copiados literalmente do artefato de referência (Playfair
-     Display / DM Sans / DM Mono, paleta "pergaminho/campo/terracota/ouro"),
-     namespaced em .jornada-ac pra não vazar pro resto do app. */
+     docs/spec-acasalamento-jornada-tres-direcoes.md e docs/design-system.md.
+     Os --ja-* aqui são ALIASES pros tokens reais de "Registro Vivo" (:root acima),
+     não uma paleta paralela — os valores do artefato de referência eram, por
+     construção, os mesmos do sistema já em produção. Aliasar (em vez de repetir
+     var(--ink) etc. em cada regra) mantém as classes .ja-* deste bloco portáveis,
+     mas herda claro/escuro (prefers-color-scheme) de graça, igual o resto do app. */
   .jornada-ac {
-    --ja-ink:#2B2419; --ja-ink-70:rgba(43,36,25,.7); --ja-ink-50:rgba(43,36,25,.52);
-    --ja-ink-30:rgba(43,36,25,.3); --ja-ink-15:rgba(43,36,25,.14); --ja-ink-08:rgba(43,36,25,.07);
-    --ja-campo:#4F6B2E; --ja-campo-deep:#33461C; --ja-campo-soft:#DEE7C9;
-    --ja-terracota:#B15A2E; --ja-terracota-soft:#F3DCC9; --ja-terracota-ink:#7A3B1C;
-    --ja-ouro:#B8860B; --ja-ouro-soft:#F1E2B8;
-    --ja-critico:#9B3226; --ja-critico-soft:#F4DAD3;
-    --ja-atencao:#A9791E; --ja-atencao-soft:#F1E3C2;
-    --ja-areia:#F4EFE6; --ja-pergaminho:#FCF9F3; --ja-pergaminho2:#F8F3EA;
-    --ja-sh-sm:0 1px 2px rgba(43,36,25,.09);
-    --ja-sh-md:0 1px 1px rgba(43,36,25,.06), 0 14px 26px -12px rgba(43,36,25,.28);
-    --ja-sh-lg:0 2px 3px rgba(43,36,25,.07), 0 30px 56px -16px rgba(43,36,25,.34);
-    --ja-serif:'Playfair Display',Georgia,serif; --ja-sans:'DM Sans',-apple-system,sans-serif; --ja-mono:'DM Mono','SF Mono',monospace;
+    --ja-ink:var(--ink); --ja-ink-70:var(--ink-70); --ja-ink-50:var(--ink-50);
+    --ja-ink-30:var(--ink-30); --ja-ink-15:var(--ink-15); --ja-ink-08:var(--ink-08);
+    --ja-campo:var(--campo); --ja-campo-deep:var(--campo-deep); --ja-campo-soft:var(--campo-soft);
+    --ja-terracota:var(--terracota); --ja-terracota-soft:var(--terracota-soft); --ja-terracota-ink:var(--terracota-ink);
+    --ja-ouro:var(--ouro); --ja-ouro-soft:var(--ouro-soft);
+    --ja-critico:var(--critico); --ja-critico-soft:var(--critico-soft);
+    --ja-atencao:var(--atencao); --ja-atencao-soft:var(--atencao-soft);
+    --ja-areia:var(--areia); --ja-pergaminho:var(--pergaminho); --ja-pergaminho2:var(--pergaminho2);
+    --ja-sh-sm:var(--sh-sm); --ja-sh-md:var(--sh-md); --ja-sh-lg:var(--sh-lg);
+    --ja-serif:var(--serif); --ja-sans:var(--font); --ja-mono:var(--mono);
     font-family:var(--ja-sans); color:var(--ja-ink); background:var(--ja-areia);
-    border-radius:20px; padding:26px 28px; margin-bottom:18px;
+    border-radius:var(--radius-lg); padding:26px 28px; margin-bottom:18px;
   }
   .jornada-ac .ja-eyebrow{font-family:var(--ja-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ja-terracota-ink);}
   .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
   .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
 
-  .jornada-ac .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:20px;padding:18px 22px;box-shadow:var(--ja-sh-md);}
+  .jornada-ac .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:20px;padding:18px 22px;border:var(--card-border);box-shadow:var(--ja-sh-md);}
   .jornada-ac .ja-alvo-av{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:linear-gradient(140deg,var(--ja-campo-soft),var(--ja-pergaminho2));
            display:flex;align-items:center;justify-content:center;font-family:var(--ja-serif);font-weight:800;font-size:22px;color:var(--ja-campo-deep);}
   .jornada-ac .ja-etq{font-family:var(--ja-mono);font-size:9.5px;padding:3px 9px 3px 12px;border-radius:4px 10px 10px 4px;display:inline-block;
@@ -764,7 +764,7 @@
 
   /* baralho embaralhando — direção C */
   .jornada-ac .ja-baralho{position:relative;height:190px;display:flex;align-items:center;justify-content:center;margin-top:8px;}
-  .jornada-ac .ja-carta{position:absolute;width:230px;height:110px;background:var(--ja-pergaminho);border-radius:16px;box-shadow:var(--ja-sh-md);
+  .jornada-ac .ja-carta{position:absolute;width:230px;height:110px;background:var(--ja-pergaminho);border-radius:16px;border:var(--card-border);box-shadow:var(--ja-sh-md);
          display:flex;flex-direction:column;justify-content:center;padding:0 20px;}
   .jornada-ac .ja-carta .ja-cn{font-family:var(--ja-serif);font-weight:700;font-size:15px;}
   .jornada-ac .ja-carta .ja-cm{font-family:var(--ja-mono);font-size:10px;color:var(--ja-ink-50);margin-top:3px;}
@@ -777,7 +777,7 @@
   .jornada-ac .ja-contador{font-family:var(--ja-mono);font-size:11.5px;color:var(--ja-ink-50);text-align:center;margin-top:6px;}
 
   /* ranking — direção C */
-  .jornada-ac .ja-linha{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:16px;padding:14px 18px;box-shadow:var(--ja-sh-sm);
+  .jornada-ac .ja-linha{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:16px;padding:14px 18px;border:var(--card-border);box-shadow:var(--ja-sh-sm);
          margin-bottom:9px;animation:ja-entra .5s cubic-bezier(.22,1,.36,1) both;transition:transform .16s ease, box-shadow .16s ease;}
   .jornada-ac .ja-linha:hover{transform:translateY(-2px);box-shadow:var(--ja-sh-md), 0 0 0 1px var(--ja-ink-15);}
   .jornada-ac .ja-linha.top{background:linear-gradient(100deg,var(--ja-campo-soft) 0%, var(--ja-pergaminho) 55%);box-shadow:var(--ja-sh-md);}
@@ -795,7 +795,7 @@
   @keyframes ja-cresce{from{width:0 !important;}}
 
   /* palco — direção B (Confluência de Sangues) */
-  .jornada-ac .ja-palco{position:relative;background:var(--ja-pergaminho);border-radius:22px;box-shadow:var(--ja-sh-md);padding:22px 24px;overflow:hidden;}
+  .jornada-ac .ja-palco{position:relative;background:var(--ja-pergaminho);border-radius:22px;border:var(--card-border);box-shadow:var(--ja-sh-md);padding:22px 24px;overflow:hidden;}
   .jornada-ac .ja-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:10px;}
   .jornada-ac .ja-quem-b{max-width:260px;}
   .jornada-ac .ja-quem-papel{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);}
@@ -835,7 +835,7 @@
 
   /* arena — direção A (O Dossiê Selado) */
   .jornada-ac .ja-arena{position:relative;display:flex;align-items:center;justify-content:center;gap:0;min-height:190px;}
-  .jornada-ac .ja-lado{width:230px;background:var(--ja-pergaminho);border-radius:18px;padding:15px 17px;box-shadow:var(--ja-sh-sm);
+  .jornada-ac .ja-lado{width:230px;background:var(--ja-pergaminho);border-radius:18px;padding:15px 17px;border:var(--card-border);box-shadow:var(--ja-sh-sm);
         transition:transform .75s cubic-bezier(.22,1,.36,1), box-shadow .75s;position:relative;z-index:2;}
   .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-esq, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-esq{transform:translateX(40px);box-shadow:var(--ja-sh-md);}
   .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-dir, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-dir{transform:translateX(-40px);box-shadow:var(--ja-sh-md);}
@@ -863,11 +863,11 @@
   @keyframes ja-impacto{0%{transform:scale(.6);opacity:.85;}100%{transform:scale(2.6);opacity:0;}}
 
   .jornada-ac .ja-dossie{margin-top:22px;animation:ja-sobe .6s cubic-bezier(.22,1,.36,1) both;}
-  .jornada-ac .ja-dossie-topo{display:flex;align-items:flex-start;gap:18px;background:var(--ja-pergaminho);border-radius:20px;padding:20px 22px;box-shadow:var(--ja-sh-md);}
+  .jornada-ac .ja-dossie-topo{display:flex;align-items:flex-start;gap:18px;background:var(--ja-pergaminho);border-radius:20px;padding:20px 22px;border:var(--card-border);box-shadow:var(--ja-sh-md);}
   .jornada-ac .ja-veredito-h{font-family:var(--ja-serif);font-weight:700;font-size:20px;line-height:1.15;}
   .jornada-ac .ja-veredito-sub{font-size:12.5px;color:var(--ja-ink-70);margin-top:6px;line-height:1.55;max-width:440px;}
   .jornada-ac .ja-grade{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;}
-  .jornada-ac .ja-bloco{background:var(--ja-pergaminho);border-radius:16px;padding:14px 16px;box-shadow:var(--ja-sh-sm);animation:ja-sobe .5s cubic-bezier(.22,1,.36,1) both;}
+  .jornada-ac .ja-bloco{background:var(--ja-pergaminho);border-radius:16px;padding:14px 16px;border:var(--card-border);box-shadow:var(--ja-sh-sm);animation:ja-sobe .5s cubic-bezier(.22,1,.36,1) both;}
   .jornada-ac .ja-bloco.ja-b1{animation-delay:.1s;} .jornada-ac .ja-bloco.ja-b2{animation-delay:.2s;} .jornada-ac .ja-bloco.ja-b3{animation-delay:.3s;}
   .jornada-ac .ja-bloco-t{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:9px;}
   .jornada-ac .ja-linha-anc{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--ja-ink-08);font-size:11.5px;}
@@ -1580,7 +1580,7 @@
          Agora começa escolhendo a égua; o Conselho ranqueia as fontes do ciclo por nota. B
          (Confluência de Sangues) e A (Dossiê Selado) entram nas fases seguintes. -->
     <div class="jornada-ac" id="ja-conselho">
-      <div class="ja-eyebrow">Direção C · O Conselho</div>
+      <div class="ja-eyebrow">Passo 1 de 3 · Escolher a égua</div>
       <div class="ja-titulo">Escolha a égua e veja quem combina com ela.</div>
       <div class="ja-sub">Aponte a égua e o Mimba ranqueia as fontes de cobertura disponíveis no ciclo <b id="ja-ciclo-label">—</b>, cruzando consanguinidade, diversidade de sangue e saldo/sanidade da fonte.</div>
 
@@ -1618,7 +1618,7 @@
       </div>
 
       <div id="ja-passo-confluencia" style="display:none;margin-top:18px;">
-        <div class="ja-eyebrow">Direção B · Confluência de Sangues</div>
+        <div class="ja-eyebrow">Passo 2 de 3 · Conferir a linhagem</div>
         <div class="ja-titulo" style="font-size:20px;margin-bottom:16px;">As duas linhagens correm até se encontrarem.</div>
         <div class="ja-palco">
           <div class="ja-cabeca">
@@ -1647,8 +1647,56 @@
 
           <div style="display:flex;gap:9px;margin-top:14px;justify-content:flex-end;">
             <button class="ja-btn2" onclick="_jaVoltarRanking()">Comparar com outra fonte</button>
-            <button class="ja-btn2" onclick="_jaAcasalarLinha(window._jaFonteAtualKey, true)">Rodar dossiê selado</button>
-            <button class="ja-btn2 forte" id="ja-b-btn-aprovar" onclick="_jaAcasalarLinha(window._jaFonteAtualKey, false)" style="display:none;">Aprovar mesmo assim</button>
+            <button class="ja-btn2" onclick="_jaAbrirDossie(true)">Rodar dossiê selado</button>
+            <button class="ja-btn2 forte" id="ja-b-btn-aprovar" onclick="_jaAbrirDossie(false)" style="display:none;">Aprovar mesmo assim</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="ja-passo-dossie" style="display:none;margin-top:18px;">
+        <div class="ja-eyebrow">Passo 3 de 3 · Confirmar o acasalamento</div>
+        <div class="ja-titulo" style="font-size:20px;margin-bottom:16px;">O parecer do cruzamento.</div>
+        <div class="ja-palco" style="padding:30px 36px;">
+          <div class="ja-arena" id="ja-a-arena">
+            <div class="ja-lado ja-esq">
+              <div class="ja-quem-papel">Garanhão · fonte</div>
+              <div class="ja-lado-nome" id="ja-a-gar-nome">—</div>
+              <div class="ja-lado-meta" id="ja-a-gar-meta">—</div>
+            </div>
+            <div class="ja-centro">
+              <div class="ja-fio"></div>
+              <div id="ja-a-centro-conteudo"><div class="ja-nucleo"></div></div>
+            </div>
+            <div class="ja-lado ja-dir">
+              <div class="ja-quem-papel">Égua</div>
+              <div class="ja-lado-nome" id="ja-a-egua-nome">—</div>
+              <div class="ja-lado-meta" id="ja-a-egua-meta">—</div>
+            </div>
+          </div>
+
+          <div id="ja-a-passos" class="ja-passos" style="align-items:center;"></div>
+          <div id="ja-a-dossie"></div>
+
+          <div id="ja-a-form" style="display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--ja-ink-08);">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div>
+                <label style="display:block;font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:5px;">Ciclo</label>
+                <input type="text" id="ja-a-ciclo" readonly style="width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho2);color:var(--ja-ink);font-family:var(--ja-sans);font-size:13px;">
+              </div>
+              <div id="ja-a-grp-receptora" style="display:none;">
+                <label style="display:block;font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:5px;">Receptora</label>
+                <select id="ja-a-receptora" style="width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho);color:var(--ja-ink);font-family:var(--ja-sans);font-size:13px;"><option value="">Nenhuma selecionada ainda...</option></select>
+              </div>
+              <div style="grid-column:1/-1;">
+                <label style="display:block;font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:5px;">Observações do planejamento</label>
+                <textarea id="ja-a-obs" rows="2" style="width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho);color:var(--ja-ink);font-family:var(--ja-sans);font-size:13px;"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="ja-acoes" id="ja-a-acoes" style="display:none;">
+            <button class="ja-btn2" onclick="_jaVoltarRanking()">Testar outro par</button>
+            <button class="ja-btn2 forte" onclick="_jaSalvarAcasalamento()">Salvar rascunho</button>
           </div>
         </div>
       </div>
@@ -9849,9 +9897,6 @@ function _acFontesAtivas() {
 // (com selects de Égua/Fonte visíveis) fica como fallback interno, chamado só se algo pedir
 // diretamente (ex.: nenhum ponto de entrada novo usa mais isso como padrão).
 function abrirModalAcasalamento() {
-  // Entrada manual (form completo) — nunca a cerimônia do Dossiê Selado, que é exclusiva
-  // do fluxo C→B→A da jornada (_jaAcasalarLinha).
-  window._jaModoDossie = false;
   const selEgua = document.getElementById('ac-egua');
   const eguas = _acEguasAtivas();
   selEgua.innerHTML = '<option value="">Selecione...</option>' +
@@ -9947,10 +9992,6 @@ async function _renderSimulacaoAcasalamento() {
   const egua = animais.find(a => String(a.db_id) === String(eguaId));
   const fonte = fontesCobertura.find(f => String(f.db_id) === String(fonteId));
   if(!egua || !fonte) { el.innerHTML = ''; return; }
-
-  // Direção A · O Dossiê Selado — só no fluxo C→B→A da jornada (_jaAcasalarLinha),
-  // nunca na entrada manual de formulário (abrirModalAcasalamento zera a flag).
-  if (window._jaModoDossie) { _jaRenderDossie(el, egua, fonte); return; }
 
   el.innerHTML = '<div class="card" style="font-size:12px;color:var(--text3)">Simulando...</div>';
 
@@ -10114,7 +10155,7 @@ function salvarAcasalamento() {
   acasalamentos.push(obj);
   _dbSalvarAcasalamento(obj, acasalamentos.length - 1);
   closeModal('modal-acasalamento');
-  window._jaEguaId = null; window._jaFase = 0; window._jaModoDossie = false;
+  window._jaEguaId = null; window._jaFase = 0;
   renderAcasalamentos();
   renderEguasCriaPlanejador();
 }
@@ -10466,10 +10507,11 @@ function renderAcasalamentosMatch() {
 
   const fase = window._jaEguaId ? (window._jaFase || 0) : -1;
   document.getElementById('ja-passo-lista').style.display = fase === -1 ? '' : 'none';
-  document.getElementById('ja-passo-alvo').style.display = (fase >= 0 && fase !== 3) ? '' : 'none';
+  document.getElementById('ja-passo-alvo').style.display = (fase >= 0 && fase !== 3 && fase !== 4) ? '' : 'none';
   document.getElementById('ja-passo-baralho').style.display = fase === 1 ? '' : 'none';
   document.getElementById('ja-passo-ranking').style.display = fase === 2 ? '' : 'none';
   document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
+  document.getElementById('ja-passo-dossie').style.display = fase === 4 ? '' : 'none';
   if (fase >= 0 && fase !== 3) _jaRenderAlvo();
 }
 
@@ -10482,6 +10524,7 @@ function _jaEscolherEgua(eguaDbId) {
 function _jaVoltarLista() {
   clearTimeout(window._jaTimer);
   clearTimeout(window._jaTimerB);
+  clearTimeout(window._jaTimerA);
   window._jaEguaId = null;
   window._jaFase = 0;
   renderAcasalamentosMatch();
@@ -10665,6 +10708,7 @@ async function _jaAbrirConfluencia(fonteKey) {
 
 function _jaVoltarRanking() {
   clearTimeout(window._jaTimerB);
+  clearTimeout(window._jaTimerA);
   window._jaFase = 2;
   renderAcasalamentosMatch();
   _jaRenderRanking();
@@ -10765,41 +10809,41 @@ function _jaRenderVereditoB(c) {
     </div>`;
 }
 
-// Direção A · O Dossiê Selado — corpo do modal de confirmação quando chega pelo fluxo da
-// jornada (_jaAcasalarLinha). animado=true toca a cerimônia (arena aproximando, núcleo
-// pulsando, selo carimbando); animado=false mostra o resultado já pronto, pro usuário
-// que só quer confirmar rápido (ver comentário em _jaAcasalarLinha).
-async function _jaRenderDossie(el, egua, fonte) {
-  const animado = window._jaModoDossieAnimado !== false;
-  el.innerHTML = `
-    <div class="jornada-ac" style="padding:20px 22px;">
-      <div class="ja-arena" id="ja-a-arena">
-        <div class="ja-lado ja-esq">
-          <div class="ja-quem-papel">Garanhão · fonte</div>
-          <div class="ja-lado-nome">${fonte.garanhao_nome}</div>
-          <div class="ja-lado-meta">${fonte.garanhao_sbb ? 'SBB ' + fonte.garanhao_sbb + ' · ' : ''}${FC_TIPO_LABEL[fonte.tipo] || fonte.tipo}</div>
-        </div>
-        <div class="ja-centro">
-          <div class="ja-fio"></div>
-          <div id="ja-a-centro-conteudo"><div class="ja-nucleo"></div></div>
-        </div>
-        <div class="ja-lado ja-dir">
-          <div class="ja-quem-papel">Égua</div>
-          <div class="ja-lado-nome">${egua.nome}</div>
-          <div class="ja-lado-meta">${egua.sbb ? 'SBB ' + egua.sbb + ' · ' : ''}${egua.estagio || ''}</div>
-        </div>
-      </div>
-      <div id="ja-a-passos" class="ja-passos" style="align-items:center;">
-        <div class="ja-passo ja-p1">consultando SBB ${fonte.garanhao_sbb || '—'} e ${egua.sbb || '—'} na ABCCC</div>
-        <div class="ja-passo ja-p2">cruzando linhagens em busca de ancestral comum</div>
-        <div class="ja-passo ja-p3">projetando concentração de sangue da cria</div>
-      </div>
-      <div id="ja-a-dossie"></div>
-    </div>`;
+// Direção A · O Dossiê Selado — terceiro e último passo da jornada, inline na própria tela
+// (não mais um modal pequeno: precisa de espaço pro selo carimbando e pra grade de 3
+// blocos). animado=true ("Rodar dossiê selado" em B) toca a cerimônia completa (arena
+// aproximando, núcleo pulsando, selo carimbando); animado=false ("Aprovar mesmo assim")
+// mostra o mesmo resultado já pronto, sem esperar a animação — pro usuário que já decidiu
+// e só quer confirmar rápido.
+async function _jaAbrirDossie(animado) {
+  const idx = fontesCobertura.findIndex(f => _fonteKey(f) === window._jaFonteAtualKey);
+  const f = fontesCobertura[idx];
+  const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
+  if (!f || !egua) return;
+  if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
 
+  window._jaFase = 4;
+  renderAcasalamentosMatch();
+
+  document.getElementById('ja-a-gar-nome').textContent = f.garanhao_nome;
+  document.getElementById('ja-a-gar-meta').textContent = (f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : '') + (FC_TIPO_LABEL[f.tipo] || f.tipo);
+  document.getElementById('ja-a-egua-nome').textContent = egua.nome;
+  document.getElementById('ja-a-egua-meta').textContent = (egua.sbb ? 'SBB ' + egua.sbb + ' · ' : '') + (egua.estagio || '');
+  document.getElementById('ja-a-centro-conteudo').innerHTML = '<div class="ja-nucleo"></div>';
+  document.getElementById('ja-a-passos').innerHTML = `
+    <div class="ja-passo ja-p1">consultando SBB ${f.garanhao_sbb || '—'} e ${egua.sbb || '—'} na ABCCC</div>
+    <div class="ja-passo ja-p2">cruzando linhagens em busca de ancestral comum</div>
+    <div class="ja-passo ja-p3">projetando concentração de sangue da cria</div>`;
+  document.getElementById('ja-a-passos').style.display = '';
+  document.getElementById('ja-a-dossie').innerHTML = '';
+  document.getElementById('ja-a-form').style.display = 'none';
+  document.getElementById('ja-a-acoes').style.display = 'none';
   const arena = document.getElementById('ja-a-arena');
+  arena.classList.remove('ja-fase-1', 'ja-fase-2');
   arena.classList.add('ja-fase-1');
-  const c = window._jaConsangCache || await _jaConsanguinidade(egua, fonte);
+
+  // Reaproveita o resultado já calculado em C/B pra não bater em sangues_linhagem de novo.
+  const c = (window._jaRanking || []).find(r => _fonteKey(r.fonte) === window._jaFonteAtualKey)?.consang || await _jaConsanguinidade(egua, f);
 
   const montar = () => {
     arena.classList.add('ja-fase-2');
@@ -10814,9 +10858,10 @@ async function _jaRenderDossie(el, egua, fonte) {
         </div>
       </div>`;
     document.getElementById('ja-a-passos').style.display = 'none';
-    _jaMontarDossieConteudo(egua, fonte, c);
+    _jaMontarDossieConteudo(egua, f, c);
   };
-  if (animado) setTimeout(montar, 2200); else montar();
+  clearTimeout(window._jaTimerA);
+  if (animado) window._jaTimerA = setTimeout(montar, 2200); else montar();
 }
 
 function _jaMontarDossieConteudo(egua, fonte, c) {
@@ -10873,36 +10918,57 @@ function _jaMontarDossieConteudo(egua, fonte, c) {
           ${risco ? `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--ja-critico-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--ja-critico);margin-top:7px;">! ${c.texto}</div>` : ''}
         </div>
       </div>
-
-      <div class="ja-acoes">
-        <button class="ja-btn2" onclick="_jaTestarOutroPar()">Testar outro par</button>
-      </div>
     </div>`;
-}
 
-function _jaTestarOutroPar() {
-  closeModal('modal-acasalamento');
-  window._jaModoDossie = false;
-  _jaVoltarLista();
-}
-
-// Passo final da jornada (usado por B via "Aprovar mesmo assim" — A, o Dossiê Selado,
-// entra numa fase seguinte substituindo este modal por dentro, sem mudar quem o chama).
-// animado=true (botão "Rodar dossiê selado" em B): toca a cerimônia completa (arena
-// aproximando, núcleo pulsando, selo carimbando) antes do dossiê. animado=false (botão
-// "Aprovar mesmo assim"): mostra o mesmo dossiê já pronto, sem esperar a animação —
-// é o atalho pra quem já decidiu e só quer confirmar rápido.
-async function _jaAcasalarLinha(fonteKey, animado) {
-  const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
-  const f = fontesCobertura[idx];
-  if (!f) return;
-  if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
+  // Form de confirmação (ciclo/receptora/observações) + ações finais — só aparece
+  // depois do veredito, junto com o resto do dossiê.
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-  window._jaModoDossie = true;
-  window._jaModoDossieAnimado = animado !== false;
-  // Reaproveita o resultado já calculado em C/B pra não bater em sangues_linhagem de novo.
-  window._jaConsangCache = (window._jaRanking || []).find(r => _fonteKey(r.fonte) === fonteKey)?.consang || null;
-  abrirModalAcasalamentoMatch(_fonteKey(f), window._jaEguaId, ciclo);
+  document.getElementById('ja-a-ciclo').value = ciclo || fonte.ciclo || '';
+  const grpReceptora = document.getElementById('ja-a-grp-receptora');
+  grpReceptora.style.display = fonte.tipo === 'embriao' ? '' : 'none';
+  if (fonte.tipo === 'embriao') {
+    const receptoras = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && a.sbb);
+    document.getElementById('ja-a-receptora').innerHTML = '<option value="">Nenhuma selecionada ainda...</option>' +
+      receptoras.map(a => `<option value="${a.db_id}">${a.nome}${a.sbb ? ' (' + a.sbb + ')' : ''}</option>`).join('');
+  }
+  document.getElementById('ja-a-obs').value = '';
+  document.getElementById('ja-a-form').style.display = '';
+  document.getElementById('ja-a-acoes').style.display = '';
+}
+
+// Salva o acasalamento a partir do passo A da jornada — mesma regra de negócio de
+// salvarAcasalamento() (modal de formulário manual), só lendo dos campos inline do
+// dossiê em vez dos selects do modal.
+function _jaSalvarAcasalamento() {
+  const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
+  const fonte = fontesCobertura.find(f => _fonteKey(f) === window._jaFonteAtualKey);
+  if (!egua || !fonte) return;
+
+  const ciclo = document.getElementById('ja-a-ciclo').value || fonte.ciclo || '';
+  if (_eguaGestandoNoCiclo(egua.db_id, ciclo)) {
+    return alert(`${egua.nome} já está gestando no ciclo ${ciclo} — não dá pra acasalar de novo nesse ciclo. Espere a gestação encerrar (nasceu/perdeu) ou planeje pro próximo ciclo.`);
+  }
+  const { disponivel } = _saldoFonteCobertura(fonte);
+  if (disponivel <= 0 && !confirm(`O saldo de ${fonte.garanhao_nome} pro ciclo ${fonte.ciclo} já está esgotado. Quer lançar mesmo assim?`)) {
+    return;
+  }
+
+  const receptoraId = fonte.tipo === 'embriao' ? (document.getElementById('ja-a-receptora').value || null) : null;
+  const obj = {
+    egua_id: egua.db_id, egua_nome: egua.nome,
+    fonte_cobertura_id: fonte.db_id, garanhao_nome: fonte.garanhao_nome,
+    tipo_cobertura: null,
+    receptora_animal_id: receptoraId,
+    ciclo,
+    obs_planejamento: document.getElementById('ja-a-obs').value || '',
+    veterinario_id: null, veterinario_nome: '',
+    status: 'rascunho', motivo_cancelamento: '',
+  };
+  acasalamentos.push(obj);
+  _dbSalvarAcasalamento(obj, acasalamentos.length - 1);
+  window._jaEguaId = null; window._jaFase = 0;
+  renderAcasalamentos();
+  renderEguasCriaPlanejador();
 }
 
 function renderAcasalamentos() {
