@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro Vivo — Design System · Mimba</title>
+<meta name="description" content="Guia oficial de marca e interface do Mimba — cor, tipografia, componentes, movimento e a jornada de acasalamento, ao vivo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,600&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2B2419; --ink-70: rgba(43,36,25,.70); --ink-50: rgba(43,36,25,.50);
+    --ink-30: rgba(43,36,25,.30); --ink-15: rgba(43,36,25,.15); --ink-08: rgba(43,36,25,.08);
+    --campo: #4F6B2E; --campo-deep: #33461C; --campo-soft: #DEE7C9;
+    --terracota: #B15A2E; --terracota-soft: #F3DCC9; --terracota-ink: #7A3B1C;
+    --ouro: #B8860B; --ouro-soft: #F1E2B8;
+    --critico: #9B3226; --critico-soft: #F4DAD3;
+    --atencao: #A9791E; --atencao-soft: #F1E3C2;
+    --areia: #F4EFE6; --pergaminho: #FCF9F3; --pergaminho2: #F8F3EA;
+    --card-border: none;
+    --sh-sm: 0 1px 2px rgba(43,36,25,.09);
+    --sh-md: 0 1px 1px rgba(43,36,25,.06), 0 14px 26px -12px rgba(43,36,25,.28);
+    --sh-lg: 0 2px 3px rgba(43,36,25,.07), 0 30px 56px -16px rgba(43,36,25,.34);
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'DM Mono', 'SF Mono', monospace;
+    --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #F0EFE9; --ink-70: rgba(240,239,233,.70); --ink-50: rgba(240,239,233,.50);
+      --ink-30: rgba(240,239,233,.30); --ink-15: rgba(240,239,233,.15); --ink-08: rgba(240,239,233,.08);
+      --campo: #8FB35A; --campo-deep: #A9CD7A; --campo-soft: rgba(143,179,90,.16);
+      --terracota: #E08A54; --terracota-soft: rgba(224,138,84,.16); --terracota-ink: #E08A54;
+      --ouro: #E8C567; --ouro-soft: rgba(232,197,103,.16);
+      --critico: #E2776A; --critico-soft: rgba(226,119,106,.14);
+      --atencao: #E3B95E; --atencao-soft: rgba(227,185,94,.14);
+      --areia: #1A1A18; --pergaminho: #242422; --pergaminho2: #1F1F1C;
+      --card-border: 1px solid var(--ink-08);
+      --sh-sm: 0 1px 2px rgba(0,0,0,.35);
+      --sh-md: 0 1px 0 rgba(255,255,255,.03) inset, 0 16px 30px -14px rgba(0,0,0,.6);
+      --sh-lg: 0 1px 0 rgba(255,255,255,.04) inset, 0 30px 56px -16px rgba(0,0,0,.72);
+      --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #F0EFE9; --ink-70: rgba(240,239,233,.70); --ink-50: rgba(240,239,233,.50);
+    --ink-30: rgba(240,239,233,.30); --ink-15: rgba(240,239,233,.15); --ink-08: rgba(240,239,233,.08);
+    --campo: #8FB35A; --campo-deep: #A9CD7A; --campo-soft: rgba(143,179,90,.16);
+    --terracota: #E08A54; --terracota-soft: rgba(224,138,84,.16); --terracota-ink: #E08A54;
+    --ouro: #E8C567; --ouro-soft: rgba(232,197,103,.16);
+    --critico: #E2776A; --critico-soft: rgba(226,119,106,.14);
+    --atencao: #E3B95E; --atencao-soft: rgba(227,185,94,.14);
+    --areia: #1A1A18; --pergaminho: #242422; --pergaminho2: #1F1F1C;
+    --card-border: 1px solid var(--ink-08);
+    --sh-sm: 0 1px 2px rgba(0,0,0,.35);
+    --sh-md: 0 1px 0 rgba(255,255,255,.03) inset, 0 16px 30px -14px rgba(0,0,0,.6);
+    --sh-lg: 0 1px 0 rgba(255,255,255,.04) inset, 0 30px 56px -16px rgba(0,0,0,.72);
+    --bg: var(--areia); --bg2: var(--pergaminho); --bg3: var(--pergaminho2);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.5;}
+  ::selection{background:var(--campo-soft);color:var(--campo-deep);}
+  a{color:inherit;}
+
+  .wrap{max-width:960px;margin:0 auto;padding:0 40px 140px;}
+
+  .topbar{position:sticky;top:0;z-index:50;background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--ink-08);}
+  .topbar-inner{max-width:960px;margin:0 auto;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .wordmark{font-family:var(--serif);font-weight:700;font-size:17px;display:flex;align-items:center;gap:9px;text-decoration:none;}
+  .wordmark .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(155deg,var(--campo),var(--campo-deep));color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+  .topbar-nav{display:flex;gap:4px;flex-wrap:wrap;}
+  .topbar-nav a{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:6px 11px;border-radius:99px;text-decoration:none;color:var(--ink-50);}
+  .topbar-nav a:hover{background:var(--bg3);color:var(--ink);}
+  .theme-toggle{display:flex;gap:2px;background:var(--bg3);border:var(--card-border);border-radius:99px;padding:3px;}
+  .theme-toggle button{border:none;background:none;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:6px 13px;border-radius:99px;cursor:pointer;color:var(--ink-50);transition:background .15s,color .15s;}
+  .theme-toggle button.on{background:var(--pergaminho);color:var(--ink);box-shadow:var(--sh-sm);}
+
+  .hero{padding:64px 0 40px;}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--terracota-ink);}
+  .hero h1{font-family:var(--serif);font-weight:900;font-size:52px;line-height:1.04;margin:16px 0 20px;letter-spacing:-.01em;text-wrap:balance;}
+  .hero h1 em{font-style:italic;font-weight:600;color:var(--terracota-ink);}
+  .hero p{font-size:16px;color:var(--ink-70);max-width:600px;line-height:1.65;}
+  .hero .meta{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--ink-30);display:flex;gap:22px;flex-wrap:wrap;}
+
+  section{padding:52px 0;border-top:1px solid var(--ink-08);}
+  .sec-head{margin-bottom:30px;}
+  .sec-num{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-30);}
+  .sec-head h2{font-family:var(--serif);font-weight:700;font-size:28px;margin:8px 0 10px;text-wrap:balance;}
+  .sec-head p{color:var(--ink-70);font-size:14px;max-width:640px;line-height:1.65;}
+
+  .principle-card{background:var(--bg2);border:var(--card-border);border-radius:22px;box-shadow:var(--sh-md);padding:36px 40px;}
+  .principle-card .big{font-family:var(--serif);font-weight:700;font-size:24px;line-height:1.35;text-wrap:balance;}
+  .principle-card .big i{font-style:italic;color:var(--campo-deep);}
+  .principle-card p{margin-top:14px;color:var(--ink-70);font-size:14px;line-height:1.7;max-width:640px;}
+
+  .swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+  .swatch{border-radius:16px;overflow:hidden;border:var(--card-border);box-shadow:var(--sh-sm);background:var(--bg2);}
+  .swatch-fill{height:74px;}
+  .swatch-info{padding:11px 13px;}
+  .swatch-name{font-family:var(--mono);font-size:11px;font-weight:500;}
+  .swatch-hex{font-family:var(--mono);font-size:10px;color:var(--ink-50);margin-top:2px;text-transform:uppercase;}
+  .swatch-use{font-size:11px;color:var(--ink-70);margin-top:6px;line-height:1.4;}
+  .reserved-note{margin-top:18px;display:flex;gap:10px;align-items:flex-start;background:var(--ouro-soft);border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--ink-70);line-height:1.6;}
+  .reserved-note b{color:var(--ink);}
+
+  .type-row{display:flex;align-items:baseline;gap:24px;padding:22px 0;border-bottom:1px solid var(--ink-08);}
+  .type-row:last-child{border-bottom:none;}
+  .type-meta{width:150px;flex-shrink:0;font-family:var(--mono);font-size:10.5px;color:var(--ink-50);line-height:1.6;}
+  .type-meta b{display:block;color:var(--ink);font-size:11px;letter-spacing:.02em;}
+  .type-sample-serif{font-family:var(--serif);font-weight:700;font-size:30px;line-height:1.15;}
+  .type-sample-sans{font-family:var(--sans);font-size:15px;color:var(--ink-70);}
+  .type-sample-mono{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--terracota-ink);}
+
+  .token-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .token-box{background:var(--bg2);border:var(--card-border);padding:20px;text-align:center;}
+  .token-box .demo{width:100%;height:56px;background:var(--campo-soft);margin-bottom:12px;}
+  .token-box .lbl{font-family:var(--mono);font-size:10.5px;color:var(--ink-70);}
+  .r-sm .demo{border-radius:8px;} .r-md .demo{border-radius:16px;} .r-lg .demo{border-radius:26px;}
+  .sh-sm{box-shadow:var(--sh-sm);} .sh-md{box-shadow:var(--sh-md);} .sh-lg{box-shadow:var(--sh-lg);}
+  .token-box.shadow{border-radius:14px;background:var(--pergaminho);}
+  .token-box.shadow .demo{background:var(--pergaminho2);border-radius:12px;}
+
+  .gallery{display:flex;flex-direction:column;gap:26px;}
+  .g-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .g-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-30);width:100%;margin-bottom:2px;}
+
+  .btn{padding:9px 17px;border-radius:10px;border:1px solid var(--ink-15);background:var(--bg2);font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);font-family:var(--sans);}
+  .btn:hover{background:var(--bg3);}
+  .btn-primary{background:linear-gradient(180deg,#5A7A38,var(--campo));color:#fff;border-color:transparent;font-weight:700;box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--sh-sm);}
+  :root[data-theme="dark"] .btn-primary{background:linear-gradient(180deg,#9CC968,#7EA84A);color:#182008;}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn-primary{background:linear-gradient(180deg,#9CC968,#7EA84A);color:#182008;}}
+
+  .badge{display:inline-block;font-size:10px;padding:3px 9px;border-radius:4px 4px 4px 2px;font-weight:600;}
+  .bg-b{background:var(--campo-soft);color:var(--campo-deep);}
+  .bg-r{background:var(--critico-soft);color:var(--critico);}
+  .bg-a{background:var(--atencao-soft);color:var(--atencao);}
+
+  .etq{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10.5px;font-weight:600;
+    padding:3px 9px 3px 15px;border-radius:5px 13px 13px 5px;background:var(--campo-soft);color:var(--campo-deep);
+    -webkit-mask-image:radial-gradient(circle 3.5px at 8px 50%,transparent 4px,black 4.5px);
+    mask-image:radial-gradient(circle 3.5px at 8px 50%,transparent 4px,black 4.5px);}
+  .etq.terracota{background:var(--terracota-soft);color:var(--terracota-ink);}
+
+  .selo{display:inline-flex;flex-direction:column;align-items:center;gap:4px;}
+  .selo-circ{width:40px;height:40px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;background:var(--pergaminho);color:var(--campo);border:1.5px solid currentColor;box-shadow:var(--sh-sm);}
+  .selo-circ::after{content:'';position:absolute;inset:4px;border-radius:50%;border:1.2px dashed currentColor;opacity:.5;}
+  .selo-circ span{font-family:var(--serif);font-weight:900;font-size:16px;position:relative;z-index:1;}
+  .selo-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-50);}
+
+  .mini-card{background:var(--bg2);border:var(--card-border);border-radius:16px;padding:16px 18px;box-shadow:var(--sh-sm);width:220px;}
+  .mini-card .t{font-family:var(--serif);font-weight:700;font-size:15px;}
+  .mini-card .s{font-size:11.5px;color:var(--ink-50);margin-top:4px;font-family:var(--mono);}
+  .mini-tabs{display:flex;gap:4px;border-bottom:1px solid var(--ink-15);}
+  .mini-tabs span{padding:7px 13px;font-size:11.5px;color:var(--ink-50);border-bottom:2px solid transparent;}
+  .mini-tabs span.on{color:var(--campo-deep);border-color:var(--campo);font-weight:600;}
+  input.demo-input{padding:9px 12px;border-radius:10px;border:1px solid var(--ink-15);background:var(--bg);font-size:12.5px;color:var(--ink);font-family:var(--sans);box-shadow:inset 0 1px 2px rgba(43,36,25,.06);}
+
+  .voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .voice-col{border-radius:16px;padding:18px 20px;}
+  .voice-col.no{background:var(--critico-soft);}
+  .voice-col.yes{background:var(--campo-soft);}
+  .voice-col .h{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+  .voice-col.no .h{color:var(--critico);}
+  .voice-col.yes .h{color:var(--campo-deep);}
+  .voice-col div.ex{font-size:13px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);color:var(--ink);}
+  .voice-col div.ex:last-child{border-bottom:none;}
+
+  footer{padding:50px 0 0;color:var(--ink-30);font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+  /* ══════════ Jornada de acasalamento — demo ao vivo ══════════ */
+  .jornada-ac{font-family:var(--sans);color:var(--ink);}
+  .ja-eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--terracota-ink);}
+  .ja-titulo{font-family:var(--serif);font-weight:700;font-size:22px;margin:8px 0 16px;line-height:1.2;}
+
+  .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--pergaminho);border:var(--card-border);border-radius:20px;padding:18px 22px;box-shadow:var(--sh-md);margin-bottom:8px;}
+  .ja-alvo-av{width:52px;height:52px;border-radius:16px;flex-shrink:0;background:linear-gradient(140deg,var(--campo-soft),var(--pergaminho2));display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:800;font-size:20px;color:var(--campo-deep);}
+  .ja-tag{font-family:var(--mono);font-size:9.5px;padding:3px 9px 3px 12px;border-radius:4px 10px 10px 4px;display:inline-block;
+    -webkit-mask-image:radial-gradient(circle 3px at 7px 50%,transparent 3px,black 3.5px);mask-image:radial-gradient(circle 3px at 7px 50%,transparent 3px,black 3.5px);}
+
+  .ja-btn-analisar{font-family:var(--sans);font-weight:700;font-size:13px;padding:12px 22px;border:none;border-radius:12px;background:linear-gradient(180deg,#5A7A38,var(--campo));color:#fff;cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--sh-md);white-space:nowrap;}
+  .ja-btn-analisar:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--sh-lg);}
+  .ja-btn2{font-family:var(--sans);font-weight:700;font-size:12px;padding:9px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--ink-15);background:var(--pergaminho);color:var(--ink);}
+  .ja-btn2.forte{border:none;background:linear-gradient(180deg,#5A7A38,var(--campo));color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.25) inset,var(--sh-sm);}
+
+  .ja-baralho{position:relative;height:170px;display:flex;align-items:center;justify-content:center;margin-top:8px;}
+  .ja-carta{position:absolute;width:220px;height:100px;background:var(--pergaminho);border:var(--card-border);border-radius:16px;box-shadow:var(--sh-md);display:flex;flex-direction:column;justify-content:center;padding:0 18px;}
+  .ja-carta .cn{font-family:var(--serif);font-weight:700;font-size:14px;}
+  .ja-carta .cm{font-family:var(--mono);font-size:9.5px;color:var(--ink-50);margin-top:3px;}
+  .ja-c1{animation:ja-gira1 1.5s cubic-bezier(.45,0,.35,1) infinite;}
+  .ja-c2{animation:ja-gira2 1.5s cubic-bezier(.45,0,.35,1) infinite;}
+  .ja-c3{animation:ja-gira3 1.5s cubic-bezier(.45,0,.35,1) infinite;}
+  @keyframes ja-gira1{0%,100%{transform:translateX(-140px) rotate(-7deg) scale(.93);opacity:.55;}33%{transform:translateX(0) rotate(0) scale(1);opacity:1;}66%{transform:translateX(140px) rotate(7deg) scale(.93);opacity:.55;}}
+  @keyframes ja-gira2{0%,100%{transform:translateX(0) rotate(0) scale(1);opacity:1;}33%{transform:translateX(140px) rotate(7deg) scale(.93);opacity:.55;}66%{transform:translateX(-140px) rotate(-7deg) scale(.93);opacity:.55;}}
+  @keyframes ja-gira3{0%,100%{transform:translateX(140px) rotate(7deg) scale(.93);opacity:.55;}33%{transform:translateX(-140px) rotate(-7deg) scale(.93);opacity:.55;}66%{transform:translateX(0) rotate(0) scale(1);opacity:1;}}
+  .ja-contador{font-family:var(--mono);font-size:11px;color:var(--ink-50);text-align:center;margin-top:4px;}
+
+  .ja-linha{display:flex;align-items:center;gap:14px;background:var(--pergaminho);border:var(--card-border);border-radius:16px;padding:13px 16px;box-shadow:var(--sh-sm);margin-bottom:9px;animation:ja-entra .5s cubic-bezier(.22,1,.36,1) both;transition:transform .16s ease, box-shadow .16s ease;}
+  .ja-linha:hover{transform:translateY(-2px);box-shadow:var(--sh-md), 0 0 0 1px var(--ink-15);}
+  .ja-linha.top{background:linear-gradient(100deg,var(--campo-soft) 0%, var(--pergaminho) 55%);box-shadow:var(--sh-md);}
+  @keyframes ja-entra{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+  .ja-pos{font-family:var(--serif);font-weight:900;font-size:20px;color:var(--ink-30);width:30px;flex-shrink:0;text-align:center;}
+  .ja-linha.top .ja-pos{color:var(--ouro);}
+  .ja-quem{flex:1;min-width:0;}
+  .ja-quem-n{font-family:var(--serif);font-weight:700;font-size:15px;}
+  .ja-quem-m{font-family:var(--mono);font-size:10px;color:var(--ink-50);margin-top:2px;}
+  .ja-porq{width:230px;flex-shrink:0;font-size:11px;color:var(--ink-70);line-height:1.5;}
+  .ja-nota{width:88px;flex-shrink:0;text-align:right;}
+  .ja-nota-v{font-family:var(--serif);font-weight:900;font-size:24px;line-height:1;}
+  .ja-barra{height:5px;border-radius:99px;background:var(--ink-08);overflow:hidden;margin-top:5px;}
+  .ja-barra span{display:block;height:100%;border-radius:99px;animation:ja-cresce .95s cubic-bezier(.22,1,.36,1) both .15s;}
+  @keyframes ja-cresce{from{width:0 !important;}}
+
+  .ja-palco{position:relative;background:var(--pergaminho);border:var(--card-border);border-radius:22px;box-shadow:var(--sh-md);padding:24px 26px;overflow:hidden;}
+  .ja-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:10px;}
+  .ja-quem-b{max-width:260px;}
+  .ja-quem-papel{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-30);}
+  .ja-quem-nome{font-family:var(--serif);font-weight:700;font-size:17px;line-height:1.15;margin-top:3px;}
+  .ja-quem-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-50);margin-top:3px;}
+  svg .ja-ramo{stroke:var(--ink-15);stroke-width:1.3;fill:none;}
+  svg .ja-ramo.ja-viva{stroke:var(--campo);stroke-width:1.6;stroke-dasharray:var(--ja-len);stroke-dashoffset:var(--ja-len);animation:ja-corre 1.1s cubic-bezier(.5,0,.2,1) forwards;}
+  svg .ja-ramo.ja-alerta{stroke:var(--critico);stroke-width:2.2;}
+  @keyframes ja-corre{to{stroke-dashoffset:0;}}
+  svg .ja-no{fill:var(--pergaminho2);stroke:var(--ink-15);stroke-width:1.2;opacity:0;animation:ja-acende .3s ease forwards;}
+  svg .ja-no.ja-comum{fill:var(--critico-soft);stroke:var(--critico);stroke-width:2.2;animation:ja-acende .3s ease forwards, ja-bate 1.5s ease-in-out infinite 1s;transform-box:fill-box;transform-origin:center;}
+  @keyframes ja-acende{to{opacity:1;}}
+  @keyframes ja-bate{0%,100%{transform:scale(1);}50%{transform:scale(1.25);}}
+  svg .ja-svgrot{font-family:'DM Mono',monospace;font-size:8px;fill:var(--ink-50);}
+  svg .ja-svgrot.ja-comum{fill:var(--critico);font-weight:500;}
+  svg .ja-halo{fill:none;stroke:var(--critico);opacity:0;animation:ja-halo 1.9s ease-out infinite 1.1s;transform-box:fill-box;transform-origin:center;}
+  @keyframes ja-halo{0%{transform:scale(.7);opacity:.75;}100%{transform:scale(2.6);opacity:0;}}
+  .ja-veredito{margin-top:14px;display:flex;gap:14px;align-items:stretch;animation:ja-sobe .5s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes ja-sobe{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+  .ja-faixa{flex:1;border-radius:16px;padding:15px 18px;display:flex;gap:12px;align-items:flex-start;}
+  .ja-faixa.ja-ok{background:var(--campo-soft);}
+  .ja-faixa.ja-risco{background:var(--critico-soft);}
+  .ja-selo-mini{width:48px;height:48px;border-radius:50%;background:rgba(252,249,243,.65);flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;}
+  .ja-selo-mini .ja-aro{position:absolute;inset:4px;border-radius:50%;border:1.4px dashed currentColor;opacity:.55;}
+  .ja-selo-mini span{font-family:var(--serif);font-weight:900;font-size:20px;}
+  .ja-coef{width:160px;flex-shrink:0;background:var(--pergaminho2);border-radius:16px;padding:15px 18px;text-align:center;}
+
+  .ja-arena{position:relative;display:flex;align-items:center;justify-content:center;gap:0;min-height:170px;}
+  .ja-lado{width:210px;background:var(--pergaminho);border:var(--card-border);border-radius:18px;padding:14px 16px;box-shadow:var(--sh-sm);transition:transform .75s cubic-bezier(.22,1,.36,1), box-shadow .75s;position:relative;z-index:2;}
+  .ja-fase-1 .ja-lado.ja-esq, .ja-fase-2 .ja-lado.ja-esq{transform:translateX(38px);box-shadow:var(--sh-md);}
+  .ja-fase-1 .ja-lado.ja-dir, .ja-fase-2 .ja-lado.ja-dir{transform:translateX(-38px);box-shadow:var(--sh-md);}
+  .ja-lado-nome{font-family:var(--serif);font-weight:700;font-size:15px;line-height:1.15;}
+  .ja-lado-meta{font-family:var(--mono);font-size:10px;color:var(--ink-50);margin-top:4px;}
+  .ja-centro{width:110px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;z-index:3;}
+  .ja-fio{position:absolute;top:50%;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,var(--ink-15),transparent);}
+  .ja-fase-1 .ja-fio, .ja-fase-2 .ja-fio{background:linear-gradient(90deg,transparent,var(--ouro),transparent);box-shadow:0 0 16px 2px rgba(184,134,11,.5);transition:all .5s;}
+  .ja-nucleo{width:50px;height:50px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 40% 35%, #F3E2A8, var(--ouro));box-shadow:0 0 28px 6px rgba(184,134,11,.4);animation:ja-pulsa 1.05s ease-in-out infinite;}
+  @keyframes ja-pulsa{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+  .ja-nucleo::before,.ja-nucleo::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:1.4px solid rgba(184,134,11,.5);animation:ja-onda 1.8s ease-out infinite;}
+  .ja-nucleo::after{animation-delay:.9s;}
+  @keyframes ja-onda{0%{transform:scale(.85);opacity:.9;}100%{transform:scale(2.1);opacity:0;}}
+  .ja-selo{width:96px;height:96px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;animation:ja-carimbo .62s cubic-bezier(.2,1.5,.4,1) both;}
+  .ja-selo .ja-aro{position:absolute;inset:7px;border-radius:50%;border:1.5px dashed currentColor;opacity:.5;}
+  .ja-selo .ja-nucleo-txt{font-family:var(--serif);font-weight:900;font-size:24px;line-height:1;}
+  .ja-selo .ja-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;text-align:center;padding:0 8px;}
+  @keyframes ja-carimbo{0%{transform:scale(2.7) rotate(-20deg);opacity:0;}58%{transform:scale(.93) rotate(-6deg);opacity:1;}76%{transform:scale(1.05) rotate(-4.2deg);}100%{transform:scale(1) rotate(-5deg);opacity:1;}}
+  .ja-impacto{position:absolute;width:96px;height:96px;border-radius:50%;border:2px solid var(--campo);animation:ja-impacto .75s ease-out .3s both;pointer-events:none;}
+  @keyframes ja-impacto{0%{transform:scale(.6);opacity:.85;}100%{transform:scale(2.6);opacity:0;}}
+  .ja-passos{display:flex;flex-direction:column;gap:6px;margin-top:12px;align-items:center;}
+  .ja-passo{font-family:var(--mono);font-size:11px;color:var(--ink-30);opacity:0;animation:ja-entrapasso .4s ease forwards;}
+  .ja-passo.ja-p1{animation-delay:.1s;} .ja-passo.ja-p2{animation-delay:.6s;} .ja-passo.ja-p3{animation-delay:1.1s;}
+  @keyframes ja-entrapasso{to{opacity:1;color:var(--ink-70);}}
+  .ja-dossie{margin-top:20px;animation:ja-sobe .6s cubic-bezier(.22,1,.36,1) both;}
+  .ja-dossie-topo{display:flex;align-items:flex-start;gap:18px;background:var(--pergaminho);border:var(--card-border);border-radius:20px;padding:20px 22px;box-shadow:var(--sh-md);}
+  .ja-veredito-h{font-family:var(--serif);font-weight:700;font-size:19px;line-height:1.15;}
+  .ja-grade{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;}
+  .ja-bloco{background:var(--pergaminho);border:var(--card-border);border-radius:16px;padding:14px 16px;box-shadow:var(--sh-sm);animation:ja-sobe .5s cubic-bezier(.22,1,.36,1) both;}
+  .ja-bloco.ja-b1{animation-delay:.1s;} .ja-bloco.ja-b2{animation-delay:.2s;} .ja-bloco.ja-b3{animation-delay:.3s;}
+  .ja-bloco-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-30);margin-bottom:9px;}
+  .ja-linha-anc{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--ink-08);font-size:11.5px;}
+  .ja-linha-anc:last-child{border-bottom:none;}
+  .ja-barra2{height:6px;border-radius:99px;background:var(--ink-08);overflow:hidden;margin-top:5px;}
+  .ja-barra2 span{display:block;height:100%;border-radius:99px;background:var(--campo);animation:ja-cresce2 .8s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes ja-cresce2{from{width:0 !important;}}
+  .ja-acoes{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+
+  @media (max-width:640px){
+    .wrap{padding:0 22px 100px;} .topbar-inner{padding:14px 22px;}
+    .hero h1{font-size:36px;} .principle-card{padding:26px 24px;}
+    .type-row{flex-direction:column;gap:8px;} .type-meta{width:auto;}
+    .token-grid{grid-template-columns:1fr 1fr;} .voice-grid{grid-template-columns:1fr;}
+    .ja-cabeca,.ja-arena{flex-direction:column;gap:16px;}
+    .ja-linha{flex-wrap:wrap;} .ja-porq{width:100%;order:3;}
+    .ja-grade{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="https://app.mimba.com.br"><span class="mark">M</span>Registro Vivo</a>
+    <nav class="topbar-nav">
+      <a href="#principio">Princípio</a>
+      <a href="#cor">Cor</a>
+      <a href="#tipografia">Tipografia</a>
+      <a href="#componentes">Componentes</a>
+      <a href="#jornada">A jornada</a>
+      <a href="#voz">Voz</a>
+    </nav>
+    <div class="theme-toggle">
+      <button id="btn-light" onclick="setTheme('light')">claro</button>
+      <button id="btn-dark" onclick="setTheme('dark')">escuro</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Design system oficial · Mimba</div>
+    <h1>O livro de registro<br>da sua cabanha, <em>digital</em>.</h1>
+    <p>Não é um painel de SaaS genérico com dados de cavalo dentro. É a metáfora do registro físico — pergaminho, selo, carimbo, tipografia editorial — aplicada com disciplina a cada tela. Esta página é a referência viva: o que já está em produção, interativa, para discutir entre sócios e mostrar a parceiros.</p>
+    <div class="meta">
+      <span>Aprovado 2026-08-19</span>
+      <span>Estendido 2026-08-21 · jornada de acasalamento</span>
+      <span>app.mimba.com.br</span>
+    </div>
+  </div>
+
+  <section id="principio">
+    <div class="sec-head">
+      <div class="sec-num">01 · Princípio</div>
+      <h2>Registro, não dashboard.</h2>
+    </div>
+    <div class="principle-card">
+      <div class="big">Cada tela trata o dado da cabanha — genealogia, ciclo, animal — como algo que se <i>consulta</i>, se <i>carimba</i>, se <i>lacra</i>. Não como uma linha numa tabela corporativa.</div>
+      <p>Isso não é decoração por cima de um app genérico — é a diferença entre "um sistema que guarda dados de cavalo" e "o livro de registro da sua cabanha". É essa segunda categoria que a Mimba ocupa, e toda escolha abaixo existe pra sustentar isso.</p>
+    </div>
+  </section>
+
+  <section id="cor">
+    <div class="sec-head">
+      <div class="sec-num">02 · Cor</div>
+      <h2>Claro e escuro, lado a lado.</h2>
+      <p>Os dois temas são calibrados juntos, nunca um invertido às pressas a partir do outro — troque acima e veja cada token se recalibrar. No app real a troca é automática (<code style="font-family:var(--mono);background:var(--ink-08);padding:1px 5px;border-radius:4px;">prefers-color-scheme</code>), sem botão manual.</p>
+    </div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-fill" style="background:var(--ink)"></div><div class="swatch-info"><div class="swatch-name">ink</div><div class="swatch-hex">texto</div><div class="swatch-use">Texto principal</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--campo)"></div><div class="swatch-info"><div class="swatch-name">campo</div><div class="swatch-hex">verde</div><div class="swatch-use">Ação primária, positivo, aprovado</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--terracota)"></div><div class="swatch-info"><div class="swatch-name">terracota</div><div class="swatch-hex">acento</div><div class="swatch-use">Eyebrows, links, destaque editorial</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--ouro)"></div><div class="swatch-info"><div class="swatch-name">ouro</div><div class="swatch-hex">reservado</div><div class="swatch-use">Só wordmark e cerimônia</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--critico)"></div><div class="swatch-info"><div class="swatch-name">crítico</div><div class="swatch-hex">erro</div><div class="swatch-use">Proibido, consanguinidade alta</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--atencao)"></div><div class="swatch-info"><div class="swatch-name">atenção</div><div class="swatch-hex">alerta</div><div class="swatch-use">Vencimento próximo</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--pergaminho);border-bottom:1px solid var(--ink-08)"></div><div class="swatch-info"><div class="swatch-name">pergaminho</div><div class="swatch-hex">superfície</div><div class="swatch-use">Fundo de card</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:var(--areia)"></div><div class="swatch-info"><div class="swatch-name">areia</div><div class="swatch-hex">fundo</div><div class="swatch-use">Fundo de página</div></div></div>
+    </div>
+    <div class="reserved-note">🔒 <div><b>Dourado é reservado.</b> Aparece só no wordmark "Mimba." e no núcleo/selo da cerimônia (seção 05) — nunca em fundo, UI ou hover.</div></div>
+  </section>
+
+  <section id="tipografia">
+    <div class="sec-head">
+      <div class="sec-num">03 · Tipografia</div>
+      <h2>Três famílias, três papéis — nunca misturados.</h2>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><b>Playfair Display</b>700 / 900 / itálico 600<br>Editorial, cerimonial</div>
+      <div class="type-sample-serif">Chanel da Mãe de Deus</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><b>DM Sans</b>400–700<br>Corpo, formulário, navegação</div>
+      <div class="type-sample-sans">Aponte a égua e o Mimba ranqueia as fontes de cobertura disponíveis no ciclo.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><b>DM Mono</b>400–500<br>Dado, metadado, registro</div>
+      <div class="type-sample-mono">SBB B688471 · Ciclo 26/27</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">04 · Espaço, raio, sombra</div>
+      <h2>Profundidade por tema — nunca a mesma técnica nos dois.</h2>
+      <p>No claro, cards não têm borda: a profundidade vem só de sombra. No escuro, sombra sozinha não marca contorno — todo card ganha 1px de borda sutil.</p>
+    </div>
+    <div class="token-grid">
+      <div class="token-box r-sm"><div class="demo"></div><div class="lbl">raio 8px · botões, inputs</div></div>
+      <div class="token-box r-md"><div class="demo"></div><div class="lbl">raio 16px · cards</div></div>
+      <div class="token-box r-lg"><div class="demo"></div><div class="lbl">raio 26px · containers</div></div>
+    </div>
+    <div class="token-grid" style="margin-top:14px;">
+      <div class="token-box shadow sh-sm"><div class="demo"></div><div class="lbl">sombra sm · repouso</div></div>
+      <div class="token-box shadow sh-md"><div class="demo"></div><div class="lbl">sombra md · hover</div></div>
+      <div class="token-box shadow sh-lg"><div class="demo"></div><div class="lbl">sombra lg · modal</div></div>
+    </div>
+  </section>
+
+  <section id="componentes">
+    <div class="sec-head">
+      <div class="sec-num">05 · Componentes</div>
+      <h2>O vocabulário visual, ao vivo.</h2>
+      <p>Passe o mouse — todos os estados de hover abaixo são reais, os mesmos do app.</p>
+    </div>
+    <div class="gallery">
+      <div class="g-row"><div class="g-label">Botões</div>
+        <button class="btn btn-primary">Salvar rascunho</button>
+        <button class="btn">Cancelar</button>
+      </div>
+      <div class="g-row"><div class="g-label">Badges de status</div>
+        <span class="badge bg-b">Confirmado</span>
+        <span class="badge bg-a">Vencendo</span>
+        <span class="badge bg-r">Crítico</span>
+      </div>
+      <div class="g-row"><div class="g-label">Etiqueta de brinco — furo recortado, metáfora do brinco de identificação</div>
+        <span class="etq">B688471</span>
+        <span class="etq terracota">CRIA</span>
+      </div>
+      <div class="g-row"><div class="g-label">Selo de registro — status crítico em pontos-chave</div>
+        <div class="selo"><div class="selo-circ" style="color:var(--campo)"><span>✓</span></div><div class="selo-label">Em dia</div></div>
+        <div class="selo"><div class="selo-circ" style="color:var(--atencao)"><span>!</span></div><div class="selo-label">Vencendo</div></div>
+        <div class="selo"><div class="selo-circ" style="color:var(--critico)"><span>✕</span></div><div class="selo-label">Vencido</div></div>
+      </div>
+      <div class="g-row"><div class="g-label">Card + tabs + input</div>
+        <div class="mini-card">
+          <div class="mini-tabs"><span class="on">Aplicadas</span><span>Histórico</span></div>
+          <div style="margin-top:12px;" class="t">Golpe Seco do Itaó</div>
+          <div class="s">SBB B566358 · Monta natural</div>
+          <input class="demo-input" style="margin-top:12px;width:100%;" placeholder="Observações…">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="jornada">
+    <div class="sec-head">
+      <div class="sec-num">06 · A jornada de acasalamento</div>
+      <h2>Três direções, uma jornada. Rode você mesmo.</h2>
+      <p>Escolha uma égua, veja o Conselho ranquear as fontes do ciclo, escolha uma linha e acompanhe a Confluência de Sangues e o Dossiê Selado — a linguagem de movimento reservada pros momentos que pesam (seção 07). Dados de demonstração, sem conexão com nenhuma cabanha real.</p>
+    </div>
+
+    <div class="jornada-ac" id="dj-conselho">
+      <div class="ja-eyebrow" id="dj-passo-label">Passo 1 de 3 · Escolher a égua</div>
+      <div class="ja-titulo" id="dj-titulo">Escolha a égua e veja quem combina com ela.</div>
+
+      <div id="dj-passo-lista">
+        <div id="dj-eguas-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"></div>
+      </div>
+
+      <div id="dj-passo-alvo" style="display:none;">
+        <div class="ja-alvo">
+          <div class="ja-alvo-av" id="dj-alvo-av">—</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-30);">Égua escolhida</div>
+            <div style="font-family:var(--serif);font-weight:700;font-size:18px;line-height:1.15;margin-top:3px;" id="dj-alvo-nome">—</div>
+            <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;" id="dj-alvo-tags"></div>
+          </div>
+          <div style="align-self:center;display:flex;gap:8px;flex-shrink:0;">
+            <button class="ja-btn2" onclick="djVoltarLista()">trocar égua</button>
+            <button class="ja-btn-analisar" id="dj-btn-analisar" onclick="djAnalisar()">Quem combina com ela?</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="dj-passo-baralho" style="display:none;">
+        <div class="ja-baralho" id="dj-baralho-cartas"></div>
+        <div class="ja-contador" id="dj-contador"></div>
+      </div>
+
+      <div id="dj-passo-ranking" style="display:none;margin-top:16px;">
+        <div class="ja-eyebrow" style="margin-bottom:10px;">Fontes do ciclo, ranqueadas</div>
+        <div id="dj-ranking-lista"></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink-30);margin-top:12px;">
+          nota = consanguinidade (peso 5) · diversidade de sangue (3) · saldo e sanidade da fonte (2)
+        </div>
+        <button class="ja-btn2" style="margin-top:14px;" onclick="djVoltarLista()">Escolher outra égua</button>
+      </div>
+
+      <div id="dj-passo-confluencia" style="display:none;margin-top:16px;">
+        <div class="ja-eyebrow">Passo 2 de 3 · Conferir a linhagem</div>
+        <div class="ja-titulo" style="font-size:19px;margin-bottom:14px;">As duas linhagens correm até se encontrarem.</div>
+        <div class="ja-palco">
+          <div class="ja-cabeca">
+            <div class="ja-quem-b">
+              <div class="ja-quem-papel">Garanhão · fonte</div>
+              <div class="ja-quem-nome" id="dj-b-gar-nome">—</div>
+              <div class="ja-quem-meta" id="dj-b-gar-meta">—</div>
+            </div>
+            <button class="ja-btn2" style="align-self:center;flex-shrink:0;" onclick="djVoltarRanking()">← voltar ao ranking</button>
+            <div class="ja-quem-b" style="text-align:right;">
+              <div class="ja-quem-papel">Égua</div>
+              <div class="ja-quem-nome" id="dj-b-egua-nome">—</div>
+              <div class="ja-quem-meta" id="dj-b-egua-meta">—</div>
+            </div>
+          </div>
+          <svg id="dj-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:260px;display:block;"></svg>
+          <div id="dj-b-veredito" style="display:none;"></div>
+          <div style="display:flex;gap:9px;margin-top:14px;justify-content:flex-end;">
+            <button class="ja-btn2" onclick="djVoltarRanking()">Comparar com outra fonte</button>
+            <button class="ja-btn2" onclick="djAbrirDossie(true)">Rodar dossiê selado</button>
+            <button class="ja-btn2 forte" id="dj-b-btn-aprovar" onclick="djAbrirDossie(false)" style="display:none;">Aprovar mesmo assim</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="dj-passo-dossie" style="display:none;margin-top:16px;">
+        <div class="ja-eyebrow">Passo 3 de 3 · Confirmar o acasalamento</div>
+        <div class="ja-titulo" style="font-size:19px;margin-bottom:14px;">O parecer do cruzamento.</div>
+        <div class="ja-palco" style="padding:28px 30px;">
+          <div class="ja-arena" id="dj-a-arena">
+            <div class="ja-lado ja-esq">
+              <div class="ja-quem-papel">Garanhão · fonte</div>
+              <div class="ja-lado-nome" id="dj-a-gar-nome">—</div>
+              <div class="ja-lado-meta" id="dj-a-gar-meta">—</div>
+            </div>
+            <div class="ja-centro">
+              <div class="ja-fio"></div>
+              <div id="dj-a-centro-conteudo"><div class="ja-nucleo"></div></div>
+            </div>
+            <div class="ja-lado ja-dir">
+              <div class="ja-quem-papel">Égua</div>
+              <div class="ja-lado-nome" id="dj-a-egua-nome">—</div>
+              <div class="ja-lado-meta" id="dj-a-egua-meta">—</div>
+            </div>
+          </div>
+          <div id="dj-a-passos" class="ja-passos" style="align-items:center;"></div>
+          <div id="dj-a-dossie"></div>
+          <div class="ja-acoes" id="dj-a-acoes" style="display:none;">
+            <button class="ja-btn2" onclick="djVoltarLista()">Testar outro par</button>
+            <button class="ja-btn2 forte" onclick="djConfirmar()">Aprovar acasalamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="sec-num">07 · Movimento</div>
+      <h2>A cerimônia — reservada pros momentos que pesam.</h2>
+      <p>O dia a dia do registro usa transições discretas (hover, fade). Mas decisões que viram registro oficial ganham essa segunda linguagem — a que você acabou de rodar acima.</p>
+    </div>
+    <div class="ja-palco" style="display:flex;align-items:center;justify-content:center;gap:32px;min-height:120px;padding:32px;">
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--ink-50);text-align:center;">GARANHÃO · FONTE<b style="display:block;font-family:var(--serif);font-size:14px;color:var(--ink);font-weight:700;margin-top:3px;">Golpe Seco do Itaó</b></div>
+      <div class="ja-nucleo"></div>
+      <div style="font-family:var(--mono);font-size:10.5px;color:var(--ink-50);text-align:center;">ÉGUA<b style="display:block;font-family:var(--serif);font-size:14px;color:var(--ink);font-weight:700;margin-top:3px;">Chanel da Mãe de Deus</b></div>
+    </div>
+  </section>
+
+  <section id="voz">
+    <div class="sec-head">
+      <div class="sec-num">08 · Voz</div>
+      <h2>Palavras são material de design, não decoração.</h2>
+    </div>
+    <div class="voice-grid">
+      <div class="voice-col no">
+        <div class="h">Evitar</div>
+        <div class="ex">"Selecione o registro egua_id"</div>
+        <div class="ex">"Enviar" / "Confirmar" (genérico)</div>
+        <div class="ex">"Direção C · O Conselho" na interface</div>
+        <div class="ex">"Ops! Algo deu errado"</div>
+      </div>
+      <div class="voice-col yes">
+        <div class="h">Usar</div>
+        <div class="ex">"Escolha a égua"</div>
+        <div class="ex">"Salvar rascunho" (diz o que faz)</div>
+        <div class="ex">"Passo 1 de 3 · Escolher a égua"</div>
+        <div class="ex">"AIE do garanhão vence em 22 dias"</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Mimba — docs/design-system.md</span>
+    <span>app.mimba.com.br/design-system</span>
+  </footer>
+
+</div>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('btn-light').classList.toggle('on', t === 'light');
+    document.getElementById('btn-dark').classList.toggle('on', t === 'dark');
+    try { localStorage.setItem('rv-theme', t); } catch(e) {}
+  }
+  (function(){
+    var saved = null;
+    try { saved = localStorage.getItem('rv-theme'); } catch(e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(saved || (prefersDark ? 'dark' : 'light'));
+  })();
+
+  /* ══════════ Dados de demonstração — sem conexão com nenhuma cabanha real ══════════ */
+  const djEguas = [
+    { id: 1, nome: 'Chanel da Mãe de Deus', sbb: 'B688471', estagio: 'CRIA',
+      anc: [ {gen:2,lado:'pat',nome:'Junco'}, {gen:2,lado:'mat',nome:'Santa Edwiges'},
+             {gen:3,lado:'pat',nome:'Itapororó Avô'}, {gen:3,lado:'mat',nome:'Quarto de Ronda da República'},
+             {gen:5,lado:'mat',nome:'Ancestral Distante'} ] },
+    { id: 2, nome: 'Sesmaria da Rauna', sbb: 'B614743', estagio: 'CRIA',
+      anc: [ {gen:2,lado:'pat',nome:'Reconquista'}, {gen:2,lado:'mat',nome:'Bisavó Aurora'},
+             {gen:3,lado:'pat',nome:'Outro Tronco'}, {gen:3,lado:'mat',nome:'Marco Zero'},
+             {gen:5,lado:'pat',nome:'Herança Distante'} ] },
+  ];
+  const djFontes = [
+    { id: 10, garanhao: 'Golpe Seco do Itaó', sbb: 'B566358', tipo: 'Próprio', disp: 4, total: 6,
+      anc: [ {gen:2,lado:'pat',nome:'Reconquista'}, {gen:2,lado:'mat',nome:'Tronco Bravo'},
+             {gen:3,lado:'pat',nome:'Mais Um'}, {gen:3,lado:'mat',nome:'Distinto C'} ] },
+    { id: 11, garanhao: 'Desafio de Santa Edwiges', sbb: 'B491204', tipo: 'Cobertura', disp: 1, total: 3,
+      anc: [ {gen:2,lado:'pat',nome:'Itapororó'}, {gen:2,lado:'mat',nome:'Reconquista'},
+             {gen:3,lado:'pat',nome:'Outro Tronco'}, {gen:3,lado:'mat',nome:'Quarto de Ronda da República'} ] },
+    { id: 12, garanhao: 'Festeiro do Itapororó', sbb: 'B729310', tipo: 'Cota', disp: 8, total: 10,
+      anc: [ {gen:2,lado:'pat',nome:'Junco'}, {gen:2,lado:'mat',nome:'Herança Distante'},
+             {gen:3,lado:'pat',nome:'Vertente Nova'}, {gen:3,lado:'mat',nome:'Campo Aberto'} ] },
+  ];
+
+  let djState = { eguaId: null, fase: 0, ranking: [], fonteAtualId: null, timer: null, timerB: null, timerA: null };
+
+  function djRender() {
+    const elLista = document.getElementById('dj-eguas-lista');
+    elLista.innerHTML = djEguas.map(e => `<div class="mini-card" style="cursor:pointer;width:auto;" onclick="djEscolherEgua(${e.id})">
+      <div class="t">${e.nome}</div><div class="s">SBB ${e.sbb} · ${e.estagio}</div>
+    </div>`).join('');
+
+    const fase = djState.eguaId ? djState.fase : -1;
+    document.getElementById('dj-passo-lista').style.display = fase === -1 ? '' : 'none';
+    document.getElementById('dj-passo-alvo').style.display = (fase >= 0 && fase !== 3 && fase !== 4) ? '' : 'none';
+    document.getElementById('dj-passo-baralho').style.display = fase === 1 ? '' : 'none';
+    document.getElementById('dj-passo-ranking').style.display = fase === 2 ? '' : 'none';
+    document.getElementById('dj-passo-confluencia').style.display = fase === 3 ? '' : 'none';
+    document.getElementById('dj-passo-dossie').style.display = fase === 4 ? '' : 'none';
+    if (fase >= 0 && fase !== 3 && fase !== 4) djRenderAlvo();
+  }
+
+  function djEscolherEgua(id) { djState.eguaId = id; djState.fase = 0; djRender(); }
+  function djVoltarLista() {
+    clearTimeout(djState.timer); clearTimeout(djState.timerB); clearTimeout(djState.timerA);
+    djState.eguaId = null; djState.fase = 0; djRender();
+  }
+
+  function djRenderAlvo() {
+    const egua = djEguas.find(e => e.id === djState.eguaId);
+    document.getElementById('dj-alvo-av').textContent = egua.nome.charAt(0).toUpperCase();
+    document.getElementById('dj-alvo-nome').textContent = egua.nome;
+    document.getElementById('dj-alvo-tags').innerHTML =
+      `<span class="ja-tag" style="background:var(--terracota-soft);color:var(--terracota-ink);">${egua.estagio}</span>` +
+      `<span class="ja-tag" style="background:var(--campo-soft);color:var(--campo-deep);">NA CABANHA</span>` +
+      `<span class="ja-tag" style="background:var(--pergaminho2);color:var(--ink-70);">${egua.sbb}</span>`;
+    document.getElementById('dj-btn-analisar').textContent = djState.fase === 2 ? 'Rodar de novo' : 'Quem combina com ela?';
+  }
+
+  function djConsanguinidade(egua, fonte) {
+    const nomesEgua3 = new Set(egua.anc.filter(a => a.gen <= 3).map(a => a.nome));
+    const nomesGar3 = new Set(fonte.anc.filter(a => a.gen <= 3).map(a => a.nome));
+    const uniao = new Set([...nomesEgua3, ...nomesGar3]);
+    const intersec = [...nomesEgua3].filter(n => nomesGar3.has(n));
+    const diversidade = uniao.size ? 1 - (intersec.length / uniao.size) : 1;
+
+    const anc5Egua = {};
+    egua.anc.filter(a => a.gen <= 5).forEach(a => { if (anc5Egua[a.nome] === undefined) anc5Egua[a.nome] = a.gen; });
+    let ic = 0; const comuns5 = [];
+    fonte.anc.filter(a => a.gen <= 5).forEach(a => {
+      if (anc5Egua[a.nome] !== undefined) { ic += Math.pow(0.5, anc5Egua[a.nome] + a.gen + 1); comuns5.push(a.nome); }
+    });
+    ic = Math.round(ic * 10000) / 100;
+
+    if (intersec.length) return { ic: Math.max(ic, 12.5), texto: `Ancestral comum nas 3 primeiras gerações: ${intersec[0]}${intersec.length > 1 ? ' +' + (intersec.length - 1) : ''}.`, diversidade, risco: true, comumNome: intersec[0] };
+    if (ic > 6.25) return { ic, texto: `IC estimado ≈${ic}%. Ancestral(is) comum(ns): ${[...new Set(comuns5)].slice(0, 2).join(', ')}.`, diversidade, risco: true, comumNome: comuns5[0] || null };
+    if (ic > 0) return { ic, texto: `IC estimado ≈${ic}% — dentro do limite recomendado (≤6,25%).`, diversidade, risco: false, comumNome: null };
+    return { ic: 0, texto: 'Zero ancestral comum em 5 gerações.', diversidade, risco: false, comumNome: null };
+  }
+  function djScoreConsang(c) { return Math.max(0, Math.min(10, 10 - c.ic * 0.5)); }
+  function djScoreDiversidade(c) { return Math.max(0, Math.min(10, c.diversidade * 10)); }
+  function djScoreSaldo(fonte) { const pct = fonte.total > 0 ? fonte.disp / fonte.total : 0; return Math.max(0, Math.min(10, pct * 6 + 4)); }
+
+  function djAnalisar() {
+    const egua = djEguas.find(e => e.id === djState.eguaId);
+    djState.fase = 1;
+    djRender();
+    const cartas = djFontes.slice(0, 3);
+    document.getElementById('dj-baralho-cartas').innerHTML = cartas.map((f, i) => `
+      <div class="ja-carta ja-c${i + 1}"><div class="cn">${f.garanhao}</div><div class="cm">avaliando ancestrais…</div></div>`).join('');
+    document.getElementById('dj-contador').textContent = `cruzando a linhagem de ${egua.nome} contra ${djFontes.length} fontes do ciclo`;
+
+    const ranking = djFontes.map(f => {
+      const c = djConsanguinidade(egua, f);
+      const nota = Math.round(5 * djScoreConsang(c) + 3 * djScoreDiversidade(c) + 2 * djScoreSaldo(f));
+      return { fonte: f, c, nota };
+    }).sort((a, b) => b.nota - a.nota);
+    djState.ranking = ranking;
+
+    clearTimeout(djState.timer);
+    djState.timer = setTimeout(() => { djState.fase = 2; djRender(); djRenderRanking(); }, 2000);
+  }
+
+  function djRenderRanking() {
+    const el = document.getElementById('dj-ranking-lista');
+    el.innerHTML = djState.ranking.map((r, i) => {
+      const cor = r.nota >= 70 ? 'var(--campo)' : r.nota >= 45 ? 'var(--atencao)' : 'var(--critico)';
+      const notaCor = r.nota >= 70 ? 'var(--campo-deep)' : r.nota >= 45 ? 'var(--atencao)' : 'var(--critico)';
+      return `<div class="ja-linha${i === 0 ? ' top' : ''}" style="animation-delay:${(i * 0.1).toFixed(2)}s">
+        <div class="ja-pos">${i + 1}</div>
+        <div class="ja-quem"><div class="ja-quem-n">${r.fonte.garanhao}</div><div class="ja-quem-m">${r.fonte.tipo} · ${r.fonte.disp} de ${r.fonte.total} disponível</div></div>
+        <div class="ja-porq" style="${r.c.risco ? 'color:var(--critico)' : ''}">${r.c.texto}</div>
+        <div class="ja-nota"><div class="ja-nota-v" style="color:${notaCor}">${r.nota}</div><div class="ja-barra"><span style="width:${r.nota}%;background:${cor}"></span></div></div>
+        <button class="ja-btn2${i === 0 ? ' forte' : ''}" onclick="djAbrirConfluencia(${r.fonte.id})">Acasalar</button>
+      </div>`;
+    }).join('');
+  }
+
+  function djVoltarRanking() {
+    clearTimeout(djState.timerB); clearTimeout(djState.timerA);
+    djState.fase = 2; djRender(); djRenderRanking();
+  }
+
+  function djAbrirConfluencia(fonteId) {
+    djState.fonteAtualId = fonteId;
+    djState.fase = 3; djRender();
+    const egua = djEguas.find(e => e.id === djState.eguaId);
+    const fonte = djFontes.find(f => f.id === fonteId);
+    document.getElementById('dj-b-gar-nome').textContent = fonte.garanhao;
+    document.getElementById('dj-b-gar-meta').textContent = `SBB ${fonte.sbb} · ${fonte.tipo}`;
+    document.getElementById('dj-b-egua-nome').textContent = egua.nome;
+    document.getElementById('dj-b-egua-meta').textContent = `SBB ${egua.sbb} · ${egua.estagio}`;
+    document.getElementById('dj-b-veredito').style.display = 'none';
+    document.getElementById('dj-b-btn-aprovar').style.display = 'none';
+
+    const c = djState.ranking.find(r => r.fonte.id === fonteId).c;
+    djDesenharArvore(fonte, egua, c);
+    clearTimeout(djState.timerB);
+    djState.timerB = setTimeout(() => djRenderVereditoB(c), 1500);
+  }
+
+  function djDesenharArvore(fonte, egua, c) {
+    const svg = document.getElementById('dj-svg-arvore');
+    svg.innerHTML = '';
+    const NS = 'http://www.w3.org/2000/svg';
+    function mk(tag, attrs) { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); return e; }
+    const leftX = 150, rightX = 990, midY = 150;
+    svg.appendChild(mk('circle', { class: 'ja-no', cx: leftX, cy: midY, r: 13 }));
+    svg.appendChild(mk('circle', { class: 'ja-no', cx: rightX, cy: midY, r: 13 }));
+    const rotEsq = mk('text', { class: 'ja-svgrot', x: leftX, y: midY + 31, 'text-anchor': 'middle' }); rotEsq.textContent = 'garanhão'; svg.appendChild(rotEsq);
+    const rotDir = mk('text', { class: 'ja-svgrot', x: rightX, y: midY + 31, 'text-anchor': 'middle' }); rotDir.textContent = 'égua'; svg.appendChild(rotDir);
+    const lanes = [
+      { side: 'gar', lado: 'pat', x0: leftX, y0: midY, xEnd: 430, yEnd: 40 },
+      { side: 'gar', lado: 'mat', x0: leftX, y0: midY, xEnd: 430, yEnd: 260 },
+      { side: 'egua', lado: 'pat', x0: rightX, y0: midY, xEnd: 710, yEnd: 40 },
+      { side: 'egua', lado: 'mat', x0: rightX, y0: midY, xEnd: 710, yEnd: 260 },
+    ];
+    const comumPonto = { gar: null, egua: null };
+    lanes.forEach(lane => {
+      const anc = (lane.side === 'gar' ? fonte.anc : egua.anc).filter(a => a.lado === lane.lado);
+      if (!anc.length) return;
+      const d = `M${lane.x0} ${lane.y0} C ${(lane.x0 + lane.xEnd) / 2} ${lane.y0}, ${(lane.x0 + lane.xEnd) / 2} ${lane.yEnd}, ${lane.xEnd} ${lane.yEnd}`;
+      const path = mk('path', { class: 'ja-ramo ja-viva', d });
+      svg.appendChild(path);
+      const len = path.getTotalLength();
+      path.style.setProperty('--ja-len', len);
+      const ordenado = [...anc].sort((a, b) => a.gen - b.gen).slice(0, 6);
+      ordenado.forEach((a, i) => {
+        const t = (i + 1) / (ordenado.length + 1);
+        const pt = path.getPointAtLength(t * len);
+        const isComum = c.comumNome && a.nome === c.comumNome && !comumPonto[lane.side];
+        const delay = (0.15 + i * 0.08).toFixed(2);
+        svg.appendChild(mk('circle', { class: 'ja-no' + (isComum ? ' ja-comum' : ''), cx: pt.x.toFixed(1), cy: pt.y.toFixed(1), r: isComum ? 9 : 6, style: `animation-delay:${delay}s` }));
+        const label = mk('text', { class: 'ja-svgrot' + (isComum ? ' ja-comum' : ''), x: pt.x.toFixed(1), y: (pt.y + (lane.yEnd < lane.y0 ? -11 : 17)).toFixed(1), 'text-anchor': 'middle' });
+        label.textContent = a.nome.length > 16 ? a.nome.slice(0, 15) + '…' : a.nome;
+        svg.appendChild(label);
+        if (isComum) comumPonto[lane.side] = { x: pt.x, y: pt.y };
+      });
+    });
+    if (comumPonto.gar && comumPonto.egua) {
+      const p1 = comumPonto.gar, p2 = comumPonto.egua;
+      svg.appendChild(mk('path', { class: 'ja-ramo ja-alerta', d: `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)} L ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}` }));
+      svg.appendChild(mk('circle', { class: 'ja-halo', cx: ((p1.x + p2.x) / 2).toFixed(1), cy: ((p1.y + p2.y) / 2).toFixed(1), r: 18 }));
+    }
+  }
+
+  function djRenderVereditoB(c) {
+    const el = document.getElementById('dj-b-veredito');
+    el.style.display = ''; document.getElementById('dj-b-btn-aprovar').style.display = '';
+    el.innerHTML = c.risco ? `
+      <div class="ja-veredito">
+        <div class="ja-faixa ja-risco">
+          <div class="ja-selo-mini" style="color:var(--critico)"><div class="ja-aro"></div><span>!</span></div>
+          <div><div class="ja-eyebrow" style="color:var(--critico)">Atenção · ancestral repetido</div>
+          <div style="font-family:var(--serif);font-weight:700;font-size:16px;margin-top:5px;color:var(--critico)">${c.texto}</div></div>
+        </div>
+        <div class="ja-coef"><div class="ja-quem-papel">Coeficiente de endogamia</div>
+          <div style="font-family:var(--serif);font-weight:900;font-size:32px;color:var(--critico);line-height:1;margin:6px 0 4px;">${c.ic}<span style="font-size:16px;">%</span></div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--ink-50);line-height:1.5;">acima de 6,25% costuma<br>pedir troca de fonte</div>
+        </div>
+      </div>` : `
+      <div class="ja-veredito"><div class="ja-faixa ja-ok">
+        <div class="ja-selo-mini" style="color:var(--campo-deep)"><div class="ja-aro"></div><span>✓</span></div>
+        <div><div class="ja-eyebrow" style="color:var(--campo-deep)">Sem impedimento encontrado</div>
+        <div style="font-family:var(--serif);font-weight:700;font-size:16px;margin-top:5px;color:var(--campo-deep)">${c.texto}</div></div>
+      </div></div>`;
+  }
+
+  function djAbrirDossie(animado) {
+    const egua = djEguas.find(e => e.id === djState.eguaId);
+    const fonte = djFontes.find(f => f.id === djState.fonteAtualId);
+    djState.fase = 4; djRender();
+    document.getElementById('dj-a-gar-nome').textContent = fonte.garanhao;
+    document.getElementById('dj-a-gar-meta').textContent = `SBB ${fonte.sbb} · ${fonte.tipo}`;
+    document.getElementById('dj-a-egua-nome').textContent = egua.nome;
+    document.getElementById('dj-a-egua-meta').textContent = `SBB ${egua.sbb} · ${egua.estagio}`;
+    document.getElementById('dj-a-centro-conteudo').innerHTML = '<div class="ja-nucleo"></div>';
+    document.getElementById('dj-a-passos').innerHTML = `
+      <div class="ja-passo ja-p1">consultando SBB ${fonte.sbb} e ${egua.sbb}</div>
+      <div class="ja-passo ja-p2">cruzando linhagens em busca de ancestral comum</div>
+      <div class="ja-passo ja-p3">projetando concentração de sangue da cria</div>`;
+    document.getElementById('dj-a-passos').style.display = '';
+    document.getElementById('dj-a-dossie').innerHTML = '';
+    document.getElementById('dj-a-acoes').style.display = 'none';
+    const arena = document.getElementById('dj-a-arena');
+    arena.classList.remove('ja-fase-1', 'ja-fase-2'); arena.classList.add('ja-fase-1');
+
+    const c = djState.ranking.find(r => r.fonte.id === fonte.id).c;
+    const montar = () => {
+      arena.classList.add('ja-fase-2');
+      document.getElementById('dj-a-centro-conteudo').innerHTML = `
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+          <div class="ja-impacto"></div>
+          <div class="ja-selo" style="background:${c.risco ? 'var(--critico-soft)' : 'var(--campo-soft)'};color:${c.risco ? 'var(--critico)' : 'var(--campo-deep)'};box-shadow:var(--sh-md);">
+            <div class="ja-aro"></div><div class="ja-nucleo-txt">A</div><div class="ja-lbl">${c.risco ? 'Atenção' : 'Recomendado'}</div>
+          </div>
+        </div>`;
+      document.getElementById('dj-a-passos').style.display = 'none';
+      djMontarDossie(egua, fonte, c);
+    };
+    clearTimeout(djState.timerA);
+    if (animado) djState.timerA = setTimeout(montar, 2000); else montar();
+  }
+
+  function djMontarDossie(egua, fonte, c) {
+    const el = document.getElementById('dj-a-dossie');
+    const porNome = {};
+    [...fonte.anc, ...egua.anc].forEach(a => { if (porNome[a.nome] === undefined || a.gen < porNome[a.nome]) porNome[a.nome] = a.gen; });
+    const top3 = Object.entries(porNome).map(([nome, gen]) => ({ nome, pct: Math.pow(0.5, gen) * 100 })).sort((a, b) => b.pct - a.pct).slice(0, 3);
+    el.innerHTML = `
+      <div class="ja-dossie">
+        <div class="ja-dossie-topo">
+          <div style="flex:1;"><div class="ja-eyebrow">Parecer do cruzamento · rascunho</div>
+            <div class="ja-veredito-h" style="margin-top:6px;color:${c.risco ? 'var(--critico)' : 'var(--campo-deep)'}">${c.texto}</div>
+            <div style="font-size:12.5px;color:var(--ink-70);margin-top:6px;line-height:1.55;">Nenhum cruzamento anterior registrado entre esta égua e este garanhão.</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;"><div class="ja-quem-papel">Grau de parentesco</div>
+            <div style="font-family:var(--serif);font-weight:900;font-size:34px;color:${c.risco ? 'var(--critico)' : 'var(--campo-deep)'};line-height:1;margin-top:4px;">${c.ic}<span style="font-size:17px;">%</span></div>
+          </div>
+        </div>
+        <div class="ja-grade">
+          <div class="ja-bloco ja-b1"><div class="ja-bloco-t">Sangue projetado na cria</div>
+            ${top3.map(t => `<div style="font-size:11.5px;margin-top:9px;"><div style="display:flex;justify-content:space-between;"><span>${t.nome}</span><b style="font-family:var(--mono)">${t.pct.toFixed(1)}%</b></div><div class="ja-barra2"><span style="width:${t.pct.toFixed(1)}%"></span></div></div>`).join('')}
+          </div>
+          <div class="ja-bloco ja-b2"><div class="ja-bloco-t">Histórico entre os dois</div>
+            <div style="font-size:12px;color:var(--ink-70);line-height:1.6;">Nenhum cruzamento anterior registrado.</div>
+            <div style="margin-top:11px;padding-top:10px;border-top:1px solid var(--ink-08);font-size:11.5px;">
+              <div class="ja-linha-anc"><span>Crias do garanhão na cabanha</span><b style="font-family:var(--mono)">3</b></div>
+              <div class="ja-linha-anc"><span>Partos anteriores da égua</span><b style="font-family:var(--mono)">1</b></div>
+            </div>
+          </div>
+          <div class="ja-bloco ja-b3"><div class="ja-bloco-t">Antes de aprovar</div>
+            ${fonte.disp > 0
+              ? `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--campo-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--campo-deep);">✓ Saldo da fonte comporta este acasalamento (${fonte.disp} de ${fonte.total})</div>`
+              : `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--atencao-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--atencao);">! Saldo da fonte esgotado</div>`}
+            ${c.risco ? `<div style="display:flex;align-items:flex-start;gap:8px;background:var(--critico-soft);border-radius:11px;padding:9px 11px;font-size:11.5px;color:var(--critico);margin-top:7px;">! ${c.texto}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('dj-a-acoes').style.display = '';
+  }
+
+  function djConfirmar() {
+    const btn = event.target;
+    btn.textContent = 'Registrado ✓';
+    btn.disabled = true;
+    setTimeout(() => { djVoltarLista(); }, 900);
+  }
+
+  djRender();
+</script>
+</body>
+</html>
