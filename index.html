@@ -1263,7 +1263,7 @@
     <div class="card" id="dash-pendencias-card" style="display:none">
       <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
         <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg> Pendências sanitárias</span>
-        <button class="btn btn-sm" onclick="showPage('saude');setTimeout(()=>{const t=document.querySelector('#page-saude .tab-row .tab:last-child');if(t)switchTab(t,'tab-pendencias')},100)">Ver todas →</button>
+        <button class="btn btn-sm" onclick="showPage('saude');setTimeout(()=>{const t=document.getElementById('saude-tab-pend');if(t)saudeTabGrupo(t,'tab-pendencias',null)},100)">Ver todas →</button>
       </div>
       <div id="dash-pendencias-lista"></div>
     </div>
@@ -1346,15 +1346,25 @@
     </div>
   </div>
   <div class="tab-row">
-    <button class="tab active" onclick="switchTab(this,'tab-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
-    <button class="tab" onclick="switchTab(this,'tab-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
-    <button class="tab" onclick="switchTab(this,'tab-verm')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
-    <button class="tab" onclick="switchTab(this,'tab-tratamentos')">Tratamentos</button>
-    <button class="tab" onclick="switchTab(this,'tab-hist-vac')">Histórico Vacinas</button>
-    <button class="tab" onclick="switchTab(this,'tab-hist-exam')">Histórico Exames</button>
-    <button class="tab" onclick="switchTab(this,'tab-pendencias')">Pendências <span id="pend-count-badge"></span></button>
-    <button class="tab" onclick="switchTab(this,'tab-reprodutivo-vet')">Reprodutivo</button>
-    <button class="tab" onclick="switchTab(this,'tab-proto-repro')">🧬 Protocolo Reprodutivo</button>
+    <button class="tab active" id="saude-tab-vac" onclick="saudeTabGrupo(this,'tab-vac','saude-sub-vac')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg> Vacinas</button>
+    <button class="tab" id="saude-tab-exam" onclick="saudeTabGrupo(this,'tab-exam','saude-sub-exam')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg> Exames</button>
+    <button class="tab" id="saude-tab-verm" onclick="saudeTabGrupo(this,'tab-verm',null)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg> Vermifugação</button>
+    <button class="tab" id="saude-tab-repro" onclick="saudeTabGrupo(this,'tab-reprodutivo-vet','saude-sub-repro')">🐎 Reprodutivo</button>
+    <button class="tab" id="saude-tab-trat" onclick="saudeTabGrupo(this,'tab-tratamentos',null)">Tratamentos</button>
+    <button class="tab" id="saude-tab-pend" onclick="saudeTabGrupo(this,'tab-pendencias',null)">Pendências <span id="pend-count-badge"></span></button>
+  </div>
+  <div id="saude-sub-vac" class="tab-row" style="background:var(--bg3);border-top:1px solid var(--border);padding:4px 12px;gap:4px">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-vac','tab-vac',this)">Aplicadas</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-vac','tab-hist-vac',this)">Histórico</button>
+  </div>
+  <div id="saude-sub-exam" class="tab-row" style="display:none;background:var(--bg3);border-top:1px solid var(--border);padding:4px 12px;gap:4px">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-exam','tab-exam',this)">Registrados</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-exam','tab-hist-exam',this)">Histórico</button>
+  </div>
+  <div id="saude-sub-repro" class="tab-row" style="display:none;background:var(--bg3);border-top:1px solid var(--border);padding:4px 12px;gap:4px">
+    <button class="tab active" onclick="saudeSubTab('saude-sub-repro','tab-reprodutivo-vet',this)">Funil veterinário</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-repro','tab-repro-gestacoes',this)">Gestações ativas</button>
+    <button class="tab" onclick="saudeSubTab('saude-sub-repro','tab-proto-repro',this)">Protocolo reprodutivo</button>
   </div>
 
   <!-- KANBAN VACINAS -->
@@ -1557,9 +1567,11 @@
        Ovuladas → DG precoce aguardando definitivo. Ao confirmar o DG definitivo, a gestação real
        nasce e passa a aparecer também na aba Reprodutivo do criador (mesma tabela `gestacoes`). -->
   <div id="tab-reprodutivo-vet" style="display:none">
-    <div class="page-sub" style="margin:-6px 0 14px">Acompanhamento do que o criador liberou no planejamento — do controle inicial até a confirmação de prenhez, e as gestações ativas em andamento.</div>
+    <div class="page-sub" style="margin:-6px 0 14px">Acompanhamento do que o criador liberou no planejamento — do controle inicial até a confirmação de prenhez.</div>
     <div class="kanban-board" id="kanban-reprodutivo-vet-board" style="grid-template-columns:repeat(4,1fr)"></div>
-    <div class="card-title" style="margin:22px 0 8px">Gestações ativas</div>
+  </div>
+  <div id="tab-repro-gestacoes" style="display:none">
+    <div class="page-sub" style="margin:-6px 0 14px">Gestações ativas em andamento — mesmo acompanhamento da aba Reprodutivo do criador.</div>
     <div id="reprodutivo-vet-gestacoes-content"></div>
   </div>
 </div>
@@ -7272,7 +7284,7 @@ function toggleSidebarMobile(force){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-repro-gestacoes','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -7292,8 +7304,17 @@ function switchTab(btn,tid){
   if(tid==='gest-protocolos') renderProtocolos();
   if(tid==='tab-proto-repro') renderKanbanProtoRepro();
   if(tid==='tab-reprodutivo-vet') renderReprodutivoVet();
+  if(tid==='tab-repro-gestacoes') renderReprodutivoVet();
   if(tid==='tab-tratamentos') renderTratamentos();
 }
+function saudeTabGrupo(btn,tabId,subId){
+  btn.closest('.tab-row').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['saude-sub-vac','saude-sub-exam','saude-sub-repro'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  if(subId){const sub=document.getElementById(subId);if(sub){sub.style.display='';const fb=sub.querySelector('.tab.active')||sub.querySelector('.tab');if(fb){const m=(fb.getAttribute('onclick')||'').match(/'([^']+)'\s*,\s*this/);if(m){switchTab(fb,m[1]);return;}}}}
+  switchTab(btn,tabId);
+}
+function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
@@ -8279,8 +8300,8 @@ function irParaPendencia(idx) {
   // Navegar para saúde > pendências e abrir modal de resolução
   showPage('saude');
   // Ativar aba pendências
-  const tabBtn = document.querySelector('#page-saude .tab-row .tab:last-child');
-  if(tabBtn) { switchTab(tabBtn, 'tab-pendencias'); }
+  const tabBtn = document.getElementById('saude-tab-pend');
+  if(tabBtn) { saudeTabGrupo(tabBtn, 'tab-pendencias', null); }
   setTimeout(()=>resolverPendencia(idx), 150);
 }
 
