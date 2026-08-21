@@ -793,6 +793,45 @@
   .jornada-ac .ja-barra{height:5px;border-radius:99px;background:var(--ja-ink-08);overflow:hidden;margin-top:6px;}
   .jornada-ac .ja-barra span{display:block;height:100%;border-radius:99px;animation:ja-cresce .95s cubic-bezier(.22,1,.36,1) both .15s;}
   @keyframes ja-cresce{from{width:0 !important;}}
+
+  /* palco — direção B (Confluência de Sangues) */
+  .jornada-ac .ja-palco{position:relative;background:var(--ja-pergaminho);border-radius:22px;box-shadow:var(--ja-sh-md);padding:22px 24px;overflow:hidden;}
+  .jornada-ac .ja-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:10px;}
+  .jornada-ac .ja-quem-b{max-width:260px;}
+  .jornada-ac .ja-quem-papel{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);}
+  .jornada-ac .ja-quem-nome{font-family:var(--ja-serif);font-weight:700;font-size:17px;line-height:1.15;margin-top:3px;}
+  .jornada-ac .ja-quem-meta{font-family:var(--ja-mono);font-size:10.5px;color:var(--ja-ink-50);margin-top:3px;}
+
+  .jornada-ac svg .ja-ramo{stroke:var(--ja-ink-15);stroke-width:1.3;fill:none;}
+  .jornada-ac svg .ja-ramo.ja-viva{stroke:var(--ja-campo);stroke-width:1.6;
+    stroke-dasharray:var(--ja-len);stroke-dashoffset:var(--ja-len);animation:ja-corre 1.1s cubic-bezier(.5,0,.2,1) forwards;}
+  .jornada-ac svg .ja-ramo.ja-alerta{stroke:var(--ja-critico);stroke-width:2.2;}
+  @keyframes ja-corre{to{stroke-dashoffset:0;}}
+  .jornada-ac svg .ja-no{fill:var(--ja-pergaminho2);stroke:var(--ja-ink-15);stroke-width:1.2;opacity:0;animation:ja-acende .3s ease forwards;}
+  .jornada-ac svg .ja-no.ja-comum{fill:var(--ja-critico-soft);stroke:var(--ja-critico);stroke-width:2.2;
+    animation:ja-acende .3s ease forwards, ja-bate 1.5s ease-in-out infinite 1s;transform-box:fill-box;transform-origin:center;}
+  @keyframes ja-acende{to{opacity:1;}}
+  @keyframes ja-bate{0%,100%{transform:scale(1);}50%{transform:scale(1.25);}}
+  .jornada-ac svg .ja-svgrot{font-family:'DM Mono',monospace;font-size:8px;fill:var(--ja-ink-50);}
+  .jornada-ac svg .ja-svgrot.ja-comum{fill:var(--ja-critico);font-weight:500;}
+  .jornada-ac svg .ja-halo{fill:none;stroke:var(--ja-critico);opacity:0;animation:ja-halo 1.9s ease-out infinite 1.1s;transform-box:fill-box;transform-origin:center;}
+  @keyframes ja-halo{0%{transform:scale(.7);opacity:.75;}100%{transform:scale(2.6);opacity:0;}}
+
+  .jornada-ac .ja-veredito{margin-top:14px;display:flex;gap:14px;align-items:stretch;animation:ja-sobe .5s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes ja-sobe{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+  .jornada-ac .ja-faixa{flex:1;border-radius:16px;padding:15px 18px;display:flex;gap:12px;align-items:flex-start;}
+  .jornada-ac .ja-faixa.ja-ok{background:var(--ja-campo-soft);}
+  .jornada-ac .ja-faixa.ja-risco{background:var(--ja-critico-soft);}
+  .jornada-ac .ja-selo-mini{width:48px;height:48px;border-radius:50%;background:rgba(252,249,243,.65);flex-shrink:0;
+             display:flex;align-items:center;justify-content:center;position:relative;}
+  .jornada-ac .ja-selo-mini .ja-aro{position:absolute;inset:4px;border-radius:50%;border:1.4px dashed currentColor;opacity:.55;}
+  .jornada-ac .ja-selo-mini span{font-family:var(--ja-serif);font-weight:900;font-size:20px;}
+  .jornada-ac .ja-coef{width:170px;flex-shrink:0;background:var(--ja-pergaminho2);border-radius:16px;padding:15px 18px;text-align:center;}
+
+  .jornada-ac .ja-passos{display:flex;flex-direction:column;gap:6px;margin-top:12px;align-items:center;}
+  .jornada-ac .ja-passo{font-family:var(--ja-mono);font-size:11px;color:var(--ja-ink-30);opacity:0;animation:ja-entrapasso .4s ease forwards;}
+  .jornada-ac .ja-passo.ja-p1{animation-delay:.1s;} .jornada-ac .ja-passo.ja-p2{animation-delay:.6s;} .jornada-ac .ja-passo.ja-p3{animation-delay:1.1s;}
+  @keyframes ja-entrapasso{to{opacity:1;color:var(--ja-ink-70);}}
   @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
 </style>
 </head>
@@ -1532,6 +1571,41 @@
           nota = consanguinidade (peso 5) · diversidade de sangue (3) · saldo e sanidade da fonte (2)
         </div>
         <button class="ja-btn2" style="margin-top:14px;" onclick="_jaVoltarLista()">Escolher outra égua</button>
+      </div>
+
+      <div id="ja-passo-confluencia" style="display:none;margin-top:18px;">
+        <div class="ja-eyebrow">Direção B · Confluência de Sangues</div>
+        <div class="ja-titulo" style="font-size:20px;margin-bottom:16px;">As duas linhagens correm até se encontrarem.</div>
+        <div class="ja-palco">
+          <div class="ja-cabeca">
+            <div class="ja-quem-b">
+              <div class="ja-quem-papel">Garanhão · fonte</div>
+              <div class="ja-quem-nome" id="ja-b-gar-nome">—</div>
+              <div class="ja-quem-meta" id="ja-b-gar-meta">—</div>
+            </div>
+            <button class="ja-btn2" style="align-self:center;flex-shrink:0;" onclick="_jaVoltarRanking()">← voltar ao ranking</button>
+            <div class="ja-quem-b" style="text-align:right;">
+              <div class="ja-quem-papel">Égua</div>
+              <div class="ja-quem-nome" id="ja-b-egua-nome">—</div>
+              <div class="ja-quem-meta" id="ja-b-egua-meta">—</div>
+            </div>
+          </div>
+
+          <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+
+          <div id="ja-b-passos" class="ja-passos">
+            <div class="ja-passo ja-p1">abrindo as gerações de cada lado</div>
+            <div class="ja-passo ja-p2">comparando nome a nome, geração a geração</div>
+            <div class="ja-passo ja-p3">calculando coeficiente de endogamia</div>
+          </div>
+
+          <div id="ja-b-veredito" style="display:none;"></div>
+
+          <div style="display:flex;gap:9px;margin-top:14px;justify-content:flex-end;">
+            <button class="ja-btn2" onclick="_jaVoltarRanking()">Comparar com outra fonte</button>
+            <button class="ja-btn2 forte" id="ja-b-btn-aprovar" onclick="_jaAcasalarLinha(window._jaFonteAtualKey)" style="display:none;">Aprovar mesmo assim</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="card-title" style="margin:22px 0 8px">Cruzamentos deste ciclo</div>
@@ -10340,10 +10414,11 @@ function renderAcasalamentosMatch() {
 
   const fase = window._jaEguaId ? (window._jaFase || 0) : -1;
   document.getElementById('ja-passo-lista').style.display = fase === -1 ? '' : 'none';
-  document.getElementById('ja-passo-alvo').style.display = fase >= 0 ? '' : 'none';
+  document.getElementById('ja-passo-alvo').style.display = (fase >= 0 && fase !== 3) ? '' : 'none';
   document.getElementById('ja-passo-baralho').style.display = fase === 1 ? '' : 'none';
   document.getElementById('ja-passo-ranking').style.display = fase === 2 ? '' : 'none';
-  if (fase >= 0) _jaRenderAlvo();
+  document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
+  if (fase >= 0 && fase !== 3) _jaRenderAlvo();
 }
 
 function _jaEscolherEgua(eguaDbId) {
@@ -10354,6 +10429,7 @@ function _jaEscolherEgua(eguaDbId) {
 
 function _jaVoltarLista() {
   clearTimeout(window._jaTimer);
+  clearTimeout(window._jaTimerB);
   window._jaEguaId = null;
   window._jaFase = 0;
   renderAcasalamentosMatch();
@@ -10399,6 +10475,10 @@ async function _jaConsanguinidade(egua, fonte) {
     const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
     const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
     if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
+    // Direção B (Confluência de Sangues) reaproveita esses arrays brutos pra desenhar a
+    // árvore, sem precisar consultar sangues_linhagem de novo.
+    const ancEgua = rEgua.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
+    const ancGar = rGar.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
 
     const nomesEgua3 = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
     const nomesGar3 = new Set(rGar.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
@@ -10413,11 +10493,12 @@ async function _jaConsanguinidade(egua, fonte) {
       if (anc5Egua[x.nome] !== undefined) { ic += Math.pow(0.5, anc5Egua[x.nome] + x.gen + 1); comuns5.push(x.nome); }
     });
     ic = Math.round(ic * 10000) / 100;
+    const comumNome = intersec[0] || comuns5[0] || null;
 
-    if (intersec.length) return { nivel: 2, ic: Math.max(ic, 12.5), texto: `Ancestral comum nas 3 primeiras gerações: ${intersec[0]}${intersec.length > 1 ? ' +' + (intersec.length - 1) : ''}.`, diversidade };
-    if (ic > 6.25) return { nivel: 3, ic, texto: `IC estimado ≈${ic}%. Ancestral(is) comum(ns): ${[...new Set(comuns5)].slice(0, 2).join(', ')}.`, diversidade };
-    if (ic > 0) return { nivel: 0, ic, texto: `IC estimado ≈${ic}% — dentro do limite recomendado (≤6,25%).`, diversidade };
-    return { nivel: 0, ic: 0, texto: 'Zero ancestral comum em 5 gerações.', diversidade };
+    if (intersec.length) return { nivel: 2, ic: Math.max(ic, 12.5), texto: `Ancestral comum nas 3 primeiras gerações: ${intersec[0]}${intersec.length > 1 ? ' +' + (intersec.length - 1) : ''}.`, diversidade, ancEgua, ancGar, comumNome };
+    if (ic > 6.25) return { nivel: 3, ic, texto: `IC estimado ≈${ic}%. Ancestral(is) comum(ns): ${[...new Set(comuns5)].slice(0, 2).join(', ')}.`, diversidade, ancEgua, ancGar, comumNome };
+    if (ic > 0) return { nivel: 0, ic, texto: `IC estimado ≈${ic}% — dentro do limite recomendado (≤6,25%).`, diversidade, ancEgua, ancGar, comumNome };
+    return { nivel: 0, ic: 0, texto: 'Zero ancestral comum em 5 gerações.', diversidade, ancEgua, ancGar, comumNome };
   } catch (e) {
     return { nivel: 0, ic: null, texto: 'Não foi possível consultar a linhagem agora.', diversidade: null };
   }
@@ -10491,22 +10572,155 @@ function _jaRenderRanking() {
         <div class="ja-nota-v" style="color:${notaCor}">${r.nota}</div>
         <div class="ja-barra"><span style="width:${r.nota}%;background:${cor}"></span></div>
       </div>
-      <button class="ja-btn2${i === 0 ? ' forte' : ''}" onclick="_jaAcasalarLinha('${_fonteKey(r.fonte)}')">Acasalar</button>
+      <button class="ja-btn2${i === 0 ? ' forte' : ''}" onclick="_jaAbrirConfluencia('${_fonteKey(r.fonte)}')">Acasalar</button>
     </div>`;
   }).join('');
 }
 
+// Direção B · Confluência de Sangues — acionada ao escolher uma linha do ranking do
+// Conselho. Reaproveita o resultado já calculado (mesma égua/fonte) quando disponível,
+// senão roda _jaConsanguinidade de novo.
+async function _jaAbrirConfluencia(fonteKey) {
+  const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
+  const f = fontesCobertura[idx];
+  if (!f) return;
+  if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
+  const key = _fonteKey(f);
+  window._jaFonteAtualKey = key;
+  window._jaFase = 3;
+  renderAcasalamentosMatch();
+
+  const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
+  document.getElementById('ja-b-gar-nome').textContent = f.garanhao_nome;
+  document.getElementById('ja-b-gar-meta').textContent = (f.garanhao_sbb ? 'SBB ' + f.garanhao_sbb + ' · ' : '') + (FC_TIPO_LABEL[f.tipo] || f.tipo);
+  document.getElementById('ja-b-egua-nome').textContent = egua.nome;
+  document.getElementById('ja-b-egua-meta').textContent = (egua.sbb ? 'SBB ' + egua.sbb + ' · ' : '') + (egua.estagio || '');
+  document.getElementById('ja-b-passos').style.display = '';
+  document.getElementById('ja-b-veredito').style.display = 'none';
+  document.getElementById('ja-b-btn-aprovar').style.display = 'none';
+  document.getElementById('ja-svg-arvore').innerHTML = '';
+
+  const existente = (window._jaRanking || []).find(r => _fonteKey(r.fonte) === key);
+  const c = existente ? existente.consang : await _jaConsanguinidade(egua, f);
+  _jaDesenharArvore(f.garanhao_nome, egua.nome, c);
+
+  clearTimeout(window._jaTimerB);
+  window._jaTimerB = setTimeout(() => {
+    document.getElementById('ja-b-passos').style.display = 'none';
+    _jaRenderVereditoB(c);
+  }, 1500);
+}
+
+function _jaVoltarRanking() {
+  clearTimeout(window._jaTimerB);
+  window._jaFase = 2;
+  renderAcasalamentosMatch();
+  _jaRenderRanking();
+}
+
+// Gera o diagrama de linhagens em SVG a partir de sangues_linhagem.ancestrais_pos (que só
+// guarda geração + lado paternal/maternal, sem posição exata dentro da geração — por isso
+// o layout é "duas pistas por lado" (paterna/materna) com os ancestrais dessa pista
+// distribuídos ao longo da curva, em vez da árvore binária de posições fixas do artefato de
+// referência. Ancestral em comum (mesmo nome nos dois lados) acende em vermelho e pulsa,
+// com uma ponte entre os dois pontos — mesma gramática visual do artefato.
+function _jaDesenharArvore(nomeGar, nomeEgua, c) {
+  const svg = document.getElementById('ja-svg-arvore');
+  svg.innerHTML = '';
+  const ancGar = c.ancGar || [];
+  const ancEgua = c.ancEgua || [];
+  const comumNome = c.comumNome || null;
+  const NS = 'http://www.w3.org/2000/svg';
+  function mk(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+    return e;
+  }
+
+  const leftX = 150, rightX = 990, midY = 150;
+  svg.appendChild(mk('circle', { class: 'ja-no ja-viva', cx: leftX, cy: midY, r: 13 }));
+  svg.appendChild(mk('circle', { class: 'ja-no ja-viva', cx: rightX, cy: midY, r: 13 }));
+  const rotEsq = mk('text', { class: 'ja-svgrot', x: leftX, y: midY + 31, 'text-anchor': 'middle' }); rotEsq.textContent = 'garanhão'; svg.appendChild(rotEsq);
+  const rotDir = mk('text', { class: 'ja-svgrot', x: rightX, y: midY + 31, 'text-anchor': 'middle' }); rotDir.textContent = 'égua'; svg.appendChild(rotDir);
+
+  const lanes = [
+    { side: 'gar', lado: 'pat', x0: leftX, y0: midY, xEnd: 430, yEnd: 40 },
+    { side: 'gar', lado: 'mat', x0: leftX, y0: midY, xEnd: 430, yEnd: 260 },
+    { side: 'egua', lado: 'pat', x0: rightX, y0: midY, xEnd: 710, yEnd: 40 },
+    { side: 'egua', lado: 'mat', x0: rightX, y0: midY, xEnd: 710, yEnd: 260 },
+  ];
+  const comumPonto = { gar: null, egua: null };
+
+  lanes.forEach(lane => {
+    const fonteAnc = lane.side === 'gar' ? ancGar : ancEgua;
+    const anc = fonteAnc.filter(a => a.lado === lane.lado);
+    if (!anc.length) return;
+    const d = `M${lane.x0} ${lane.y0} C ${(lane.x0 + lane.xEnd) / 2} ${lane.y0}, ${(lane.x0 + lane.xEnd) / 2} ${lane.yEnd}, ${lane.xEnd} ${lane.yEnd}`;
+    const path = mk('path', { class: 'ja-ramo ja-viva', d });
+    svg.appendChild(path);
+    const len = path.getTotalLength();
+    path.style.setProperty('--ja-len', len);
+
+    const ordenado = [...anc].sort((a, b) => a.gen - b.gen).slice(0, 6);
+    ordenado.forEach((a, i) => {
+      const t = (i + 1) / (ordenado.length + 1);
+      const pt = path.getPointAtLength(t * len);
+      const isComum = comumNome && a.nome === comumNome && !comumPonto[lane.side];
+      const delay = (0.15 + i * 0.08).toFixed(2);
+      svg.appendChild(mk('circle', { class: 'ja-no' + (isComum ? ' ja-comum' : ''), cx: pt.x.toFixed(1), cy: pt.y.toFixed(1), r: isComum ? 9 : 6, style: `animation-delay:${delay}s` }));
+      const label = mk('text', { class: 'ja-svgrot' + (isComum ? ' ja-comum' : ''), x: pt.x.toFixed(1), y: (pt.y + (lane.yEnd < lane.y0 ? -11 : 17)).toFixed(1), 'text-anchor': 'middle' });
+      label.textContent = a.nome.length > 16 ? a.nome.slice(0, 15) + '…' : a.nome;
+      svg.appendChild(label);
+      if (isComum) comumPonto[lane.side] = { x: pt.x, y: pt.y };
+    });
+  });
+
+  if (comumPonto.gar && comumPonto.egua) {
+    const p1 = comumPonto.gar, p2 = comumPonto.egua;
+    svg.appendChild(mk('path', { class: 'ja-ramo ja-alerta', d: `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)} L ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}` }));
+    svg.appendChild(mk('circle', { class: 'ja-halo', cx: ((p1.x + p2.x) / 2).toFixed(1), cy: ((p1.y + p2.y) / 2).toFixed(1), r: 18 }));
+  }
+}
+
+function _jaRenderVereditoB(c) {
+  const el = document.getElementById('ja-b-veredito');
+  el.style.display = '';
+  document.getElementById('ja-b-btn-aprovar').style.display = '';
+  const risco = c.nivel >= 2 || (c.ic !== null && c.ic !== undefined && c.ic > 6.25);
+  el.innerHTML = risco ? `
+    <div class="ja-veredito">
+      <div class="ja-faixa ja-risco">
+        <div class="ja-selo-mini" style="color:var(--ja-critico)"><div class="ja-aro"></div><span>!</span></div>
+        <div>
+          <div class="ja-eyebrow" style="color:var(--ja-critico)">Atenção · ancestral repetido</div>
+          <div style="font-family:var(--ja-serif);font-weight:700;font-size:17px;margin-top:5px;color:var(--ja-critico)">${c.texto}</div>
+        </div>
+      </div>
+      <div class="ja-coef">
+        <div class="ja-quem-papel">Coeficiente de endogamia</div>
+        <div style="font-family:var(--ja-serif);font-weight:900;font-size:34px;color:var(--ja-critico);line-height:1;margin:6px 0 4px;">${c.ic ?? '?'}<span style="font-size:18px;">%</span></div>
+        <div style="font-family:var(--ja-mono);font-size:10px;color:var(--ja-ink-50);line-height:1.5;">acima de 6,25% costuma<br>pedir troca de fonte</div>
+      </div>
+    </div>` : `
+    <div class="ja-veredito">
+      <div class="ja-faixa ja-ok">
+        <div class="ja-selo-mini" style="color:var(--ja-campo-deep)"><div class="ja-aro"></div><span>✓</span></div>
+        <div>
+          <div class="ja-eyebrow" style="color:var(--ja-campo-deep)">Sem impedimento encontrado</div>
+          <div style="font-family:var(--ja-serif);font-weight:700;font-size:17px;margin-top:5px;color:var(--ja-campo-deep)">${c.texto}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Passo final da jornada (usado por B via "Aprovar mesmo assim" — A, o Dossiê Selado,
+// entra numa fase seguinte substituindo este modal por dentro, sem mudar quem o chama).
 async function _jaAcasalarLinha(fonteKey) {
   const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
   const f = fontesCobertura[idx];
   if (!f) return;
-  // Fonte recém-criada automaticamente (ex.: "Próprio" do ciclo) cujo POST ainda não
-  // terminou — tenta persistir agora antes de deixar prosseguir, igual já fazia a tela
-  // de match antiga (_acMatchSelecionarFonte).
   if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-  // B (Confluência de Sangues) e A (Dossiê Selado) entram aqui nas fases seguintes —
-  // por ora, mesma confirmação final que já existia.
   abrirModalAcasalamentoMatch(_fonteKey(f), window._jaEguaId, ciclo);
 }
 
