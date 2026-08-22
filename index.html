@@ -419,7 +419,7 @@
   .evt-3 { background:var(--amber-l); color:var(--amber-d); }
   .evt-class { background:var(--purple-l); color:var(--purple-d); }
   .evt-sem { background:var(--gray-l); color:var(--gray-d); }
-  .evt-animal-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .evt-animal-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .evt-animal-row:last-child { border-bottom:none; }
   /* GESTAÇÃO */
   .gest-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
@@ -8179,7 +8179,7 @@ function renderEvtAnimaisTemp() {
   }
   let html = evtAnimaisTemp.map((p,pi)=>`
     <div class="evt-animal-row">
-      <span style="font-weight:600;flex:1;font-size:12px">${p.nome}</span>
+      <span style="font-weight:600;flex:1 1 100%;font-size:12px">${p.nome}</span>
       <select style="width:130px;font-size:11px;padding:4px" onchange="evtAnimaisTemp[${pi}].modalidade=this.value">
         <option ${p.modalidade==='Individual'?'selected':''}>Individual</option>
         <option ${p.modalidade==='Conjunto'?'selected':''}>Conjunto</option>
