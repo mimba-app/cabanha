@@ -7981,59 +7981,75 @@ function abrirModalTemplateCRUD(tmplId) {
     estagio: tmpl?.estagio_vinculado||'',
     itens: tmpl ? JSON.parse(JSON.stringify(tmpl.itens)) : []
   };
-  _renderModalTemplateCRUD();
+  _montarModalTemplateCRUD();
 }
 
-function _renderModalTemplateCRUD() {
+// Monta o modal UMA vez só. Diferente da versão anterior (bug real, 2026-08-21): adicionar ou
+// remover um item recriava o modal inteiro do zero a partir de window._tmplEdit — como os campos
+// Nome/Estágio nunca sincronizavam seu valor de volta pro estado ao digitar, cada re-render
+// jogava fora o que a pessoa tinha acabado de escrever. Agora Nome/Estágio têm listener próprio
+// (sincroniza a cada tecla/troca) e adicionar/remover item só re-renderiza a lista de itens
+// (#tmpl-crud-itens), sem tocar no resto do modal.
+function _montarModalTemplateCRUD() {
   document.getElementById('modal-tmpl-crud')?.remove();
   const st = window._tmplEdit;
   const estagios = ['','CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
-  const tipos = ['racao','aveia','alfafa','verde','sal','suplemento','outro'];
-  const itensRows = st.itens.map((it,idx)=>`
-    <div style="display:grid;grid-template-columns:100px 1fr 90px 110px 1fr auto;gap:6px;margin-bottom:6px;align-items:center">
-      <select onchange="window._tmplEdit.itens[${idx}].tipo=this.value">
-        ${tipos.map(t=>`<option value="${t}" ${it.tipo===t?'selected':''}>${t}</option>`).join('')}
-      </select>
-      <input type="text" placeholder="Produto" value="${(it.produto||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].produto=this.value">
-      <input type="text" placeholder="Qtd/dia" value="${(it.quantidade||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].quantidade=this.value">
-      <input type="text" placeholder="Frequência" value="${(it.frequencia||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].frequencia=this.value">
-      <input type="text" placeholder="Obs" value="${(it.obs||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].obs=this.value">
-      <button class="nut-item-edit" style="color:var(--red-d)" onclick="window._tmplEdit.itens.splice(${idx},1);_renderModalTemplateCRUD()">×</button>
-    </div>`).join('');
 
   const bg = document.createElement('div');
   bg.className='modal-bg'; bg.id='modal-tmpl-crud'; bg.style.display='flex';
   bg.innerHTML=`
-    <div class="modal" style="width:680px;max-height:90vh;overflow-y:auto">
+    <div class="modal" style="width:640px">
       <div class="modal-header">
         <span class="modal-title">${st.db_id?'Editar':'Novo'} template</span>
         <button class="modal-close" onclick="document.getElementById('modal-tmpl-crud').remove()">×</button>
       </div>
-      <div style="padding:0 1.25rem 1rem">
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div class="form-group" style="margin:0"><label>Nome do template</label>
-            <input type="text" id="tmpl-crud-nome" value="${st.nome.replace(/"/g,'&quot;')}" placeholder="Ex: Potros em recria"></div>
-          <div class="form-group" style="margin:0"><label>Estágio vinculado (opcional)</label>
-            <select id="tmpl-crud-estagio">
-              ${estagios.map(e=>`<option value="${e}" ${st.estagio===e?'selected':''}>${e||'— nenhum —'}</option>`).join('')}
-            </select></div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Itens do template</div>
-        <div id="tmpl-crud-itens">${itensRows || '<div class="nut-empty">Nenhum item ainda.</div>'}</div>
-        <button class="btn btn-sm" style="margin-top:6px" onclick="window._tmplEdit.itens.push({tipo:'racao',produto:'',quantidade:'',frequencia:'2x ao dia',obs:''});_renderModalTemplateCRUD()">+ Adicionar item</button>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div class="form-group" style="margin:0"><label>Nome do template</label>
+          <input type="text" id="tmpl-crud-nome" value="${st.nome.replace(/"/g,'&quot;')}" placeholder="Ex: Potros em recria" oninput="window._tmplEdit.nome=this.value"></div>
+        <div class="form-group" style="margin:0"><label>Estágio vinculado (opcional)</label>
+          <select id="tmpl-crud-estagio" onchange="window._tmplEdit.estagio=this.value">
+            ${estagios.map(e=>`<option value="${e}" ${st.estagio===e?'selected':''}>${e||'— nenhum —'}</option>`).join('')}
+          </select></div>
       </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Itens do template</div>
+      <div id="tmpl-crud-itens"></div>
+      <button class="btn btn-sm" style="margin-top:4px" onclick="window._tmplEdit.itens.push({tipo:'racao',produto:'',quantidade:'',frequencia:'2x ao dia',obs:''});_renderTmplItensRows()">+ Adicionar item</button>
       <div class="modal-footer">
         <button class="btn" onclick="document.getElementById('modal-tmpl-crud').remove()">Cancelar</button>
         <button class="btn btn-primary" onclick="salvarTemplateCRUD()">Salvar template</button>
       </div>
     </div>`;
   document.body.appendChild(bg);
+  _renderTmplItensRows();
+}
+
+// Cada item vira um card (mesmo padrão visual do resto do app: fundo --bg3, raio --radius) com
+// os campos em flex-wrap — reflow natural em telas estreitas, em vez do grid de colunas fixas
+// (100px/90px/110px...) que forçava scroll horizontal dentro do modal.
+function _renderTmplItensRows() {
+  const el = document.getElementById('tmpl-crud-itens');
+  if(!el) return;
+  const st = window._tmplEdit;
+  const tipos = ['racao','aveia','alfafa','verde','sal','suplemento','outro'];
+  el.innerHTML = st.itens.length===0
+    ? '<div class="nut-empty">Nenhum item ainda.</div>'
+    : st.itens.map((it,idx)=>`
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg3);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px">
+        <select style="flex:1 1 100px" onchange="window._tmplEdit.itens[${idx}].tipo=this.value">
+          ${tipos.map(t=>`<option value="${t}" ${it.tipo===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        <input type="text" style="flex:2 1 140px" placeholder="Produto" value="${(it.produto||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].produto=this.value">
+        <input type="text" style="flex:1 1 90px" placeholder="Qtd/dia" value="${(it.quantidade||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].quantidade=this.value">
+        <input type="text" style="flex:1 1 110px" placeholder="Frequência" value="${(it.frequencia||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].frequencia=this.value">
+        <input type="text" style="flex:2 1 140px" placeholder="Obs" value="${(it.obs||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].obs=this.value">
+        <button class="nut-item-edit" style="color:var(--red-d)" onclick="window._tmplEdit.itens.splice(${idx},1);_renderTmplItensRows()">×</button>
+      </div>`).join('');
 }
 
 async function salvarTemplateCRUD() {
-  const nome = document.getElementById('tmpl-crud-nome').value.trim();
+  const nome = (window._tmplEdit.nome||'').trim();
   if(!nome) return alert('Informe o nome do template.');
-  const estagio = document.getElementById('tmpl-crud-estagio').value || null;
+  const estagio = window._tmplEdit.estagio || null;
   const st = window._tmplEdit;
   let tmplId = st.db_id;
   if(tmplId) {
