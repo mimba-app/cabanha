@@ -521,6 +521,14 @@
   .med-val-pill.med-status-hi  { background:var(--amber-l); color:var(--amber-d); }
   .med-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-top:5px; }
   .med-padrão { font-size:9px; color:var(--text3); margin-top:2px; }
+  /* Máscara da status bar/Dynamic Island: sem isso, o conteúdo que rola pra cima
+     aparece "vazando" por trás do notch em vez de mostrar só o fundo — o WKWebView
+     não pinta essa faixa sozinho. Altura = env(safe-area-inset-top) exatamente:
+     0 (invisível) em qualquer tela sem notch/Dynamic Island, web incluído. */
+  #status-bar-mask {
+    position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top);
+    background:var(--bg); z-index:99999; pointer-events:none;
+  }
   /* Menu mobile: botão hamburger fixo, escondido em desktop. */
   #mobile-menu-btn {
     display:none; position:fixed;
@@ -957,6 +965,40 @@
   @keyframes ja-cresce2{from{width:0 !important;}}
   .jornada-ac .ja-acoes{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
   @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+
+  /* Jornada de acasalamento — mobile. O componente foi desenhado em colunas fixas
+     (cards lado a lado, linhas de ranking com larguras em px somando bem mais que
+     uma tela de celular) — sem isso ele "quebra" (vaza largura/corta conteúdo) em
+     qualquer tela estreita. Empilha em coluna única e troca largura fixa por 100%. */
+  @media (max-width:680px){
+    .jornada-ac{padding:18px 16px;}
+    .jornada-ac .ja-titulo{font-size:19px;}
+    .jornada-ac .ja-alvo{flex-wrap:wrap;}
+    .jornada-ac .ja-alvo > div:last-child{width:100%;justify-content:flex-end;}
+
+    .jornada-ac .ja-baralho{overflow:hidden;}
+
+    .jornada-ac .ja-linha{flex-wrap:wrap;row-gap:8px;}
+    .jornada-ac .ja-porq{width:100%;order:4;}
+    .jornada-ac .ja-nota{order:5;width:auto;margin-left:auto;text-align:right;}
+    .jornada-ac .ja-linha > .ja-btn2{order:6;}
+
+    .jornada-ac .ja-palco{padding:16px 14px;}
+    .jornada-ac .ja-cabeca{flex-direction:column;gap:10px;}
+    .jornada-ac .ja-cabeca .ja-quem-b{max-width:100%;text-align:left !important;}
+
+    .jornada-ac .ja-veredito{flex-direction:column;}
+    .jornada-ac .ja-coef{width:100%;}
+
+    .jornada-ac .ja-arena{flex-direction:column;gap:14px;min-height:0;}
+    .jornada-ac .ja-lado{width:100%;}
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-esq, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-esq,
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-dir, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-dir{transform:none;}
+    .jornada-ac .ja-fio{display:none;}
+
+    .jornada-ac .ja-dossie-topo{flex-direction:column;}
+    .jornada-ac .ja-grade{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
@@ -1120,6 +1162,7 @@
   </div>
 </div>
 
+<div id="status-bar-mask"></div>
 <button id="mobile-menu-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu" title="Menu">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
 </button>
