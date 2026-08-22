@@ -529,26 +529,47 @@
     position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top);
     background:var(--bg); z-index:99999; pointer-events:none;
   }
-  /* Menu mobile: botão hamburger fixo, escondido em desktop. */
-  #mobile-menu-btn {
-    display:none; position:fixed;
-    top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
-    z-index:30; width:38px; height:38px; align-items:center; justify-content:center;
-    background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius);
-    color:var(--text); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  /* Navegação mobile nativa: em vez de hambúrguer + gaveta sobreposta, o menu
+     (mesmo conteúdo da sidebar) vira uma TELA CHEIA própria — como a lista de
+     Pastas do app Notes da Apple. Uma barra fixa (embutida na máscara da
+     status bar, por isso ela cresce no mobile) mostra "‹ Menu" à esquerda
+     quando uma página de conteúdo está aberta, e o título da página
+     centralizado — sem hambúrguer flutuante, sem backdrop translúcido. */
+  #mobile-back-btn {
+    display:none; position:absolute; left:8px; bottom:0; z-index:2;
+    align-items:center; gap:2px; background:none; border:none; cursor:pointer;
+    font-family:var(--font); font-weight:600; font-size:15px; color:var(--chrome-accent);
+    padding:8px 10px 8px 4px;
   }
-  #sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9; }
+  #mobile-back-btn svg { width:22px; height:22px; flex-shrink:0; }
+  #mobile-navbar-title {
+    display:none; font-family:var(--serif); font-weight:800; font-size:16px;
+    color:var(--chrome-text); max-width:62%; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
   @media (max-width: 768px) {
-    /* Sidebar vira painel suspenso (drawer): some por padrão, sem disputar
-       espaço fixo com o conteúdo — só ocupa a tela quando o usuário abre. */
-    #mobile-menu-btn { display:flex; }
-    .sidebar { width:250px; max-width:82vw; transform:translateX(-100%); transition:transform 0.22s ease; box-shadow:2px 0 20px rgba(0,0,0,0.15); }
+    #status-bar-mask {
+      height:calc(env(safe-area-inset-top) + 46px);
+      display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px;
+      border-bottom:0.5px solid var(--chrome-border); pointer-events:auto;
+    }
+    #mobile-back-btn, #mobile-navbar-title { display:flex; }
+    /* Menu vira tela cheia própria (não gaveta estreita sobre um backdrop) —
+       cobre 100% da viewport e desliza inteira, como uma tela de navegação real. */
+    .sidebar { width:100vw; max-width:100vw; transform:translateX(-100%); transition:transform 0.28s cubic-bezier(.25,.1,.25,1); box-shadow:none; z-index:20; padding-top:calc(env(safe-area-inset-top) + 62px); }
     .sidebar.open { transform:translateX(0); }
-    #sidebar-backdrop.open { display:block; }
-    .main { margin-left:0; padding:1rem; padding-top:calc(4rem + env(safe-area-inset-top)); max-width:100vw; }
+    .main { margin-left:0; padding:1rem; padding-top:calc(62px + env(safe-area-inset-top) + 1rem); max-width:100vw; }
     #trial-banner-topo { margin:-1rem -1rem 1rem; flex-wrap:wrap; }
     .metrics { grid-template-columns:1fr 1fr; }
     .two-col { grid-template-columns:1fr; }
+    /* Lista do menu com cara de lista nativa: linha divisória e seta à direita
+       em vez do item "achatado" que fazia sentido só numa gaveta estreita. */
+    .nav-btn { padding:13px 4px; border-bottom:0.5px solid var(--chrome-border); border-radius:0; font-size:15px; }
+    .nav-btn::after {
+      content:''; margin-left:auto; width:8px; height:8px; flex-shrink:0;
+      border-right:1.6px solid var(--chrome-text3); border-top:1.6px solid var(--chrome-text3);
+      transform:rotate(45deg); opacity:.7;
+    }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .sangue-bar { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border); }
@@ -1162,11 +1183,13 @@
   </div>
 </div>
 
-<div id="status-bar-mask"></div>
-<button id="mobile-menu-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu" title="Menu">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-</button>
-<div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
+<div id="status-bar-mask">
+  <button id="mobile-back-btn" onclick="toggleSidebarMobile(true)" aria-label="Voltar ao menu" title="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Menu
+  </button>
+  <span id="mobile-navbar-title"></span>
+</div>
 
 <div class="sidebar" id="sidebar-main">
   <div class="logo">
@@ -7342,17 +7365,29 @@ function showPage(id){
   if(id==='saude')renderSaude();
   if(id==='reprodutivo'){renderReprodutivo();renderPlanejadorReprodutivo();}
   if(id==='financeiro')renderFinanceiro();
-  toggleSidebarMobile(false); // navegar sempre fecha o menu suspenso no mobile
+  // Título da barra de navegação mobile: lido do .page-title da própria página,
+  // única fonte de verdade (em vez de duplicar o texto num mapa à parte).
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (navTitulo) {
+    const tituloEl = document.querySelector('#page-'+id+' .page-title');
+    navTitulo.textContent = tituloEl ? tituloEl.textContent : '';
+  }
+  toggleSidebarMobile(false); // navegar sempre volta pro conteúdo (fecha o menu) no mobile
 }
 
-// ── Menu mobile (painel suspenso) ──────────────────────────────────────────
+// ── Menu mobile (tela cheia, estilo "Pastas" do Notes — não é mais gaveta
+// sobreposta) — toggleSidebarMobile(true) mostra o menu, (false) mostra o
+// conteúdo. O botão "‹ Menu" e o título centralizado só fazem sentido com o
+// conteúdo visível, por isso somem juntos com o menu.
 function toggleSidebarMobile(force){
   const sb = document.getElementById('sidebar-main');
-  const bd = document.getElementById('sidebar-backdrop');
   if(!sb) return;
   const abrir = typeof force === 'boolean' ? force : !sb.classList.contains('open');
   sb.classList.toggle('open', abrir);
-  if(bd) bd.classList.toggle('open', abrir);
+  const backBtn = document.getElementById('mobile-back-btn');
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (backBtn) backBtn.style.visibility = abrir ? 'hidden' : '';
+  if (navTitulo) navTitulo.style.visibility = abrir ? 'hidden' : '';
 }
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -15368,6 +15403,11 @@ function _entrarApp() {
   if(usrSub) usrSub.textContent = 'Controle de acesso ao sistema' + (nomeCab ? ` — ${nomeCab}` : '');
   _aplicarPermissoes();
   populaCiclos();
+  // Dashboard é sempre a página de entrada (já vem "active" no HTML estático,
+  // sem passar por showPage()) — título da navbar mobile precisa ser setado
+  // aqui manualmente, senão fica vazio até a primeira troca de página.
+  const navTituloInicial = document.getElementById('mobile-navbar-title');
+  if (navTituloInicial) navTituloInicial.textContent = document.querySelector('#page-dashboard .page-title')?.textContent || 'Dashboard';
   // Não renderizar o dashboard com dado real aqui: animais ainda está vazio (limpo
   // em _limparEstadoLocal) — mostra skeleton animado até _sincronizarAoLogin
   // terminar e chamar renderDashboard() de verdade, no final.
