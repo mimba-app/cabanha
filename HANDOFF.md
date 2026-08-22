@@ -447,17 +447,43 @@ na tabela `coberturas_arquivadas_legado`). Dois problemas distintos, corrigidos:
   **falta QA de ponta a ponta em `mimba-hml.pages.dev` com login/dado reais** (planejar ciclo do zero,
   negociar cobertura entre duas cabanhas de teste de verdade) **antes de considerar pronto pra produção**.
 
-## 🥕 Nutrição — refactor pendente (spec fechada, 2026-08-21)
+## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
-nutricional não persiste no banco (o módulo inteiro roda em memória — `nutProj` é recriado vazio
-a cada load, zero chamadas ao Supabase em toda a seção de Nutrição), não dá pra criar novos
-templates (`NUT_TEMPLATES` é uma constante JS fixa de 7 chaves), e não dá pra ter dois itens do
-mesmo tipo num template/projeto (ração/aveia/alfafa/verde/sal são campos únicos, não listas — só
-suplementos já era array). Spec completa com schema novo (`nutricao_templates`/
-`nutricao_template_itens`/`nutricao_projetos`/`nutricao_projeto_itens`, seguindo o padrão
-cabeçalho+itens já usado em `tratamentos`/`reproducao_atividades`), plano de seed dos 7 templates
-atuais, e 5 fases de implementação em `docs/spec-nutricao-refactor.md`. **Nada implementado
-ainda** — só a spec, pronta pro Pedro construir.
+nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado
+vazio a cada load, zero chamadas ao Supabase em toda a seção de Nutrição), não dava pra criar
+novos templates (`NUT_TEMPLATES` era uma constante JS fixa de 7 chaves), e não dava pra ter dois
+itens do mesmo tipo num template/projeto (ração/aveia/alfafa/verde/sal eram campos únicos, não
+listas — só suplementos já era array). Spec completa em `docs/spec-nutricao-refactor.md`.
+
+**Pedro assumiu o projeto do app mobile (Android/iOS); esta frente passou a ser trabalhada
+direto por mim (Claude) com o Luciano**, fora do padrão usual "spec pro Pedro construir" — por
+isso já foi direto pra implementação, banco e frontend.
+
+- **Schema** (`docs/migrations/2026-08-21-nutricao-refactor-fase0.sql`, aplicada via MCP):
+  `nutricao_templates`/`nutricao_template_itens` (templates configuráveis, CRUD real) +
+  `nutricao_projetos`/`nutricao_projeto_itens` (projeto por animal, histórico real via
+  status ativo/finalizado, índice único parcial garantindo no máximo 1 ativo por animal).
+  Suplementos deixaram de ser um array à parte — viram só mais um `tipo` de item.
+  ⚠️ **Achado no caminho**: já existiam tabelas `nutricao_itens`/`nutricao_projetos` de uma
+  tentativa anterior abandonada (formato incompleto, nunca lida pelo frontend — mesmo espírito
+  do achado de "garanhões fantasma"). 17 linhas órfãs na Mãe de Deus (todas "Aveia" default,
+  datadas de março) foram migradas pra estrutura nova antes de derrubar as tabelas velhas — nada
+  perdido. Os 7 templates que eram a constante JS `NUT_TEMPLATES` foram semeados como dados reais
+  em todos os 8 tenants, valores idênticos aos que já estavam calibrados.
+- **`provisionar_schema_cabanha`** e **`carregar_dados_cabanha`** (bootstrap de login)
+  atualizadas — cabanhas novas já nascem com os 7 templates seedados; o bootstrap já devolve
+  `nutricao_templates`/`nutricao_projetos` com itens aninhados.
+- **Frontend** (`index.html`): bloco inteiro de Nutrição reescrito — persistência real via
+  `_supa()` (mesmo padrão de `tratamentos`), CRUD completo de templates (criar/editar/excluir,
+  modal dinâmico), listas de itens em vez de campos fixos (qualquer quantidade de itens por
+  categoria, incluindo dois tipos de ração no mesmo animal), Lista de Compras generalizada pra
+  agrupar por `(tipo, produto)` em vez de chaves fixas.
+- **Testado** com harness funcional (jsdom + vm, simulando o bootstrap real e as respostas do
+  Supabase) — 10 cenários cobrindo aplicar template, adicionar segundo item do mesmo tipo,
+  suplemento, lista de compras com produtos separados, e criar template novo do zero. Todos
+  passaram. **Não testado ainda em navegador real com sessão/login de verdade** — só a lógica
+  client-side isolada. Sintaxe do arquivo inteiro validada com `node --check`, sem referências
+  órfãs aos identificadores antigos (`NUT_TEMPLATES`, `nutTemplatesCustom`, `.suplementos` etc.)
 
 ## 🚀 Meta V1.5 até 29/08/2026 (definida com o Pedro em 2026-08-02)
 Plano completo em `docs/roadmap-v15.md`. Origem: `docs/roadmap-gestao-crioulo.pdf` (roadmap geral), marco

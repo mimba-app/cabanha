@@ -2397,11 +2397,12 @@
   </div>
 </div>
 
-<!-- MODAL NUTRIÇÃO: editar item base -->
+<!-- MODAL NUTRIÇÃO: item de uma categoria (ração/aveia/alfafa/verde/sal) — suporta N itens
+     por categoria, não mais um único campo fixo -->
 <div class="modal-bg" id="modal-nut-item">
   <div class="modal" style="width:520px">
-    <div class="modal-header"><span class="modal-title" id="nut-item-titulo">Editar item</span><button class="modal-close" onclick="closeModal('modal-nut-item')">×</button></div>
-    <input type="hidden" id="nut-idx"><input type="hidden" id="nut-field">
+    <div class="modal-header"><span class="modal-title" id="nut-item-titulo">Item</span><button class="modal-close" onclick="closeModal('modal-nut-item')">×</button></div>
+    <input type="hidden" id="nut-idx"><input type="hidden" id="nut-tipo"><input type="hidden" id="nut-item-edit-idx">
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1"><label id="nut-label-prod">Produto / Marca</label><input type="text" id="nut-produto" placeholder="Ex: Pré-Mix Premium · Tortuga"></div>
       <div class="form-group"><label>Quantidade diária</label><input type="text" id="nut-qty" placeholder="Ex: 2 kg"></div>
@@ -2410,8 +2411,6 @@
         <option>3x ao dia</option><option>Semanal</option><option>Conforme disponível</option><option>Não fornecido</option>
       </select></div>
       <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="nut-obs-item" placeholder="Notas adicionais"></div>
-      <div class="form-group" id="nut-periodo-group" style="display:none;grid-column:1/-1"><label>Período de uso</label><input type="text" id="nut-periodo" placeholder="Ex: Março a Agosto / Inverno / Contínuo"></div>
-      <div class="form-group" id="nut-dosagem-group" style="display:none;grid-column:1/-1"><label>Dosagem detalhada</label><input type="text" id="nut-dosagem" placeholder="Ex: 50g por dia dividido em 2 refeições"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-nut-item')">Cancelar</button>
@@ -2447,18 +2446,9 @@
 <div class="modal-bg" id="modal-template">
   <div class="modal" style="width:480px">
     <div class="modal-header"><span class="modal-title">Aplicar template nutricional</span><button class="modal-close" onclick="closeModal('modal-template')">×</button></div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Selecione o estágio para copiar o template padrão ao animal selecionado. Os dados atuais do animal serão substituídos (exceto suplementos).</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Selecione o template para copiar ao animal selecionado. A alimentação base atual do animal será substituída (suplementos são mantidos).</p>
     <div class="form-group" style="margin-bottom:1rem"><label>Animal</label><select id="tmpl-animal" style="width:100%"></select></div>
-    <div class="form-group"><label>Template (por estágio)</label><select id="tmpl-estagio" style="width:100%">
-      <option value="CAMPO">CAMPO (potros / recria)</option>
-      <option value="PISTA MORFOLOGIA">PISTA MORFOLOGIA</option>
-      <option value="PISTA FUNCIONAL">PISTA FUNCIONAL</option>
-      <option value="ARREIO CABANHA">ARREIO CABANHA</option>
-      <option value="LAÇO">LAÇO</option>
-      <option value="DOMA">DOMA</option>
-      <option value="CRIA">CRIA (éguas com cria)</option>
-      <option value="VAZIO">Vazio (limpar)</option>
-    </select></div>
+    <div class="form-group"><label>Template</label><select id="tmpl-select" style="width:100%"></select></div>
     <div id="tmpl-preview" style="margin-top:1rem;padding:0.8rem;background:var(--bg3);border-radius:var(--radius);font-size:11px;color:var(--text2);line-height:1.7"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-template')">Cancelar</button>
@@ -4805,6 +4795,7 @@ function salvarMedida() {
     const t = window._medProjTipo.tipo;
     if(!nutProj[idx]) nutProj[idx]=nutVazio();
     nutProj[idx][`med_${t}`]={cernelha:reg.cernelha,torax:reg.torax,canela:reg.canela,peso:reg.peso,escore:reg.escore,data:reg.data,obs:reg.obs};
+    _dbSalvarProjeto(idx);
     window._medProjTipo=null;
     const body=document.getElementById('nutbody-'+idx);
     if(body&&body.classList.contains('open')) body.innerHTML=renderNutBody(idx);
@@ -6168,11 +6159,12 @@ function _renderDetCorpo(i, editando) {
   // ── NUTRIÇÃO ──────────────────────────────────────────────────────
   const n=getNut(i); const ps=projStatus(n);
   const S5=`<div class="ficha-section"><div class="ficha-section-title">${_iconTrigo(17)} Projeto Nutricional <span class="nut-proj-status ${ps.cls}" style="margin-left:6px">${ps.label}</span></div>
-    ${(n.dt_inicio||n.racao.produto||n.aveia.qty)?`
+    ${(n.dt_inicio||n.itens.length>0)?`
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-      ${[['Ração',n.racao.produto,n.racao.qty],['Aveia','Aveia',n.aveia.qty],['Alfafa','Alfafa',n.alfafa.qty],
-         ['Verde',n.verde.produto||'Sazonal',n.verde.qty],['Sal',n.sal.produto||'Sal mineral',n.sal.freq]]
-        .filter(([,p,q])=>p||q).map(([l,p,q])=>`<div style="background:var(--bg3);border-radius:var(--radius);padding:6px 8px">
+      ${n.itens.filter(it=>it.tipo!=='suplemento').map(it=>{
+        const rotulos={racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde',sal:'Sal'};
+        return [rotulos[it.tipo]||it.tipo, it.produto, it.quantidade||it.frequencia];
+      }).filter(([,p,q])=>p||q).map(([l,p,q])=>`<div style="background:var(--bg3);border-radius:var(--radius);padding:6px 8px">
           <div style="font-size:10px;color:var(--text3)">${l}</div>
           <div style="font-weight:600;font-size:11px;margin-top:2px">${q||'—'}</div>
           <div style="font-size:10px;color:var(--text2)">${p||''}</div>
@@ -7373,80 +7365,110 @@ const INATIVOS = ['MORTO','TRANSFERIDO','VENDIDO','MORTO(A)','DOADO(A)','VENDIDO
 function isAtivo(a) { return !INATIVOS.includes(a.situacao); }
 function isNaCabanha(a) { return a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO'; }
 
-// Estrutura padrão de projeto nutricional por animal
+// Estrutura padrão de projeto nutricional por animal — refactor 2026-08-21
+// (spec: docs/spec-nutricao-refactor.md). Persiste em `nutricao_projetos` +
+// `nutricao_projeto_itens` (1:N — qualquer quantidade de itens do mesmo tipo,
+// ex.: dois tipos de ração). Suplementos deixaram de ser um array à parte —
+// viram só mais um tipo de item (tipo='suplemento') na mesma lista `itens`.
 function nutVazio() {
   return {
-    dt_inicio: '', dt_fim: '', status_proj: 'ativo',
-    racao:    { produto:'', qty:'', freq:'2x ao dia', obs:'' },
-    aveia:    { produto:'Aveia', qty:'', freq:'2x ao dia', obs:'' },
-    alfafa:   { produto:'Alfafa', qty:'', freq:'1x ao dia', obs:'' },
-    verde:    { produto:'', qty:'', freq:'Conforme disponível', obs:'Corte sazonal' },
-    sal:      { produto:'Sal mineral', qty:'', freq:'À vontade', obs:'' },
-    suplementos: [], obs_projeto: '',
+    db_id: null, dt_inicio: '', dt_fim: '', status_proj: 'ativo',
+    obs_projeto: '', template_origem_id: null,
+    itens: [],
     med_inicial: { cernelha:'', torax:'', canela:'', peso:'', escore:'', data:'', obs:'' },
     med_final:   { cernelha:'', torax:'', canela:'', peso:'', escore:'', data:'', obs:'' },
   };
 }
 
-// Templates por estágio
-const NUT_TEMPLATES = {
-  'CAMPO': {
-    racao:  { produto:'Ração crescimento', qty:'2 kg/dia', freq:'2x ao dia', obs:'Dividir manhã e tarde' },
-    aveia:  { produto:'Aveia grão', qty:'0,5 kg/dia', freq:'1x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'0,5 kg/dia', freq:'1x ao dia', obs:'Feno de boa qualidade' },
-    verde:  { produto:'Azevém / Tifton / Aveia preta', qty:'À vontade', freq:'Conforme disponível', obs:'Pasto rotacionado, sazonal' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'Coccho coberto' },
-  },
-  'PISTA MORFOLOGIA': {
-    racao:  { produto:'Ração performance', qty:'3 kg/dia', freq:'2x ao dia', obs:'Alta energia, dividido em 2 tratos' },
-    aveia:  { produto:'Aveia grão', qty:'1 kg/dia', freq:'2x ao dia', obs:'0,5 kg por trato' },
-    alfafa: { produto:'Alfafa feno', qty:'1 kg/dia', freq:'2x ao dia', obs:'Fornecer antes da ração' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'Complementar ao feno' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'Coccho coberto' },
-  },
-  'PISTA FUNCIONAL': {
-    racao:  { produto:'Ração performance / trabalho', qty:'4 kg/dia', freq:'2x ao dia', obs:'Aumentar em período de provas' },
-    aveia:  { produto:'Aveia grão', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'0,75 kg por trato' },
-    alfafa: { produto:'Alfafa feno', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'Fornecer antes da ração' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'Complementar ao feno' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'Coccho coberto' },
-  },
-  'ARREIO CABANHA': {
-    racao:  { produto:'Ração manutenção / performance', qty:'3 kg/dia', freq:'2x ao dia', obs:'Ajustar conforme uso' },
-    aveia:  { produto:'Aveia grão', qty:'1 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'1 kg/dia', freq:'1x ao dia', obs:'' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'LAÇO': {
-    racao:  { produto:'Ração performance', qty:'4 kg/dia', freq:'2x ao dia', obs:'Alta demanda energética' },
-    aveia:  { produto:'Aveia grão', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'DOMA': {
-    racao:  { produto:'Ração manutenção', qty:'2,5 kg/dia', freq:'2x ao dia', obs:'Aumentar com progressão do treino' },
-    aveia:  { produto:'Aveia grão', qty:'0,8 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'0,8 kg/dia', freq:'1x ao dia', obs:'' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'CRIA': {
-    racao:  { produto:'Ração égua lactante', qty:'4 kg/dia', freq:'2x ao dia', obs:'Maior demanda na lactação' },
-    aveia:  { produto:'Aveia grão', qty:'1 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'2 kg/dia', freq:'2x ao dia', obs:'Alta proteína para produção de leite' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'À vontade', obs:'Pasto de qualidade' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'VAZIO': nutVazio(),
-};
+// Categorias fixas da "Alimentação base" (cada uma agora é uma LISTA de itens, não um
+// campo único) + metadados de exibição. Suplemento é tratado à parte na renderização
+// (mesma seção visual de antes), mas mora na mesma tabela/array `itens`.
+const NUT_CATEGORIAS = [
+  {tipo:'racao', icon:()=>_iconTrigo(14), label:'Ração'},
+  {tipo:'aveia', icon:()=>_iconTrigo(14), label:'Aveia'},
+  {tipo:'alfafa', icon:()=>_iconFolha(14), label:'Alfafa'},
+  {tipo:'verde', icon:()=>_iconBroto(14), label:'Verde (corte)'},
+  {tipo:'sal', icon:()=>_iconSal(14), label:'Sal mineral'},
+];
 
-// Inicializar projetos nutricionais
+// Templates — carregados do banco (nutricao_templates + nutricao_template_itens),
+// preenchidos no bootstrap de login e recarregados após qualquer CRUD de template.
+let nutTemplates = [];
+
+async function _carregarNutTemplatesDoBanco() {
+  const res = await _supa('GET','nutricao_templates',null,'?select=*,itens:nutricao_template_itens(*)&ativo=eq.true&order=nome');
+  nutTemplates = (res||[]).map(t=>({
+    db_id: t.id, nome: t.nome, estagio_vinculado: t.estagio_vinculado||'',
+    itens: (t.itens||[]).sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(it=>({
+      db_id: it.id, tipo: it.tipo, produto: it.produto||'', marca: it.marca||'',
+      quantidade: it.quantidade||'', frequencia: it.frequencia||'', periodo: it.periodo||'', obs: it.obs||''
+    }))
+  }));
+}
+
+// Projetos por animal — inicializado vazio, preenchido no bootstrap a partir do banco
+// (ver carregarDadosCabanha). Continua indexado por índice do array `animais`, mesmo
+// padrão já usado no resto do app (histVacinas, histExames etc.) — mas cada entrada
+// carrega seu próprio `db_id` real, então a persistência não depende dessa posição.
 let nutProj = {};
-animais.forEach((a,i) => { nutProj[i] = nutVazio(); });
 
 function getNut(i) { if(!nutProj[i]) nutProj[i]=nutVazio(); return nutProj[i]; }
+
+// ─── PERSISTÊNCIA ────────────────────────────────────────────────────────────────
+async function _dbGarantirProjeto(i) {
+  const n = getNut(i);
+  if(n.db_id) return n.db_id;
+  const animal = animais[i];
+  if(!animal?.db_id) return null; // animal ainda não persistido — nada a fazer
+  const payload = {
+    animal_id: animal.db_id, dt_inicio: n.dt_inicio||null, dt_fim: n.dt_fim||null,
+    status: n.status_proj||'ativo', obs_projeto: n.obs_projeto||null,
+    template_origem_id: n.template_origem_id||null,
+    med_inicial: (n.med_inicial&&(n.med_inicial.cernelha||n.med_inicial.peso))?n.med_inicial:null,
+    med_final: (n.med_final&&(n.med_final.cernelha||n.med_final.peso))?n.med_final:null,
+    criado_por: usuarioAtual?.db_id||null,
+  };
+  const res = await _supa('POST', 'nutricao_projetos', payload);
+  if(res?.[0]?.id) n.db_id = res[0].id;
+  return n.db_id;
+}
+
+async function _dbSalvarProjeto(i) {
+  const n = getNut(i);
+  if(!n.db_id) { await _dbGarantirProjeto(i); return; }
+  const payload = {
+    dt_inicio: n.dt_inicio||null, dt_fim: n.dt_fim||null,
+    status: n.status_proj||'ativo', obs_projeto: n.obs_projeto||null,
+    template_origem_id: n.template_origem_id||null,
+    med_inicial: (n.med_inicial&&(n.med_inicial.cernelha||n.med_inicial.peso))?n.med_inicial:null,
+    med_final: (n.med_final&&(n.med_final.cernelha||n.med_final.peso))?n.med_final:null,
+  };
+  await _supa('PATCH', 'nutricao_projetos', payload, '?id=eq.' + n.db_id);
+}
+
+async function _dbSalvarItemProjeto(i, itemIdx) {
+  const n = getNut(i);
+  const item = n.itens[itemIdx];
+  if(!item) return;
+  const projId = await _dbGarantirProjeto(i);
+  if(!projId) return;
+  const payload = {
+    projeto_id: projId, tipo: item.tipo, produto: item.produto||null, marca: item.marca||null,
+    quantidade: item.quantidade||null, frequencia: item.frequencia||null,
+    periodo: item.periodo||null, obs: item.obs||null, ordem: itemIdx,
+  };
+  if(item.db_id) {
+    await _supa('PATCH', 'nutricao_projeto_itens', payload, '?id=eq.' + item.db_id);
+  } else {
+    const res = await _supa('POST', 'nutricao_projeto_itens', payload);
+    if(res?.[0]?.id) item.db_id = res[0].id;
+  }
+}
+
+async function _dbExcluirItemProjeto(itemDbId) {
+  if(!itemDbId) return;
+  await _supa('DELETE', 'nutricao_projeto_itens', null, '?id=eq.' + itemDbId);
+}
 
 // ─── RENDER LISTA ──────────────────────────────────────────────────────────────
 function projStatus(n) {
@@ -7487,7 +7509,8 @@ function renderNutLista() {
     const i = animais.indexOf(a);
     const n = getNut(i);
     const ps = projStatus(n);
-    const nSuplBadge = n.suplementos.length>0 ? `<span class="badge bt" style="margin-left:6px">${n.suplementos.length} supl.</span>` : '';
+    const nSupl = n.itens.filter(it=>it.tipo==='suplemento').length;
+    const nSuplBadge = nSupl>0 ? `<span class="badge bt" style="margin-left:6px">${nSupl} supl.</span>` : '';
     return `<div class="nut-animal-card" id="nutcard-${i}">
       <div class="nut-animal-header" onclick="toggleNutCard(${i})">
         <div style="flex:1">
@@ -7518,23 +7541,16 @@ function toggleNutCard(i) {
 function renderNutBody(i) {
   const n = getNut(i);
   const ps = projStatus(n);
-  const items = [
-    {key:'racao', icon:_iconTrigo(14), label:'Ração'},
-    {key:'aveia', icon:_iconTrigo(14), label:'Aveia'},
-    {key:'alfafa', icon:_iconFolha(14), label:'Alfafa'},
-    {key:'verde', icon:_iconBroto(14), label:'Verde (corte)'},
-    {key:'sal', icon:_iconSal(14), label:'Sal mineral'},
-  ];
 
   // Cabeçalho: período do projeto
   let html = `<div class="nut-proj-header">
     <div class="nut-proj-date">
       <label>Início do projeto</label>
-      <input type="date" value="${n.dt_inicio||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_inicio=this.value;atualizarStatusNutCard(${i})">
+      <input type="date" value="${n.dt_inicio||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_inicio=this.value;_dbSalvarProjeto(${i});atualizarStatusNutCard(${i})">
     </div>
     <div class="nut-proj-date">
       <label>Fim / Revisão prevista</label>
-      <input type="date" value="${n.dt_fim||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_fim=this.value;atualizarStatusNutCard(${i})">
+      <input type="date" value="${n.dt_fim||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_fim=this.value;_dbSalvarProjeto(${i});atualizarStatusNutCard(${i})">
     </div>
     <div style="display:flex;flex-direction:column;gap:4px">
       <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px">Status</label>
@@ -7542,49 +7558,66 @@ function renderNutBody(i) {
     </div>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:flex-end">
       ${n.status_proj==='finalizado'
-        ? `<button class="btn btn-sm" onclick="nutProj[${i}].status_proj='ativo';atualizarStatusNutCard(${i});renderNutLista()">Reativar projeto</button>`
-        : `<button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Finalizar este projeto nutricional?')){nutProj[${i}].status_proj='finalizado';atualizarStatusNutCard(${i});renderNutLista()}">Finalizar projeto</button>`}
+        ? `<button class="btn btn-sm" onclick="nutProj[${i}].status_proj='ativo';_dbSalvarProjeto(${i});atualizarStatusNutCard(${i});renderNutLista()">Reativar projeto</button>`
+        : `<button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Finalizar este projeto nutricional?')){nutProj[${i}].status_proj='finalizado';_dbSalvarProjeto(${i});atualizarStatusNutCard(${i});renderNutLista()}">Finalizar projeto</button>`}
     </div>
   </div>`;
 
+  // Alimentação base — cada categoria agora é uma lista (0..N itens), não 1 campo fixo.
   html += `<div class="nut-section">
-    <div class="nut-section-title">${_iconTrigo(14)} Alimentação base</div>
-    <div style="display:grid;grid-template-columns:160px 120px 140px 1fr auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
-      <span>Componente</span><span>Quantidade/dia</span><span>Frequência</span><span>Observações</span><span></span>
-    </div>`;
-  items.forEach(it=>{
-    const d = n[it.key];
-    html += `<div class="nut-item">
-      <span class="nut-item-label">${it.icon} ${it.label}${d.produto && it.key!=='aveia'&&it.key!=='alfafa'&&it.key!=='sal' ? '<br><span style="font-weight:400;font-size:11px;color:var(--text2)">'+d.produto+'</span>' : ''}</span>
-      <span class="nut-item-qty">${d.qty||'<span style="color:var(--text3)">—</span>'}</span>
-      <span class="nut-item-freq"><span class="badge bgr">${d.freq||'—'}</span></span>
-      <span class="nut-item-obs">${d.obs||''}</span>
-      <button class="nut-item-edit" onclick="editarNutItem(${i},'${it.key}')">editar</button>
-    </div>`;
+    <div class="nut-section-title">${_iconTrigo(14)} Alimentação base</div>`;
+  NUT_CATEGORIAS.forEach(cat=>{
+    const itensCat = n.itens.map((it,idx)=>({it,idx})).filter(x=>x.it.tipo===cat.tipo);
+    html += `<div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+        <span style="font-weight:600;font-size:12px">${cat.icon()} ${cat.label}</span>
+        <button class="nut-add-btn" onclick="abrirModalNutItem(${i},'${cat.tipo}',-1)">+ Adicionar</button>
+      </div>`;
+    if(itensCat.length===0){
+      html += `<div class="nut-empty" style="margin:0 0 4px">Nenhum item cadastrado.</div>`;
+    } else {
+      html += `<div style="display:grid;grid-template-columns:160px 120px 140px 1fr auto;gap:6px;padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+        <span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Observações</span><span></span>
+      </div>`;
+      itensCat.forEach(({it,idx})=>{
+        html += `<div class="nut-item">
+          <span class="nut-item-label">${it.produto||'<span style="color:var(--text3)">—</span>'}</span>
+          <span class="nut-item-qty">${it.quantidade||'<span style="color:var(--text3)">—</span>'}</span>
+          <span class="nut-item-freq"><span class="badge bgr">${it.frequencia||'—'}</span></span>
+          <span class="nut-item-obs">${it.obs||''}</span>
+          <div style="display:flex;gap:4px">
+            <button class="nut-item-edit" onclick="abrirModalNutItem(${i},'${cat.tipo}',${idx})">editar</button>
+            <button class="nut-item-edit" style="color:var(--red-d)" onclick="removerNutItem(${i},${idx})">×</button>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
   });
   html += '</div>';
 
-  // Suplementos
+  // Suplementos — mesma seção visual de sempre, agora lendo de `n.itens` (tipo=suplemento).
+  const suplList = n.itens.map((it,idx)=>({it,idx})).filter(x=>x.it.tipo==='suplemento');
   html += `<div class="nut-section">
     <div class="nut-section-title">${_iconComprimido(14)} Suplementação
       <button class="nut-add-btn" onclick="addSupl(${i})">+ Adicionar</button>
     </div>`;
-  if(n.suplementos.length===0){
+  if(suplList.length===0){
     html += `<div class="nut-empty">Nenhum suplemento cadastrado para este animal.</div>`;
   } else {
     html += `<div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
       <span>Suplemento</span><span>Marca</span><span>Dosagem</span><span>Frequência</span><span>Período</span><span></span>
     </div>`;
-    n.suplementos.forEach((s,si)=>{
+    suplList.forEach(({it:s,idx})=>{
       html += `<div class="nut-supl">
-        <span style="font-weight:600;font-size:12px">${s.nome}</span>
+        <span style="font-weight:600;font-size:12px">${s.produto}</span>
         <span style="font-size:11px;color:var(--text2)">${s.marca||'—'}</span>
-        <span style="font-size:11px">${s.dosagem||'—'}</span>
-        <span style="font-size:11px"><span class="badge bb">${s.freq||'—'}</span></span>
+        <span style="font-size:11px">${s.quantidade||'—'}</span>
+        <span style="font-size:11px"><span class="badge bb">${s.frequencia||'—'}</span></span>
         <span style="font-size:11px;color:var(--text3)">${s.periodo||'—'}</span>
         <div style="display:flex;gap:4px">
-          <button class="nut-item-edit" onclick="editarSupl(${i},${si})">editar</button>
-          <button class="nut-item-edit" style="color:var(--red-d)" onclick="removerSupl(${i},${si})">×</button>
+          <button class="nut-item-edit" onclick="editarSupl(${i},${idx})">editar</button>
+          <button class="nut-item-edit" style="color:var(--red-d)" onclick="removerSupl(${i},${idx})">×</button>
         </div>
       </div>`;
     });
@@ -7593,7 +7626,7 @@ function renderNutBody(i) {
 
   html += `<div style="margin-top:0.9rem;padding-top:0.9rem;border-top:0.5px solid var(--border)">
     <label style="font-size:11px;font-weight:700;color:var(--text2)">Observações do projeto nutricional</label>
-    <input type="text" style="width:100%;margin-top:6px" value="${n.obs_projeto||''}" placeholder="Notas gerais sobre a alimentação deste animal..." onchange="nutProj[${i}].obs_projeto=this.value">
+    <input type="text" style="width:100%;margin-top:6px" value="${n.obs_projeto||''}" placeholder="Notas gerais sobre a alimentação deste animal..." onchange="nutProj[${i}].obs_projeto=this.value;_dbSalvarProjeto(${i})">
   </div>
   <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)">
     <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.75rem">${_iconRegua(14)} Medidas do Projeto</div>
@@ -7644,45 +7677,62 @@ function renderNutBody(i) {
 function atualizarStatusNutCard(i) {
   const n = getNut(i);
   const ps = projStatus(n);
-  // Atualizar badge no card fechado
   const lbl = document.getElementById('ps-label-'+i);
   if(lbl){ lbl.className='nut-proj-status '+ps.cls; lbl.textContent=ps.label; }
 }
 
-// ─── EDITAR ITEM ───────────────────────────────────────────────────────────────
-function editarNutItem(animalIdx, field) {
+// ─── EDITAR ITEM (qualquer categoria de Alimentação base) ────────────────────────
+function abrirModalNutItem(animalIdx, tipo, itemIdx) {
   const n = getNut(animalIdx);
-  const d = n[field];
-  document.getElementById('nut-idx').value = animalIdx;
-  document.getElementById('nut-field').value = field;
+  const item = (itemIdx!=null && itemIdx>=0) ? n.itens[itemIdx] : null;
   const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte sazonal)',sal:'Sal mineral'};
-  document.getElementById('nut-item-titulo').textContent = 'Editar — ' + labels[field];
-  document.getElementById('nut-label-prod').textContent = field==='racao' ? 'Produto / Marca / Linha' : field==='verde' ? 'Cultura / Espécie vegetal' : 'Produto';
-  document.getElementById('nut-produto').value = d.produto||'';
-  document.getElementById('nut-qty').value = d.qty||'';
-  document.getElementById('nut-freq').value = d.freq||'2x ao dia';
-  document.getElementById('nut-obs-item').value = d.obs||'';
-  document.getElementById('nut-periodo-group').style.display = 'none';
-  document.getElementById('nut-dosagem-group').style.display = 'none';
+  document.getElementById('nut-idx').value = animalIdx;
+  document.getElementById('nut-tipo').value = tipo;
+  document.getElementById('nut-item-edit-idx').value = (itemIdx!=null?itemIdx:-1);
+  document.getElementById('nut-item-titulo').textContent = (item?'Editar — ':'Novo item — ') + (labels[tipo]||tipo);
+  document.getElementById('nut-label-prod').textContent = tipo==='racao' ? 'Produto / Marca / Linha' : tipo==='verde' ? 'Cultura / Espécie vegetal' : 'Produto';
+  document.getElementById('nut-produto').value = item?.produto||'';
+  document.getElementById('nut-qty').value = item?.quantidade||'';
+  document.getElementById('nut-freq').value = item?.frequencia||'2x ao dia';
+  document.getElementById('nut-obs-item').value = item?.obs||'';
   openModal('modal-nut-item');
 }
 
 function salvarNutItem() {
   const i = parseInt(document.getElementById('nut-idx').value);
-  const field = document.getElementById('nut-field').value;
-  nutProj[i][field] = {
+  const tipo = document.getElementById('nut-tipo').value;
+  const editIdx = parseInt(document.getElementById('nut-item-edit-idx').value);
+  const n = getNut(i);
+  const obj = {
+    tipo,
     produto: document.getElementById('nut-produto').value,
-    qty: document.getElementById('nut-qty').value,
-    freq: document.getElementById('nut-freq').value,
+    quantidade: document.getElementById('nut-qty').value,
+    frequencia: document.getElementById('nut-freq').value,
     obs: document.getElementById('nut-obs-item').value,
   };
+  let idxFinal;
+  if(editIdx>=0 && n.itens[editIdx]) { n.itens[editIdx] = {...n.itens[editIdx], ...obj}; idxFinal = editIdx; }
+  else { n.itens.push(obj); idxFinal = n.itens.length-1; }
+  _dbSalvarItemProjeto(i, idxFinal);
   closeModal('modal-nut-item');
   const body = document.getElementById('nutbody-'+i);
   if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
   renderNutLista();
 }
 
-// ─── SUPLEMENTOS ───────────────────────────────────────────────────────────────
+function removerNutItem(i, idx) {
+  const n = getNut(i);
+  const item = n.itens[idx];
+  if(!item) return;
+  if(!confirm('Remover este item?')) return;
+  n.itens.splice(idx,1);
+  _dbExcluirItemProjeto(item.db_id);
+  const body = document.getElementById('nutbody-'+i);
+  if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
+  renderNutLista();
+}
+
+// ─── SUPLEMENTOS (tipo='suplemento' dentro de n.itens) ────────────────────────────
 function addSupl(i) {
   document.getElementById('supl-titulo').textContent = 'Adicionar suplemento';
   document.getElementById('supl-animal-idx').value = i;
@@ -7691,86 +7741,120 @@ function addSupl(i) {
   document.getElementById('supl-freq').value='Diário';
   openModal('modal-nut-supl');
 }
-function editarSupl(i, si) {
-  const s = nutProj[i].suplementos[si];
+function editarSupl(i, idx) {
+  const s = getNut(i).itens[idx];
   document.getElementById('supl-titulo').textContent = 'Editar suplemento';
   document.getElementById('supl-animal-idx').value = i;
-  document.getElementById('supl-supl-idx').value = si;
-  document.getElementById('supl-nome').value = s.nome||'';
+  document.getElementById('supl-supl-idx').value = idx;
+  document.getElementById('supl-nome').value = s.produto||'';
   document.getElementById('supl-marca').value = s.marca||'';
-  document.getElementById('supl-dosagem').value = s.dosagem||'';
-  document.getElementById('supl-freq').value = s.freq||'Diário';
+  document.getElementById('supl-dosagem').value = s.quantidade||'';
+  document.getElementById('supl-freq').value = s.frequencia||'Diário';
   document.getElementById('supl-periodo').value = s.periodo||'';
   document.getElementById('supl-obs').value = s.obs||'';
   openModal('modal-nut-supl');
 }
 function salvarSupl() {
   const i = parseInt(document.getElementById('supl-animal-idx').value);
-  const si = parseInt(document.getElementById('supl-supl-idx').value);
-  const s = {
-    nome: document.getElementById('supl-nome').value,
+  const idx = parseInt(document.getElementById('supl-supl-idx').value);
+  const n = getNut(i);
+  const obj = {
+    tipo: 'suplemento',
+    produto: document.getElementById('supl-nome').value,
     marca: document.getElementById('supl-marca').value,
-    dosagem: document.getElementById('supl-dosagem').value,
-    freq: document.getElementById('supl-freq').value,
+    quantidade: document.getElementById('supl-dosagem').value,
+    frequencia: document.getElementById('supl-freq').value,
     periodo: document.getElementById('supl-periodo').value,
     obs: document.getElementById('supl-obs').value,
   };
-  if(!s.nome) return alert('Nome do suplemento obrigatório.');
-  if(si===-1) nutProj[i].suplementos.push(s);
-  else nutProj[i].suplementos[si]=s;
+  if(!obj.produto) return alert('Nome do suplemento obrigatório.');
+  let idxFinal;
+  if(idx===-1) { n.itens.push(obj); idxFinal = n.itens.length-1; }
+  else { n.itens[idx] = {...n.itens[idx], ...obj}; idxFinal = idx; }
+  _dbSalvarItemProjeto(i, idxFinal);
   closeModal('modal-nut-supl');
   const body = document.getElementById('nutbody-'+i);
   if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
   renderNutLista();
 }
-function removerSupl(i, si) {
+function removerSupl(i, idx) {
+  const n = getNut(i);
+  const item = n.itens[idx];
   if(!confirm('Remover este suplemento?')) return;
-  nutProj[i].suplementos.splice(si,1);
+  n.itens.splice(idx,1);
+  _dbExcluirItemProjeto(item?.db_id);
   const body = document.getElementById('nutbody-'+i);
   if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
   renderNutLista();
 }
 
-// ─── TEMPLATES ─────────────────────────────────────────────────────────────────
+// ─── APLICAR TEMPLATE A UM ANIMAL ─────────────────────────────────────────────────
 function abrirTemplate(preIdx) {
   const sel = document.getElementById('tmpl-animal');
   sel.innerHTML = animais.map((a,i)=>`<option value="${i}">${a.nome}</option>`).join('');
   if(preIdx!==undefined) sel.value = preIdx;
-  const estSel = document.getElementById('tmpl-estagio');
+  const tmplSel = document.getElementById('tmpl-select');
+  tmplSel.innerHTML = nutTemplates.map(t=>`<option value="${t.db_id}">${t.nome}${t.estagio_vinculado?' ('+t.estagio_vinculado+')':''}</option>`).join('')
+    + `<option value="VAZIO">Vazio (limpar alimentação base)</option>`;
   const a = animais[parseInt(sel.value)];
-  if(a && a.estagio && NUT_TEMPLATES[a.estagio]) estSel.value = a.estagio;
+  if(a && a.estagio) {
+    const match = nutTemplates.find(t=>t.estagio_vinculado===a.estagio);
+    if(match) tmplSel.value = match.db_id;
+  }
   atualizarPreviewTemplate();
   openModal('modal-template');
 }
 document.addEventListener('DOMContentLoaded', ()=>{
-  const el = document.getElementById('tmpl-estagio');
+  const el = document.getElementById('tmpl-select');
   if(el) el.addEventListener('change', atualizarPreviewTemplate);
   const el2 = document.getElementById('tmpl-animal');
   if(el2) el2.addEventListener('change', ()=>{
     const a = animais[parseInt(el2.value)];
-    if(a && a.estagio && NUT_TEMPLATES[a.estagio]) document.getElementById('tmpl-estagio').value=a.estagio;
+    const tmplSel = document.getElementById('tmpl-select');
+    if(a && a.estagio && tmplSel) {
+      const match = nutTemplates.find(t=>t.estagio_vinculado===a.estagio);
+      if(match) tmplSel.value = match.db_id;
+    }
     atualizarPreviewTemplate();
   });
 });
 function atualizarPreviewTemplate() {
-  const est = document.getElementById('tmpl-estagio').value;
-  const tmpl = _getNutTemplate(est);
-  if(!tmpl){document.getElementById('tmpl-preview').innerHTML='';return;}
-  const lines = [];
-  if(tmpl.racao?.produto) lines.push(`${_iconTrigo(14)} Ração: ${tmpl.racao.produto} — ${tmpl.racao.qty}`);
-  if(tmpl.aveia?.qty) lines.push(`${_iconTrigo(14)} Aveia: ${tmpl.aveia.qty} · ${tmpl.aveia.freq}`);
-  if(tmpl.alfafa?.qty) lines.push(`${_iconFolha(14)} Alfafa: ${tmpl.alfafa.qty} · ${tmpl.alfafa.freq}`);
-  if(tmpl.verde?.obs) lines.push(`${_iconBroto(14)} Verde: ${tmpl.verde.obs}`);
-  if(tmpl.sal?.produto) lines.push(`${_iconSal(14)} Sal: ${tmpl.sal.produto} — ${tmpl.sal.freq}`);
-  document.getElementById('tmpl-preview').innerHTML = lines.join('<br>') || 'Template vazio.';
+  const val = document.getElementById('tmpl-select').value;
+  const prevEl = document.getElementById('tmpl-preview');
+  if(val==='VAZIO'){ prevEl.innerHTML = 'Limpa a alimentação base (mantém suplementos).'; return; }
+  const tmpl = nutTemplates.find(t=>String(t.db_id)===String(val));
+  if(!tmpl){ prevEl.innerHTML=''; return; }
+  const icons = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14)};
+  const lines = tmpl.itens.map(it=>`${icons[it.tipo]||''} ${it.produto||it.tipo}: ${it.quantidade||''}${it.frequencia?' · '+it.frequencia:''}`);
+  prevEl.innerHTML = lines.join('<br>') || 'Template vazio.';
 }
-function aplicarTemplate() {
+async function aplicarTemplate() {
   const i = parseInt(document.getElementById('tmpl-animal').value);
-  const est = document.getElementById('tmpl-estagio').value;
-  const tmpl = _getNutTemplate(est);
-  if(!tmpl) return;
-  const suplAtual = nutProj[i]?.suplementos||[];
-  nutProj[i] = {...nutVazio(), ...JSON.parse(JSON.stringify(tmpl)), suplementos: suplAtual};
+  const val = document.getElementById('tmpl-select').value;
+  const n = getNut(i);
+  // Suplementos nunca são tocados pela aplicação de template — só a "Alimentação base".
+  const suplExistentes = n.itens.filter(it=>it.tipo==='suplemento');
+  const antigos = n.itens.filter(it=>it.tipo!=='suplemento');
+  for(const it of antigos) { if(it.db_id) await _dbExcluirItemProjeto(it.db_id); }
+
+  let novosItens = [];
+  let templateOrigemId = null;
+  if(val!=='VAZIO'){
+    const tmpl = nutTemplates.find(t=>String(t.db_id)===String(val));
+    if(tmpl){
+      novosItens = tmpl.itens.map(it=>({tipo:it.tipo, produto:it.produto, marca:it.marca||'', quantidade:it.quantidade, frequencia:it.frequencia, periodo:it.periodo||'', obs:it.obs||'', db_id:null}));
+      templateOrigemId = tmpl.db_id;
+    }
+  }
+  n.itens = [...novosItens, ...suplExistentes];
+  n.template_origem_id = templateOrigemId;
+
+  await _dbGarantirProjeto(i);
+  await _dbSalvarProjeto(i);
+  for(let idx=0; idx<n.itens.length; idx++){
+    if(!n.itens[idx].db_id) await _dbSalvarItemProjeto(i, idx);
+  }
+
   closeModal('modal-template');
   renderNutLista();
   const body = document.getElementById('nutbody-'+i);
@@ -7778,203 +7862,201 @@ function aplicarTemplate() {
 }
 
 // ─── LISTA DE COMPRAS ──────────────────────────────────────────────────────────
+// Agrupa por (tipo, produto) — generaliza de graça pra N produtos do mesmo tipo
+// (ex.: dois tipos de ração aparecem como duas linhas, cada uma com seu total).
 function renderCompras() {
   const el = document.getElementById('compras-content');
   if(!el) return;
-  // Nunca incluir animais mortos
   const ativos = animais.filter((a,i)=>isNaCabanha(a));
+  const grupos = {};
 
-  // Agregar ração por produto
-  const racoes={}, aveiaAnimais=[], alfafaAnimais=[], suplMap={};
-  let totalAveiaKg=0, totalAlfafaKg=0;
-
-  ativos.forEach((a,_)=>{
-    const i=animais.indexOf(a);
-    const n=getNut(i);
-    // Ração
-    if(n.racao.produto){
-      const key=n.racao.produto;
-      if(!racoes[key]) racoes[key]={animais:[],totalKg:0};
-      racoes[key].animais.push(a.nome);
-      const kg=parseFloat((n.racao.qty||'0').replace(',','.'));
-      if(!isNaN(kg)) racoes[key].totalKg+=kg;
-    }
-    // Aveia
-    if(n.aveia.qty){
-      const kg=parseFloat((n.aveia.qty||'0').replace(',','.'));
-      if(!isNaN(kg)){totalAveiaKg+=kg; aveiaAnimais.push(a.nome);}
-    }
-    // Alfafa
-    if(n.alfafa.qty){
-      const kg=parseFloat((n.alfafa.qty||'0').replace(',','.'));
-      if(!isNaN(kg)){totalAlfafaKg+=kg; alfafaAnimais.push(a.nome);}
-    }
-    // Suplementos
-    n.suplementos.forEach(s=>{
-      const key=(s.nome+(s.marca?` · ${s.marca}`:'')).trim();
-      if(!suplMap[key]) suplMap[key]={animais:[],dosagem:s.dosagem,freq:s.freq,periodo:s.periodo};
-      suplMap[key].animais.push(a.nome);
+  ativos.forEach(a=>{
+    const i = animais.indexOf(a);
+    const n = getNut(i);
+    (n.itens||[]).forEach(it=>{
+      const nomeProduto = it.produto || (it.tipo==='suplemento' ? null : '(sem produto definido)');
+      if(!nomeProduto) return;
+      const key = it.tipo+'::'+nomeProduto;
+      if(!grupos[key]) grupos[key] = {tipo:it.tipo, produto:nomeProduto, animais:[], totalQtd:0, temQtdNumerica:false, dosagem:it.quantidade, freq:it.frequencia, periodo:it.periodo};
+      grupos[key].animais.push(a.nome);
+      const qtd = parseFloat((it.quantidade||'0').replace(',','.'));
+      if(!isNaN(qtd)){ grupos[key].totalQtd += qtd; grupos[key].temQtdNumerica = true; }
     });
   });
 
+  const ordem = ['racao','aveia','alfafa','verde','sal','suplemento'];
+  const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte)',sal:'Sal mineral',suplemento:'Suplementos em uso'};
+  const icons = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14),suplemento:_iconComprimido(14)};
+
   let html = '';
-
-  // Ração
-  html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconTrigo(14)} Ração (consumo diário)</div>`;
-  if(Object.keys(racoes).length===0){html+='<div class="nut-empty">Nenhuma ração cadastrada nos projetos.</div>';}
-  else{Object.entries(racoes).forEach(([prod,d])=>{
-    const sem=d.totalKg*7;
-    html+=`<div class="compra-item">
-      <div><div style="font-weight:600;font-size:13px">${prod}</div><div class="compra-animais">${d.animais.length} animal(is): ${d.animais.join(', ')}</div></div>
-      <div style="text-align:right"><div class="compra-qty">${d.totalKg.toFixed(1)} kg/dia</div><div style="font-size:11px;color:var(--text3)">${sem.toFixed(0)} kg/semana · ${(sem*4).toFixed(0)} kg/mês</div></div>
-    </div>`;
-  });}
-  html += '</div>';
-
-  // Aveia
-  html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconTrigo(14)} Aveia</div>`;
-  if(totalAveiaKg===0){html+='<div class="nut-empty">Nenhuma aveia cadastrada.</div>';}
-  else{html+=`<div class="compra-item">
-    <div><div style="font-weight:600;font-size:13px">Aveia grão</div><div class="compra-animais">${aveiaAnimais.length} animal(is)</div></div>
-    <div style="text-align:right"><div class="compra-qty">${totalAveiaKg.toFixed(1)} kg/dia</div><div style="font-size:11px;color:var(--text3)">${(totalAveiaKg*7).toFixed(0)} kg/semana · ${(totalAveiaKg*30).toFixed(0)} kg/mês</div></div>
-  </div>`;}
-  html += '</div>';
-
-  // Alfafa
-  html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconFolha(14)} Alfafa feno</div>`;
-  if(totalAlfafaKg===0){html+='<div class="nut-empty">Nenhuma alfafa cadastrada.</div>';}
-  else{html+=`<div class="compra-item">
-    <div><div style="font-weight:600;font-size:13px">Alfafa feno</div><div class="compra-animais">${alfafaAnimais.length} animal(is)</div></div>
-    <div style="text-align:right"><div class="compra-qty">${totalAlfafaKg.toFixed(1)} kg/dia</div><div style="font-size:11px;color:var(--text3)">${(totalAlfafaKg*7).toFixed(0)} kg/semana · ${(totalAlfafaKg*30).toFixed(0)} kg/mês</div></div>
-  </div>`;}
-  html += '</div>';
-
-  // Suplementos
-  html += `<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconComprimido(14)} Suplementos em uso</div>`;
-  if(Object.keys(suplMap).length===0){html+='<div class="nut-empty">Nenhum suplemento cadastrado.</div>';}
-  else{Object.entries(suplMap).forEach(([key,d])=>{
-    html+=`<div class="compra-item">
-      <div><div style="font-weight:600;font-size:13px">${key}</div><div class="compra-animais">${d.animais.length} animal(is): ${d.animais.join(', ')}</div></div>
-      <div style="text-align:right;font-size:11px;color:var(--text2)"><div>${d.dosagem||'—'} · ${d.freq||'—'}</div><div style="color:var(--text3)">${d.periodo||''}</div></div>
-    </div>`;
-  });}
-  html += '</div>';
-
+  ordem.forEach(tipo=>{
+    const doGrupo = Object.values(grupos).filter(g=>g.tipo===tipo);
+    html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${icons[tipo]} ${labels[tipo]}</div>`;
+    if(doGrupo.length===0){
+      html += `<div class="nut-empty">Nenhum item cadastrado.</div>`;
+    } else if(tipo==='suplemento'){
+      doGrupo.forEach(g=>{
+        html += `<div class="compra-item">
+          <div><div style="font-weight:600;font-size:13px">${g.produto}</div><div class="compra-animais">${g.animais.length} animal(is): ${g.animais.join(', ')}</div></div>
+          <div style="text-align:right;font-size:11px;color:var(--text2)"><div>${g.dosagem||'—'} · ${g.freq||'—'}</div><div style="color:var(--text3)">${g.periodo||''}</div></div>
+        </div>`;
+      });
+    } else {
+      doGrupo.forEach(g=>{
+        if(g.temQtdNumerica){
+          const sem = g.totalQtd*7;
+          html += `<div class="compra-item">
+            <div><div style="font-weight:600;font-size:13px">${g.produto}</div><div class="compra-animais">${g.animais.length} animal(is): ${g.animais.join(', ')}</div></div>
+            <div style="text-align:right"><div class="compra-qty">${g.totalQtd.toFixed(1)} /dia</div><div style="font-size:11px;color:var(--text3)">${sem.toFixed(0)} /semana · ${(sem*4).toFixed(0)} /mês</div></div>
+          </div>`;
+        } else {
+          html += `<div class="compra-item">
+            <div><div style="font-weight:600;font-size:13px">${g.produto}</div><div class="compra-animais">${g.animais.length} animal(is): ${g.animais.join(', ')}</div></div>
+            <div style="text-align:right;font-size:11px;color:var(--text3)">${g.dosagem||'—'}</div>
+          </div>`;
+        }
+      });
+    }
+    html += '</div>';
+  });
   el.innerHTML = html;
 }
 
-// ─── RENDER TEMPLATES PAGE ─────────────────────────────────────────────────────
-// Templates editáveis — sobrescritas pelo usuário ficam em nutTemplatesCustom
-let nutTemplatesCustom = {}; // { estagio: { racao:{...}, ... } } — persiste no save
-
-function _getNutTemplate(est) {
-  return nutTemplatesCustom[est] || NUT_TEMPLATES[est] || {};
-}
-
+// ─── RENDER TEMPLATES PAGE (CRUD completo, dados vêm do banco) ────────────────────
 function renderTemplatesPage() {
   const el = document.getElementById('templates-content');
   if(!el) return;
   const podeEditar = usuarioAtual && (usuarioAtual.perfil==='adm' || usuarioAtual.perfil==='vet');
-  const estagios = ['CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
-  const icons  = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14)};
-  const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte)',sal:'Sal mineral'};
-  el.innerHTML = estagios.map(est=>{
-    const tmpl = _getNutTemplate(est);
-    const isCustom = !!nutTemplatesCustom[est];
-    const anCount = animais.filter(a=>a.estagio===est&&(a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO')).length;
-    const rows = ['racao','aveia','alfafa','verde','sal'].map(k=>`
-      <div style="display:grid;grid-template-columns:130px 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start">
-        <span style="font-weight:600">${icons[k]} ${labels[k]}</span>
-        <span style="color:var(--text2)">${tmpl[k]?.qty||'—'}</span>
-        <span><span class="badge bgr">${tmpl[k]?.freq||'—'}</span></span>
-        <span style="color:var(--text3);font-size:11px">${tmpl[k]?.produto||''} ${tmpl[k]?.obs?'· '+tmpl[k].obs:''}</span>
-      </div>`).join('');
-    const editBtn = podeEditar
-      ? `<button class="btn btn-sm" style="margin-left:6px;font-size:10px" onclick="abrirEditarTemplate('${est}')">${_iconEditar(12)} Editar</button>`
-      : '';
-    const resetBtn = podeEditar && isCustom
-      ? `<button class="btn btn-sm" style="font-size:10px;color:var(--text3)" onclick="if(confirm('Restaurar template padrão de ${est}?')){delete nutTemplatesCustom['${est}'];renderTemplatesPage();}">↺ Padrão</button>`
-      : '';
-    return `<div class="template-card">
-      <div class="template-card-title">
-        ${est}
-        ${isCustom ? '<span style="font-size:10px;color:var(--blue-d);font-weight:400">personalizado</span>' : ''}
-        <span class="badge bgr" style="font-weight:400">${anCount} animal(is) na cabanha</span>
-        <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
-          ${editBtn}${resetBtn}
-          <button class="btn btn-sm" style="font-size:10px" onclick="abrirTemplate(undefined);document.getElementById('tmpl-estagio').value='${est}';atualizarPreviewTemplate()">Aplicar a animal</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:130px 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
-        <span>Componente</span><span>Quantidade/dia</span><span>Frequência</span><span>Produto / Obs</span>
-      </div>
-      ${rows}
-    </div>`;
-  }).join('');
+  const icons = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14),suplemento:_iconComprimido(14)};
+  const novoBtn = podeEditar ? `<button class="btn btn-sm btn-primary" onclick="abrirModalTemplateCRUD(null)">+ Novo template</button>` : '';
+  const lista = nutTemplates.length===0
+    ? '<div class="nut-empty">Nenhum template cadastrado.</div>'
+    : nutTemplates.map(tmpl=>{
+        const anCount = tmpl.estagio_vinculado ? animais.filter(a=>a.estagio===tmpl.estagio_vinculado&&(a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO')).length : null;
+        const rows = tmpl.itens.map(it=>`
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start">
+            <span style="font-weight:600">${icons[it.tipo]||''} ${it.tipo}</span>
+            <span style="color:var(--text2)">${it.produto||'—'}</span>
+            <span style="color:var(--text2)">${it.quantidade||'—'}</span>
+            <span><span class="badge bgr">${it.frequencia||'—'}</span></span>
+            <span style="color:var(--text3);font-size:11px">${it.obs||''}</span>
+          </div>`).join('');
+        const editBtn = podeEditar
+          ? `<button class="btn btn-sm" style="margin-left:6px;font-size:10px" onclick="abrirModalTemplateCRUD('${tmpl.db_id}')">${_iconEditar(12)} Editar</button>`
+          : '';
+        const delBtn = podeEditar
+          ? `<button class="btn btn-sm" style="font-size:10px;color:var(--red-d)" onclick="excluirTemplate('${tmpl.db_id}')">Excluir</button>`
+          : '';
+        return `<div class="template-card">
+          <div class="template-card-title">
+            ${tmpl.nome}
+            ${tmpl.estagio_vinculado ? `<span class="badge bgr" style="font-weight:400">${tmpl.estagio_vinculado}</span>` : ''}
+            ${anCount!==null ? `<span class="badge bgr" style="font-weight:400">${anCount} animal(is) na cabanha</span>` : ''}
+            <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
+              ${editBtn}${delBtn}
+              <button class="btn btn-sm" style="font-size:10px" onclick="abrirTemplate(undefined);document.getElementById('tmpl-select').value='${tmpl.db_id}';atualizarPreviewTemplate()">Aplicar a animal</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+            <span>Tipo</span><span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Obs</span>
+          </div>
+          ${rows || '<div class="nut-empty" style="margin:4px 0">Sem itens.</div>'}
+        </div>`;
+      }).join('');
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">${novoBtn}</div>${lista}`;
 }
 
-function abrirEditarTemplate(est) {
-  const tmpl = _getNutTemplate(est);
-  const comps = ['racao','aveia','alfafa','verde','sal'];
-  const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte)',sal:'Sal mineral'};
-  const campos = comps.map(k=>`
-    <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">${labels[k]}</div>
-      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px">
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Produto</label>
-          <input type="text" id="te-${k}-produto" value="${(tmpl[k]?.produto||'').replace(/"/g,'&quot;')}"></div>
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Quantidade / dia</label>
-          <input type="text" id="te-${k}-qty" value="${(tmpl[k]?.qty||'').replace(/"/g,'&quot;')}"></div>
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Frequência</label>
-          <input type="text" id="te-${k}-freq" value="${(tmpl[k]?.freq||'').replace(/"/g,'&quot;')}"></div>
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Observações</label>
-          <input type="text" id="te-${k}-obs" value="${(tmpl[k]?.obs||'').replace(/"/g,'&quot;')}"></div>
-      </div>
+async function excluirTemplate(tmplId) {
+  if(!confirm('Excluir este template? Projetos já aplicados a partir dele não são afetados.')) return;
+  await _supa('DELETE','nutricao_templates',null,'?id=eq.'+tmplId);
+  await _carregarNutTemplatesDoBanco();
+  renderTemplatesPage();
+}
+
+function abrirModalTemplateCRUD(tmplId) {
+  const tmpl = tmplId ? nutTemplates.find(t=>String(t.db_id)===String(tmplId)) : null;
+  window._tmplEdit = {
+    db_id: tmpl?.db_id||null,
+    nome: tmpl?.nome||'',
+    estagio: tmpl?.estagio_vinculado||'',
+    itens: tmpl ? JSON.parse(JSON.stringify(tmpl.itens)) : []
+  };
+  _renderModalTemplateCRUD();
+}
+
+function _renderModalTemplateCRUD() {
+  document.getElementById('modal-tmpl-crud')?.remove();
+  const st = window._tmplEdit;
+  const estagios = ['','CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
+  const tipos = ['racao','aveia','alfafa','verde','sal','suplemento','outro'];
+  const itensRows = st.itens.map((it,idx)=>`
+    <div style="display:grid;grid-template-columns:100px 1fr 90px 110px 1fr auto;gap:6px;margin-bottom:6px;align-items:center">
+      <select onchange="window._tmplEdit.itens[${idx}].tipo=this.value">
+        ${tipos.map(t=>`<option value="${t}" ${it.tipo===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <input type="text" placeholder="Produto" value="${(it.produto||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].produto=this.value">
+      <input type="text" placeholder="Qtd/dia" value="${(it.quantidade||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].quantidade=this.value">
+      <input type="text" placeholder="Frequência" value="${(it.frequencia||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].frequencia=this.value">
+      <input type="text" placeholder="Obs" value="${(it.obs||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].obs=this.value">
+      <button class="nut-item-edit" style="color:var(--red-d)" onclick="window._tmplEdit.itens.splice(${idx},1);_renderModalTemplateCRUD()">×</button>
     </div>`).join('');
 
-  // Usar modal genérico — criar dinamicamente
   const bg = document.createElement('div');
-  bg.className='modal-bg'; bg.id='modal-edit-tmpl'; bg.style.display='flex';
+  bg.className='modal-bg'; bg.id='modal-tmpl-crud'; bg.style.display='flex';
   bg.innerHTML=`
-    <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto">
+    <div class="modal" style="width:680px;max-height:90vh;overflow-y:auto">
       <div class="modal-header">
-        <span class="modal-title">Editar Template — ${est}</span>
-        <button class="modal-close" onclick="document.getElementById('modal-edit-tmpl').remove()">×</button>
+        <span class="modal-title">${st.db_id?'Editar':'Novo'} template</span>
+        <button class="modal-close" onclick="document.getElementById('modal-tmpl-crud').remove()">×</button>
       </div>
       <div style="padding:0 1.25rem 1rem">
-        <div style="font-size:11px;color:var(--text2);margin-bottom:12px">
-          Edite os valores padrão para animais no estágio <strong>${est}</strong>. As alterações ficam salvas no backup e substituem o template original.
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div class="form-group" style="margin:0"><label>Nome do template</label>
+            <input type="text" id="tmpl-crud-nome" value="${st.nome.replace(/"/g,'&quot;')}" placeholder="Ex: Potros em recria"></div>
+          <div class="form-group" style="margin:0"><label>Estágio vinculado (opcional)</label>
+            <select id="tmpl-crud-estagio">
+              ${estagios.map(e=>`<option value="${e}" ${st.estagio===e?'selected':''}>${e||'— nenhum —'}</option>`).join('')}
+            </select></div>
         </div>
-        ${campos}
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Itens do template</div>
+        <div id="tmpl-crud-itens">${itensRows || '<div class="nut-empty">Nenhum item ainda.</div>'}</div>
+        <button class="btn btn-sm" style="margin-top:6px" onclick="window._tmplEdit.itens.push({tipo:'racao',produto:'',quantidade:'',frequencia:'2x ao dia',obs:''});_renderModalTemplateCRUD()">+ Adicionar item</button>
       </div>
       <div class="modal-footer">
-        <button class="btn" onclick="document.getElementById('modal-edit-tmpl').remove()">Cancelar</button>
-        <button class="btn btn-primary" onclick="salvarEditarTemplate('${est}')">Salvar template</button>
+        <button class="btn" onclick="document.getElementById('modal-tmpl-crud').remove()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarTemplateCRUD()">Salvar template</button>
       </div>
     </div>`;
   document.body.appendChild(bg);
 }
 
-function salvarEditarTemplate(est) {
-  const comps = ['racao','aveia','alfafa','verde','sal'];
-  const novo = {};
-  comps.forEach(k=>{
-    novo[k]={
-      produto: document.getElementById(`te-${k}-produto`)?.value||'',
-      qty:     document.getElementById(`te-${k}-qty`)?.value||'',
-      freq:    document.getElementById(`te-${k}-freq`)?.value||'',
-      obs:     document.getElementById(`te-${k}-obs`)?.value||'',
-    };
-  });
-  nutTemplatesCustom[est]=novo;
-  document.getElementById('modal-edit-tmpl')?.remove();
+async function salvarTemplateCRUD() {
+  const nome = document.getElementById('tmpl-crud-nome').value.trim();
+  if(!nome) return alert('Informe o nome do template.');
+  const estagio = document.getElementById('tmpl-crud-estagio').value || null;
+  const st = window._tmplEdit;
+  let tmplId = st.db_id;
+  if(tmplId) {
+    await _supa('PATCH','nutricao_templates',{nome, estagio_vinculado: estagio},'?id=eq.'+tmplId);
+  } else {
+    const res = await _supa('POST','nutricao_templates',{nome, estagio_vinculado: estagio, criado_por: usuarioAtual?.db_id||null});
+    tmplId = res?.[0]?.id;
+  }
+  if(!tmplId) return alert('Erro ao salvar template.');
+  // Recria os itens do zero a partir do estado atual da tela — mais simples e seguro que
+  // diff incremental pra listas pequenas (poucas dezenas de itens por template).
+  await _supa('DELETE','nutricao_template_itens',null,'?template_id=eq.'+tmplId);
+  for(let idx=0; idx<st.itens.length; idx++){
+    const it = st.itens[idx];
+    await _supa('POST','nutricao_template_itens',{
+      template_id: tmplId, tipo: it.tipo, produto: it.produto||null, marca: it.marca||null,
+      quantidade: it.quantidade||null, frequencia: it.frequencia||null, periodo: it.periodo||null,
+      obs: it.obs||null, ordem: idx
+    });
+  }
+  await _carregarNutTemplatesDoBanco();
+  document.getElementById('modal-tmpl-crud')?.remove();
   renderTemplatesPage();
-  // Atualizar também projetos nutricionais que usam este template
-  animais.forEach((a,i)=>{
-    if(a.estagio===est && nutProj[i]) {
-      // Notificar mas não sobrescrever dados individuais
-    }
-  });
 }
 
 // ─── EVENTOS ESPORTIVOS ────────────────────────────────────────────────────────
@@ -14094,6 +14176,55 @@ async function _sincronizarAoLogin() {
           data_inicio: t.data_inicio, data_fim: t.data_fim || null,
           descricao: t.descricao, resp: t.resp || '', obs: t.obs || '',
         });
+      });
+    }
+
+    // 5f. Nutrição (refactor 2026-08-21 — spec docs/spec-nutricao-refactor.md): templates
+    // configuráveis + projeto por animal, ambos com itens 1:N. Mesmo padrão defensivo das
+    // demais tabelas — usa bootstrap se vier, senão busca via REST.
+    let dbNutTmpl = bootstrap.nutricao_templates;
+    if(!dbNutTmpl) {
+      try { dbNutTmpl = await _supa('GET','nutricao_templates',null,'?select=*,itens:nutricao_template_itens(*)&ativo=eq.true&order=nome'); }
+      catch(e) { dbNutTmpl = null; }
+    }
+    nutTemplates = (dbNutTmpl||[]).map(t => ({
+      db_id: t.id, nome: t.nome, estagio_vinculado: t.estagio_vinculado||'',
+      itens: (t.itens||[]).slice().sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(it => ({
+        db_id: it.id, tipo: it.tipo, produto: it.produto||'', marca: it.marca||'',
+        quantidade: it.quantidade||'', frequencia: it.frequencia||'', periodo: it.periodo||'', obs: it.obs||''
+      }))
+    }));
+
+    let dbNutProj = bootstrap.nutricao_projetos;
+    if(!dbNutProj) {
+      try { dbNutProj = await _supa('GET','nutricao_projetos',null,'?select=*,itens:nutricao_projeto_itens(*)&order=criado_em.desc'); }
+      catch(e) { dbNutProj = null; }
+    }
+    nutProj = {};
+    if(dbNutProj) {
+      // Um projeto por animal na tela: prioriza o "ativo"; se não houver, usa o mais recente
+      // (histórico) — dbNutProj já vem ordenado por criado_em desc.
+      const porAnimal = {};
+      dbNutProj.forEach(p => {
+        const idx = animais.findIndex(a => a.db_id === p.animal_id);
+        if(idx < 0) return;
+        if(!porAnimal[idx]) porAnimal[idx] = [];
+        porAnimal[idx].push(p);
+      });
+      Object.keys(porAnimal).forEach(idx => {
+        const lista = porAnimal[idx];
+        const escolhido = lista.find(p => p.status==='ativo') || lista[0];
+        nutProj[idx] = {
+          db_id: escolhido.id, dt_inicio: escolhido.dt_inicio||'', dt_fim: escolhido.dt_fim||'',
+          status_proj: escolhido.status||'ativo', obs_projeto: escolhido.obs_projeto||'',
+          template_origem_id: escolhido.template_origem_id||null,
+          med_inicial: escolhido.med_inicial||{ cernelha:'',torax:'',canela:'',peso:'',escore:'',data:'',obs:'' },
+          med_final:   escolhido.med_final||{ cernelha:'',torax:'',canela:'',peso:'',escore:'',data:'',obs:'' },
+          itens: (escolhido.itens||[]).slice().sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(it => ({
+            db_id: it.id, tipo: it.tipo, produto: it.produto||'', marca: it.marca||'',
+            quantidade: it.quantidade||'', frequencia: it.frequencia||'', periodo: it.periodo||'', obs: it.obs||''
+          }))
+        };
       });
     }
 
