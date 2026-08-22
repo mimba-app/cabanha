@@ -551,6 +551,8 @@
     color:var(--chrome-text); max-width:62%; overflow:hidden; text-overflow:ellipsis;
     white-space:nowrap;
   }
+  /* Escondido por padrão (desktop/web) — só existe como recurso mobile. */
+  #ptr-indicator { display:none; }
   @media (max-width: 768px) {
     #status-bar-mask {
       height:calc(env(safe-area-inset-top) + 46px);
@@ -574,6 +576,35 @@
       border-right:1.6px solid var(--chrome-text3); border-top:1.6px solid var(--chrome-text3);
       transform:rotate(45deg); opacity:.7;
     }
+    /* Trocar de página tem uma transição sutil (fade + leve subida) em vez do
+       corte seco do display:none→block — o mesmo instante em que dá pra
+       arrastar a tela pra baixo e soltar (transform de baixo). */
+    .main { transition:transform 0.25s cubic-bezier(.25,.1,.25,1); }
+    .page.active { animation:mimba-page-in 0.22s cubic-bezier(.25,.1,.25,1); }
+    @keyframes mimba-page-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    /* Toque tem que dar feedback visual — sem isso (e sem o flash cinza padrão
+       do WebKit, removido de propósito acima) botão/item de menu não mostra
+       nenhuma reação ao dedo, o que parece quebrado num app nativo. */
+    .btn:active, .nav-btn:active, .kanban-card:active, .med-card:active,
+    .hist-row:active, .sangue-bar:active, .evt-animal-row:active {
+      transform:scale(0.97); opacity:0.88; transition:transform 0.08s ease, opacity 0.08s ease;
+    }
+    .btn, .nav-btn { -webkit-user-select:none; user-select:none; }
+    /* Indicador de pull-to-refresh: some por trás da barra de navegação (some
+       de vista) e só aparece conforme o dedo arrasta a tela pra baixo, ou
+       gira como spinner enquanto os dados recarregam. Ver a lógica de arrasto
+       junto de toggleSidebarMobile, na seção NAV do JS. */
+    #ptr-indicator {
+      display:flex; position:fixed; left:0; right:0; z-index:15;
+      top:calc(env(safe-area-inset-top) + 46px); height:0;
+      align-items:flex-start; justify-content:center; pointer-events:none;
+    }
+    #ptr-indicator svg { width:20px; height:20px; color:var(--chrome-accent); opacity:0; margin-top:10px; }
+    #ptr-indicator.pulling svg, #ptr-indicator.loading svg { opacity:1; }
+    #ptr-indicator.loading svg { animation:spin 0.7s linear infinite; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page.active { animation:none; }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .sangue-bar { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border); }
@@ -1193,6 +1224,10 @@
     Menu
   </button>
   <span id="mobile-navbar-title"></span>
+</div>
+
+<div id="ptr-indicator" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 </div>
 
 <div class="sidebar" id="sidebar-main">
@@ -7393,6 +7428,91 @@ function toggleSidebarMobile(force){
   if (backBtn) backBtn.style.visibility = abrir ? 'hidden' : '';
   if (navTitulo) navTitulo.style.visibility = abrir ? 'hidden' : '';
 }
+
+// ── Pull-to-refresh (mobile, estilo iOS) ────────────────────────────────────
+// Arrastar a tela pra baixo no topo recarrega os dados da cabanha, reusando
+// _sincronizarAoLogin() (mesma busca completa do banco que já roda no login),
+// só que sem registrar um "LOGIN" novo no audit log — ver o parâmetro
+// viaPullRefresh lá. Só faz sentido no layout mobile e com o dedo (touch);
+// desktop já tem F5/atalhos normais do navegador.
+(function(){
+  const LIMIAR = 62; // px arrastados (já com resistência) pra soltar e disparar
+  const RESISTENCIA = 0.45;
+  const MAX_VISUAL = 92;
+  let inicioY = 0, arrastando = false, carregando = false, distAtual = 0;
+
+  function podeComecarArrasto(){
+    if (window.innerWidth > 768) return false;
+    if (window.scrollY > 0) return false;
+    if (document.querySelector('.modal-bg.open')) return false;
+    if (document.getElementById('sidebar-main')?.classList.contains('open')) return false;
+    const login = document.getElementById('login-screen');
+    if (login && login.style.display !== 'none') return false;
+    return true;
+  }
+
+  function aplicarArrasto(dist){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = 'none';
+    main.style.transform = dist ? `translateY(${dist}px)` : '';
+    ind.style.height = dist ? dist+'px' : '';
+    ind.classList.toggle('pulling', dist > 4);
+    const svg = ind.querySelector('svg');
+    if(svg) svg.style.transform = `rotate(${Math.min(dist/LIMIAR,1)*180}deg)`;
+  }
+
+  function soltar(){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = '';
+    if(distAtual >= LIMIAR && !carregando){
+      carregando = true;
+      main.style.transform = `translateY(${LIMIAR}px)`;
+      ind.style.height = LIMIAR+'px';
+      ind.classList.remove('pulling'); ind.classList.add('loading');
+      Promise.resolve(_sincronizarAoLogin({viaPullRefresh:true})).finally(()=>{
+        main.style.transform = '';
+        ind.style.height = '';
+        ind.classList.remove('loading');
+        carregando = false;
+      });
+    } else {
+      main.style.transform = '';
+      ind.style.height = '';
+      ind.classList.remove('pulling');
+    }
+    distAtual = 0;
+  }
+
+  window.addEventListener('touchstart', (e)=>{
+    if(carregando || !podeComecarArrasto()) { arrastando = false; return; }
+    inicioY = e.touches[0].clientY;
+    arrastando = true;
+  }, {passive:true});
+
+  window.addEventListener('touchmove', (e)=>{
+    if(!arrastando || carregando) return;
+    const dy = e.touches[0].clientY - inicioY;
+    if(dy <= 0 || window.scrollY > 0){
+      if(distAtual){ distAtual = 0; aplicarArrasto(0); }
+      arrastando = false;
+      return;
+    }
+    distAtual = Math.min(dy * RESISTENCIA, MAX_VISUAL);
+    e.preventDefault();
+    aplicarArrasto(distAtual);
+  }, {passive:false});
+
+  window.addEventListener('touchend', ()=>{
+    if(!arrastando) return;
+    arrastando = false;
+    soltar();
+  }, {passive:true});
+})();
+
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -13972,8 +14092,9 @@ function _mostrarStatusSync(msg, tipo) {
 // ══════════════════════════════════════════════════════════════════════════════
 // SYNC COMPLETO — carrega todos os dados do banco relacional
 // ══════════════════════════════════════════════════════════════════════════════
-async function _sincronizarAoLogin() {
-  _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
+async function _sincronizarAoLogin(opts) {
+  const viaPullRefresh = !!(opts && opts.viaPullRefresh);
+  _mostrarStatusSync(viaPullRefresh ? '🔄 Atualizando...' : '🔄 Carregando dados do banco...', 'amber');
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
   fontesCobertura.length = 0;
@@ -14430,9 +14551,12 @@ async function _sincronizarAoLogin() {
       }
     }
 
-    // Registrar login no audit
-    await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
-      {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    // Registrar login no audit — só na sincronização de login de verdade; um
+    // pull-to-refresh não é um novo login e não pode poluir o audit log como se fosse.
+    if (!viaPullRefresh) {
+      await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
+        {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    }
 
     populaCiclos(); renderDashboard(); renderAnimais(); atualizarBadgePendencias();
     // Se o usuário já tiver navegado para outra página (ex.: Gestação, Medidas)
