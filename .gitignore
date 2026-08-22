@@ -1,3 +1,19 @@
 .DS_Store
 .claude/settings.local.json
 .claude/worktrees/
+
+# mobile/ — wrapper Capacitor (docs/adr/0005-empacotamento-mobile-em-3-fases.md).
+# Isolado do resto do repo: tem seu próprio npm/build step, que não existe no
+# frontend web (index.html continua sem framework/bundler).
+mobile/node_modules/
+# gerados por `npm run sync`/`cap sync` a partir do index.html da raiz — nunca
+# editar direto, e nunca versionar (senão vira uma segunda fonte de verdade).
+mobile/www/
+mobile/ios/App/App/public/
+# build/estado de usuário do Xcode
+mobile/ios/App/build/
+mobile/ios/**/xcuserdata/
+mobile/ios/**/*.xcuserstate
+mobile/ios/DerivedData/
+# CocoaPods, se algum plugin futuro precisar (hoje o projeto usa Swift Package Manager)
+mobile/ios/App/Pods/

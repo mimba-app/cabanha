@@ -14,7 +14,7 @@
 - **Provisionamento:** `signups` → Edge Function `asaas-webhook` (valida token Asaas) → Edge Function `provisionar-cabanha` (exige `Bearer service_role`) → RPC `provisionar_schema_cabanha(p_schema)` (clona o `public` via `LIKE INCLUDING ALL` + RLS + grants + triggers) → cria admin no `auth.users` + membership → expõe o schema via Management API (`SB_MGMT_TOKEN`).
 
 ## Convenções
-- **Frontend sem framework/bundler** — **não sugerir React, build step ou package manager sem confirmar antes.**
+- **Frontend sem framework/bundler** — **não sugerir React, build step ou package manager sem confirmar antes.** Vale pro frontend web (`index.html`/GitHub Pages). **Exceção deliberada e isolada:** `mobile/` (empacotamento Capacitor pras lojas, ver `docs/adr/0005-empacotamento-mobile-em-3-fases.md`) tem seu próprio `npm`/`package.json`/build step — não mexe no `index.html` da raiz nem no deploy do GitHub Pages. `mobile/www/` e `mobile/ios/App/App/public/` são gerados (`npm run sync` dentro de `mobile/`) a partir do `index.html` da raiz, nunca editados direto.
 - Edge Functions rodam em **Deno**, não Node.
 - **Banco:** o MCP do Supabase **permite write** via `apply_migration` (confirmado em 2026-08-13 — antes achávamos que era read-only e pedíamos pro usuário rodar no SQL Editor; não é mais o caso). Pode aplicar migration/função/policy direto pelo MCP. Mesmo assim, sempre gerar o SQL como arquivo em `docs/migrations/` primeiro (revisável, versionado) antes de aplicar — e mudanças em auth/RLS/provisionamento passam pelo `revisor-isolamento` antes.
 - **Deploy:** push na `main` → GitHub Pages publica; o workflow `versionar.yml` arquiva as últimas 10 versões em `versions/`. Sempre commitar só o `index.html` (conferir o staged).
