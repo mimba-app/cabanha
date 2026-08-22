@@ -1314,6 +1314,23 @@
       <button class="btn btn-sm" id="an-view-btn-grade" onclick="_animaisSetView('grade')">▦ Grade</button>
       <button class="btn btn-sm" id="an-view-btn-lista" onclick="_animaisSetView('lista')">☰ Lista</button>
     </div>
+  <!-- Gerenciamento de Piquetes -->
+  <div style="margin:10px 0;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer"
+         onclick="var b=document.getElementById('piq-body');var t=this.querySelector('.piq-arr');if(b.style.display==='none'){b.style.display='';t.textContent='▾';renderPiquetes();}else{b.style.display='none';t.textContent='▸';}">
+      <span style="font-size:12px;font-weight:600;color:var(--text2)">🏕 Piquetes / Campos</span>
+      <span class="piq-arr" style="color:var(--text3);font-size:12px">▸</span>
+    </div>
+    <div id="piq-body" style="display:none;padding:0 12px 12px">
+      <div id="piquetes-lista" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="piquete-novo-nome" type="text" placeholder="Nome do piquete ou campo..." style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter')_addPiquete()">
+        <button class="btn btn-sm" onclick="_addPiquete()">+ Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
   <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
