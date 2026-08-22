@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mimba — Gestão Crioulos</title>
 <script>
   // Aplica o tema salvo (se houver) ANTES do CSS pintar a tela — sem isso, a página
@@ -173,11 +173,17 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow-x: hidden; max-width: 100vw; }
+  /* Sem isso, todo toque em botão/link pisca um retângulo cinza — o "flash"
+     do WebKit em cima de qualquer elemento tocável. Nada nativo mostra isso;
+     os componentes já têm seu próprio hover/active. */
+  * { -webkit-tap-highlight-color: transparent; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
   .sidebar {
     width: 230px; background: var(--chrome-bg); border-right: 0.5px solid var(--chrome-border);
     padding: 1.25rem 1rem; position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
+    padding-top: calc(1.25rem + env(safe-area-inset-top));
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    padding-left: calc(1rem + env(safe-area-inset-left));
     overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
     color: var(--chrome-text);
   }
@@ -375,7 +381,7 @@
   .nut-animal-body.open { display:block; }
   .nut-section { margin-top:1rem; }
   .nut-section-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
-  .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:620px; }
   .nut-item:last-child { border-bottom:none; }
   .nut-item-label { font-weight:600; color:var(--text); }
   .nut-item-qty { color:var(--text2); }
@@ -383,14 +389,14 @@
   .nut-item-obs { color:var(--text3); font-style:italic; font-size:11px; }
   .nut-item-edit { cursor:pointer; font-size:11px; color:var(--blue-d); background:none; border:none; padding:2px 6px; border-radius:4px; font-family:var(--font); }
   .nut-item-edit:hover { background:var(--blue-l); }
-  .nut-supl { display:grid; grid-template-columns:160px 120px 1fr 120px auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nut-supl { display:grid; grid-template-columns:150px 110px 90px 1fr 110px auto; gap:6px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:650px; }
   .nut-supl:last-child { border-bottom:none; }
   .nut-empty { font-size:12px; color:var(--text3); font-style:italic; padding:8px 0; }
   .nut-add-btn { font-size:11px; color:var(--green-d); background:var(--green-l); border:none; padding:4px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; margin-top:6px; }
   .nut-add-btn:hover { background:#C0DD97; }
   .template-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
   .template-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
-  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
+  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .compra-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .compra-item:last-child { border-bottom:none; }
   .compra-qty { font-weight:700; color:var(--green-d); font-size:13px; }
@@ -417,7 +423,7 @@
   .evt-3 { background:var(--amber-l); color:var(--amber-d); }
   .evt-class { background:var(--purple-l); color:var(--purple-d); }
   .evt-sem { background:var(--gray-l); color:var(--gray-d); }
-  .evt-animal-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .evt-animal-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .evt-animal-row:last-child { border-bottom:none; }
   /* GESTAÇÃO */
   .gest-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
@@ -426,7 +432,7 @@
   .gest-prog-fill { height:8px; border-radius:99px; transition:width 0.3s; }
   .gest-dias { font-size:11px; color:var(--text2); display:flex; justify-content:space-between; }
   /* ESTOQUE */
-  .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:640px; }
   .est-row:last-child { border-bottom:none; }
   .est-row-header { font-size:var(--fs-caption); font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; padding:6px 0 8px; border-bottom:0.5px solid var(--border); }
   .est-low { color:var(--red-d); font-weight:700; }
@@ -441,7 +447,7 @@
   .agenda-sub { font-size:11px; color:var(--text2); margin-top:2px; }
   .agenda-data { font-size:var(--fs-caption); color:var(--text3); white-space:nowrap; font-family:var(--mono); }
   /* SAVE BADGE */
-  .save-badge { position:fixed; bottom:1rem; right:1rem; background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .save-badge { position:fixed; bottom:calc(1rem + env(safe-area-inset-bottom)); right:calc(1rem + env(safe-area-inset-right)); background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .save-badge.show { opacity:1; }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
@@ -519,26 +525,86 @@
   .med-val-pill.med-status-hi  { background:var(--amber-l); color:var(--amber-d); }
   .med-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-top:5px; }
   .med-padrão { font-size:9px; color:var(--text3); margin-top:2px; }
-  /* Menu mobile: botão hamburger fixo, escondido em desktop. */
-  #mobile-menu-btn {
-    display:none; position:fixed;
-    top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
-    z-index:30; width:38px; height:38px; align-items:center; justify-content:center;
-    background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius);
-    color:var(--text); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  /* Máscara da status bar/Dynamic Island: sem isso, o conteúdo que rola pra cima
+     aparece "vazando" por trás do notch em vez de mostrar só o fundo — o WKWebView
+     não pinta essa faixa sozinho. Altura = env(safe-area-inset-top) exatamente:
+     0 (invisível) em qualquer tela sem notch/Dynamic Island, web incluído. */
+  #status-bar-mask {
+    position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top);
+    background:var(--bg); z-index:99999; pointer-events:none;
   }
-  #sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9; }
+  /* Navegação mobile nativa: em vez de hambúrguer + gaveta sobreposta, o menu
+     (mesmo conteúdo da sidebar) vira uma TELA CHEIA própria — como a lista de
+     Pastas do app Notes da Apple. Uma barra fixa (embutida na máscara da
+     status bar, por isso ela cresce no mobile) mostra "‹ Menu" à esquerda
+     quando uma página de conteúdo está aberta, e o título da página
+     centralizado — sem hambúrguer flutuante, sem backdrop translúcido. */
+  #mobile-back-btn {
+    display:none; position:absolute; left:8px; bottom:0; z-index:2;
+    align-items:center; gap:2px; background:none; border:none; cursor:pointer;
+    font-family:var(--font); font-weight:600; font-size:15px; color:var(--chrome-accent);
+    padding:8px 10px 8px 4px;
+  }
+  #mobile-back-btn svg { width:22px; height:22px; flex-shrink:0; }
+  #mobile-navbar-title {
+    display:none; font-family:var(--serif); font-weight:800; font-size:16px;
+    color:var(--chrome-text); max-width:62%; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  /* Escondido por padrão (desktop/web) — só existe como recurso mobile. */
+  #ptr-indicator { display:none; }
   @media (max-width: 768px) {
-    /* Sidebar vira painel suspenso (drawer): some por padrão, sem disputar
-       espaço fixo com o conteúdo — só ocupa a tela quando o usuário abre. */
-    #mobile-menu-btn { display:flex; }
-    .sidebar { width:250px; max-width:82vw; transform:translateX(-100%); transition:transform 0.22s ease; box-shadow:2px 0 20px rgba(0,0,0,0.15); }
+    #status-bar-mask {
+      height:calc(env(safe-area-inset-top) + 46px);
+      display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px;
+      border-bottom:0.5px solid var(--chrome-border); pointer-events:auto;
+    }
+    #mobile-back-btn, #mobile-navbar-title { display:flex; }
+    /* Menu vira tela cheia própria (não gaveta estreita sobre um backdrop) —
+       cobre 100% da viewport e desliza inteira, como uma tela de navegação real. */
+    .sidebar { width:100vw; max-width:100vw; transform:translateX(-100%); transition:transform 0.28s cubic-bezier(.25,.1,.25,1); box-shadow:none; z-index:20; padding-top:calc(env(safe-area-inset-top) + 62px); }
     .sidebar.open { transform:translateX(0); }
-    #sidebar-backdrop.open { display:block; }
-    .main { margin-left:0; padding:1rem; padding-top:4rem; max-width:100vw; }
+    .main { margin-left:0; padding:1rem; padding-top:calc(62px + env(safe-area-inset-top) + 1rem); max-width:100vw; }
     #trial-banner-topo { margin:-1rem -1rem 1rem; flex-wrap:wrap; }
     .metrics { grid-template-columns:1fr 1fr; }
     .two-col { grid-template-columns:1fr; }
+    /* Lista do menu com cara de lista nativa: linha divisória e seta à direita
+       em vez do item "achatado" que fazia sentido só numa gaveta estreita. */
+    .nav-btn { padding:13px 4px; border-bottom:0.5px solid var(--chrome-border); border-radius:0; font-size:15px; }
+    .nav-btn::after {
+      content:''; margin-left:auto; width:8px; height:8px; flex-shrink:0;
+      border-right:1.6px solid var(--chrome-text3); border-top:1.6px solid var(--chrome-text3);
+      transform:rotate(45deg); opacity:.7;
+    }
+    /* Trocar de página tem uma transição sutil (fade + leve subida) em vez do
+       corte seco do display:none→block — o mesmo instante em que dá pra
+       arrastar a tela pra baixo e soltar (transform de baixo). */
+    .main { transition:transform 0.25s cubic-bezier(.25,.1,.25,1); }
+    .page.active { animation:mimba-page-in 0.22s cubic-bezier(.25,.1,.25,1); }
+    @keyframes mimba-page-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    /* Toque tem que dar feedback visual — sem isso (e sem o flash cinza padrão
+       do WebKit, removido de propósito acima) botão/item de menu não mostra
+       nenhuma reação ao dedo, o que parece quebrado num app nativo. */
+    .btn:active, .nav-btn:active, .kanban-card:active, .med-card:active,
+    .hist-row:active, .sangue-bar:active, .evt-animal-row:active {
+      transform:scale(0.97); opacity:0.88; transition:transform 0.08s ease, opacity 0.08s ease;
+    }
+    .btn, .nav-btn { -webkit-user-select:none; user-select:none; }
+    /* Indicador de pull-to-refresh: some por trás da barra de navegação (some
+       de vista) e só aparece conforme o dedo arrasta a tela pra baixo, ou
+       gira como spinner enquanto os dados recarregam. Ver a lógica de arrasto
+       junto de toggleSidebarMobile, na seção NAV do JS. */
+    #ptr-indicator {
+      display:flex; position:fixed; left:0; right:0; z-index:15;
+      top:calc(env(safe-area-inset-top) + 46px); height:0;
+      align-items:flex-start; justify-content:center; pointer-events:none;
+    }
+    #ptr-indicator svg { width:20px; height:20px; color:var(--chrome-accent); opacity:0; margin-top:10px; }
+    #ptr-indicator.pulling svg, #ptr-indicator.loading svg { opacity:1; }
+    #ptr-indicator.loading svg { animation:spin 0.7s linear infinite; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page.active { animation:none; }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .sangue-bar { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border); }
@@ -955,6 +1021,40 @@
   @keyframes ja-cresce2{from{width:0 !important;}}
   .jornada-ac .ja-acoes{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
   @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+
+  /* Jornada de acasalamento — mobile. O componente foi desenhado em colunas fixas
+     (cards lado a lado, linhas de ranking com larguras em px somando bem mais que
+     uma tela de celular) — sem isso ele "quebra" (vaza largura/corta conteúdo) em
+     qualquer tela estreita. Empilha em coluna única e troca largura fixa por 100%. */
+  @media (max-width:680px){
+    .jornada-ac{padding:18px 16px;}
+    .jornada-ac .ja-titulo{font-size:19px;}
+    .jornada-ac .ja-alvo{flex-wrap:wrap;}
+    .jornada-ac .ja-alvo > div:last-child{width:100%;justify-content:flex-end;}
+
+    .jornada-ac .ja-baralho{overflow:hidden;}
+
+    .jornada-ac .ja-linha{flex-wrap:wrap;row-gap:8px;}
+    .jornada-ac .ja-porq{width:100%;order:4;}
+    .jornada-ac .ja-nota{order:5;width:auto;margin-left:auto;text-align:right;}
+    .jornada-ac .ja-linha > .ja-btn2{order:6;}
+
+    .jornada-ac .ja-palco{padding:16px 14px;}
+    .jornada-ac .ja-cabeca{flex-direction:column;gap:10px;}
+    .jornada-ac .ja-cabeca .ja-quem-b{max-width:100%;text-align:left !important;}
+
+    .jornada-ac .ja-veredito{flex-direction:column;}
+    .jornada-ac .ja-coef{width:100%;}
+
+    .jornada-ac .ja-arena{flex-direction:column;gap:14px;min-height:0;}
+    .jornada-ac .ja-lado{width:100%;}
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-esq, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-esq,
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-dir, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-dir{transform:none;}
+    .jornada-ac .ja-fio{display:none;}
+
+    .jornada-ac .ja-dossie-topo{flex-direction:column;}
+    .jornada-ac .ja-grade{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
@@ -1118,10 +1218,17 @@
   </div>
 </div>
 
-<button id="mobile-menu-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu" title="Menu">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-</button>
-<div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
+<div id="status-bar-mask">
+  <button id="mobile-back-btn" onclick="toggleSidebarMobile(true)" aria-label="Voltar ao menu" title="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Menu
+  </button>
+  <span id="mobile-navbar-title"></span>
+</div>
+
+<div id="ptr-indicator" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
 
 <div class="sidebar" id="sidebar-main">
   <div class="logo">
@@ -1171,7 +1278,7 @@
 
 <!-- V1.5 (Fase 2, complemento): banner de trial perto do vencimento — fixo no topo em toda
      página (não é um toast que some sozinho, fica até o usuário fechar ou o trial acabar). -->
-<div id="trial-banner-topo" style="display:none;align-items:center;gap:10px;position:sticky;top:0;z-index:40;margin:-1.75rem -1.75rem 1.25rem;padding:10px 1.75rem;background:var(--amber-l);color:var(--amber-d);border-bottom:1px solid var(--amber);font-size:12px">
+<div id="trial-banner-topo" style="display:none;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top);z-index:40;margin:-1.75rem -1.75rem 1.25rem;padding:10px 1.75rem;background:var(--amber-l);color:var(--amber-d);border-bottom:1px solid var(--amber);font-size:12px">
   <span id="trial-banner-texto" style="flex:1"></span>
   <button class="btn btn-sm" onclick="_cancelarTrialClick()" style="background:transparent;border-color:var(--amber-d);color:var(--amber-d);white-space:nowrap">Cancelar teste</button>
   <button onclick="_fecharTrialBanner()" title="Fechar aviso" aria-label="Fechar aviso" style="background:none;border:none;cursor:pointer;color:var(--amber-d);font-size:18px;line-height:1;padding:0 4px">×</button>
@@ -2019,7 +2126,7 @@
         <option>Medicamento</option><option>Vacina</option><option>Material veterinário</option><option>Outro</option>
       </select>
     </div>
-    <div class="card" style="padding:0 1.1rem">
+    <div class="card" style="padding:0 1.1rem;overflow-x:auto">
       <div class="est-row est-row-header">
         <span>Item / Marca</span><span>Categoria</span><span>Estoque atual</span><span>Estoque mínimo</span><span>Unidade</span><span></span>
       </div>
@@ -3618,7 +3725,7 @@
         <label style="font-size:12px;font-weight:600;color:var(--text2)">Etapas</label>
         <button class="btn btn-sm" onclick="_prAdicionarEtapaLinha()">+ Adicionar etapa</button>
       </div>
-      <div id="pr-etapas-list"></div>
+      <div id="pr-etapas-list" style="overflow-x:auto"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-protocolo')">Cancelar</button><button class="btn btn-primary" onclick="salvarProtocolo()">Salvar</button></div>
   </div>
@@ -7297,18 +7404,115 @@ function showPage(id){
   if(id==='saude')renderSaude();
   if(id==='reprodutivo'){renderReprodutivo();renderPlanejadorReprodutivo();}
   if(id==='financeiro')renderFinanceiro();
-  toggleSidebarMobile(false); // navegar sempre fecha o menu suspenso no mobile
+  // Título da barra de navegação mobile: lido do .page-title da própria página,
+  // única fonte de verdade (em vez de duplicar o texto num mapa à parte).
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (navTitulo) {
+    const tituloEl = document.querySelector('#page-'+id+' .page-title');
+    navTitulo.textContent = tituloEl ? tituloEl.textContent : '';
+  }
+  toggleSidebarMobile(false); // navegar sempre volta pro conteúdo (fecha o menu) no mobile
 }
 
-// ── Menu mobile (painel suspenso) ──────────────────────────────────────────
+// ── Menu mobile (tela cheia, estilo "Pastas" do Notes — não é mais gaveta
+// sobreposta) — toggleSidebarMobile(true) mostra o menu, (false) mostra o
+// conteúdo. O botão "‹ Menu" e o título centralizado só fazem sentido com o
+// conteúdo visível, por isso somem juntos com o menu.
 function toggleSidebarMobile(force){
   const sb = document.getElementById('sidebar-main');
-  const bd = document.getElementById('sidebar-backdrop');
   if(!sb) return;
   const abrir = typeof force === 'boolean' ? force : !sb.classList.contains('open');
   sb.classList.toggle('open', abrir);
-  if(bd) bd.classList.toggle('open', abrir);
+  const backBtn = document.getElementById('mobile-back-btn');
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (backBtn) backBtn.style.visibility = abrir ? 'hidden' : '';
+  if (navTitulo) navTitulo.style.visibility = abrir ? 'hidden' : '';
 }
+
+// ── Pull-to-refresh (mobile, estilo iOS) ────────────────────────────────────
+// Arrastar a tela pra baixo no topo recarrega os dados da cabanha, reusando
+// _sincronizarAoLogin() (mesma busca completa do banco que já roda no login),
+// só que sem registrar um "LOGIN" novo no audit log — ver o parâmetro
+// viaPullRefresh lá. Só faz sentido no layout mobile e com o dedo (touch);
+// desktop já tem F5/atalhos normais do navegador.
+(function(){
+  const LIMIAR = 62; // px arrastados (já com resistência) pra soltar e disparar
+  const RESISTENCIA = 0.45;
+  const MAX_VISUAL = 92;
+  let inicioY = 0, arrastando = false, carregando = false, distAtual = 0;
+
+  function podeComecarArrasto(){
+    if (window.innerWidth > 768) return false;
+    if (window.scrollY > 0) return false;
+    if (document.querySelector('.modal-bg.open')) return false;
+    if (document.getElementById('sidebar-main')?.classList.contains('open')) return false;
+    const login = document.getElementById('login-screen');
+    if (login && login.style.display !== 'none') return false;
+    return true;
+  }
+
+  function aplicarArrasto(dist){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = 'none';
+    main.style.transform = dist ? `translateY(${dist}px)` : '';
+    ind.style.height = dist ? dist+'px' : '';
+    ind.classList.toggle('pulling', dist > 4);
+    const svg = ind.querySelector('svg');
+    if(svg) svg.style.transform = `rotate(${Math.min(dist/LIMIAR,1)*180}deg)`;
+  }
+
+  function soltar(){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = '';
+    if(distAtual >= LIMIAR && !carregando){
+      carregando = true;
+      main.style.transform = `translateY(${LIMIAR}px)`;
+      ind.style.height = LIMIAR+'px';
+      ind.classList.remove('pulling'); ind.classList.add('loading');
+      Promise.resolve(_sincronizarAoLogin({viaPullRefresh:true})).finally(()=>{
+        main.style.transform = '';
+        ind.style.height = '';
+        ind.classList.remove('loading');
+        carregando = false;
+      });
+    } else {
+      main.style.transform = '';
+      ind.style.height = '';
+      ind.classList.remove('pulling');
+    }
+    distAtual = 0;
+  }
+
+  window.addEventListener('touchstart', (e)=>{
+    if(carregando || !podeComecarArrasto()) { arrastando = false; return; }
+    inicioY = e.touches[0].clientY;
+    arrastando = true;
+  }, {passive:true});
+
+  window.addEventListener('touchmove', (e)=>{
+    if(!arrastando || carregando) return;
+    const dy = e.touches[0].clientY - inicioY;
+    if(dy <= 0 || window.scrollY > 0){
+      if(distAtual){ distAtual = 0; aplicarArrasto(0); }
+      arrastando = false;
+      return;
+    }
+    distAtual = Math.min(dy * RESISTENCIA, MAX_VISUAL);
+    e.preventDefault();
+    aplicarArrasto(distAtual);
+  }, {passive:false});
+
+  window.addEventListener('touchend', ()=>{
+    if(!arrastando) return;
+    arrastando = false;
+    soltar();
+  }, {passive:true});
+})();
+
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -7576,7 +7780,7 @@ function renderNutBody(i) {
     if(itensCat.length===0){
       html += `<div class="nut-empty" style="margin:0 0 4px">Nenhum item cadastrado.</div>`;
     } else {
-      html += `<div style="display:grid;grid-template-columns:160px 120px 140px 1fr auto;gap:6px;padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+      html += `<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:180px 100px 100px 1fr auto;gap:8px;padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:620px">
         <span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Observações</span><span></span>
       </div>`;
       itensCat.forEach(({it,idx})=>{
@@ -7591,6 +7795,7 @@ function renderNutBody(i) {
           </div>
         </div>`;
       });
+      html += `</div>`;
     }
     html += `</div>`;
   });
@@ -7605,7 +7810,7 @@ function renderNutBody(i) {
   if(suplList.length===0){
     html += `<div class="nut-empty">Nenhum suplemento cadastrado para este animal.</div>`;
   } else {
-    html += `<div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+    html += `<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:650px">
       <span>Suplemento</span><span>Marca</span><span>Dosagem</span><span>Frequência</span><span>Período</span><span></span>
     </div>`;
     suplList.forEach(({it:s,idx})=>{
@@ -7621,6 +7826,7 @@ function renderNutBody(i) {
         </div>
       </div>`;
     });
+    html += `</div>`;
   }
   html += '</div>';
 
@@ -7934,7 +8140,7 @@ function renderTemplatesPage() {
     : nutTemplates.map(tmpl=>{
         const anCount = tmpl.estagio_vinculado ? animais.filter(a=>a.estagio===tmpl.estagio_vinculado&&(a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO')).length : null;
         const rows = tmpl.itens.map(it=>`
-          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start">
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start;min-width:520px">
             <span style="font-weight:600">${icons[it.tipo]||''} ${it.tipo}</span>
             <span style="color:var(--text2)">${it.produto||'—'}</span>
             <span style="color:var(--text2)">${it.quantidade||'—'}</span>
@@ -7957,10 +8163,12 @@ function renderTemplatesPage() {
               <button class="btn btn-sm" style="font-size:10px" onclick="abrirTemplate(undefined);document.getElementById('tmpl-select').value='${tmpl.db_id}';atualizarPreviewTemplate()">Aplicar a animal</button>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+          <div style="overflow-x:auto">
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:520px">
             <span>Tipo</span><span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Obs</span>
           </div>
           ${rows || '<div class="nut-empty" style="margin:4px 0">Sem itens.</div>'}
+          </div>
         </div>`;
       }).join('');
   el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">${novoBtn}</div>${lista}`;
@@ -8130,7 +8338,7 @@ function renderEvtAnimaisTemp() {
   }
   let html = evtAnimaisTemp.map((p,pi)=>`
     <div class="evt-animal-row">
-      <span style="font-weight:600;flex:1;font-size:12px">${p.nome}</span>
+      <span style="font-weight:600;flex:1 1 100%;font-size:12px">${p.nome}</span>
       <select style="width:130px;font-size:11px;padding:4px" onchange="evtAnimaisTemp[${pi}].modalidade=this.value">
         <option ${p.modalidade==='Individual'?'selected':''}>Individual</option>
         <option ${p.modalidade==='Conjunto'?'selected':''}>Conjunto</option>
@@ -11639,7 +11847,7 @@ function _prAdicionarEtapaLinha(etapa) {
   const wrap = document.getElementById('pr-etapas-list');
   const row = document.createElement('div');
   row.className = 'pr-etapa-row';
-  row.style.cssText = 'display:grid;grid-template-columns:90px 130px 1fr 90px 26px;gap:6px;align-items:center;margin-bottom:6px';
+  row.style.cssText = 'display:grid;grid-template-columns:90px 130px 1fr 90px 26px;gap:6px;align-items:center;margin-bottom:6px;min-width:460px';
   row.innerHTML = `
     <input type="number" class="pr-et-dia" placeholder="Dia" value="${etapa?.dia_relativo ?? ''}" style="width:100%">
     <select class="pr-et-tipo" style="width:100%">
@@ -13884,8 +14092,9 @@ function _mostrarStatusSync(msg, tipo) {
 // ══════════════════════════════════════════════════════════════════════════════
 // SYNC COMPLETO — carrega todos os dados do banco relacional
 // ══════════════════════════════════════════════════════════════════════════════
-async function _sincronizarAoLogin() {
-  _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
+async function _sincronizarAoLogin(opts) {
+  const viaPullRefresh = !!(opts && opts.viaPullRefresh);
+  _mostrarStatusSync(viaPullRefresh ? '🔄 Atualizando...' : '🔄 Carregando dados do banco...', 'amber');
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
   fontesCobertura.length = 0;
@@ -14342,9 +14551,12 @@ async function _sincronizarAoLogin() {
       }
     }
 
-    // Registrar login no audit
-    await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
-      {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    // Registrar login no audit — só na sincronização de login de verdade; um
+    // pull-to-refresh não é um novo login e não pode poluir o audit log como se fosse.
+    if (!viaPullRefresh) {
+      await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
+        {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    }
 
     populaCiclos(); renderDashboard(); renderAnimais(); atualizarBadgePendencias();
     // Se o usuário já tiver navegado para outra página (ex.: Gestação, Medidas)
@@ -15319,6 +15531,11 @@ function _entrarApp() {
   if(usrSub) usrSub.textContent = 'Controle de acesso ao sistema' + (nomeCab ? ` — ${nomeCab}` : '');
   _aplicarPermissoes();
   populaCiclos();
+  // Dashboard é sempre a página de entrada (já vem "active" no HTML estático,
+  // sem passar por showPage()) — título da navbar mobile precisa ser setado
+  // aqui manualmente, senão fica vazio até a primeira troca de página.
+  const navTituloInicial = document.getElementById('mobile-navbar-title');
+  if (navTituloInicial) navTituloInicial.textContent = document.querySelector('#page-dashboard .page-title')?.textContent || 'Dashboard';
   // Não renderizar o dashboard com dado real aqui: animais ainda está vazio (limpo
   // em _limparEstadoLocal) — mostra skeleton animado até _sincronizarAoLogin
   // terminar e chamar renderDashboard() de verdade, no final.
@@ -15755,7 +15972,7 @@ if(!_checkRecovery()){
 }
 
 </script>
-<div id="sync-status" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+<div id="sync-status" style="display:none;position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom));right:calc(1.25rem + env(safe-area-inset-right));padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
 
 <div class="modal-bg" id="modal-nao-confirmar">
   <div class="modal" style="max-width:420px">
