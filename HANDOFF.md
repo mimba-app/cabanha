@@ -6,6 +6,31 @@
 - **App/produto Mimba:** sessão em `projetos/cabanha` → *"lê o HANDOFF.md e vamos continuar"*. Carregam sozinhos: CLAUDE.md, memória (`MEMORY.md`), subagentes (`revisor-isolamento`, `arquiteto`, `engenheiro-frontend`) e skills (`nova-migration-tenant`, `deploy`, `testar-provisionamento`).
 - **Landing:** sessão em `projetos/mimba-landing` (repo `mimba-app/mimba-landing`, clonado). O `index.html` é um bundle gerado; as páginas `/assinar` e `/obrigado` são hand-authored (editáveis à vontade).
 
+## 🤖 Agente de IA interno — v1 no ar, falta só a API key da Anthropic (2026-08-23)
+ADR 0006 (arquitetura) + 0007 (adiamento do especialista ABCCC/cruzamento) já fechados. V1
+implementada e mergeada (PR #34): chat flutuante em `index.html` (FAB bottom-right, visível só
+logado), Edge Function nova `agente-ia` (`supabase/functions/agente-ia/index.ts` — primeira Edge
+Function do projeto versionada no repo, as demais só existem no dashboard do Supabase), streaming
+SSE, tool-calling restrito a RPCs read-only tenant-scoped (nunca SQL livre). RPCs novas
+`cab_buscar_animal`/`cab_listar_gestacoes_ativas`/`cab_resumo_periodo` + tabela `uso_ia_mensal`
+(cota mensal por tenant, lida de `planos.features->>'cota_ia_mensal'`, default 50 se ausente) —
+revisadas pelo `revisor-isolamento` (aprovado) antes de aplicar. Base de conhecimento estática em
+`docs/agente-ia-base-conhecimento.md`.
+
+**Escopo desta v1**: caso de uso 1 (dado da própria cabanha) + caso de uso 4 (ajuda de uso). Fora
+de escopo por decisão registrada (ADR 0007): score de cruzamento sob demanda pra um par
+garanhão×égua específico (reabriria o isolamento produção↔Mimba Lab que existe desde o incidente
+que derrubou a produção — ver `docs/handoff-mimba-lab-cruzamentos.md`) e conhecimento
+geral/agregado do Lab via artefato estático (depende de credencial de leitura ao projeto
+`mimba-analytics` que o Pedro ainda não passou).
+
+**Único bloqueio real**: `ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL` não configuradas como secret da
+Edge Function — o Pedro ainda não tem uma key da Anthropic. Sem isso o agente responde 500 com
+mensagem clara em vez de tentar chamar a Claude (comportamento testado e confirmado). Assim que a
+key existir: configurar os dois secrets no dashboard do Supabase (Edge Functions → agente-ia →
+Settings) e testar o fluxo completo de tool-calling ponta a ponta — todo o resto (RPCs, Edge
+Function, frontend) já está pronto e revisado.
+
 ## 📱 App mobile nativo (Capacitor) — Fase 1 concluída, falta só assinatura das lojas (2026-08-23)
 Pedro assumiu a frente do app mobile (ver nota na seção de Nutrição abaixo). ADR
 `docs/adr/0005-empacotamento-mobile-em-3-fases.md` decidiu empacotar o `index.html` atual com
