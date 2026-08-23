@@ -467,6 +467,25 @@
   /* SAVE BADGE */
   .save-badge { position:fixed; bottom:calc(1rem + env(safe-area-inset-bottom)); right:calc(1rem + env(safe-area-inset-right)); background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .save-badge.show { opacity:1; }
+  /* AGENTE DE IA — chat flutuante (ADR 0006). Fica entre os toasts (z-index
+     500) e os modais (até ~400 antes disso)/login-screen (100000), pra poder
+     ficar aberto por cima de qualquer tela sem brigar com nada. */
+  .chat-ia-fab { position:fixed; bottom:calc(1.25rem + env(safe-area-inset-bottom)); right:calc(1.25rem + env(safe-area-inset-right)); width:52px; height:52px; border-radius:50%; background:var(--green-d); color:#fff; border:none; display:none; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,0.25); cursor:pointer; z-index:800; }
+  .chat-ia-fab.visible { display:flex; }
+  .chat-ia-fab svg { width:24px; height:24px; }
+  .chat-ia-panel { position:fixed; bottom:calc(5.5rem + env(safe-area-inset-bottom)); right:calc(1.25rem + env(safe-area-inset-right)); width:380px; max-width:calc(100vw - 2rem); height:min(560px, 70vh); background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 40px rgba(0,0,0,0.3); z-index:900; display:none; flex-direction:column; overflow:hidden; }
+  .chat-ia-panel.open { display:flex; }
+  .chat-ia-header { padding:14px 16px; background:var(--chrome-accent-d); color:#fff; display:flex; align-items:center; justify-content:space-between; font-weight:700; font-size:14px; flex-shrink:0; }
+  .chat-ia-header button { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; line-height:1; padding:0 4px; }
+  .chat-ia-msgs { flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+  .chat-ia-msg { max-width:85%; padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.5; white-space:pre-wrap; }
+  .chat-ia-msg.user { align-self:flex-end; background:var(--green-d); color:#fff; border-bottom-right-radius:3px; }
+  .chat-ia-msg.assistente { align-self:flex-start; background:var(--bg3); color:var(--text); border-bottom-left-radius:3px; }
+  .chat-ia-msg.sistema { align-self:center; background:none; color:var(--text3); font-size:11px; text-align:center; }
+  .chat-ia-input-row { flex-shrink:0; display:flex; gap:8px; padding:12px; border-top:1px solid var(--border); }
+  .chat-ia-input-row textarea { flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; font-family:var(--font); font-size:13px; background:var(--bg); color:var(--text); max-height:80px; }
+  .chat-ia-input-row button { background:var(--green-d); color:#fff; border:none; border-radius:var(--radius); padding:0 16px; font-weight:700; cursor:pointer; }
+  .chat-ia-input-row button:disabled { opacity:0.5; cursor:default; }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
   .san-panel-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
@@ -15676,6 +15695,7 @@ function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
+  _chatIAMostrarFab(true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -15739,6 +15759,8 @@ function _entrarApp() {
 function fazerLogout() {
   usuarioAtual = null;
   AUTH_TOKEN = null; AUTH_USER = null; TENANT_INFO = null;
+  _chatIAMostrarFab(false);
+  _chatIAMensagens = [];
   // não deixar dado da cabanha na memória/localStorage após sair
   _limparEstadoLocal();
   _limparSessaoSalva(); // sair de verdade não pode voltar sozinho no próximo reload
@@ -16164,8 +16186,130 @@ if(!_checkRecovery()){
   _tentarRetomarSessao().then(retomou => { if(!retomou) _carregarEmailLembrado(); });
 }
 
+// ── Agente de IA — chat flutuante (ADR 0006/0007) ───────────────────────────
+// Streaming via SSE: primeiro uso desse padrão no projeto (o resto do app só
+// usa fetch simples com await res.json()). Cada RPC que o agente chama já é
+// tenant-scoped/autorizada no Postgres (tem_acesso_tenant) — esta função só
+// repassa o JWT do usuário, nunca monta SQL nem decide autorização aqui.
+let _chatIAMensagens = [];
+let _chatIAEnviando = false;
+
+function _chatIAToggle(){
+  const painel = document.getElementById('chat-ia-panel');
+  const abrindo = !painel.classList.contains('open');
+  painel.classList.toggle('open', abrindo);
+  if(abrindo) document.getElementById('chat-ia-input')?.focus();
+}
+
+function _chatIAMostrarFab(mostrar){
+  document.getElementById('chat-ia-fab')?.classList.toggle('visible', !!mostrar);
+  if(!mostrar) document.getElementById('chat-ia-panel')?.classList.remove('open');
+}
+
+function _chatIARenderMsg(texto, classe){
+  const box = document.getElementById('chat-ia-msgs');
+  const div = document.createElement('div');
+  div.className = 'chat-ia-msg ' + classe;
+  div.textContent = texto;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function _chatIAEnviar(){
+  if(_chatIAEnviando) return;
+  const input = document.getElementById('chat-ia-input');
+  const texto = (input.value||'').trim();
+  if(!texto) return;
+  const tenantId = TENANT_INFO?.tenant_id || TENANT_INFO?.id;
+  if(!tenantId){ _chatIARenderMsg('Nenhuma cabanha ativa.', 'sistema'); return; }
+
+  input.value = '';
+  _chatIARenderMsg(texto, 'user');
+  _chatIAMensagens.push({ role: 'user', content: texto });
+
+  _chatIAEnviando = true;
+  const botaoEnviar = document.getElementById('chat-ia-send');
+  if(botaoEnviar) botaoEnviar.disabled = true;
+  const bolhaResposta = _chatIARenderMsg('', 'assistente');
+
+  try {
+    await _garantirTokenValido();
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/agente-ia`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: tenantId, mensagens: _chatIAMensagens }),
+    });
+
+    if(!r.ok){
+      const d = await r.json().catch(()=>({}));
+      bolhaResposta.remove();
+      _chatIARenderMsg(d?.erro || `Erro ${r.status} ao falar com o assistente.`, 'sistema');
+      _chatIAMensagens.pop();
+      return;
+    }
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let respostaTexto = '';
+
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const partes = buffer.split('\n\n');
+      buffer = partes.pop() || '';
+      for(const parte of partes){
+        const linhas = parte.split('\n');
+        const linhaEvento = linhas.find(l=>l.startsWith('event: '));
+        const linhaDados = linhas.find(l=>l.startsWith('data: '));
+        if(!linhaEvento || !linhaDados) continue;
+        const evento = linhaEvento.slice(7);
+        const dados = JSON.parse(linhaDados.slice(6));
+        if(evento === 'texto'){
+          respostaTexto += dados.delta;
+          bolhaResposta.textContent = respostaTexto;
+          document.getElementById('chat-ia-msgs').scrollTop = 9e9;
+        } else if(evento === 'ferramenta'){
+          bolhaResposta.textContent = respostaTexto || 'consultando...';
+        } else if(evento === 'erro'){
+          bolhaResposta.textContent = respostaTexto || (dados.erro || 'Erro no assistente.');
+        }
+      }
+    }
+
+    if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
+    else bolhaResposta.remove();
+  } catch(e) {
+    bolhaResposta.textContent = 'Falha de conexão com o assistente.';
+  } finally {
+    _chatIAEnviando = false;
+    if(botaoEnviar) botaoEnviar.disabled = false;
+  }
+}
+
 </script>
 <div id="sync-status" style="display:none;position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom));right:calc(1.25rem + env(safe-area-inset-right));padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+
+<!-- Agente de IA — chat flutuante (ADR 0006). Escondido por padrão; _entrarApp()/
+     fazerLogout() controlam a visibilidade (só aparece logado, nunca sobre o login). -->
+<button class="chat-ia-fab" id="chat-ia-fab" onclick="_chatIAToggle()" title="Assistente Mimba" aria-label="Abrir assistente">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+</button>
+<div class="chat-ia-panel" id="chat-ia-panel">
+  <div class="chat-ia-header">
+    <span>Assistente Mimba</span>
+    <button onclick="_chatIAToggle()" aria-label="Fechar">×</button>
+  </div>
+  <div class="chat-ia-msgs" id="chat-ia-msgs">
+    <div class="chat-ia-msg sistema">Pergunte sobre os dados da sua cabanha ou como usar o sistema.</div>
+  </div>
+  <div class="chat-ia-input-row">
+    <textarea id="chat-ia-input" rows="1" placeholder="Escreva sua pergunta..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_chatIAEnviar();}"></textarea>
+    <button id="chat-ia-send" onclick="_chatIAEnviar()">Enviar</button>
+  </div>
+</div>
 
 <div class="modal-bg" id="modal-nao-confirmar">
   <div class="modal" style="max-width:420px">
