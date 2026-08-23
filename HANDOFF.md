@@ -6,6 +6,55 @@
 - **App/produto Mimba:** sessão em `projetos/cabanha` → *"lê o HANDOFF.md e vamos continuar"*. Carregam sozinhos: CLAUDE.md, memória (`MEMORY.md`), subagentes (`revisor-isolamento`, `arquiteto`, `engenheiro-frontend`) e skills (`nova-migration-tenant`, `deploy`, `testar-provisionamento`).
 - **Landing:** sessão em `projetos/mimba-landing` (repo `mimba-app/mimba-landing`, clonado). O `index.html` é um bundle gerado; as páginas `/assinar` e `/obrigado` são hand-authored (editáveis à vontade).
 
+## 📱 App mobile nativo (Capacitor) — Fase 1 concluída, falta só assinatura das lojas (2026-08-23)
+Pedro assumiu a frente do app mobile (ver nota na seção de Nutrição abaixo). ADR
+`docs/adr/0005-empacotamento-mobile-em-3-fases.md` decidiu empacotar o `index.html` atual com
+Capacitor em 3 fases; **Fase 1 (empacotar iOS + Android) está tecnicamente completa** nesta
+sessão. Pasta `mobile/` isolada do resto do repo (própria `npm`/`package.json`/build step —
+exceção deliberada ao "sem framework/bundler" do `CLAUDE.md`). `mobile/www/` e
+`mobile/ios/App/App/public/` são gerados (`npm run sync:ios` / `sync:android`) a partir do
+`index.html` da raiz — nunca editar direto.
+
+**O que já está pronto e mergeado em `main`:**
+- **iOS**: projeto Xcode gerado (`mobile/ios/`), roda no Simulador, ícone/splash reais (monograma
+  "M" branco + ponto dourado `#E8C567` sobre gradiente verde `#4F6B2E→#33461C`, fonte Manrope
+  ExtraBold — mesma composição do wordmark do site).
+- **Android**: SDK instalado nesta máquina (`android-commandlinetools` via Homebrew, não o
+  Android Studio completo — AVD `Mimba_Pixel`, Pixel 7/API 34), projeto gerado (`mobile/android/`),
+  mesmo ícone/splash do iOS. **Keystore de assinatura de release gerada e guardada fora do repo**
+  (`~/.mimba-keys/mimba-release.keystore`, alias `mimba-upload` — senhas em
+  `mobile/android/keystore.properties`, local, gitignored). `build.gradle` já lê de lá; `assembleRelease`
+  gera APK assinado corretamente (verificado via `apksigner verify`).
+- **Bug de safe-area do Android corrigido** (PR #33): WebViews Android mais antigos (Chromium
+  <140) não reportavam `env(safe-area-inset-*)`, deixando o conteúdo colado embaixo da
+  câmera/sinal/bateria. Trocado `@capacitor/status-bar` por `@capacitor-community/safe-area` +
+  plugin nativo próprio (`MimbaBarsPlugin.java`) pra pintar o respiro com a paleta da marca em vez
+  de preto/branco. Verificado no emulador Android e no Simulador iOS (sem regressão).
+- Bundle ID: `br.com.mimba.app` (ambas as plataformas).
+
+**Bloqueado até o Pedro alinhar com o Luciano (amanhã) — assinaturas das contas de
+desenvolvedor:**
+1. **Apple Developer Program** (US$99/ano) — precisa da conta criada/paga antes de gerar
+   certificado de distribuição + provisioning profile e submeter no App Store Connect. Sem isso,
+   o app iOS só roda no Simulador, não pode ir pra TestFlight/loja.
+2. **Google Play Console** (US$25 taxa única) — precisa da conta criada/paga antes de criar o
+   app no console, preencher ficha da loja (ícone, screenshots, descrição, política de
+   privacidade — **ainda não escrita**, obrigatória pra publicar) e subir o primeiro AAB/APK
+   assinado (keystore já pronta, ver acima).
+3. Nenhuma dessas duas é algo que eu (Claude) posso fazer sozinho — exigem login/pagamento
+   pessoal do Pedro (+ Luciano, no caso da Apple, provavelmente como Account Holder/Admin da
+   organização).
+
+**Próximos passos, na ordem, assim que as contas existirem:**
+- iOS: gerar certificado de distribuição + provisioning profile no Apple Developer, configurar
+  signing no Xcode (`mobile/ios/App`), arquivar e subir via Xcode/Transporter pro App Store
+  Connect, preencher ficha da loja, TestFlight antes de submeter pra revisão.
+- Android: criar o app no Play Console, preencher ficha da loja (falta escrever política de
+  privacidade), gerar AAB de release (`./gradlew bundleRelease`, já assina sozinho com a
+  keystore local), subir como faixa de teste interno antes de produção.
+- Depois de publicado nas duas lojas: Fase 2 do ADR 0005 (detecção de offline) fica como próxima
+  frente nativa — não fazer antes disso.
+
 ## ✅ ATUALIZAÇÃO (2026-08-21): `staging` foi promovida pra `main` — item resolvido
 A seção abaixo ficou desatualizada por várias sessões e foi corrigida depois de uma verificação
 direta no código (não só na leitura deste documento). **`staging` já está 100% mergeada em
