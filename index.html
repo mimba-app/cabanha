@@ -566,8 +566,26 @@
     .sidebar.open { transform:translateX(0); }
     .main { margin-left:0; padding:1rem; padding-top:calc(62px + env(safe-area-inset-top) + 1rem); max-width:100vw; }
     #trial-banner-topo { margin:-1rem -1rem 1rem; flex-wrap:wrap; }
-    .metrics { grid-template-columns:1fr 1fr; }
+    /* !important necessário: várias telas (Animais, Medidas, Financeiro, Painel
+       Mimba) fixam a coluna via style="grid-template-columns:repeat(N,...)" no
+       próprio HTML, o que sempre vence a regra externa — sem isso os cards de
+       métrica ficavam espremidos em 3-4 colunas na largura de mobile. */
+    .metrics { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px; }
+    .metric { padding:14px 12px; }
+    .metric-value { font-size:21px; }
     .two-col { grid-template-columns:1fr; }
+    /* Formulários em 2 colunas (usados em quase todo modal de cadastro/edição)
+       viram 1 coluna cheia no mobile — 2 campos espremidos lado a lado são
+       difíceis de tocar e ler numa tela de ~370px úteis. */
+    .form-grid { grid-template-columns:1fr !important; }
+    /* Utilitários pra grids soltos (sem classe própria, cada um com seu style=
+       "display:grid;grid-template-columns:..." espalhado pelo app) que ficavam
+       espremidos no mobile — telas de Sangues, ficha de animal, Nutrição,
+       Vermifugação/Vacina em lote, planejador de Cruzamentos, drill-down do
+       Dashboard. g-cols-2 (formulário lado a lado, lista+formulário) empilha
+       cheio; g-cols-3 (cards/valores menores) vira 2 colunas. */
+    .g-cols-2 { grid-template-columns:1fr !important; }
+    .g-cols-3, .g-cols-4 { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
     /* Lista do menu com cara de lista nativa: linha divisória e seta à direita
        em vez do item "achatado" que fazia sentido só numa gaveta estreita. */
     .nav-btn { padding:13px 4px; border-bottom:0.5px solid var(--chrome-border); border-radius:0; font-size:15px; }
@@ -1521,7 +1539,7 @@
 
     <!-- PAINEL DE CONTROLE -->
     <div id="verm-painel">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+      <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
 
         <!-- COLUNA 1: seleção de animais -->
         <div class="card" style="padding:0;overflow:hidden">
@@ -1920,7 +1938,7 @@
           <div id="ja-a-dossie"></div>
 
           <div id="ja-a-form" style="display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--ja-ink-08);">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
               <div>
                 <label style="display:block;font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:5px;">Ciclo</label>
                 <input type="text" id="ja-a-ciclo" readonly style="width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho2);color:var(--ja-ink);font-family:var(--ja-sans);font-size:13px;">
@@ -2205,7 +2223,7 @@
     <div id="sangues-meta" style="font-size:11px;color:var(--text2);margin-bottom:1.2rem"></div>
 
     <!-- Linha 1: Pais | Avós Paternos | Avós Maternos -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="g-cols-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
       <div class="card">
         <div class="card-title" style="font-size:13px">👨 Principais Pais</div>
         <div id="sangues-pais"></div>
@@ -2221,7 +2239,7 @@
     </div>
 
     <!-- Linha 2: Afixos | Ancestrais -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
       <div class="card">
         <div class="card-title" style="font-size:13px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Afixos / Cabanhas mais presentes</div>
         <div id="sangues-afixos"></div>
@@ -2235,7 +2253,7 @@
     <!-- Linha 3: Prefixos -->
     <div class="card" style="margin-bottom:1rem">
       <div class="card-title" style="font-size:13px">📛 Prefixos / Marcas mais frequentes</div>
-      <div id="sangues-prefixos" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 2rem"></div>
+      <div id="sangues-prefixos" class="g-cols-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 2rem"></div>
     </div>
 
     <!-- Detalhes por animal -->
@@ -2372,7 +2390,7 @@
         <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
         <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
+      <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
         <div class="card" style="text-align:center;padding:1rem">
           <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
@@ -3115,7 +3133,7 @@
 <div class="modal-bg" id="modal-vac-lote">
   <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
     <div class="modal-header"><span class="modal-title">Vacinar em lote</span><button class="modal-close" onclick="closeModal('modal-vac-lote')">×</button></div>
-    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+    <div class="g-cols-2" style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
           <div style="font-size:13px;font-weight:700">Selecionar animais</div>
@@ -3147,7 +3165,7 @@
 <div class="modal-bg" id="modal-exam-lote">
   <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
     <div class="modal-header"><span class="modal-title">Exame em lote</span><button class="modal-close" onclick="closeModal('modal-exam-lote')">×</button></div>
-    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+    <div class="g-cols-2" style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
           <div style="font-size:13px;font-weight:700">Selecionar animais</div>
@@ -4053,7 +4071,7 @@ function renderAnimais(){
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
         ${a.receptora_externa ? '<span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
+      <div class="g-cols-2" style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
         <div>Nasc.: ${fd(a.nasc)||'—'}</div>
         <div style="grid-column:1/-1">RP: ${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'}</div>
@@ -5434,7 +5452,7 @@ function renderVermStatusPlantel() {
     <span style="color:var(--text3);font-size:11px">${info}</span>
   </div>`;
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
+    <div class="g-cols-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
       <div style="text-align:center;background:var(--red-l);border-radius:var(--radius);padding:8px">
         <div style="font-size:20px;font-weight:800;color:var(--red-d)">${cols.urgente.length}</div>
         <div style="font-size:10px;color:var(--red-d)">Urgente (>180d)</div>
@@ -6084,7 +6102,7 @@ function _renderDetCorpo(i, editando) {
         </div>
         <input type="hidden" id="ed-foto-b64" value="${a.foto_url||''}">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nome</label>
           <input id="ed-nome" value="${a.nome||''}" style="width:100%;font-size:12px" placeholder="Nome em maiúsculas"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">RP</label>
@@ -6267,7 +6285,7 @@ function _renderDetCorpo(i, editando) {
   const n=getNut(i); const ps=projStatus(n);
   const S5=`<div class="ficha-section"><div class="ficha-section-title">${_iconTrigo(17)} Projeto Nutricional <span class="nut-proj-status ${ps.cls}" style="margin-left:6px">${ps.label}</span></div>
     ${(n.dt_inicio||n.itens.length>0)?`
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+    <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
       ${n.itens.filter(it=>it.tipo!=='suplemento').map(it=>{
         const rotulos={racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde',sal:'Sal'};
         return [rotulos[it.tipo]||it.tipo, it.produto, it.quantidade||it.frequencia];
@@ -7836,7 +7854,7 @@ function renderNutBody(i) {
   </div>
   <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)">
     <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.75rem">${_iconRegua(14)} Medidas do Projeto</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       ${['inicial','final'].map(tipo=>{
         const m = n[`med_${tipo}`]||{};
         const label = tipo==='inicial'?'📍 Medidas iniciais':'🏁 Medidas finais';
@@ -7848,7 +7866,7 @@ function renderNutBody(i) {
             </button>
           </div>
           ${m.cernelha||m.peso?`
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+            <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
               ${m.data?`<div style="grid-column:1/-1;font-size:10px;color:var(--text3)">${fd(m.data)}</div>`:''}
               ${m.cernelha?`<div><span style="color:var(--text3)">Cernelha</span><br><strong>${m.cernelha}m</strong></div>`:''}
               ${m.torax?`<div><span style="color:var(--text3)">Tórax</span><br><strong>${m.torax}m</strong></div>`:''}
@@ -12587,7 +12605,7 @@ function dashDrill(tipo, filtro){
     case 'sexo':{
       const fems=ativos.filter(a=>a.sexo==='Fêmea'), macs=ativos.filter(a=>a.sexo==='Macho');
       label=`♀♂ Fêmeas (${fems.length}) / Machos (${macs.length})`;
-      rows=`<div style="display:grid;grid-template-columns:1fr 1fr">
+      rows=`<div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr">
         <div style="border-right:0.5px solid var(--border)">
           ${_secHeader(`♀ Fêmeas (${fems.length})`, 'var(--pink-l)', 'var(--pink-d)')}
           ${fems.map(_drillRow).join('')}
