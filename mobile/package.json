@@ -5,9 +5,11 @@
   "description": "Empacotamento nativo (Capacitor) do app Mimba — ver docs/adr/0005-empacotamento-mobile-em-3-fases.md. Isolado do frontend web (index.html na raiz do repo), que continua sem framework/bundler.",
   "scripts": {
     "sync": "node scripts/sync-web.js",
-    "sync:ios": "npm run sync && npx cap sync ios"
+    "sync:ios": "npm run sync && npx cap sync ios",
+    "sync:android": "npm run sync && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@capacitor/ios": "^8.5.0"
