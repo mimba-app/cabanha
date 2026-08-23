@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mimba — Gestão Crioulos</title>
 <script>
   // Aplica o tema salvo (se houver) ANTES do CSS pintar a tela — sem isso, a página
@@ -173,11 +173,17 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow-x: hidden; max-width: 100vw; }
+  /* Sem isso, todo toque em botão/link pisca um retângulo cinza — o "flash"
+     do WebKit em cima de qualquer elemento tocável. Nada nativo mostra isso;
+     os componentes já têm seu próprio hover/active. */
+  * { -webkit-tap-highlight-color: transparent; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
   .sidebar {
     width: 230px; background: var(--chrome-bg); border-right: 0.5px solid var(--chrome-border);
     padding: 1.25rem 1rem; position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
+    padding-top: calc(1.25rem + env(safe-area-inset-top));
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    padding-left: calc(1rem + env(safe-area-inset-left));
     overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
     color: var(--chrome-text);
   }
@@ -189,11 +195,12 @@
     display:flex; align-items:center; justify-content:center;
   }
   .logo-monogram span { font-family:var(--serif); font-weight:700; font-size:24px; color:#fff; line-height:1; }
+  .logo-monogram span.mimba-dot { color: var(--ouro); }
   .logo-badge {
     display:block; font-family:var(--serif); font-size:var(--fs-md); font-weight:700; color:var(--chrome-text);
     margin-top:10px; line-height:1.2; overflow-wrap:break-word;
   }
-  .powered-by { font-family:var(--serif); color:var(--ouro); letter-spacing:.02em; }
+  .powered-by { font-family:var(--serif); color:var(--text3); letter-spacing:.02em; }
   .nav-btn {
     display:flex; align-items:center; gap:10px; padding:8px 10px 8px 12px; border-radius:var(--radius);
     cursor:pointer; font-size:13px; color:var(--chrome-text2); border:none; background:none; width:100%;
@@ -209,6 +216,24 @@
   .nav-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .nav-icon svg { width:19px; height:19px; }
   .main { margin-left:230px; padding:2rem 2.4rem; min-height:100vh; min-height:100dvh; }
+  /* Sincronização inicial (login/restaurar sessão): o Dashboard já tem seu
+     próprio skeleton por campo, mas as outras páginas simplesmente renderizam
+     com os arrays vazios (zerados em _sincronizarAoLogin antes de buscar do
+     banco) — parecem "vazias/quebradas" em vez de "carregando". Este overlay
+     cobre a área de conteúdo com um estado de carregamento explícito
+     enquanto a sincronização inicial não termina (sucesso ou erro), pra
+     qualquer página que o usuário tenha aberto nesse meio-tempo. Ver
+     _atualizarOverlayCarregamento(), chamado de showPage() e do fim de
+     _sincronizarAoLogin(). Some sozinho no Dashboard, que já resolve isso à
+     sua própria maneira.
+  */
+  #page-loading-overlay {
+    display:none; position:fixed; top:0; left:230px; right:0; bottom:0; z-index:50;
+    background:var(--bg); align-items:center; justify-content:center; flex-direction:column; gap:14px;
+  }
+  #page-loading-overlay.show { display:flex; }
+  #page-loading-overlay svg { width:26px; height:26px; color:var(--text3); animation:spin 0.8s linear infinite; }
+  #page-loading-overlay span { font-family:var(--mono); font-size:12px; color:var(--text3); letter-spacing:.02em; }
   .page { display:none; }
   .page.active { display:block; }
   .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.6rem; flex-wrap:wrap; gap:10px; }
@@ -374,7 +399,7 @@
   .nut-animal-body.open { display:block; }
   .nut-section { margin-top:1rem; }
   .nut-section-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
-  .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:620px; }
   .nut-item:last-child { border-bottom:none; }
   .nut-item-label { font-weight:600; color:var(--text); }
   .nut-item-qty { color:var(--text2); }
@@ -382,14 +407,14 @@
   .nut-item-obs { color:var(--text3); font-style:italic; font-size:11px; }
   .nut-item-edit { cursor:pointer; font-size:11px; color:var(--blue-d); background:none; border:none; padding:2px 6px; border-radius:4px; font-family:var(--font); }
   .nut-item-edit:hover { background:var(--blue-l); }
-  .nut-supl { display:grid; grid-template-columns:160px 120px 1fr 120px auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nut-supl { display:grid; grid-template-columns:150px 110px 90px 1fr 110px auto; gap:6px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:650px; }
   .nut-supl:last-child { border-bottom:none; }
   .nut-empty { font-size:12px; color:var(--text3); font-style:italic; padding:8px 0; }
   .nut-add-btn { font-size:11px; color:var(--green-d); background:var(--green-l); border:none; padding:4px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; margin-top:6px; }
   .nut-add-btn:hover { background:#C0DD97; }
   .template-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
   .template-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
-  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
+  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .compra-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .compra-item:last-child { border-bottom:none; }
   .compra-qty { font-weight:700; color:var(--green-d); font-size:13px; }
@@ -416,7 +441,7 @@
   .evt-3 { background:var(--amber-l); color:var(--amber-d); }
   .evt-class { background:var(--purple-l); color:var(--purple-d); }
   .evt-sem { background:var(--gray-l); color:var(--gray-d); }
-  .evt-animal-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .evt-animal-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .evt-animal-row:last-child { border-bottom:none; }
   /* GESTAÇÃO */
   .gest-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
@@ -425,7 +450,7 @@
   .gest-prog-fill { height:8px; border-radius:99px; transition:width 0.3s; }
   .gest-dias { font-size:11px; color:var(--text2); display:flex; justify-content:space-between; }
   /* ESTOQUE */
-  .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:640px; }
   .est-row:last-child { border-bottom:none; }
   .est-row-header { font-size:var(--fs-caption); font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; padding:6px 0 8px; border-bottom:0.5px solid var(--border); }
   .est-low { color:var(--red-d); font-weight:700; }
@@ -440,7 +465,7 @@
   .agenda-sub { font-size:11px; color:var(--text2); margin-top:2px; }
   .agenda-data { font-size:var(--fs-caption); color:var(--text3); white-space:nowrap; font-family:var(--mono); }
   /* SAVE BADGE */
-  .save-badge { position:fixed; bottom:1rem; right:1rem; background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .save-badge { position:fixed; bottom:calc(1rem + env(safe-area-inset-bottom)); right:calc(1rem + env(safe-area-inset-right)); background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .save-badge.show { opacity:1; }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
@@ -496,6 +521,10 @@
   @media (max-width:768px) {
     .ficha-header-acoes { margin-left:0; width:100%; padding-top:0; }
     .ficha-avatar { width:76px; height:76px; font-size:28px; }
+    /* No mobile o "‹" da barra superior já volta pra Animais (ver
+       mobileBackTap) — o botão "← Voltar" embutido aqui, ao lado de
+       Editar/Excluir, virou um segundo "voltar" redundante e espremido. */
+    .ficha-voltar-inline { display:none; }
   }
   /* HISTÓRICO SAÚDE */
   .hist-row { display:grid; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
@@ -518,26 +547,118 @@
   .med-val-pill.med-status-hi  { background:var(--amber-l); color:var(--amber-d); }
   .med-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-top:5px; }
   .med-padrão { font-size:9px; color:var(--text3); margin-top:2px; }
-  /* Menu mobile: botão hamburger fixo, escondido em desktop. */
-  #mobile-menu-btn {
-    display:none; position:fixed;
-    top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
-    z-index:30; width:38px; height:38px; align-items:center; justify-content:center;
-    background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius);
-    color:var(--text); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  /* Máscara da status bar/Dynamic Island: sem isso, o conteúdo que rola pra cima
+     aparece "vazando" por trás do notch em vez de mostrar só o fundo — o WKWebView
+     não pinta essa faixa sozinho. Altura = env(safe-area-inset-top) exatamente:
+     0 (invisível) em qualquer tela sem notch/Dynamic Island, web incluído. */
+  #status-bar-mask {
+    position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top);
+    background:var(--bg); z-index:99999; pointer-events:none;
   }
-  #sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9; }
+  /* Navegação mobile nativa: em vez de hambúrguer + gaveta sobreposta, o menu
+     (mesmo conteúdo da sidebar) vira uma TELA CHEIA própria — como a lista de
+     Pastas do app Notes da Apple. Uma barra fixa (embutida na máscara da
+     status bar, por isso ela cresce no mobile) mostra "‹ Menu" à esquerda
+     quando uma página de conteúdo está aberta, e o título da página
+     centralizado — sem hambúrguer flutuante, sem backdrop translúcido. */
+  #mobile-back-btn {
+    display:none; position:absolute; left:8px; bottom:0; z-index:2;
+    align-items:center; gap:2px; background:none; border:none; cursor:pointer;
+    font-family:var(--font); font-weight:600; font-size:15px; color:var(--chrome-accent);
+    padding:8px 10px 8px 4px;
+  }
+  #mobile-back-btn svg { width:22px; height:22px; flex-shrink:0; }
+  #mobile-navbar-title {
+    display:none; font-family:var(--serif); font-weight:800; font-size:16px;
+    color:var(--chrome-text); max-width:62%; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  /* Escondido por padrão (desktop/web) — só existe como recurso mobile. */
+  #ptr-indicator { display:none; }
   @media (max-width: 768px) {
-    /* Sidebar vira painel suspenso (drawer): some por padrão, sem disputar
-       espaço fixo com o conteúdo — só ocupa a tela quando o usuário abre. */
-    #mobile-menu-btn { display:flex; }
-    .sidebar { width:250px; max-width:82vw; transform:translateX(-100%); transition:transform 0.22s ease; box-shadow:2px 0 20px rgba(0,0,0,0.15); }
+    #status-bar-mask {
+      height:calc(env(safe-area-inset-top) + 46px);
+      display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px;
+      border-bottom:0.5px solid var(--chrome-border); pointer-events:auto;
+    }
+    #mobile-back-btn, #mobile-navbar-title { display:flex; }
+    /* Menu vira tela cheia própria (não gaveta estreita sobre um backdrop) —
+       cobre 100% da viewport e desliza inteira, como uma tela de navegação real. */
+    .sidebar { width:100vw; max-width:100vw; transform:translateX(-100%); transition:transform 0.28s cubic-bezier(.25,.1,.25,1); box-shadow:none; z-index:20; padding-top:calc(env(safe-area-inset-top) + 62px); }
     .sidebar.open { transform:translateX(0); }
-    #sidebar-backdrop.open { display:block; }
-    .main { margin-left:0; padding:1rem; padding-top:4rem; max-width:100vw; }
+    .main { margin-left:0; padding:1rem; padding-top:calc(62px + env(safe-area-inset-top) + 1rem); max-width:100vw; }
     #trial-banner-topo { margin:-1rem -1rem 1rem; flex-wrap:wrap; }
-    .metrics { grid-template-columns:1fr 1fr; }
+    #page-loading-overlay { left:0; top:calc(env(safe-area-inset-top) + 46px); }
+    /* !important necessário: várias telas (Animais, Medidas, Financeiro, Painel
+       Mimba) fixam a coluna via style="grid-template-columns:repeat(N,...)" no
+       próprio HTML, o que sempre vence a regra externa — sem isso os cards de
+       métrica ficavam espremidos em 3-4 colunas na largura de mobile. */
+    .metrics { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px; }
+    .metric { padding:14px 12px; text-align:center; }
+    .metric-value { font-size:21px; }
     .two-col { grid-template-columns:1fr; }
+    /* Modal ignorava a safe-area e encostava embaixo do Dynamic Island/notch —
+       a caixa ficava alta o bastante (max-height:90vh) pra sempre tocar o topo
+       da tela, mesmo com align-items:center. O respiro de cima usa a mesma
+       altura da barra de navegação fixa (status-bar-mask, 46px + safe-area)
+       — não só a safe-area sozinha — senão o topo do modal ficava escondido
+       atrás da barra em vez de começar limpo logo abaixo dela. */
+    .modal-bg { padding:calc(env(safe-area-inset-top) + 46px + 12px) 14px calc(env(safe-area-inset-bottom) + 14px); box-sizing:border-box; }
+    /* !important: quase todo modal fixa width/max-height no próprio style=""
+       (ex.: style="width:820px;max-height:92vh"), o que sempre vence a regra
+       externa — sem isso a caixa continuava alta o bastante pra estourar a
+       área segura, voltando a encostar no notch mesmo com o padding do
+       .modal-bg acima. */
+    .modal { max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 72px) !important; width:100% !important; }
+    /* Formulários em 2 colunas (usados em quase todo modal de cadastro/edição)
+       viram 1 coluna cheia no mobile — 2 campos espremidos lado a lado são
+       difíceis de tocar e ler numa tela de ~370px úteis. */
+    .form-grid { grid-template-columns:1fr !important; }
+    /* Utilitários pra grids soltos (sem classe própria, cada um com seu style=
+       "display:grid;grid-template-columns:..." espalhado pelo app) que ficavam
+       espremidos no mobile — telas de Sangues, ficha de animal, Nutrição,
+       Vermifugação/Vacina em lote, planejador de Cruzamentos, drill-down do
+       Dashboard. g-cols-2 (formulário lado a lado, lista+formulário) empilha
+       cheio; g-cols-3 (cards/valores menores) vira 2 colunas. */
+    .g-cols-2 { grid-template-columns:1fr !important; }
+    .g-cols-3, .g-cols-4 { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+    /* Lista do menu com cara de lista nativa: linha divisória e seta à direita
+       em vez do item "achatado" que fazia sentido só numa gaveta estreita. */
+    .nav-btn { padding:13px 4px; border-bottom:0.5px solid var(--chrome-border); border-radius:0; font-size:15px; }
+    .nav-btn::after {
+      content:''; margin-left:auto; width:8px; height:8px; flex-shrink:0;
+      border-right:1.6px solid var(--chrome-text3); border-top:1.6px solid var(--chrome-text3);
+      transform:rotate(45deg); opacity:.7;
+    }
+    /* Trocar de página tem uma transição sutil (fade + leve subida) em vez do
+       corte seco do display:none→block — o mesmo instante em que dá pra
+       arrastar a tela pra baixo e soltar (transform de baixo). */
+    .main { transition:transform 0.25s cubic-bezier(.25,.1,.25,1); }
+    .page.active { animation:mimba-page-in 0.22s cubic-bezier(.25,.1,.25,1); }
+    @keyframes mimba-page-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    /* Toque tem que dar feedback visual — sem isso (e sem o flash cinza padrão
+       do WebKit, removido de propósito acima) botão/item de menu não mostra
+       nenhuma reação ao dedo, o que parece quebrado num app nativo. */
+    .btn:active, .nav-btn:active, .kanban-card:active, .med-card:active,
+    .hist-row:active, .sangue-bar:active, .evt-animal-row:active {
+      transform:scale(0.97); opacity:0.88; transition:transform 0.08s ease, opacity 0.08s ease;
+    }
+    .btn, .nav-btn { -webkit-user-select:none; user-select:none; }
+    /* Indicador de pull-to-refresh: some por trás da barra de navegação (some
+       de vista) e só aparece conforme o dedo arrasta a tela pra baixo, ou
+       gira como spinner enquanto os dados recarregam. Ver a lógica de arrasto
+       junto de toggleSidebarMobile, na seção NAV do JS. */
+    #ptr-indicator {
+      display:flex; position:fixed; left:0; right:0; z-index:15;
+      top:calc(env(safe-area-inset-top) + 46px); height:0;
+      align-items:flex-start; justify-content:center; pointer-events:none;
+    }
+    #ptr-indicator svg { width:20px; height:20px; color:var(--chrome-accent); opacity:0; margin-top:10px; }
+    #ptr-indicator.pulling svg, #ptr-indicator.loading svg { opacity:1; }
+    #ptr-indicator.loading svg { animation:spin 0.7s linear infinite; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page.active { animation:none; }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .sangue-bar { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border); }
@@ -548,9 +669,10 @@
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
+  .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
   .kanban-board.cols-4 { grid-template-columns:repeat(4,1fr); }
   .kanban-board.cols-5 { grid-template-columns:repeat(5,1fr); }
-  @media(max-width:900px){ .kanban-board, .kanban-board.cols-4, .kanban-board.cols-5 { grid-template-columns:1fr; } }
+  @media(max-width:900px){ .kanban-board, .kanban-board.cols-2, .kanban-board.cols-4, .kanban-board.cols-5 { grid-template-columns:1fr; } }
   /* Kanban — cabeçalho colorido (tokens de estado do "Registro Vivo"), corpo em
      pergaminho2 e cards em pergaminho puro, sem borda no claro (só sombra). */
   .kanban-col { border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); }
@@ -607,12 +729,20 @@
   .verm-grupo-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
   .verm-grupo-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .verm-grupo-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
-  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:999;display:flex;align-items:center;justify-content:center; }
+  /* z-index acima do #status-bar-mask (99999): antes do login, não existe
+     nenhuma "página" nem barra de navegação de verdade — mas o mask/nav-bar
+     mobile é incondicional e ficava pintado por cima da tela de login,
+     cortando a headline do herói com um "‹ Menu" que não faz sentido nesse
+     momento (não tem menu nem pra onde voltar ainda). */
+  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:100000;display:flex;align-items:center;justify-content:center; }
   .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
-  .login-logo-title { font-family:var(--serif);font-size:48px;font-weight:900;color:var(--ouro);letter-spacing:-0.01em;line-height:1; }
+  .login-logo-title { font-family:var(--serif);font-size:48px;font-weight:900;color:var(--chrome-text);letter-spacing:-0.01em;line-height:1; }
+  /* Marca "Mimba." — a palavra assume a cor de texto do contexto (clara em fundo escuro, escura
+     em fundo claro); só o ponto final é sempre dourado (--ouro), a assinatura da marca. */
+  .mimba-dot { color: var(--ouro); }
   .login-logo-sub { font-size:12px;color:var(--chrome-text2);margin-top:8px;letter-spacing:.02em; }
   .login-field { margin-bottom:1rem; }
   .login-field label { display:block;font-size:11px;font-weight:700;color:var(--chrome-text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px; }
@@ -650,10 +780,10 @@
     position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1000;
   }
   .login-form-col .login-box { box-shadow:none; border:none; background:transparent; width:360px; padding:0; }
-  .login-form-wordmark { font-family:var(--serif); font-size:22px; font-weight:900; color:var(--ouro); margin-bottom:1.75rem; }
+  .login-form-wordmark { font-family:var(--serif); font-size:22px; font-weight:900; color:var(--chrome-text); margin-bottom:1.75rem; }
   @media (max-width:860px){
     .login-shell { flex-direction:column; }
-    .login-hero { flex:0 0 auto; max-width:100%; padding:1.75rem 1.5rem; }
+    .login-hero { flex:0 0 auto; max-width:100%; padding:calc(1.75rem + env(safe-area-inset-top)) 1.5rem 1.75rem; }
     .login-hero-headline { font-size:clamp(26px,7vw,36px); }
     .login-hero-desc { display:none; }
     .login-hero-stats { display:none; }
@@ -813,6 +943,16 @@
   .jornada-ac .ja-titulo{font-family:var(--ja-serif);font-weight:700;font-size:23px;margin:8px 0 6px;line-height:1.2;}
   .jornada-ac .ja-sub{font-size:13px;color:var(--ja-ink-70);line-height:1.6;max-width:680px;margin-bottom:20px;}
 
+  /* Pill toggle genérico (estado ativo destacado) — usado no seletor de modo de Cruzamentos
+     (Rápido × Inteligência) e no toggle de tema (Claro × Escuro) em Conta. Componente
+     independente, sem escopo de ancestral — usa os tokens reais direto. */
+  .pill-switch{display:inline-flex;gap:2px;background:var(--pergaminho2);border:var(--card-border);border-radius:99px;padding:3px;}
+  .pill-switch-btn{border:none;background:none;font-family:var(--font);font-weight:700;font-size:12px;padding:8px 16px;border-radius:99px;cursor:pointer;color:var(--ink-50);transition:background .15s,color .15s;}
+  .pill-switch-btn.on{background:var(--pergaminho);color:var(--ink);box-shadow:var(--sh-sm);}
+  .pill-switch-hint{font-size:12px;color:var(--ink-50);}
+  #ja-modo-wrap .pill-switch{margin-bottom:18px;}
+  #ja-modo-wrap .pill-switch-hint{margin:-10px 0 18px;}
+
   .jornada-ac .ja-alvo{display:flex;align-items:center;gap:16px;background:var(--ja-pergaminho);border-radius:20px;padding:18px 22px;border:var(--card-border);box-shadow:var(--ja-sh-md);}
   .jornada-ac .ja-alvo-av{width:56px;height:56px;border-radius:16px;flex-shrink:0;background:linear-gradient(140deg,var(--ja-campo-soft),var(--ja-pergaminho2));
            display:flex;align-items:center;justify-content:center;font-family:var(--ja-serif);font-weight:800;font-size:22px;color:var(--ja-campo-deep);}
@@ -859,6 +999,7 @@
 
   /* palco — direção B (Confluência de Sangues) */
   .jornada-ac .ja-palco{position:relative;background:var(--ja-pergaminho);border-radius:22px;border:var(--card-border);box-shadow:var(--ja-sh-md);padding:22px 24px;overflow:hidden;}
+  .ja-arvore-dica{display:none;}
   .jornada-ac .ja-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:10px;}
   .jornada-ac .ja-quem-b{max-width:260px;}
   .jornada-ac .ja-quem-papel{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);}
@@ -940,6 +1081,58 @@
   @keyframes ja-cresce2{from{width:0 !important;}}
   .jornada-ac .ja-acoes{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
   @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+
+  /* Jornada de acasalamento — mobile. O componente foi desenhado em colunas fixas
+     (cards lado a lado, linhas de ranking com larguras em px somando bem mais que
+     uma tela de celular) — sem isso ele "quebra" (vaza largura/corta conteúdo) em
+     qualquer tela estreita. Empilha em coluna única e troca largura fixa por 100%. */
+  @media (max-width:680px){
+    .jornada-ac{padding:18px 16px;}
+    .jornada-ac .ja-titulo{font-size:19px;}
+    .jornada-ac .ja-alvo{flex-wrap:wrap;}
+    .jornada-ac .ja-alvo > div:last-child{width:100%;justify-content:flex-end;}
+
+    .jornada-ac .ja-baralho{overflow:hidden;}
+
+    .jornada-ac .ja-linha{flex-wrap:wrap;row-gap:8px;}
+    .jornada-ac .ja-porq{width:100%;order:4;}
+    .jornada-ac .ja-nota{order:5;width:auto;margin-left:auto;text-align:right;}
+    .jornada-ac .ja-linha > .ja-btn2{order:6;}
+
+    .jornada-ac .ja-palco{padding:16px 14px;}
+    .jornada-ac .ja-cabeca{flex-direction:column;gap:10px;}
+    .jornada-ac .ja-cabeca .ja-quem-b{max-width:100%;text-align:left !important;}
+
+    .jornada-ac .ja-veredito{flex-direction:column;}
+    .jornada-ac .ja-coef{width:100%;}
+
+    .jornada-ac .ja-arena{flex-direction:column;gap:14px;min-height:0;}
+    .jornada-ac .ja-lado{width:100%;}
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-esq, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-esq,
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-dir, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-dir{transform:none;}
+    .jornada-ac .ja-fio{display:none;}
+
+    .jornada-ac .ja-dossie-topo{flex-direction:column;}
+    .jornada-ac .ja-grade{grid-template-columns:1fr;}
+
+    /* Árvore de linhagens: no desktop o viewBox 1140×300 escala pra caber na
+       largura do palco e ainda dá pra ler; espremido em ~340px de mobile, os
+       nomes dos ancestrais viravam ilegíveis (font-size na casa de 2-3px reais).
+       Em vez de continuar encolhendo tudo pra caber, deixa a árvore no tamanho
+       nativo (a mesma escala do desktop) e vira um retângulo que arrasta —
+       touch-action:pinch-zoom permite beliscar pra ampliar só essa área, apesar
+       do app inteiro estar com o zoom da página travado (user-scalable=no). */
+    .ja-arvore-scroll {
+      overflow:auto; -webkit-overflow-scrolling:touch;
+      touch-action:pan-x pan-y pinch-zoom;
+      border-radius:14px; background:var(--ja-pergaminho2);
+    }
+    .ja-arvore-scroll #ja-svg-arvore { width:1140px !important; max-width:none !important; flex-shrink:0; }
+    .ja-arvore-dica {
+      display:block; text-align:center; font-family:var(--ja-mono); font-size:10px;
+      color:var(--ja-ink-50); margin-top:6px; letter-spacing:.02em;
+    }
+  }
 </style>
 </head>
 <body>
@@ -991,7 +1184,7 @@
     </div>
     <div class="login-form-col">
       <div class="login-box" id="login-box-main">
-        <div class="login-form-wordmark">Mimba.</div>
+        <div class="login-form-wordmark">Mimba<span class="mimba-dot">.</span></div>
         <div id="login-campos-normais">
           <div class="login-field">
             <label>Email</label>
@@ -1053,7 +1246,7 @@
   </div>
   <div class="login-box" id="login-restaurando" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba.</div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
       <div class="login-logo-sub">Restaurando sua sessão...</div>
     </div>
   </div>
@@ -1062,7 +1255,7 @@
        ainda (isso é o Portal do Cliente, Fase 4) — por ora só orienta a falar com a Mimba. -->
   <div class="login-box" id="login-bloqueado" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba.</div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
       <div class="login-logo-sub" style="color:var(--red-d)">Acesso temporariamente bloqueado</div>
     </div>
     <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
@@ -1075,7 +1268,7 @@
   <!-- V1.5 (Fase 2, complemento): trial cancelado pelo próprio admin antes da cobrança. -->
   <div class="login-box" id="login-cancelado" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba.</div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
       <div class="login-logo-sub">Teste cancelado</div>
     </div>
     <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
@@ -1087,7 +1280,7 @@
   </div>
   <div class="login-box" id="definir-senha-box" style="display:none">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba.</div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
       <div class="login-logo-sub">Primeiro acesso · defina sua senha</div>
     </div>
     <div class="login-field">
@@ -1103,15 +1296,27 @@
   </div>
 </div>
 
-<button id="mobile-menu-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu" title="Menu">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-</button>
-<div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
+<div id="status-bar-mask">
+  <button id="mobile-back-btn" onclick="mobileBackTap()" aria-label="Voltar" title="Voltar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    <span id="mobile-back-label">Menu</span>
+  </button>
+  <span id="mobile-navbar-title"></span>
+</div>
+
+<div id="ptr-indicator" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
+
+<div id="page-loading-overlay" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-opacity="0.25"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+  <span>Carregando dados da cabanha…</span>
+</div>
 
 <div class="sidebar" id="sidebar-main">
   <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
-    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M</span></div>
+    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M<span class="mimba-dot">.</span></span></div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
   </div>
@@ -1156,7 +1361,7 @@
 
 <!-- V1.5 (Fase 2, complemento): banner de trial perto do vencimento — fixo no topo em toda
      página (não é um toast que some sozinho, fica até o usuário fechar ou o trial acabar). -->
-<div id="trial-banner-topo" style="display:none;align-items:center;gap:10px;position:sticky;top:0;z-index:40;margin:-1.75rem -1.75rem 1.25rem;padding:10px 1.75rem;background:var(--amber-l);color:var(--amber-d);border-bottom:1px solid var(--amber);font-size:12px">
+<div id="trial-banner-topo" style="display:none;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top);z-index:40;margin:-1.75rem -1.75rem 1.25rem;padding:10px 1.75rem;background:var(--amber-l);color:var(--amber-d);border-bottom:1px solid var(--amber);font-size:12px">
   <span id="trial-banner-texto" style="flex:1"></span>
   <button class="btn btn-sm" onclick="_cancelarTrialClick()" style="background:transparent;border-color:var(--amber-d);color:var(--amber-d);white-space:nowrap">Cancelar teste</button>
   <button onclick="_fecharTrialBanner()" title="Fechar aviso" aria-label="Fechar aviso" style="background:none;border:none;cursor:pointer;color:var(--amber-d);font-size:18px;line-height:1;padding:0 4px">×</button>
@@ -1166,7 +1371,7 @@
 <div class="page active" id="page-dashboard">
   <div class="page-header">
     <div><div class="page-title">Dashboard</div><div class="page-sub" id="data-hoje"></div></div>
-    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba.</span></span>
+    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba<span class="mimba-dot">.</span></span></span>
   </div>
 
   <!-- MÉTRICAS -->
@@ -1299,6 +1504,23 @@
       <button class="btn btn-sm" id="an-view-btn-grade" onclick="_animaisSetView('grade')">▦ Grade</button>
       <button class="btn btn-sm" id="an-view-btn-lista" onclick="_animaisSetView('lista')">☰ Lista</button>
     </div>
+  <!-- Gerenciamento de Piquetes -->
+  <div style="margin:10px 0;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer"
+         onclick="var b=document.getElementById('piq-body');var t=this.querySelector('.piq-arr');if(b.style.display==='none'){b.style.display='';t.textContent='▾';renderPiquetes();}else{b.style.display='none';t.textContent='▸';}">
+      <span style="font-size:12px;font-weight:600;color:var(--text2)">🏕 Piquetes / Campos</span>
+      <span class="piq-arr" style="color:var(--text3);font-size:12px">▸</span>
+    </div>
+    <div id="piq-body" style="display:none;padding:0 12px 12px">
+      <div id="piquetes-lista" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="piquete-novo-nome" type="text" placeholder="Nome do piquete ou campo..." style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter')_addPiquete()">
+        <button class="btn btn-sm" onclick="_addPiquete()">+ Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
   <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
@@ -1399,7 +1621,7 @@
 
     <!-- PAINEL DE CONTROLE -->
     <div id="verm-painel">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+      <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
 
         <!-- COLUNA 1: seleção de animais -->
         <div class="card" style="padding:0;overflow:hidden">
@@ -1668,12 +1890,39 @@
        docs/spec-reprodutivo-v3.md — mesma tela "Reprodutivo", nenhum dado/função mudou de
        lugar, só o menu. -->
   <div id="gest-acasalamentos" style="display:none">
-    <!-- Jornada de Acasalamento (docs/spec-acasalamento-jornada-tres-direcoes.md), Fase 1 (C ·
-         O Conselho): substitui a antiga tela de duas colunas (garanhão × égua, clique-clique).
-         Agora começa escolhendo a égua; o Conselho ranqueia as fontes do ciclo por nota. B
-         (Confluência de Sangues) e A (Dossiê Selado) entram nas fases seguintes. -->
+    <!-- Cruzamentos tem dois modos (pedido do Luciano, 2026-08-22): Rápido é a tela clássica
+         de duas colunas (garanhão/fonte × égua, clique-clique, sem ranking nem cerimônia) —
+         igual ao que existia antes da jornada, só com os componentes visuais atuais
+         (.kanban-col/.kanban-card/.badge já são o design system vigente). Inteligência é a
+         jornada completa (docs/spec-acasalamento-jornada-tres-direcoes.md): Conselho ranqueia
+         as fontes por nota, Confluência de Sangues e Dossiê Selado seguem depois. -->
+    <div id="ja-modo-wrap">
+      <div class="pill-switch" id="ja-modo-switch">
+        <button class="pill-switch-btn" id="ja-modo-btn-rapido" onclick="jaSelecionarModo('rapido')">⚡ Rápido</button>
+        <button class="pill-switch-btn" id="ja-modo-btn-inteligencia" onclick="jaSelecionarModo('inteligencia')">✨ Inteligência</button>
+      </div>
+      <div class="pill-switch-hint" id="ja-modo-hint"></div>
+    </div>
+
+    <!-- MODO RÁPIDO: duas colunas, clique-clique, sem ranking — pra quem despacha volume alto. -->
+    <div id="ac-match-rapido" style="display:none">
+      <div class="page-sub" style="margin:-6px 0 10px">Clique num garanhão/fonte à esquerda, depois numa égua à direita, pra criar o acasalamento deste ciclo (<span id="ac-match-ciclo-label">—</span>).</div>
+      <div id="ac-match-resumo-sel" style="display:none;margin-bottom:10px"></div>
+      <div class="kanban-board cols-2">
+        <div class="kanban-col kanban-col-emdia">
+          <div class="kanban-col-header"><span>Garanhões / Fontes</span></div>
+          <div id="ac-match-fontes" class="kanban-cards"></div>
+        </div>
+        <div class="kanban-col kanban-col-emdia">
+          <div class="kanban-col-header"><span>Éguas</span></div>
+          <div id="ac-match-eguas" class="kanban-cards"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODO INTELIGÊNCIA: jornada completa (Conselho → Confluência de Sangues → Dossiê Selado). -->
     <div class="jornada-ac" id="ja-conselho">
-      <div class="ja-eyebrow">Passo 1 de 3 · Escolher a égua</div>
+      <div class="ja-eyebrow" id="ja-passo-label">Passo 1 de 3 · Escolher a égua</div>
       <div class="ja-titulo">Escolha a égua e veja quem combina com ela.</div>
       <div class="ja-sub">Aponte a égua e o Mimba ranqueia as fontes de cobertura disponíveis no ciclo <b id="ja-ciclo-label">—</b>, cruzando consanguinidade, diversidade de sangue e saldo/sanidade da fonte.</div>
 
@@ -1728,7 +1977,10 @@
             </div>
           </div>
 
-          <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+          <div id="ja-arvore-scroll" class="ja-arvore-scroll">
+            <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+          </div>
+          <div class="ja-arvore-dica">↔ arraste e belisque (pinch) pra ampliar</div>
 
           <div id="ja-b-passos" class="ja-passos">
             <div class="ja-passo ja-p1">abrindo as gerações de cada lado</div>
@@ -1771,7 +2023,7 @@
           <div id="ja-a-dossie"></div>
 
           <div id="ja-a-form" style="display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--ja-ink-08);">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
               <div>
                 <label style="display:block;font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:5px;">Ciclo</label>
                 <input type="text" id="ja-a-ciclo" readonly style="width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho2);color:var(--ja-ink);font-family:var(--ja-sans);font-size:13px;">
@@ -1977,7 +2229,7 @@
         <option>Medicamento</option><option>Vacina</option><option>Material veterinário</option><option>Outro</option>
       </select>
     </div>
-    <div class="card" style="padding:0 1.1rem">
+    <div class="card" style="padding:0 1.1rem;overflow-x:auto">
       <div class="est-row est-row-header">
         <span>Item / Marca</span><span>Categoria</span><span>Estoque atual</span><span>Estoque mínimo</span><span>Unidade</span><span></span>
       </div>
@@ -2056,7 +2308,7 @@
     <div id="sangues-meta" style="font-size:11px;color:var(--text2);margin-bottom:1.2rem"></div>
 
     <!-- Linha 1: Pais | Avós Paternos | Avós Maternos -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="g-cols-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
       <div class="card">
         <div class="card-title" style="font-size:13px">👨 Principais Pais</div>
         <div id="sangues-pais"></div>
@@ -2072,7 +2324,7 @@
     </div>
 
     <!-- Linha 2: Afixos | Ancestrais -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
       <div class="card">
         <div class="card-title" style="font-size:13px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Afixos / Cabanhas mais presentes</div>
         <div id="sangues-afixos"></div>
@@ -2086,7 +2338,7 @@
     <!-- Linha 3: Prefixos -->
     <div class="card" style="margin-bottom:1rem">
       <div class="card-title" style="font-size:13px">📛 Prefixos / Marcas mais frequentes</div>
-      <div id="sangues-prefixos" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 2rem"></div>
+      <div id="sangues-prefixos" class="g-cols-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 2rem"></div>
     </div>
 
     <!-- Detalhes por animal -->
@@ -2223,7 +2475,7 @@
         <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
         <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
+      <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
         <div class="card" style="text-align:center;padding:1rem">
           <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
@@ -2355,11 +2607,12 @@
   </div>
 </div>
 
-<!-- MODAL NUTRIÇÃO: editar item base -->
+<!-- MODAL NUTRIÇÃO: item de uma categoria (ração/aveia/alfafa/verde/sal) — suporta N itens
+     por categoria, não mais um único campo fixo -->
 <div class="modal-bg" id="modal-nut-item">
   <div class="modal" style="width:520px">
-    <div class="modal-header"><span class="modal-title" id="nut-item-titulo">Editar item</span><button class="modal-close" onclick="closeModal('modal-nut-item')">×</button></div>
-    <input type="hidden" id="nut-idx"><input type="hidden" id="nut-field">
+    <div class="modal-header"><span class="modal-title" id="nut-item-titulo">Item</span><button class="modal-close" onclick="closeModal('modal-nut-item')">×</button></div>
+    <input type="hidden" id="nut-idx"><input type="hidden" id="nut-tipo"><input type="hidden" id="nut-item-edit-idx">
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1"><label id="nut-label-prod">Produto / Marca</label><input type="text" id="nut-produto" placeholder="Ex: Pré-Mix Premium · Tortuga"></div>
       <div class="form-group"><label>Quantidade diária</label><input type="text" id="nut-qty" placeholder="Ex: 2 kg"></div>
@@ -2368,8 +2621,6 @@
         <option>3x ao dia</option><option>Semanal</option><option>Conforme disponível</option><option>Não fornecido</option>
       </select></div>
       <div class="form-group" style="grid-column:1/-1"><label>Observações</label><input type="text" id="nut-obs-item" placeholder="Notas adicionais"></div>
-      <div class="form-group" id="nut-periodo-group" style="display:none;grid-column:1/-1"><label>Período de uso</label><input type="text" id="nut-periodo" placeholder="Ex: Março a Agosto / Inverno / Contínuo"></div>
-      <div class="form-group" id="nut-dosagem-group" style="display:none;grid-column:1/-1"><label>Dosagem detalhada</label><input type="text" id="nut-dosagem" placeholder="Ex: 50g por dia dividido em 2 refeições"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-nut-item')">Cancelar</button>
@@ -2405,18 +2656,9 @@
 <div class="modal-bg" id="modal-template">
   <div class="modal" style="width:480px">
     <div class="modal-header"><span class="modal-title">Aplicar template nutricional</span><button class="modal-close" onclick="closeModal('modal-template')">×</button></div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Selecione o estágio para copiar o template padrão ao animal selecionado. Os dados atuais do animal serão substituídos (exceto suplementos).</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Selecione o template para copiar ao animal selecionado. A alimentação base atual do animal será substituída (suplementos são mantidos).</p>
     <div class="form-group" style="margin-bottom:1rem"><label>Animal</label><select id="tmpl-animal" style="width:100%"></select></div>
-    <div class="form-group"><label>Template (por estágio)</label><select id="tmpl-estagio" style="width:100%">
-      <option value="CAMPO">CAMPO (potros / recria)</option>
-      <option value="PISTA MORFOLOGIA">PISTA MORFOLOGIA</option>
-      <option value="PISTA FUNCIONAL">PISTA FUNCIONAL</option>
-      <option value="ARREIO CABANHA">ARREIO CABANHA</option>
-      <option value="LAÇO">LAÇO</option>
-      <option value="DOMA">DOMA</option>
-      <option value="CRIA">CRIA (éguas com cria)</option>
-      <option value="VAZIO">Vazio (limpar)</option>
-    </select></div>
+    <div class="form-group"><label>Template</label><select id="tmpl-select" style="width:100%"></select></div>
     <div id="tmpl-preview" style="margin-top:1rem;padding:0.8rem;background:var(--bg3);border-radius:var(--radius);font-size:11px;color:var(--text2);line-height:1.7"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-template')">Cancelar</button>
@@ -2976,7 +3218,7 @@
 <div class="modal-bg" id="modal-vac-lote">
   <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
     <div class="modal-header"><span class="modal-title">Vacinar em lote</span><button class="modal-close" onclick="closeModal('modal-vac-lote')">×</button></div>
-    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+    <div class="g-cols-2" style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
           <div style="font-size:13px;font-weight:700">Selecionar animais</div>
@@ -3008,7 +3250,7 @@
 <div class="modal-bg" id="modal-exam-lote">
   <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
     <div class="modal-header"><span class="modal-title">Exame em lote</span><button class="modal-close" onclick="closeModal('modal-exam-lote')">×</button></div>
-    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+    <div class="g-cols-2" style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
           <div style="font-size:13px;font-weight:700">Selecionar animais</div>
@@ -3586,7 +3828,7 @@
         <label style="font-size:12px;font-weight:600;color:var(--text2)">Etapas</label>
         <button class="btn btn-sm" onclick="_prAdicionarEtapaLinha()">+ Adicionar etapa</button>
       </div>
-      <div id="pr-etapas-list"></div>
+      <div id="pr-etapas-list" style="overflow-x:auto"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-protocolo')">Cancelar</button><button class="btn btn-primary" onclick="salvarProtocolo()">Salvar</button></div>
   </div>
@@ -3914,7 +4156,7 @@ function renderAnimais(){
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
         ${a.receptora_externa ? '<span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
+      <div class="g-cols-2" style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
         <div>Nasc.: ${fd(a.nasc)||'—'}</div>
         <div style="grid-column:1/-1">RP: ${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'}</div>
@@ -4763,6 +5005,7 @@ function salvarMedida() {
     const t = window._medProjTipo.tipo;
     if(!nutProj[idx]) nutProj[idx]=nutVazio();
     nutProj[idx][`med_${t}`]={cernelha:reg.cernelha,torax:reg.torax,canela:reg.canela,peso:reg.peso,escore:reg.escore,data:reg.data,obs:reg.obs};
+    _dbSalvarProjeto(idx);
     window._medProjTipo=null;
     const body=document.getElementById('nutbody-'+idx);
     if(body&&body.classList.contains('open')) body.innerHTML=renderNutBody(idx);
@@ -5294,7 +5537,7 @@ function renderVermStatusPlantel() {
     <span style="color:var(--text3);font-size:11px">${info}</span>
   </div>`;
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
+    <div class="g-cols-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
       <div style="text-align:center;background:var(--red-l);border-radius:var(--radius);padding:8px">
         <div style="font-size:20px;font-weight:800;color:var(--red-d)">${cols.urgente.length}</div>
         <div style="font-size:10px;color:var(--red-d)">Urgente (>180d)</div>
@@ -5884,7 +6127,7 @@ function _fichaAcoesHtml(editando) {
   const ed = editando ? 'none' : '';
   const sv = editando ? '' : 'none';
   return `<div class="ficha-header-acoes">
-    <button class="btn btn-sm" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
+    <button class="btn btn-sm ficha-voltar-inline" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
     <button class="btn btn-sm" id="det-btn-editar" style="display:${ed}" onclick="alternarEdicaoAnimal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar</button>
     <button class="btn btn-sm btn-primary" id="det-btn-salvar" onclick="salvarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Salvar</button>
     <button class="btn btn-sm" id="det-btn-cancelar" onclick="cancelarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</button>
@@ -5944,7 +6187,7 @@ function _renderDetCorpo(i, editando) {
         </div>
         <input type="hidden" id="ed-foto-b64" value="${a.foto_url||''}">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nome</label>
           <input id="ed-nome" value="${a.nome||''}" style="width:100%;font-size:12px" placeholder="Nome em maiúsculas"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">RP</label>
@@ -6126,11 +6369,12 @@ function _renderDetCorpo(i, editando) {
   // ── NUTRIÇÃO ──────────────────────────────────────────────────────
   const n=getNut(i); const ps=projStatus(n);
   const S5=`<div class="ficha-section"><div class="ficha-section-title">${_iconTrigo(17)} Projeto Nutricional <span class="nut-proj-status ${ps.cls}" style="margin-left:6px">${ps.label}</span></div>
-    ${(n.dt_inicio||n.racao.produto||n.aveia.qty)?`
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-      ${[['Ração',n.racao.produto,n.racao.qty],['Aveia','Aveia',n.aveia.qty],['Alfafa','Alfafa',n.alfafa.qty],
-         ['Verde',n.verde.produto||'Sazonal',n.verde.qty],['Sal',n.sal.produto||'Sal mineral',n.sal.freq]]
-        .filter(([,p,q])=>p||q).map(([l,p,q])=>`<div style="background:var(--bg3);border-radius:var(--radius);padding:6px 8px">
+    ${(n.dt_inicio||n.itens.length>0)?`
+    <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+      ${n.itens.filter(it=>it.tipo!=='suplemento').map(it=>{
+        const rotulos={racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde',sal:'Sal'};
+        return [rotulos[it.tipo]||it.tipo, it.produto, it.quantidade||it.frequencia];
+      }).filter(([,p,q])=>p||q).map(([l,p,q])=>`<div style="background:var(--bg3);border-radius:var(--radius);padding:6px 8px">
           <div style="font-size:10px;color:var(--text3)">${l}</div>
           <div style="font-weight:600;font-size:11px;margin-top:2px">${q||'—'}</div>
           <div style="font-size:10px;color:var(--text2)">${p||''}</div>
@@ -6398,7 +6642,8 @@ function renderReprodutivo(){
   document.getElementById('ciclos-content').innerHTML=Object.entries(ciclos).sort().map(([c,lista])=>`
     <div class="card">
       <div class="card-title">Ciclo ${c} · <span style="color:var(--text2);font-weight:400">${lista.length} animal${lista.length>1?'is':''}</span></div>
-      <table style="table-layout:fixed;width:100%">
+      <div style="overflow-x:auto">
+      <table style="table-layout:fixed;width:100%;min-width:640px">
       <colgroup><col style="width:20%"><col style="width:12%"><col style="width:9%"><col style="width:13%"><col style="width:15%"><col style="width:15%"><col style="width:16%"></colgroup>
       <thead><tr><th>Nome</th><th>Nascimento</th><th>Sexo</th><th>Pelagem</th><th>Mãe</th><th>Pai</th><th>Situação</th></tr></thead>
       <tbody>${lista.map(a=>`<tr>
@@ -6410,6 +6655,7 @@ function renderReprodutivo(){
         <td style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${a.pai||''}">${a.pai||'—'}</td>
         <td>${sitb(a.situacao)}</td>
       </tr>`).join('')}</tbody></table>
+      </div>
     </div>`).join('');
 
   const maes={};animais.filter(a=>a.mae).forEach(a=>{if(!maes[a.mae])maes[a.mae]=[];maes[a.mae].push(a);});
@@ -7263,18 +7509,179 @@ function showPage(id){
   if(id==='saude')renderSaude();
   if(id==='reprodutivo'){renderReprodutivo();renderPlanejadorReprodutivo();}
   if(id==='financeiro')renderFinanceiro();
-  toggleSidebarMobile(false); // navegar sempre fecha o menu suspenso no mobile
+  // Título da barra de navegação mobile: lido do .page-title da própria página,
+  // única fonte de verdade (em vez de duplicar o texto num mapa à parte).
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (navTitulo) {
+    const tituloEl = document.querySelector('#page-'+id+' .page-title');
+    navTitulo.textContent = tituloEl ? tituloEl.textContent : '';
+  }
+  // Rótulo do botão "‹" da barra: em qualquer página do menu principal ele
+  // abre o menu tela cheia ("Menu"); na ficha do animal — que não tem item
+  // próprio no menu, só se chega nela a partir da lista — ele volta pra
+  // "Animais" em vez de abrir o menu, igual o padrão nativo de navegação em
+  // pilha (o "voltar" leva pra tela anterior, não pra raiz).
+  const backLabel = document.getElementById('mobile-back-label');
+  if (backLabel) backLabel.textContent = id === 'detalhe-animal' ? 'Animais' : 'Menu';
+  toggleSidebarMobile(false); // navegar sempre volta pro conteúdo (fecha o menu) no mobile
+  _atualizarOverlayCarregamento();
 }
 
-// ── Menu mobile (painel suspenso) ──────────────────────────────────────────
+// Cobre a página ativa com um estado de carregamento explícito enquanto a
+// sincronização inicial (login/restaurar sessão) não termina — ver o
+// comentário de #page-loading-overlay no CSS. O Dashboard já resolve isso
+// com o próprio skeleton por campo, então o overlay nunca aparece nele.
+function _atualizarOverlayCarregamento(){
+  const overlay = document.getElementById('page-loading-overlay');
+  if(!overlay) return;
+  const ehDashboard = document.getElementById('page-dashboard')?.classList.contains('active');
+  overlay.classList.toggle('show', !!window._syncInicialEmAndamento && !ehDashboard);
+}
+
+// Toque no "‹" da barra mobile: normalmente abre o menu tela cheia, mas na
+// ficha do animal volta direto pra lista de Animais (ver comentário em showPage).
+function mobileBackTap(){
+  const ativa = document.querySelector('.page.active');
+  if (ativa && ativa.id === 'page-detalhe-animal') { showPage('animais'); return; }
+  toggleSidebarMobile(true);
+}
+
+// ── Menu mobile (tela cheia, estilo "Pastas" do Notes — não é mais gaveta
+// sobreposta) — toggleSidebarMobile(true) mostra o menu, (false) mostra o
+// conteúdo. O botão "‹ Menu" e o título centralizado só fazem sentido com o
+// conteúdo visível, por isso somem juntos com o menu.
 function toggleSidebarMobile(force){
   const sb = document.getElementById('sidebar-main');
-  const bd = document.getElementById('sidebar-backdrop');
   if(!sb) return;
   const abrir = typeof force === 'boolean' ? force : !sb.classList.contains('open');
   sb.classList.toggle('open', abrir);
-  if(bd) bd.classList.toggle('open', abrir);
+  const backBtn = document.getElementById('mobile-back-btn');
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (backBtn) backBtn.style.visibility = abrir ? 'hidden' : '';
+  if (navTitulo) navTitulo.style.visibility = abrir ? 'hidden' : '';
 }
+
+// ── Pull-to-refresh (mobile, estilo iOS) ────────────────────────────────────
+// Arrastar a tela pra baixo no topo recarrega os dados da cabanha, reusando
+// _sincronizarAoLogin() (mesma busca completa do banco que já roda no login),
+// só que sem registrar um "LOGIN" novo no audit log — ver o parâmetro
+// viaPullRefresh lá. Só faz sentido no layout mobile e com o dedo (touch);
+// desktop já tem F5/atalhos normais do navegador.
+(function(){
+  const LIMIAR = 62; // px arrastados (já com resistência) pra soltar e disparar
+  const RESISTENCIA = 0.45;
+  const MAX_VISUAL = 92;
+  let inicioY = 0, arrastando = false, carregando = false, distAtual = 0;
+
+  function podeComecarArrasto(){
+    if (window.innerWidth > 768) return false;
+    if (window.scrollY > 0) return false;
+    if (document.querySelector('.modal-bg.open')) return false;
+    if (document.getElementById('sidebar-main')?.classList.contains('open')) return false;
+    const login = document.getElementById('login-screen');
+    if (login && login.style.display !== 'none') return false;
+    return true;
+  }
+
+  function aplicarArrasto(dist){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = 'none';
+    main.style.transform = dist ? `translateY(${dist}px)` : '';
+    ind.style.height = dist ? dist+'px' : '';
+    ind.classList.toggle('pulling', dist > 4);
+    const svg = ind.querySelector('svg');
+    if(svg) svg.style.transform = `rotate(${Math.min(dist/LIMIAR,1)*180}deg)`;
+  }
+
+  function soltar(){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = '';
+    if(distAtual >= LIMIAR && !carregando){
+      carregando = true;
+      main.style.transform = `translateY(${LIMIAR}px)`;
+      ind.style.height = LIMIAR+'px';
+      ind.classList.remove('pulling'); ind.classList.add('loading');
+      Promise.resolve(_sincronizarAoLogin({viaPullRefresh:true})).finally(()=>{
+        main.style.transform = '';
+        ind.style.height = '';
+        ind.classList.remove('loading');
+        carregando = false;
+      });
+    } else {
+      main.style.transform = '';
+      ind.style.height = '';
+      ind.classList.remove('pulling');
+    }
+    distAtual = 0;
+  }
+
+  window.addEventListener('touchstart', (e)=>{
+    if(carregando || !podeComecarArrasto()) { arrastando = false; return; }
+    inicioY = e.touches[0].clientY;
+    arrastando = true;
+  }, {passive:true});
+
+  window.addEventListener('touchmove', (e)=>{
+    if(!arrastando || carregando) return;
+    const dy = e.touches[0].clientY - inicioY;
+    if(dy <= 0 || window.scrollY > 0){
+      if(distAtual){ distAtual = 0; aplicarArrasto(0); }
+      arrastando = false;
+      return;
+    }
+    distAtual = Math.min(dy * RESISTENCIA, MAX_VISUAL);
+    e.preventDefault();
+    aplicarArrasto(distAtual);
+  }, {passive:false});
+
+  window.addEventListener('touchend', ()=>{
+    if(!arrastando) return;
+    arrastando = false;
+    soltar();
+  }, {passive:true});
+})();
+
+// ── Status bar nativa (Android) ─────────────────────────────────────────────
+// No iOS a barra de status não pinta fundo nenhum — é só uma faixa
+// translúcida por cima do WebView, e o #status-bar-mask em CSS (mesmo
+// arquivo, sem diferença nenhuma entre plataformas) já pinta atrás dela. No
+// Android, por padrão, o Capacitor desenha a barra de status com um scrim
+// cinza translúcido próprio por cima do conteúdo — brigando visualmente com
+// a nossa própria máscara. Deixando a barra do Android totalmente
+// transparente e sobrepondo o WebView (mesmo comportamento edge-to-edge do
+// iOS), o #status-bar-mask já existente vira a única fonte de verdade da cor
+// ali em cima nas duas plataformas, sem duplicar estilo nenhum. Roda só
+// dentro do app nativo (window.Capacitor só existe lá) — no navegador normal
+// (mimba.com.br) esse bloco inteiro não faz nada.
+// Cor dos ícones da barra (relógio/wifi/bateria) tem que combinar com o que
+// está pintado embaixo dela pelo #status-bar-mask — e isso NÃO é só "tema
+// claro ou escuro do sistema": o herói da tela de login é verde-escuro fixo
+// (não muda com prefers-color-scheme), enquanto o resto do app (sidebar,
+// conteúdo) usa --bg/--chrome-bg, que aí sim inverte com o tema. 'DEFAULT'
+// (segue só o tema do sistema) deixava os ícones escuros — quase invisíveis
+// — por cima do verde escuro do login quando o sistema estava no tema claro.
+// Ajusta pelo que está realmente visível: fundo escuro (login) → ícones
+// claros; senão, segue o tema do próprio app.
+function _ajustarStatusBarNativa(){
+  const sb = window.Capacitor?.Plugins?.StatusBar;
+  if (!sb) return;
+  const loginVisivel = document.getElementById('login-screen')?.style.display !== 'none';
+  const escuro = loginVisivel || window.matchMedia('(prefers-color-scheme: dark)').matches;
+  sb.setStyle({ style: escuro ? 'DARK' : 'LIGHT' }).catch(()=>{});
+}
+(function(){
+  const sb = window.Capacitor?.Plugins?.StatusBar;
+  if (!sb) return;
+  sb.setOverlaysWebView({ overlay: true }).catch(()=>{});
+  sb.setBackgroundColor({ color: '#00000000' }).catch(()=>{});
+  _ajustarStatusBarNativa();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', _ajustarStatusBarNativa);
+})();
+
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -7331,80 +7738,110 @@ const INATIVOS = ['MORTO','TRANSFERIDO','VENDIDO','MORTO(A)','DOADO(A)','VENDIDO
 function isAtivo(a) { return !INATIVOS.includes(a.situacao); }
 function isNaCabanha(a) { return a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO'; }
 
-// Estrutura padrão de projeto nutricional por animal
+// Estrutura padrão de projeto nutricional por animal — refactor 2026-08-21
+// (spec: docs/spec-nutricao-refactor.md). Persiste em `nutricao_projetos` +
+// `nutricao_projeto_itens` (1:N — qualquer quantidade de itens do mesmo tipo,
+// ex.: dois tipos de ração). Suplementos deixaram de ser um array à parte —
+// viram só mais um tipo de item (tipo='suplemento') na mesma lista `itens`.
 function nutVazio() {
   return {
-    dt_inicio: '', dt_fim: '', status_proj: 'ativo',
-    racao:    { produto:'', qty:'', freq:'2x ao dia', obs:'' },
-    aveia:    { produto:'Aveia', qty:'', freq:'2x ao dia', obs:'' },
-    alfafa:   { produto:'Alfafa', qty:'', freq:'1x ao dia', obs:'' },
-    verde:    { produto:'', qty:'', freq:'Conforme disponível', obs:'Corte sazonal' },
-    sal:      { produto:'Sal mineral', qty:'', freq:'À vontade', obs:'' },
-    suplementos: [], obs_projeto: '',
+    db_id: null, dt_inicio: '', dt_fim: '', status_proj: 'ativo',
+    obs_projeto: '', template_origem_id: null,
+    itens: [],
     med_inicial: { cernelha:'', torax:'', canela:'', peso:'', escore:'', data:'', obs:'' },
     med_final:   { cernelha:'', torax:'', canela:'', peso:'', escore:'', data:'', obs:'' },
   };
 }
 
-// Templates por estágio
-const NUT_TEMPLATES = {
-  'CAMPO': {
-    racao:  { produto:'Ração crescimento', qty:'2 kg/dia', freq:'2x ao dia', obs:'Dividir manhã e tarde' },
-    aveia:  { produto:'Aveia grão', qty:'0,5 kg/dia', freq:'1x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'0,5 kg/dia', freq:'1x ao dia', obs:'Feno de boa qualidade' },
-    verde:  { produto:'Azevém / Tifton / Aveia preta', qty:'À vontade', freq:'Conforme disponível', obs:'Pasto rotacionado, sazonal' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'Coccho coberto' },
-  },
-  'PISTA MORFOLOGIA': {
-    racao:  { produto:'Ração performance', qty:'3 kg/dia', freq:'2x ao dia', obs:'Alta energia, dividido em 2 tratos' },
-    aveia:  { produto:'Aveia grão', qty:'1 kg/dia', freq:'2x ao dia', obs:'0,5 kg por trato' },
-    alfafa: { produto:'Alfafa feno', qty:'1 kg/dia', freq:'2x ao dia', obs:'Fornecer antes da ração' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'Complementar ao feno' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'Coccho coberto' },
-  },
-  'PISTA FUNCIONAL': {
-    racao:  { produto:'Ração performance / trabalho', qty:'4 kg/dia', freq:'2x ao dia', obs:'Aumentar em período de provas' },
-    aveia:  { produto:'Aveia grão', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'0,75 kg por trato' },
-    alfafa: { produto:'Alfafa feno', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'Fornecer antes da ração' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'Complementar ao feno' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'Coccho coberto' },
-  },
-  'ARREIO CABANHA': {
-    racao:  { produto:'Ração manutenção / performance', qty:'3 kg/dia', freq:'2x ao dia', obs:'Ajustar conforme uso' },
-    aveia:  { produto:'Aveia grão', qty:'1 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'1 kg/dia', freq:'1x ao dia', obs:'' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'LAÇO': {
-    racao:  { produto:'Ração performance', qty:'4 kg/dia', freq:'2x ao dia', obs:'Alta demanda energética' },
-    aveia:  { produto:'Aveia grão', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'1,5 kg/dia', freq:'2x ao dia', obs:'' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'DOMA': {
-    racao:  { produto:'Ração manutenção', qty:'2,5 kg/dia', freq:'2x ao dia', obs:'Aumentar com progressão do treino' },
-    aveia:  { produto:'Aveia grão', qty:'0,8 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'0,8 kg/dia', freq:'1x ao dia', obs:'' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'Conforme disponível', obs:'' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'CRIA': {
-    racao:  { produto:'Ração égua lactante', qty:'4 kg/dia', freq:'2x ao dia', obs:'Maior demanda na lactação' },
-    aveia:  { produto:'Aveia grão', qty:'1 kg/dia', freq:'2x ao dia', obs:'' },
-    alfafa: { produto:'Alfafa feno', qty:'2 kg/dia', freq:'2x ao dia', obs:'Alta proteína para produção de leite' },
-    verde:  { produto:'Azevém / Tifton', qty:'À vontade', freq:'À vontade', obs:'Pasto de qualidade' },
-    sal:    { produto:'Sal mineral equino', qty:'À vontade', freq:'À vontade', obs:'' },
-  },
-  'VAZIO': nutVazio(),
-};
+// Categorias fixas da "Alimentação base" (cada uma agora é uma LISTA de itens, não um
+// campo único) + metadados de exibição. Suplemento é tratado à parte na renderização
+// (mesma seção visual de antes), mas mora na mesma tabela/array `itens`.
+const NUT_CATEGORIAS = [
+  {tipo:'racao', icon:()=>_iconTrigo(14), label:'Ração'},
+  {tipo:'aveia', icon:()=>_iconTrigo(14), label:'Aveia'},
+  {tipo:'alfafa', icon:()=>_iconFolha(14), label:'Alfafa'},
+  {tipo:'verde', icon:()=>_iconBroto(14), label:'Verde (corte)'},
+  {tipo:'sal', icon:()=>_iconSal(14), label:'Sal mineral'},
+];
 
-// Inicializar projetos nutricionais
+// Templates — carregados do banco (nutricao_templates + nutricao_template_itens),
+// preenchidos no bootstrap de login e recarregados após qualquer CRUD de template.
+let nutTemplates = [];
+
+async function _carregarNutTemplatesDoBanco() {
+  const res = await _supa('GET','nutricao_templates',null,'?select=*,itens:nutricao_template_itens(*)&ativo=eq.true&order=nome');
+  nutTemplates = (res||[]).map(t=>({
+    db_id: t.id, nome: t.nome, estagio_vinculado: t.estagio_vinculado||'',
+    itens: (t.itens||[]).sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(it=>({
+      db_id: it.id, tipo: it.tipo, produto: it.produto||'', marca: it.marca||'',
+      quantidade: it.quantidade||'', frequencia: it.frequencia||'', periodo: it.periodo||'', obs: it.obs||''
+    }))
+  }));
+}
+
+// Projetos por animal — inicializado vazio, preenchido no bootstrap a partir do banco
+// (ver carregarDadosCabanha). Continua indexado por índice do array `animais`, mesmo
+// padrão já usado no resto do app (histVacinas, histExames etc.) — mas cada entrada
+// carrega seu próprio `db_id` real, então a persistência não depende dessa posição.
 let nutProj = {};
-animais.forEach((a,i) => { nutProj[i] = nutVazio(); });
 
 function getNut(i) { if(!nutProj[i]) nutProj[i]=nutVazio(); return nutProj[i]; }
+
+// ─── PERSISTÊNCIA ────────────────────────────────────────────────────────────────
+async function _dbGarantirProjeto(i) {
+  const n = getNut(i);
+  if(n.db_id) return n.db_id;
+  const animal = animais[i];
+  if(!animal?.db_id) return null; // animal ainda não persistido — nada a fazer
+  const payload = {
+    animal_id: animal.db_id, dt_inicio: n.dt_inicio||null, dt_fim: n.dt_fim||null,
+    status: n.status_proj||'ativo', obs_projeto: n.obs_projeto||null,
+    template_origem_id: n.template_origem_id||null,
+    med_inicial: (n.med_inicial&&(n.med_inicial.cernelha||n.med_inicial.peso))?n.med_inicial:null,
+    med_final: (n.med_final&&(n.med_final.cernelha||n.med_final.peso))?n.med_final:null,
+    criado_por: usuarioAtual?.db_id||null,
+  };
+  const res = await _supa('POST', 'nutricao_projetos', payload);
+  if(res?.[0]?.id) n.db_id = res[0].id;
+  return n.db_id;
+}
+
+async function _dbSalvarProjeto(i) {
+  const n = getNut(i);
+  if(!n.db_id) { await _dbGarantirProjeto(i); return; }
+  const payload = {
+    dt_inicio: n.dt_inicio||null, dt_fim: n.dt_fim||null,
+    status: n.status_proj||'ativo', obs_projeto: n.obs_projeto||null,
+    template_origem_id: n.template_origem_id||null,
+    med_inicial: (n.med_inicial&&(n.med_inicial.cernelha||n.med_inicial.peso))?n.med_inicial:null,
+    med_final: (n.med_final&&(n.med_final.cernelha||n.med_final.peso))?n.med_final:null,
+  };
+  await _supa('PATCH', 'nutricao_projetos', payload, '?id=eq.' + n.db_id);
+}
+
+async function _dbSalvarItemProjeto(i, itemIdx) {
+  const n = getNut(i);
+  const item = n.itens[itemIdx];
+  if(!item) return;
+  const projId = await _dbGarantirProjeto(i);
+  if(!projId) return;
+  const payload = {
+    projeto_id: projId, tipo: item.tipo, produto: item.produto||null, marca: item.marca||null,
+    quantidade: item.quantidade||null, frequencia: item.frequencia||null,
+    periodo: item.periodo||null, obs: item.obs||null, ordem: itemIdx,
+  };
+  if(item.db_id) {
+    await _supa('PATCH', 'nutricao_projeto_itens', payload, '?id=eq.' + item.db_id);
+  } else {
+    const res = await _supa('POST', 'nutricao_projeto_itens', payload);
+    if(res?.[0]?.id) item.db_id = res[0].id;
+  }
+}
+
+async function _dbExcluirItemProjeto(itemDbId) {
+  if(!itemDbId) return;
+  await _supa('DELETE', 'nutricao_projeto_itens', null, '?id=eq.' + itemDbId);
+}
 
 // ─── RENDER LISTA ──────────────────────────────────────────────────────────────
 function projStatus(n) {
@@ -7445,7 +7882,8 @@ function renderNutLista() {
     const i = animais.indexOf(a);
     const n = getNut(i);
     const ps = projStatus(n);
-    const nSuplBadge = n.suplementos.length>0 ? `<span class="badge bt" style="margin-left:6px">${n.suplementos.length} supl.</span>` : '';
+    const nSupl = n.itens.filter(it=>it.tipo==='suplemento').length;
+    const nSuplBadge = nSupl>0 ? `<span class="badge bt" style="margin-left:6px">${nSupl} supl.</span>` : '';
     return `<div class="nut-animal-card" id="nutcard-${i}">
       <div class="nut-animal-header" onclick="toggleNutCard(${i})">
         <div style="flex:1">
@@ -7476,23 +7914,16 @@ function toggleNutCard(i) {
 function renderNutBody(i) {
   const n = getNut(i);
   const ps = projStatus(n);
-  const items = [
-    {key:'racao', icon:_iconTrigo(14), label:'Ração'},
-    {key:'aveia', icon:_iconTrigo(14), label:'Aveia'},
-    {key:'alfafa', icon:_iconFolha(14), label:'Alfafa'},
-    {key:'verde', icon:_iconBroto(14), label:'Verde (corte)'},
-    {key:'sal', icon:_iconSal(14), label:'Sal mineral'},
-  ];
 
   // Cabeçalho: período do projeto
   let html = `<div class="nut-proj-header">
     <div class="nut-proj-date">
       <label>Início do projeto</label>
-      <input type="date" value="${n.dt_inicio||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_inicio=this.value;atualizarStatusNutCard(${i})">
+      <input type="date" value="${n.dt_inicio||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_inicio=this.value;_dbSalvarProjeto(${i});atualizarStatusNutCard(${i})">
     </div>
     <div class="nut-proj-date">
       <label>Fim / Revisão prevista</label>
-      <input type="date" value="${n.dt_fim||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_fim=this.value;atualizarStatusNutCard(${i})">
+      <input type="date" value="${n.dt_fim||''}" style="font-size:12px;padding:5px 8px" onchange="nutProj[${i}].dt_fim=this.value;_dbSalvarProjeto(${i});atualizarStatusNutCard(${i})">
     </div>
     <div style="display:flex;flex-direction:column;gap:4px">
       <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px">Status</label>
@@ -7500,62 +7931,81 @@ function renderNutBody(i) {
     </div>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:flex-end">
       ${n.status_proj==='finalizado'
-        ? `<button class="btn btn-sm" onclick="nutProj[${i}].status_proj='ativo';atualizarStatusNutCard(${i});renderNutLista()">Reativar projeto</button>`
-        : `<button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Finalizar este projeto nutricional?')){nutProj[${i}].status_proj='finalizado';atualizarStatusNutCard(${i});renderNutLista()}">Finalizar projeto</button>`}
+        ? `<button class="btn btn-sm" onclick="nutProj[${i}].status_proj='ativo';_dbSalvarProjeto(${i});atualizarStatusNutCard(${i});renderNutLista()">Reativar projeto</button>`
+        : `<button class="btn btn-sm" style="color:var(--red-d)" onclick="if(confirm('Finalizar este projeto nutricional?')){nutProj[${i}].status_proj='finalizado';_dbSalvarProjeto(${i});atualizarStatusNutCard(${i});renderNutLista()}">Finalizar projeto</button>`}
     </div>
   </div>`;
 
+  // Alimentação base — cada categoria agora é uma lista (0..N itens), não 1 campo fixo.
   html += `<div class="nut-section">
-    <div class="nut-section-title">${_iconTrigo(14)} Alimentação base</div>
-    <div style="display:grid;grid-template-columns:160px 120px 140px 1fr auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
-      <span>Componente</span><span>Quantidade/dia</span><span>Frequência</span><span>Observações</span><span></span>
-    </div>`;
-  items.forEach(it=>{
-    const d = n[it.key];
-    html += `<div class="nut-item">
-      <span class="nut-item-label">${it.icon} ${it.label}${d.produto && it.key!=='aveia'&&it.key!=='alfafa'&&it.key!=='sal' ? '<br><span style="font-weight:400;font-size:11px;color:var(--text2)">'+d.produto+'</span>' : ''}</span>
-      <span class="nut-item-qty">${d.qty||'<span style="color:var(--text3)">—</span>'}</span>
-      <span class="nut-item-freq"><span class="badge bgr">${d.freq||'—'}</span></span>
-      <span class="nut-item-obs">${d.obs||''}</span>
-      <button class="nut-item-edit" onclick="editarNutItem(${i},'${it.key}')">editar</button>
-    </div>`;
+    <div class="nut-section-title">${_iconTrigo(14)} Alimentação base</div>`;
+  NUT_CATEGORIAS.forEach(cat=>{
+    const itensCat = n.itens.map((it,idx)=>({it,idx})).filter(x=>x.it.tipo===cat.tipo);
+    html += `<div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+        <span style="font-weight:600;font-size:12px">${cat.icon()} ${cat.label}</span>
+        <button class="nut-add-btn" onclick="abrirModalNutItem(${i},'${cat.tipo}',-1)">+ Adicionar</button>
+      </div>`;
+    if(itensCat.length===0){
+      html += `<div class="nut-empty" style="margin:0 0 4px">Nenhum item cadastrado.</div>`;
+    } else {
+      html += `<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:180px 100px 100px 1fr auto;gap:8px;padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:620px">
+        <span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Observações</span><span></span>
+      </div>`;
+      itensCat.forEach(({it,idx})=>{
+        html += `<div class="nut-item">
+          <span class="nut-item-label">${it.produto||'<span style="color:var(--text3)">—</span>'}</span>
+          <span class="nut-item-qty">${it.quantidade||'<span style="color:var(--text3)">—</span>'}</span>
+          <span class="nut-item-freq"><span class="badge bgr">${it.frequencia||'—'}</span></span>
+          <span class="nut-item-obs">${it.obs||''}</span>
+          <div style="display:flex;gap:4px">
+            <button class="nut-item-edit" onclick="abrirModalNutItem(${i},'${cat.tipo}',${idx})">editar</button>
+            <button class="nut-item-edit" style="color:var(--red-d)" onclick="removerNutItem(${i},${idx})">×</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
   });
   html += '</div>';
 
-  // Suplementos
+  // Suplementos — mesma seção visual de sempre, agora lendo de `n.itens` (tipo=suplemento).
+  const suplList = n.itens.map((it,idx)=>({it,idx})).filter(x=>x.it.tipo==='suplemento');
   html += `<div class="nut-section">
     <div class="nut-section-title">${_iconComprimido(14)} Suplementação
       <button class="nut-add-btn" onclick="addSupl(${i})">+ Adicionar</button>
     </div>`;
-  if(n.suplementos.length===0){
+  if(suplList.length===0){
     html += `<div class="nut-empty">Nenhum suplemento cadastrado para este animal.</div>`;
   } else {
-    html += `<div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+    html += `<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:650px">
       <span>Suplemento</span><span>Marca</span><span>Dosagem</span><span>Frequência</span><span>Período</span><span></span>
     </div>`;
-    n.suplementos.forEach((s,si)=>{
+    suplList.forEach(({it:s,idx})=>{
       html += `<div class="nut-supl">
-        <span style="font-weight:600;font-size:12px">${s.nome}</span>
+        <span style="font-weight:600;font-size:12px">${s.produto}</span>
         <span style="font-size:11px;color:var(--text2)">${s.marca||'—'}</span>
-        <span style="font-size:11px">${s.dosagem||'—'}</span>
-        <span style="font-size:11px"><span class="badge bb">${s.freq||'—'}</span></span>
+        <span style="font-size:11px">${s.quantidade||'—'}</span>
+        <span style="font-size:11px"><span class="badge bb">${s.frequencia||'—'}</span></span>
         <span style="font-size:11px;color:var(--text3)">${s.periodo||'—'}</span>
         <div style="display:flex;gap:4px">
-          <button class="nut-item-edit" onclick="editarSupl(${i},${si})">editar</button>
-          <button class="nut-item-edit" style="color:var(--red-d)" onclick="removerSupl(${i},${si})">×</button>
+          <button class="nut-item-edit" onclick="editarSupl(${i},${idx})">editar</button>
+          <button class="nut-item-edit" style="color:var(--red-d)" onclick="removerSupl(${i},${idx})">×</button>
         </div>
       </div>`;
     });
+    html += `</div>`;
   }
   html += '</div>';
 
   html += `<div style="margin-top:0.9rem;padding-top:0.9rem;border-top:0.5px solid var(--border)">
     <label style="font-size:11px;font-weight:700;color:var(--text2)">Observações do projeto nutricional</label>
-    <input type="text" style="width:100%;margin-top:6px" value="${n.obs_projeto||''}" placeholder="Notas gerais sobre a alimentação deste animal..." onchange="nutProj[${i}].obs_projeto=this.value">
+    <input type="text" style="width:100%;margin-top:6px" value="${n.obs_projeto||''}" placeholder="Notas gerais sobre a alimentação deste animal..." onchange="nutProj[${i}].obs_projeto=this.value;_dbSalvarProjeto(${i})">
   </div>
   <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)">
     <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.75rem">${_iconRegua(14)} Medidas do Projeto</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       ${['inicial','final'].map(tipo=>{
         const m = n[`med_${tipo}`]||{};
         const label = tipo==='inicial'?'📍 Medidas iniciais':'🏁 Medidas finais';
@@ -7567,7 +8017,7 @@ function renderNutBody(i) {
             </button>
           </div>
           ${m.cernelha||m.peso?`
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+            <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
               ${m.data?`<div style="grid-column:1/-1;font-size:10px;color:var(--text3)">${fd(m.data)}</div>`:''}
               ${m.cernelha?`<div><span style="color:var(--text3)">Cernelha</span><br><strong>${m.cernelha}m</strong></div>`:''}
               ${m.torax?`<div><span style="color:var(--text3)">Tórax</span><br><strong>${m.torax}m</strong></div>`:''}
@@ -7602,45 +8052,62 @@ function renderNutBody(i) {
 function atualizarStatusNutCard(i) {
   const n = getNut(i);
   const ps = projStatus(n);
-  // Atualizar badge no card fechado
   const lbl = document.getElementById('ps-label-'+i);
   if(lbl){ lbl.className='nut-proj-status '+ps.cls; lbl.textContent=ps.label; }
 }
 
-// ─── EDITAR ITEM ───────────────────────────────────────────────────────────────
-function editarNutItem(animalIdx, field) {
+// ─── EDITAR ITEM (qualquer categoria de Alimentação base) ────────────────────────
+function abrirModalNutItem(animalIdx, tipo, itemIdx) {
   const n = getNut(animalIdx);
-  const d = n[field];
-  document.getElementById('nut-idx').value = animalIdx;
-  document.getElementById('nut-field').value = field;
+  const item = (itemIdx!=null && itemIdx>=0) ? n.itens[itemIdx] : null;
   const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte sazonal)',sal:'Sal mineral'};
-  document.getElementById('nut-item-titulo').textContent = 'Editar — ' + labels[field];
-  document.getElementById('nut-label-prod').textContent = field==='racao' ? 'Produto / Marca / Linha' : field==='verde' ? 'Cultura / Espécie vegetal' : 'Produto';
-  document.getElementById('nut-produto').value = d.produto||'';
-  document.getElementById('nut-qty').value = d.qty||'';
-  document.getElementById('nut-freq').value = d.freq||'2x ao dia';
-  document.getElementById('nut-obs-item').value = d.obs||'';
-  document.getElementById('nut-periodo-group').style.display = 'none';
-  document.getElementById('nut-dosagem-group').style.display = 'none';
+  document.getElementById('nut-idx').value = animalIdx;
+  document.getElementById('nut-tipo').value = tipo;
+  document.getElementById('nut-item-edit-idx').value = (itemIdx!=null?itemIdx:-1);
+  document.getElementById('nut-item-titulo').textContent = (item?'Editar — ':'Novo item — ') + (labels[tipo]||tipo);
+  document.getElementById('nut-label-prod').textContent = tipo==='racao' ? 'Produto / Marca / Linha' : tipo==='verde' ? 'Cultura / Espécie vegetal' : 'Produto';
+  document.getElementById('nut-produto').value = item?.produto||'';
+  document.getElementById('nut-qty').value = item?.quantidade||'';
+  document.getElementById('nut-freq').value = item?.frequencia||'2x ao dia';
+  document.getElementById('nut-obs-item').value = item?.obs||'';
   openModal('modal-nut-item');
 }
 
 function salvarNutItem() {
   const i = parseInt(document.getElementById('nut-idx').value);
-  const field = document.getElementById('nut-field').value;
-  nutProj[i][field] = {
+  const tipo = document.getElementById('nut-tipo').value;
+  const editIdx = parseInt(document.getElementById('nut-item-edit-idx').value);
+  const n = getNut(i);
+  const obj = {
+    tipo,
     produto: document.getElementById('nut-produto').value,
-    qty: document.getElementById('nut-qty').value,
-    freq: document.getElementById('nut-freq').value,
+    quantidade: document.getElementById('nut-qty').value,
+    frequencia: document.getElementById('nut-freq').value,
     obs: document.getElementById('nut-obs-item').value,
   };
+  let idxFinal;
+  if(editIdx>=0 && n.itens[editIdx]) { n.itens[editIdx] = {...n.itens[editIdx], ...obj}; idxFinal = editIdx; }
+  else { n.itens.push(obj); idxFinal = n.itens.length-1; }
+  _dbSalvarItemProjeto(i, idxFinal);
   closeModal('modal-nut-item');
   const body = document.getElementById('nutbody-'+i);
   if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
   renderNutLista();
 }
 
-// ─── SUPLEMENTOS ───────────────────────────────────────────────────────────────
+function removerNutItem(i, idx) {
+  const n = getNut(i);
+  const item = n.itens[idx];
+  if(!item) return;
+  if(!confirm('Remover este item?')) return;
+  n.itens.splice(idx,1);
+  _dbExcluirItemProjeto(item.db_id);
+  const body = document.getElementById('nutbody-'+i);
+  if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
+  renderNutLista();
+}
+
+// ─── SUPLEMENTOS (tipo='suplemento' dentro de n.itens) ────────────────────────────
 function addSupl(i) {
   document.getElementById('supl-titulo').textContent = 'Adicionar suplemento';
   document.getElementById('supl-animal-idx').value = i;
@@ -7649,86 +8116,120 @@ function addSupl(i) {
   document.getElementById('supl-freq').value='Diário';
   openModal('modal-nut-supl');
 }
-function editarSupl(i, si) {
-  const s = nutProj[i].suplementos[si];
+function editarSupl(i, idx) {
+  const s = getNut(i).itens[idx];
   document.getElementById('supl-titulo').textContent = 'Editar suplemento';
   document.getElementById('supl-animal-idx').value = i;
-  document.getElementById('supl-supl-idx').value = si;
-  document.getElementById('supl-nome').value = s.nome||'';
+  document.getElementById('supl-supl-idx').value = idx;
+  document.getElementById('supl-nome').value = s.produto||'';
   document.getElementById('supl-marca').value = s.marca||'';
-  document.getElementById('supl-dosagem').value = s.dosagem||'';
-  document.getElementById('supl-freq').value = s.freq||'Diário';
+  document.getElementById('supl-dosagem').value = s.quantidade||'';
+  document.getElementById('supl-freq').value = s.frequencia||'Diário';
   document.getElementById('supl-periodo').value = s.periodo||'';
   document.getElementById('supl-obs').value = s.obs||'';
   openModal('modal-nut-supl');
 }
 function salvarSupl() {
   const i = parseInt(document.getElementById('supl-animal-idx').value);
-  const si = parseInt(document.getElementById('supl-supl-idx').value);
-  const s = {
-    nome: document.getElementById('supl-nome').value,
+  const idx = parseInt(document.getElementById('supl-supl-idx').value);
+  const n = getNut(i);
+  const obj = {
+    tipo: 'suplemento',
+    produto: document.getElementById('supl-nome').value,
     marca: document.getElementById('supl-marca').value,
-    dosagem: document.getElementById('supl-dosagem').value,
-    freq: document.getElementById('supl-freq').value,
+    quantidade: document.getElementById('supl-dosagem').value,
+    frequencia: document.getElementById('supl-freq').value,
     periodo: document.getElementById('supl-periodo').value,
     obs: document.getElementById('supl-obs').value,
   };
-  if(!s.nome) return alert('Nome do suplemento obrigatório.');
-  if(si===-1) nutProj[i].suplementos.push(s);
-  else nutProj[i].suplementos[si]=s;
+  if(!obj.produto) return alert('Nome do suplemento obrigatório.');
+  let idxFinal;
+  if(idx===-1) { n.itens.push(obj); idxFinal = n.itens.length-1; }
+  else { n.itens[idx] = {...n.itens[idx], ...obj}; idxFinal = idx; }
+  _dbSalvarItemProjeto(i, idxFinal);
   closeModal('modal-nut-supl');
   const body = document.getElementById('nutbody-'+i);
   if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
   renderNutLista();
 }
-function removerSupl(i, si) {
+function removerSupl(i, idx) {
+  const n = getNut(i);
+  const item = n.itens[idx];
   if(!confirm('Remover este suplemento?')) return;
-  nutProj[i].suplementos.splice(si,1);
+  n.itens.splice(idx,1);
+  _dbExcluirItemProjeto(item?.db_id);
   const body = document.getElementById('nutbody-'+i);
   if(body && body.classList.contains('open')) body.innerHTML = renderNutBody(i);
   renderNutLista();
 }
 
-// ─── TEMPLATES ─────────────────────────────────────────────────────────────────
+// ─── APLICAR TEMPLATE A UM ANIMAL ─────────────────────────────────────────────────
 function abrirTemplate(preIdx) {
   const sel = document.getElementById('tmpl-animal');
   sel.innerHTML = animais.map((a,i)=>`<option value="${i}">${a.nome}</option>`).join('');
   if(preIdx!==undefined) sel.value = preIdx;
-  const estSel = document.getElementById('tmpl-estagio');
+  const tmplSel = document.getElementById('tmpl-select');
+  tmplSel.innerHTML = nutTemplates.map(t=>`<option value="${t.db_id}">${t.nome}${t.estagio_vinculado?' ('+t.estagio_vinculado+')':''}</option>`).join('')
+    + `<option value="VAZIO">Vazio (limpar alimentação base)</option>`;
   const a = animais[parseInt(sel.value)];
-  if(a && a.estagio && NUT_TEMPLATES[a.estagio]) estSel.value = a.estagio;
+  if(a && a.estagio) {
+    const match = nutTemplates.find(t=>t.estagio_vinculado===a.estagio);
+    if(match) tmplSel.value = match.db_id;
+  }
   atualizarPreviewTemplate();
   openModal('modal-template');
 }
 document.addEventListener('DOMContentLoaded', ()=>{
-  const el = document.getElementById('tmpl-estagio');
+  const el = document.getElementById('tmpl-select');
   if(el) el.addEventListener('change', atualizarPreviewTemplate);
   const el2 = document.getElementById('tmpl-animal');
   if(el2) el2.addEventListener('change', ()=>{
     const a = animais[parseInt(el2.value)];
-    if(a && a.estagio && NUT_TEMPLATES[a.estagio]) document.getElementById('tmpl-estagio').value=a.estagio;
+    const tmplSel = document.getElementById('tmpl-select');
+    if(a && a.estagio && tmplSel) {
+      const match = nutTemplates.find(t=>t.estagio_vinculado===a.estagio);
+      if(match) tmplSel.value = match.db_id;
+    }
     atualizarPreviewTemplate();
   });
 });
 function atualizarPreviewTemplate() {
-  const est = document.getElementById('tmpl-estagio').value;
-  const tmpl = _getNutTemplate(est);
-  if(!tmpl){document.getElementById('tmpl-preview').innerHTML='';return;}
-  const lines = [];
-  if(tmpl.racao?.produto) lines.push(`${_iconTrigo(14)} Ração: ${tmpl.racao.produto} — ${tmpl.racao.qty}`);
-  if(tmpl.aveia?.qty) lines.push(`${_iconTrigo(14)} Aveia: ${tmpl.aveia.qty} · ${tmpl.aveia.freq}`);
-  if(tmpl.alfafa?.qty) lines.push(`${_iconFolha(14)} Alfafa: ${tmpl.alfafa.qty} · ${tmpl.alfafa.freq}`);
-  if(tmpl.verde?.obs) lines.push(`${_iconBroto(14)} Verde: ${tmpl.verde.obs}`);
-  if(tmpl.sal?.produto) lines.push(`${_iconSal(14)} Sal: ${tmpl.sal.produto} — ${tmpl.sal.freq}`);
-  document.getElementById('tmpl-preview').innerHTML = lines.join('<br>') || 'Template vazio.';
+  const val = document.getElementById('tmpl-select').value;
+  const prevEl = document.getElementById('tmpl-preview');
+  if(val==='VAZIO'){ prevEl.innerHTML = 'Limpa a alimentação base (mantém suplementos).'; return; }
+  const tmpl = nutTemplates.find(t=>String(t.db_id)===String(val));
+  if(!tmpl){ prevEl.innerHTML=''; return; }
+  const icons = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14)};
+  const lines = tmpl.itens.map(it=>`${icons[it.tipo]||''} ${it.produto||it.tipo}: ${it.quantidade||''}${it.frequencia?' · '+it.frequencia:''}`);
+  prevEl.innerHTML = lines.join('<br>') || 'Template vazio.';
 }
-function aplicarTemplate() {
+async function aplicarTemplate() {
   const i = parseInt(document.getElementById('tmpl-animal').value);
-  const est = document.getElementById('tmpl-estagio').value;
-  const tmpl = _getNutTemplate(est);
-  if(!tmpl) return;
-  const suplAtual = nutProj[i]?.suplementos||[];
-  nutProj[i] = {...nutVazio(), ...JSON.parse(JSON.stringify(tmpl)), suplementos: suplAtual};
+  const val = document.getElementById('tmpl-select').value;
+  const n = getNut(i);
+  // Suplementos nunca são tocados pela aplicação de template — só a "Alimentação base".
+  const suplExistentes = n.itens.filter(it=>it.tipo==='suplemento');
+  const antigos = n.itens.filter(it=>it.tipo!=='suplemento');
+  for(const it of antigos) { if(it.db_id) await _dbExcluirItemProjeto(it.db_id); }
+
+  let novosItens = [];
+  let templateOrigemId = null;
+  if(val!=='VAZIO'){
+    const tmpl = nutTemplates.find(t=>String(t.db_id)===String(val));
+    if(tmpl){
+      novosItens = tmpl.itens.map(it=>({tipo:it.tipo, produto:it.produto, marca:it.marca||'', quantidade:it.quantidade, frequencia:it.frequencia, periodo:it.periodo||'', obs:it.obs||'', db_id:null}));
+      templateOrigemId = tmpl.db_id;
+    }
+  }
+  n.itens = [...novosItens, ...suplExistentes];
+  n.template_origem_id = templateOrigemId;
+
+  await _dbGarantirProjeto(i);
+  await _dbSalvarProjeto(i);
+  for(let idx=0; idx<n.itens.length; idx++){
+    if(!n.itens[idx].db_id) await _dbSalvarItemProjeto(i, idx);
+  }
+
   closeModal('modal-template');
   renderNutLista();
   const body = document.getElementById('nutbody-'+i);
@@ -7736,203 +8237,219 @@ function aplicarTemplate() {
 }
 
 // ─── LISTA DE COMPRAS ──────────────────────────────────────────────────────────
+// Agrupa por (tipo, produto) — generaliza de graça pra N produtos do mesmo tipo
+// (ex.: dois tipos de ração aparecem como duas linhas, cada uma com seu total).
 function renderCompras() {
   const el = document.getElementById('compras-content');
   if(!el) return;
-  // Nunca incluir animais mortos
   const ativos = animais.filter((a,i)=>isNaCabanha(a));
+  const grupos = {};
 
-  // Agregar ração por produto
-  const racoes={}, aveiaAnimais=[], alfafaAnimais=[], suplMap={};
-  let totalAveiaKg=0, totalAlfafaKg=0;
-
-  ativos.forEach((a,_)=>{
-    const i=animais.indexOf(a);
-    const n=getNut(i);
-    // Ração
-    if(n.racao.produto){
-      const key=n.racao.produto;
-      if(!racoes[key]) racoes[key]={animais:[],totalKg:0};
-      racoes[key].animais.push(a.nome);
-      const kg=parseFloat((n.racao.qty||'0').replace(',','.'));
-      if(!isNaN(kg)) racoes[key].totalKg+=kg;
-    }
-    // Aveia
-    if(n.aveia.qty){
-      const kg=parseFloat((n.aveia.qty||'0').replace(',','.'));
-      if(!isNaN(kg)){totalAveiaKg+=kg; aveiaAnimais.push(a.nome);}
-    }
-    // Alfafa
-    if(n.alfafa.qty){
-      const kg=parseFloat((n.alfafa.qty||'0').replace(',','.'));
-      if(!isNaN(kg)){totalAlfafaKg+=kg; alfafaAnimais.push(a.nome);}
-    }
-    // Suplementos
-    n.suplementos.forEach(s=>{
-      const key=(s.nome+(s.marca?` · ${s.marca}`:'')).trim();
-      if(!suplMap[key]) suplMap[key]={animais:[],dosagem:s.dosagem,freq:s.freq,periodo:s.periodo};
-      suplMap[key].animais.push(a.nome);
+  ativos.forEach(a=>{
+    const i = animais.indexOf(a);
+    const n = getNut(i);
+    (n.itens||[]).forEach(it=>{
+      const nomeProduto = it.produto || (it.tipo==='suplemento' ? null : '(sem produto definido)');
+      if(!nomeProduto) return;
+      const key = it.tipo+'::'+nomeProduto;
+      if(!grupos[key]) grupos[key] = {tipo:it.tipo, produto:nomeProduto, animais:[], totalQtd:0, temQtdNumerica:false, dosagem:it.quantidade, freq:it.frequencia, periodo:it.periodo};
+      grupos[key].animais.push(a.nome);
+      const qtd = parseFloat((it.quantidade||'0').replace(',','.'));
+      if(!isNaN(qtd)){ grupos[key].totalQtd += qtd; grupos[key].temQtdNumerica = true; }
     });
   });
 
+  const ordem = ['racao','aveia','alfafa','verde','sal','suplemento'];
+  const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte)',sal:'Sal mineral',suplemento:'Suplementos em uso'};
+  const icons = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14),suplemento:_iconComprimido(14)};
+
   let html = '';
-
-  // Ração
-  html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconTrigo(14)} Ração (consumo diário)</div>`;
-  if(Object.keys(racoes).length===0){html+='<div class="nut-empty">Nenhuma ração cadastrada nos projetos.</div>';}
-  else{Object.entries(racoes).forEach(([prod,d])=>{
-    const sem=d.totalKg*7;
-    html+=`<div class="compra-item">
-      <div><div style="font-weight:600;font-size:13px">${prod}</div><div class="compra-animais">${d.animais.length} animal(is): ${d.animais.join(', ')}</div></div>
-      <div style="text-align:right"><div class="compra-qty">${d.totalKg.toFixed(1)} kg/dia</div><div style="font-size:11px;color:var(--text3)">${sem.toFixed(0)} kg/semana · ${(sem*4).toFixed(0)} kg/mês</div></div>
-    </div>`;
-  });}
-  html += '</div>';
-
-  // Aveia
-  html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconTrigo(14)} Aveia</div>`;
-  if(totalAveiaKg===0){html+='<div class="nut-empty">Nenhuma aveia cadastrada.</div>';}
-  else{html+=`<div class="compra-item">
-    <div><div style="font-weight:600;font-size:13px">Aveia grão</div><div class="compra-animais">${aveiaAnimais.length} animal(is)</div></div>
-    <div style="text-align:right"><div class="compra-qty">${totalAveiaKg.toFixed(1)} kg/dia</div><div style="font-size:11px;color:var(--text3)">${(totalAveiaKg*7).toFixed(0)} kg/semana · ${(totalAveiaKg*30).toFixed(0)} kg/mês</div></div>
-  </div>`;}
-  html += '</div>';
-
-  // Alfafa
-  html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconFolha(14)} Alfafa feno</div>`;
-  if(totalAlfafaKg===0){html+='<div class="nut-empty">Nenhuma alfafa cadastrada.</div>';}
-  else{html+=`<div class="compra-item">
-    <div><div style="font-weight:600;font-size:13px">Alfafa feno</div><div class="compra-animais">${alfafaAnimais.length} animal(is)</div></div>
-    <div style="text-align:right"><div class="compra-qty">${totalAlfafaKg.toFixed(1)} kg/dia</div><div style="font-size:11px;color:var(--text3)">${(totalAlfafaKg*7).toFixed(0)} kg/semana · ${(totalAlfafaKg*30).toFixed(0)} kg/mês</div></div>
-  </div>`;}
-  html += '</div>';
-
-  // Suplementos
-  html += `<div><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${_iconComprimido(14)} Suplementos em uso</div>`;
-  if(Object.keys(suplMap).length===0){html+='<div class="nut-empty">Nenhum suplemento cadastrado.</div>';}
-  else{Object.entries(suplMap).forEach(([key,d])=>{
-    html+=`<div class="compra-item">
-      <div><div style="font-weight:600;font-size:13px">${key}</div><div class="compra-animais">${d.animais.length} animal(is): ${d.animais.join(', ')}</div></div>
-      <div style="text-align:right;font-size:11px;color:var(--text2)"><div>${d.dosagem||'—'} · ${d.freq||'—'}</div><div style="color:var(--text3)">${d.periodo||''}</div></div>
-    </div>`;
-  });}
-  html += '</div>';
-
+  ordem.forEach(tipo=>{
+    const doGrupo = Object.values(grupos).filter(g=>g.tipo===tipo);
+    html += `<div style="margin-bottom:1.25rem"><div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${icons[tipo]} ${labels[tipo]}</div>`;
+    if(doGrupo.length===0){
+      html += `<div class="nut-empty">Nenhum item cadastrado.</div>`;
+    } else if(tipo==='suplemento'){
+      doGrupo.forEach(g=>{
+        html += `<div class="compra-item">
+          <div><div style="font-weight:600;font-size:13px">${g.produto}</div><div class="compra-animais">${g.animais.length} animal(is): ${g.animais.join(', ')}</div></div>
+          <div style="text-align:right;font-size:11px;color:var(--text2)"><div>${g.dosagem||'—'} · ${g.freq||'—'}</div><div style="color:var(--text3)">${g.periodo||''}</div></div>
+        </div>`;
+      });
+    } else {
+      doGrupo.forEach(g=>{
+        if(g.temQtdNumerica){
+          const sem = g.totalQtd*7;
+          html += `<div class="compra-item">
+            <div><div style="font-weight:600;font-size:13px">${g.produto}</div><div class="compra-animais">${g.animais.length} animal(is): ${g.animais.join(', ')}</div></div>
+            <div style="text-align:right"><div class="compra-qty">${g.totalQtd.toFixed(1)} /dia</div><div style="font-size:11px;color:var(--text3)">${sem.toFixed(0)} /semana · ${(sem*4).toFixed(0)} /mês</div></div>
+          </div>`;
+        } else {
+          html += `<div class="compra-item">
+            <div><div style="font-weight:600;font-size:13px">${g.produto}</div><div class="compra-animais">${g.animais.length} animal(is): ${g.animais.join(', ')}</div></div>
+            <div style="text-align:right;font-size:11px;color:var(--text3)">${g.dosagem||'—'}</div>
+          </div>`;
+        }
+      });
+    }
+    html += '</div>';
+  });
   el.innerHTML = html;
 }
 
-// ─── RENDER TEMPLATES PAGE ─────────────────────────────────────────────────────
-// Templates editáveis — sobrescritas pelo usuário ficam em nutTemplatesCustom
-let nutTemplatesCustom = {}; // { estagio: { racao:{...}, ... } } — persiste no save
-
-function _getNutTemplate(est) {
-  return nutTemplatesCustom[est] || NUT_TEMPLATES[est] || {};
-}
-
+// ─── RENDER TEMPLATES PAGE (CRUD completo, dados vêm do banco) ────────────────────
 function renderTemplatesPage() {
   const el = document.getElementById('templates-content');
   if(!el) return;
   const podeEditar = usuarioAtual && (usuarioAtual.perfil==='adm' || usuarioAtual.perfil==='vet');
-  const estagios = ['CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
-  const icons  = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14)};
-  const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte)',sal:'Sal mineral'};
-  el.innerHTML = estagios.map(est=>{
-    const tmpl = _getNutTemplate(est);
-    const isCustom = !!nutTemplatesCustom[est];
-    const anCount = animais.filter(a=>a.estagio===est&&(a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO')).length;
-    const rows = ['racao','aveia','alfafa','verde','sal'].map(k=>`
-      <div style="display:grid;grid-template-columns:130px 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start">
-        <span style="font-weight:600">${icons[k]} ${labels[k]}</span>
-        <span style="color:var(--text2)">${tmpl[k]?.qty||'—'}</span>
-        <span><span class="badge bgr">${tmpl[k]?.freq||'—'}</span></span>
-        <span style="color:var(--text3);font-size:11px">${tmpl[k]?.produto||''} ${tmpl[k]?.obs?'· '+tmpl[k].obs:''}</span>
-      </div>`).join('');
-    const editBtn = podeEditar
-      ? `<button class="btn btn-sm" style="margin-left:6px;font-size:10px" onclick="abrirEditarTemplate('${est}')">${_iconEditar(12)} Editar</button>`
-      : '';
-    const resetBtn = podeEditar && isCustom
-      ? `<button class="btn btn-sm" style="font-size:10px;color:var(--text3)" onclick="if(confirm('Restaurar template padrão de ${est}?')){delete nutTemplatesCustom['${est}'];renderTemplatesPage();}">↺ Padrão</button>`
-      : '';
-    return `<div class="template-card">
-      <div class="template-card-title">
-        ${est}
-        ${isCustom ? '<span style="font-size:10px;color:var(--blue-d);font-weight:400">personalizado</span>' : ''}
-        <span class="badge bgr" style="font-weight:400">${anCount} animal(is) na cabanha</span>
-        <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
-          ${editBtn}${resetBtn}
-          <button class="btn btn-sm" style="font-size:10px" onclick="abrirTemplate(undefined);document.getElementById('tmpl-estagio').value='${est}';atualizarPreviewTemplate()">Aplicar a animal</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:130px 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
-        <span>Componente</span><span>Quantidade/dia</span><span>Frequência</span><span>Produto / Obs</span>
-      </div>
-      ${rows}
-    </div>`;
-  }).join('');
+  const icons = {racao:_iconTrigo(14),aveia:_iconTrigo(14),alfafa:_iconFolha(14),verde:_iconBroto(14),sal:_iconSal(14),suplemento:_iconComprimido(14)};
+  const novoBtn = podeEditar ? `<button class="btn btn-sm btn-primary" onclick="abrirModalTemplateCRUD(null)">+ Novo template</button>` : '';
+  const lista = nutTemplates.length===0
+    ? '<div class="nut-empty">Nenhum template cadastrado.</div>'
+    : nutTemplates.map(tmpl=>{
+        const anCount = tmpl.estagio_vinculado ? animais.filter(a=>a.estagio===tmpl.estagio_vinculado&&(a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO')).length : null;
+        const rows = tmpl.itens.map(it=>`
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start;min-width:520px">
+            <span style="font-weight:600">${icons[it.tipo]||''} ${it.tipo}</span>
+            <span style="color:var(--text2)">${it.produto||'—'}</span>
+            <span style="color:var(--text2)">${it.quantidade||'—'}</span>
+            <span><span class="badge bgr">${it.frequencia||'—'}</span></span>
+            <span style="color:var(--text3);font-size:11px">${it.obs||''}</span>
+          </div>`).join('');
+        const editBtn = podeEditar
+          ? `<button class="btn btn-sm" style="margin-left:6px;font-size:10px" onclick="abrirModalTemplateCRUD('${tmpl.db_id}')">${_iconEditar(12)} Editar</button>`
+          : '';
+        const delBtn = podeEditar
+          ? `<button class="btn btn-sm" style="font-size:10px;color:var(--red-d)" onclick="excluirTemplate('${tmpl.db_id}')">Excluir</button>`
+          : '';
+        return `<div class="template-card">
+          <div class="template-card-title">
+            ${tmpl.nome}
+            ${tmpl.estagio_vinculado ? `<span class="badge bgr" style="font-weight:400">${tmpl.estagio_vinculado}</span>` : ''}
+            ${anCount!==null ? `<span class="badge bgr" style="font-weight:400">${anCount} animal(is) na cabanha</span>` : ''}
+            <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
+              ${editBtn}${delBtn}
+              <button class="btn btn-sm" style="font-size:10px" onclick="abrirTemplate(undefined);document.getElementById('tmpl-select').value='${tmpl.db_id}';atualizarPreviewTemplate()">Aplicar a animal</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:520px">
+            <span>Tipo</span><span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Obs</span>
+          </div>
+          ${rows || '<div class="nut-empty" style="margin:4px 0">Sem itens.</div>'}
+          </div>
+        </div>`;
+      }).join('');
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">${novoBtn}</div>${lista}`;
 }
 
-function abrirEditarTemplate(est) {
-  const tmpl = _getNutTemplate(est);
-  const comps = ['racao','aveia','alfafa','verde','sal'];
-  const labels = {racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde (corte)',sal:'Sal mineral'};
-  const campos = comps.map(k=>`
-    <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">${labels[k]}</div>
-      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px">
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Produto</label>
-          <input type="text" id="te-${k}-produto" value="${(tmpl[k]?.produto||'').replace(/"/g,'&quot;')}"></div>
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Quantidade / dia</label>
-          <input type="text" id="te-${k}-qty" value="${(tmpl[k]?.qty||'').replace(/"/g,'&quot;')}"></div>
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Frequência</label>
-          <input type="text" id="te-${k}-freq" value="${(tmpl[k]?.freq||'').replace(/"/g,'&quot;')}"></div>
-        <div class="form-group" style="margin:0"><label style="font-size:10px">Observações</label>
-          <input type="text" id="te-${k}-obs" value="${(tmpl[k]?.obs||'').replace(/"/g,'&quot;')}"></div>
-      </div>
-    </div>`).join('');
+async function excluirTemplate(tmplId) {
+  if(!confirm('Excluir este template? Projetos já aplicados a partir dele não são afetados.')) return;
+  await _supa('DELETE','nutricao_templates',null,'?id=eq.'+tmplId);
+  await _carregarNutTemplatesDoBanco();
+  renderTemplatesPage();
+}
 
-  // Usar modal genérico — criar dinamicamente
+function abrirModalTemplateCRUD(tmplId) {
+  const tmpl = tmplId ? nutTemplates.find(t=>String(t.db_id)===String(tmplId)) : null;
+  window._tmplEdit = {
+    db_id: tmpl?.db_id||null,
+    nome: tmpl?.nome||'',
+    estagio: tmpl?.estagio_vinculado||'',
+    itens: tmpl ? JSON.parse(JSON.stringify(tmpl.itens)) : []
+  };
+  _montarModalTemplateCRUD();
+}
+
+// Monta o modal UMA vez só. Diferente da versão anterior (bug real, 2026-08-21): adicionar ou
+// remover um item recriava o modal inteiro do zero a partir de window._tmplEdit — como os campos
+// Nome/Estágio nunca sincronizavam seu valor de volta pro estado ao digitar, cada re-render
+// jogava fora o que a pessoa tinha acabado de escrever. Agora Nome/Estágio têm listener próprio
+// (sincroniza a cada tecla/troca) e adicionar/remover item só re-renderiza a lista de itens
+// (#tmpl-crud-itens), sem tocar no resto do modal.
+function _montarModalTemplateCRUD() {
+  document.getElementById('modal-tmpl-crud')?.remove();
+  const st = window._tmplEdit;
+  const estagios = ['','CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
+
   const bg = document.createElement('div');
-  bg.className='modal-bg'; bg.id='modal-edit-tmpl'; bg.style.display='flex';
+  bg.className='modal-bg'; bg.id='modal-tmpl-crud'; bg.style.display='flex';
   bg.innerHTML=`
-    <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto">
+    <div class="modal" style="width:640px">
       <div class="modal-header">
-        <span class="modal-title">Editar Template — ${est}</span>
-        <button class="modal-close" onclick="document.getElementById('modal-edit-tmpl').remove()">×</button>
+        <span class="modal-title">${st.db_id?'Editar':'Novo'} template</span>
+        <button class="modal-close" onclick="document.getElementById('modal-tmpl-crud').remove()">×</button>
       </div>
-      <div style="padding:0 1.25rem 1rem">
-        <div style="font-size:11px;color:var(--text2);margin-bottom:12px">
-          Edite os valores padrão para animais no estágio <strong>${est}</strong>. As alterações ficam salvas no backup e substituem o template original.
-        </div>
-        ${campos}
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div class="form-group" style="margin:0"><label>Nome do template</label>
+          <input type="text" id="tmpl-crud-nome" value="${st.nome.replace(/"/g,'&quot;')}" placeholder="Ex: Potros em recria" oninput="window._tmplEdit.nome=this.value"></div>
+        <div class="form-group" style="margin:0"><label>Estágio vinculado (opcional)</label>
+          <select id="tmpl-crud-estagio" onchange="window._tmplEdit.estagio=this.value">
+            ${estagios.map(e=>`<option value="${e}" ${st.estagio===e?'selected':''}>${e||'— nenhum —'}</option>`).join('')}
+          </select></div>
       </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Itens do template</div>
+      <div id="tmpl-crud-itens"></div>
+      <button class="btn btn-sm" style="margin-top:4px" onclick="window._tmplEdit.itens.push({tipo:'racao',produto:'',quantidade:'',frequencia:'2x ao dia',obs:''});_renderTmplItensRows()">+ Adicionar item</button>
       <div class="modal-footer">
-        <button class="btn" onclick="document.getElementById('modal-edit-tmpl').remove()">Cancelar</button>
-        <button class="btn btn-primary" onclick="salvarEditarTemplate('${est}')">Salvar template</button>
+        <button class="btn" onclick="document.getElementById('modal-tmpl-crud').remove()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarTemplateCRUD()">Salvar template</button>
       </div>
     </div>`;
   document.body.appendChild(bg);
+  _renderTmplItensRows();
 }
 
-function salvarEditarTemplate(est) {
-  const comps = ['racao','aveia','alfafa','verde','sal'];
-  const novo = {};
-  comps.forEach(k=>{
-    novo[k]={
-      produto: document.getElementById(`te-${k}-produto`)?.value||'',
-      qty:     document.getElementById(`te-${k}-qty`)?.value||'',
-      freq:    document.getElementById(`te-${k}-freq`)?.value||'',
-      obs:     document.getElementById(`te-${k}-obs`)?.value||'',
-    };
-  });
-  nutTemplatesCustom[est]=novo;
-  document.getElementById('modal-edit-tmpl')?.remove();
+// Cada item vira um card (mesmo padrão visual do resto do app: fundo --bg3, raio --radius) com
+// os campos em flex-wrap — reflow natural em telas estreitas, em vez do grid de colunas fixas
+// (100px/90px/110px...) que forçava scroll horizontal dentro do modal.
+function _renderTmplItensRows() {
+  const el = document.getElementById('tmpl-crud-itens');
+  if(!el) return;
+  const st = window._tmplEdit;
+  const tipos = ['racao','aveia','alfafa','verde','sal','suplemento','outro'];
+  el.innerHTML = st.itens.length===0
+    ? '<div class="nut-empty">Nenhum item ainda.</div>'
+    : st.itens.map((it,idx)=>`
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg3);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px">
+        <select style="flex:1 1 100px" onchange="window._tmplEdit.itens[${idx}].tipo=this.value">
+          ${tipos.map(t=>`<option value="${t}" ${it.tipo===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        <input type="text" style="flex:2 1 140px" placeholder="Produto" value="${(it.produto||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].produto=this.value">
+        <input type="text" style="flex:1 1 90px" placeholder="Qtd/dia" value="${(it.quantidade||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].quantidade=this.value">
+        <input type="text" style="flex:1 1 110px" placeholder="Frequência" value="${(it.frequencia||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].frequencia=this.value">
+        <input type="text" style="flex:2 1 140px" placeholder="Obs" value="${(it.obs||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].obs=this.value">
+        <button class="nut-item-edit" style="color:var(--red-d)" onclick="window._tmplEdit.itens.splice(${idx},1);_renderTmplItensRows()">×</button>
+      </div>`).join('');
+}
+
+async function salvarTemplateCRUD() {
+  const nome = (window._tmplEdit.nome||'').trim();
+  if(!nome) return alert('Informe o nome do template.');
+  const estagio = window._tmplEdit.estagio || null;
+  const st = window._tmplEdit;
+  let tmplId = st.db_id;
+  if(tmplId) {
+    await _supa('PATCH','nutricao_templates',{nome, estagio_vinculado: estagio},'?id=eq.'+tmplId);
+  } else {
+    const res = await _supa('POST','nutricao_templates',{nome, estagio_vinculado: estagio, criado_por: usuarioAtual?.db_id||null});
+    tmplId = res?.[0]?.id;
+  }
+  if(!tmplId) return alert('Erro ao salvar template.');
+  // Recria os itens do zero a partir do estado atual da tela — mais simples e seguro que
+  // diff incremental pra listas pequenas (poucas dezenas de itens por template).
+  await _supa('DELETE','nutricao_template_itens',null,'?template_id=eq.'+tmplId);
+  for(let idx=0; idx<st.itens.length; idx++){
+    const it = st.itens[idx];
+    await _supa('POST','nutricao_template_itens',{
+      template_id: tmplId, tipo: it.tipo, produto: it.produto||null, marca: it.marca||null,
+      quantidade: it.quantidade||null, frequencia: it.frequencia||null, periodo: it.periodo||null,
+      obs: it.obs||null, ordem: idx
+    });
+  }
+  await _carregarNutTemplatesDoBanco();
+  document.getElementById('modal-tmpl-crud')?.remove();
   renderTemplatesPage();
-  // Atualizar também projetos nutricionais que usam este template
-  animais.forEach((a,i)=>{
-    if(a.estagio===est && nutProj[i]) {
-      // Notificar mas não sobrescrever dados individuais
-    }
-  });
 }
 
 // ─── EVENTOS ESPORTIVOS ────────────────────────────────────────────────────────
@@ -7990,7 +8507,7 @@ function renderEvtAnimaisTemp() {
   }
   let html = evtAnimaisTemp.map((p,pi)=>`
     <div class="evt-animal-row">
-      <span style="font-weight:600;flex:1;font-size:12px">${p.nome}</span>
+      <span style="font-weight:600;flex:1 1 100%;font-size:12px">${p.nome}</span>
       <select style="width:130px;font-size:11px;padding:4px" onchange="evtAnimaisTemp[${pi}].modalidade=this.value">
         <option ${p.modalidade==='Individual'?'selected':''}>Individual</option>
         <option ${p.modalidade==='Conjunto'?'selected':''}>Conjunto</option>
@@ -8670,7 +9187,7 @@ function renderEvtPorAnimal() {
         ${totalPodios>0?`<span class="badge bg">${_iconTrofeu(12)} ${totalPodios} pódio(s)</span>`:''}
       </div>
       ${evts.length===0?'<div class="nut-empty">Nenhum evento registrado para este animal.</div>':
-        `<table style="font-size:11px"><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>
+        `<div style="overflow-x:auto"><table style="font-size:11px;min-width:420px"><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>
           ${evts.map(e=>{
             const p=e.participantes.find(x=>x.nome===a.nome)||{};
             const rc=p.resultado==='1'?'evt-1':p.resultado==='2'?'evt-2':p.resultado==='3'?'evt-3':p.resultado==='Classificado'?'evt-class':'evt-sem';
@@ -8682,7 +9199,7 @@ function renderEvtPorAnimal() {
               <td>${p.pontos||'—'}</td>
             </tr>`;
           }).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
     </div>`;
   }).join('');
 }
@@ -10593,15 +11110,115 @@ function _acCard(a, i, col) {
     + '</div>';
 }
 
-// Reprodutivo v4, Fase 8 (spec 3b): tela "Tinder" de acasalamento — duas colunas (fontes ×
-// éguas disponíveis no ciclo do Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem
-// remover) fonte sem saldo ou égua já com match feito nesse ciclo, em vez de escondê-las.
-// Jornada de Acasalamento — Fase 1 (docs/spec-acasalamento-jornada-tres-direcoes.md).
-// Direção C · O Conselho: escolhe a égua primeiro, depois o Mimba ranqueia as fontes do
-// ciclo. Substitui a antiga tela de duas colunas garanhão×égua (_acMatchSelecionarFonte/
-// _acMatchSelecionarEgua) — B (Confluência de Sangues) e A (Dossiê Selado) vêm nas fases
-// seguintes, encaixando entre "escolher uma linha do ranking" e "abrir o modal de confirmação".
+// Modo da jornada (Rápido × Inteligência) — decidido com o Pedro/Luciano 2026-08-22,
+// ajustado a pedido explícito do Luciano em seguida: Rápido NÃO reaproveita o Conselho —
+// é a tela clássica de duas colunas (garanhão/fonte × égua, clique-clique, sem ranking, sem
+// cerimônia), do jeito que já era antes da jornada existir, só com os componentes visuais
+// atuais. Inteligência é a jornada completa (Conselho → Confluência de Sangues → Dossiê
+// Selado), sempre com a cerimônia (não há mais atalho "sem animação" — quem quer rapidez
+// usa o modo Rápido). Preferência salva por PESSOA, igual o toggle de tema.
+const JA_MODO_KEY = 'mimba_modo_cruzamento';
+function _jaModoAtual() {
+  if (!window._jaModo) {
+    let salvo = null;
+    try { salvo = localStorage.getItem(JA_MODO_KEY); } catch (e) {}
+    window._jaModo = (salvo === 'rapido' || salvo === 'inteligencia') ? salvo : 'inteligencia';
+  }
+  return window._jaModo;
+}
+function jaSelecionarModo(modo) {
+  window._jaModo = modo;
+  try { localStorage.setItem(JA_MODO_KEY, modo); } catch (e) {}
+  renderAcasalamentosMatch();
+}
+
+// Despacha pro render do modo ativo — chamado por tudo que precisa re-renderizar a tela de
+// Cruzamentos (troca de modo, seleção de égua/fonte, voltar de uma fase, etc.).
 function renderAcasalamentosMatch() {
+  const modo = _jaModoAtual();
+  document.getElementById('ja-modo-btn-rapido').classList.toggle('on', modo === 'rapido');
+  document.getElementById('ja-modo-btn-inteligencia').classList.toggle('on', modo === 'inteligencia');
+  const hint = document.getElementById('ja-modo-hint');
+  if (hint) hint.textContent = modo === 'rapido'
+    ? 'Garanhão/fonte à esquerda, égua à direita — clique nos dois pra criar o acasalamento.'
+    : 'A jornada completa: Conselho, Confluência de Sangues e Dossiê Selado.';
+  document.getElementById('ac-match-rapido').style.display = modo === 'rapido' ? '' : 'none';
+  document.getElementById('ja-conselho').style.display = modo === 'inteligencia' ? '' : 'none';
+  if (modo === 'rapido') { _acMatchRapidoRender(); return; }
+  _jaConselhoRender();
+}
+
+// MODO RÁPIDO — tela clássica de duas colunas (fontes × éguas disponíveis no ciclo do
+// Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem remover) fonte sem saldo ou
+// égua já com match feito nesse ciclo, em vez de escondê-las. Ao escolher os dois lados, abre
+// o modal de confirmação de sempre (ciclo/receptora/observações + consanguinidade), igual
+// funcionava antes da jornada existir.
+function _acMatchRapidoRender() {
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  const cicloLabel = document.getElementById('ac-match-ciclo-label');
+  if (cicloLabel) cicloLabel.textContent = ciclo;
+
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const elF = document.getElementById('ac-match-fontes');
+  if (elF) {
+    elF.innerHTML = fontes.length ? fontes.map(f => {
+      const saldo = _saldoFonteCobertura(f);
+      const semSaldo = saldo.disponivel <= 0;
+      const key = _fonteKey(f);
+      const sel = window._acMatchFonteId && window._acMatchFonteId === key;
+      return `<div class="kanban-card" style="cursor:${semSaldo ? 'default' : 'pointer'};opacity:${semSaldo ? 0.45 : 1};${sel ? 'outline:2px solid var(--green-d)' : ''}" ${semSaldo ? '' : `onclick="_acMatchSelecionarFonte('${key}')"`}>
+        <div class="kanban-card-nome">${f.garanhao_nome}${sel ? ' <span class="badge bg" style="font-size:9px">Selecionado</span>' : ''}</div>
+        <div class="kanban-card-info">${FC_TIPO_LABEL[f.tipo] || f.tipo} · ${saldo.disponivel} de ${saldo.total} disponível${semSaldo ? ' <span class="badge br" style="font-size:9px">Sem saldo</span>' : ''}</div>
+      </div>`;
+    }).join('') : '<div class="kanban-empty">Nenhuma fonte neste ciclo. Cadastre em "Garanhões e Coberturas".</div>';
+  }
+
+  const eguas = animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a) && (a.estagio || '').toUpperCase() === 'CRIA');
+  const elE = document.getElementById('ac-match-eguas');
+  if (elE) {
+    elE.innerHTML = eguas.length ? eguas.map(a => {
+      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_acMatchSelecionarEgua('${a.db_id}')"`}>
+        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
+        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+      </div>`;
+    }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
+  }
+
+  _acMatchAtualizarResumoSel();
+}
+
+async function _acMatchSelecionarFonte(fonteKey) {
+  if (!fonteKey) { window._acMatchFonteId = null; renderAcasalamentosMatch(); return; }
+  const idx = fontesCobertura.findIndex(f => _fonteKey(f) === fonteKey);
+  const f = fontesCobertura[idx];
+  if (!f) return;
+  // Fonte recém-criada automaticamente (ex.: "Próprio" do ciclo) cujo POST ainda não
+  // terminou — tenta persistir agora antes de deixar selecionar, pra nunca fechar um
+  // acasalamento com uma fonte sem id real no banco.
+  if (!f.db_id) await _dbSalvarFonteCobertura(f, idx);
+  window._acMatchFonteId = _fonteKey(f);
+  renderAcasalamentosMatch();
+}
+
+function _acMatchSelecionarEgua(eguaDbId) {
+  if (!window._acMatchFonteId) return alert('Selecione primeiro um garanhão/fonte à esquerda.');
+  const ciclo = window._cicloPlanejador || _cicloAtualTexto();
+  abrirModalAcasalamentoMatch(window._acMatchFonteId, eguaDbId, ciclo);
+}
+
+function _acMatchAtualizarResumoSel() {
+  const el = document.getElementById('ac-match-resumo-sel');
+  if (!el) return;
+  const f = window._acMatchFonteId && fontesCobertura.find(x => _fonteKey(x) === window._acMatchFonteId);
+  if (!f) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = `<div class="alert alert-b" style="font-size:12px">Selecionado: <b>${f.garanhao_nome}</b> — clique agora numa égua à direita pra criar o acasalamento. <button class="btn btn-sm" style="margin-left:8px" onclick="_acMatchSelecionarFonte(null)">cancelar seleção</button></div>`;
+}
+
+// MODO INTELIGÊNCIA — Direção C · O Conselho: escolhe a égua primeiro, depois o Mimba
+// ranqueia as fontes do ciclo. B (Confluência de Sangues) e A (Dossiê Selado) seguem depois.
+function _jaConselhoRender() {
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
   document.querySelectorAll('#ja-ciclo-label, #ja-ranking-ciclo').forEach(el => el.textContent = ciclo);
 
@@ -10625,6 +11242,9 @@ function renderAcasalamentosMatch() {
   document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
   document.getElementById('ja-passo-dossie').style.display = fase === 4 ? '' : 'none';
   if (fase >= 0 && fase !== 3) _jaRenderAlvo();
+  // Seletor de modo só faz sentido antes de começar a análise — trocar de modo no meio do
+  // ranking/confluência/dossiê seria confuso (a essa altura já se está "dentro" da jornada).
+  document.getElementById('ja-modo-wrap').style.display = fase <= 0 ? '' : 'none';
 }
 
 function _jaEscolherEgua(eguaDbId) {
@@ -10753,10 +11373,10 @@ async function _jaAnalisar() {
   const ranking = analises.filter(x => x.consang.nivel !== 1).sort((a, b) => b.nota - a.nota);
   window._jaRanking = ranking;
 
+  clearTimeout(window._jaTimer);
   // Deixa a animação do baralho rodar pelo menos ~2.2s mesmo se o cálculo terminar
   // rápido (é síncrono/local, sem round-trip de rede) — senão o efeito nem aparece.
   const decorrido = Date.now() - window._jaAnaliseInicio;
-  clearTimeout(window._jaTimer);
   window._jaTimer = setTimeout(() => { window._jaFase = 2; renderAcasalamentosMatch(); _jaRenderRanking(); }, Math.max(300, 2200 - decorrido));
 }
 
@@ -11396,7 +12016,7 @@ function _prAdicionarEtapaLinha(etapa) {
   const wrap = document.getElementById('pr-etapas-list');
   const row = document.createElement('div');
   row.className = 'pr-etapa-row';
-  row.style.cssText = 'display:grid;grid-template-columns:90px 130px 1fr 90px 26px;gap:6px;align-items:center;margin-bottom:6px';
+  row.style.cssText = 'display:grid;grid-template-columns:90px 130px 1fr 90px 26px;gap:6px;align-items:center;margin-bottom:6px;min-width:460px';
   row.innerHTML = `
     <input type="number" class="pr-et-dia" placeholder="Dia" value="${etapa?.dia_relativo ?? ''}" style="width:100%">
     <select class="pr-et-tipo" style="width:100%">
@@ -12136,7 +12756,7 @@ function dashDrill(tipo, filtro){
     case 'sexo':{
       const fems=ativos.filter(a=>a.sexo==='Fêmea'), macs=ativos.filter(a=>a.sexo==='Macho');
       label=`♀♂ Fêmeas (${fems.length}) / Machos (${macs.length})`;
-      rows=`<div style="display:grid;grid-template-columns:1fr 1fr">
+      rows=`<div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr">
         <div style="border-right:0.5px solid var(--border)">
           ${_secHeader(`♀ Fêmeas (${fems.length})`, 'var(--pink-l)', 'var(--pink-d)')}
           ${fems.map(_drillRow).join('')}
@@ -12284,7 +12904,7 @@ function renderUsuarios() {
   // defesa em profundidade no client, não a proteção real.
   const isAdmViewer = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
 
-  el.innerHTML = `<table><thead><tr>
+  el.innerHTML = `<div style="overflow-x:auto"><table style="min-width:560px"><thead><tr>
     <th style="padding:10px 14px">Nome</th>
     <th>E-mail</th>
     <th>Perfil</th>
@@ -12315,7 +12935,7 @@ function renderUsuarios() {
       </td>`}
     </tr>`;
   }).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
 }
 
 function abrirModalUsuario(idx) {
@@ -13641,8 +14261,9 @@ function _mostrarStatusSync(msg, tipo) {
 // ══════════════════════════════════════════════════════════════════════════════
 // SYNC COMPLETO — carrega todos os dados do banco relacional
 // ══════════════════════════════════════════════════════════════════════════════
-async function _sincronizarAoLogin() {
-  _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
+async function _sincronizarAoLogin(opts) {
+  const viaPullRefresh = !!(opts && opts.viaPullRefresh);
+  _mostrarStatusSync(viaPullRefresh ? '🔄 Atualizando...' : '🔄 Carregando dados do banco...', 'amber');
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
   fontesCobertura.length = 0;
@@ -13952,6 +14573,55 @@ async function _sincronizarAoLogin() {
       });
     }
 
+    // 5f. Nutrição (refactor 2026-08-21 — spec docs/spec-nutricao-refactor.md): templates
+    // configuráveis + projeto por animal, ambos com itens 1:N. Mesmo padrão defensivo das
+    // demais tabelas — usa bootstrap se vier, senão busca via REST.
+    let dbNutTmpl = bootstrap.nutricao_templates;
+    if(!dbNutTmpl) {
+      try { dbNutTmpl = await _supa('GET','nutricao_templates',null,'?select=*,itens:nutricao_template_itens(*)&ativo=eq.true&order=nome'); }
+      catch(e) { dbNutTmpl = null; }
+    }
+    nutTemplates = (dbNutTmpl||[]).map(t => ({
+      db_id: t.id, nome: t.nome, estagio_vinculado: t.estagio_vinculado||'',
+      itens: (t.itens||[]).slice().sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(it => ({
+        db_id: it.id, tipo: it.tipo, produto: it.produto||'', marca: it.marca||'',
+        quantidade: it.quantidade||'', frequencia: it.frequencia||'', periodo: it.periodo||'', obs: it.obs||''
+      }))
+    }));
+
+    let dbNutProj = bootstrap.nutricao_projetos;
+    if(!dbNutProj) {
+      try { dbNutProj = await _supa('GET','nutricao_projetos',null,'?select=*,itens:nutricao_projeto_itens(*)&order=criado_em.desc'); }
+      catch(e) { dbNutProj = null; }
+    }
+    nutProj = {};
+    if(dbNutProj) {
+      // Um projeto por animal na tela: prioriza o "ativo"; se não houver, usa o mais recente
+      // (histórico) — dbNutProj já vem ordenado por criado_em desc.
+      const porAnimal = {};
+      dbNutProj.forEach(p => {
+        const idx = animais.findIndex(a => a.db_id === p.animal_id);
+        if(idx < 0) return;
+        if(!porAnimal[idx]) porAnimal[idx] = [];
+        porAnimal[idx].push(p);
+      });
+      Object.keys(porAnimal).forEach(idx => {
+        const lista = porAnimal[idx];
+        const escolhido = lista.find(p => p.status==='ativo') || lista[0];
+        nutProj[idx] = {
+          db_id: escolhido.id, dt_inicio: escolhido.dt_inicio||'', dt_fim: escolhido.dt_fim||'',
+          status_proj: escolhido.status||'ativo', obs_projeto: escolhido.obs_projeto||'',
+          template_origem_id: escolhido.template_origem_id||null,
+          med_inicial: escolhido.med_inicial||{ cernelha:'',torax:'',canela:'',peso:'',escore:'',data:'',obs:'' },
+          med_final:   escolhido.med_final||{ cernelha:'',torax:'',canela:'',peso:'',escore:'',data:'',obs:'' },
+          itens: (escolhido.itens||[]).slice().sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(it => ({
+            db_id: it.id, tipo: it.tipo, produto: it.produto||'', marca: it.marca||'',
+            quantidade: it.quantidade||'', frequencia: it.frequencia||'', periodo: it.periodo||'', obs: it.obs||''
+          }))
+        };
+      });
+    }
+
     // 6. Medidas
     if(dbMed) {
       Object.keys(medidas).forEach(k => delete medidas[k]);
@@ -14050,9 +14720,12 @@ async function _sincronizarAoLogin() {
       }
     }
 
-    // Registrar login no audit
-    await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
-      {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    // Registrar login no audit — só na sincronização de login de verdade; um
+    // pull-to-refresh não é um novo login e não pode poluir o audit log como se fosse.
+    if (!viaPullRefresh) {
+      await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
+        {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    }
 
     populaCiclos(); renderDashboard(); renderAnimais(); atualizarBadgePendencias();
     // Se o usuário já tiver navegado para outra página (ex.: Gestação, Medidas)
@@ -14061,6 +14734,7 @@ async function _sincronizarAoLogin() {
     // mostrando vazio/desatualizado até sair e voltar manualmente. Reaproveita
     // o dispatch de showPage (já sabe renderizar cada página) na página que
     // estiver ativa agora, sem precisar listar cada uma na mão.
+    if(!viaPullRefresh) window._syncInicialEmAndamento = false;
     const _paginaAtivaAoTerminarSync = document.querySelector('.page.active');
     if(_paginaAtivaAoTerminarSync) showPage(_paginaAtivaAoTerminarSync.id.replace('page-',''));
     _gerarPendenciasAnimaisAtivos();
@@ -14069,6 +14743,16 @@ async function _sincronizarAoLogin() {
   } catch(err) {
     console.error('Sync error:', err);
     _mostrarStatusSync('⚠️ Erro ao sincronizar — usando dados locais', 'amber');
+    if(!viaPullRefresh) window._syncInicialEmAndamento = false;
+    // Sem isso, quando a sincronização falha o Dashboard (e qualquer página
+    // que já tivesse entrado em skeleton) ficava com o esqueleto de
+    // "carregando" pra sempre — nunca chegava a hora de trocar pelo
+    // conteúdo real, mesmo que "real" aqui signifique 0/vazio. O usuário via
+    // isso como "trava infinita", quando na verdade a sincronização já tinha
+    // terminado (com erro) fazia tempo.
+    populaCiclos(); renderDashboard(); renderAnimais(); atualizarBadgePendencias();
+    const _paginaAtivaNoErro = document.querySelector('.page.active');
+    if(_paginaAtivaNoErro) showPage(_paginaAtivaNoErro.id.replace('page-',''));
   }
 }
 
@@ -14986,6 +15670,7 @@ async function renderPainelMimba() {
 function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
+  _ajustarStatusBarNativa();
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -15027,11 +15712,22 @@ function _entrarApp() {
   if(usrSub) usrSub.textContent = 'Controle de acesso ao sistema' + (nomeCab ? ` — ${nomeCab}` : '');
   _aplicarPermissoes();
   populaCiclos();
+  // Dashboard é sempre a página de entrada (já vem "active" no HTML estático,
+  // sem passar por showPage()) — título da navbar mobile precisa ser setado
+  // aqui manualmente, senão fica vazio até a primeira troca de página.
+  const navTituloInicial = document.getElementById('mobile-navbar-title');
+  if (navTituloInicial) navTituloInicial.textContent = document.querySelector('#page-dashboard .page-title')?.textContent || 'Dashboard';
   // Não renderizar o dashboard com dado real aqui: animais ainda está vazio (limpo
   // em _limparEstadoLocal) — mostra skeleton animado até _sincronizarAoLogin
   // terminar e chamar renderDashboard() de verdade, no final.
   _mostrarDashboardSkeleton();
   atualizarBadgePendencias();
+  // Cobre qualquer página que não seja o Dashboard com o overlay de
+  // carregamento (ver _atualizarOverlayCarregamento) até a sincronização
+  // inicial terminar — sucesso ou erro, ambos limpam a flag no fim de
+  // _sincronizarAoLogin.
+  window._syncInicialEmAndamento = true;
+  _atualizarOverlayCarregamento();
   _sincronizarAoLogin();
 }
 
@@ -15052,6 +15748,7 @@ function fazerLogout() {
   document.title = 'Mimba — Gestão Crioulos';
   _loadUsuarios();
   document.getElementById('login-screen').style.display='flex';
+  _ajustarStatusBarNativa();
   // restaurar a tela normal de login (pode estar escondida por causa da tela de bloqueio)
   _mostrarLoginShell(true);
   const bloq = document.getElementById('login-bloqueado'); if(bloq) bloq.style.display='none';
@@ -15463,7 +16160,7 @@ if(!_checkRecovery()){
 }
 
 </script>
-<div id="sync-status" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+<div id="sync-status" style="display:none;position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom));right:calc(1.25rem + env(safe-area-inset-right));padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
 
 <div class="modal-bg" id="modal-nao-confirmar">
   <div class="modal" style="max-width:420px">
