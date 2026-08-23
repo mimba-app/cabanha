@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mesma paleta do app (index.html: campo/campo-deep/ouro/areia,
+         tema claro) — usada só pro fundo nativo por trás da safe-area
+         (safe-area plugin adiciona padding real fora do WebView em
+         telas/WebViews mais antigos; sem isso, esse respiro aparecia
+         preto por padrão em vez de combinar com a marca). -->
+    <color name="colorPrimary">#4F6B2E</color>
+    <color name="colorPrimaryDark">#33461C</color>
+    <color name="colorAccent">#B8860B</color>
+    <color name="windowBackground">#F4EFE6</color>
+</resources>
