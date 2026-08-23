@@ -710,7 +710,12 @@
   .verm-grupo-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
   .verm-grupo-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .verm-grupo-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
-  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:999;display:flex;align-items:center;justify-content:center; }
+  /* z-index acima do #status-bar-mask (99999): antes do login, não existe
+     nenhuma "página" nem barra de navegação de verdade — mas o mask/nav-bar
+     mobile é incondicional e ficava pintado por cima da tela de login,
+     cortando a headline do herói com um "‹ Menu" que não faz sentido nesse
+     momento (não tem menu nem pra onde voltar ainda). */
+  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:100000;display:flex;align-items:center;justify-content:center; }
   .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
@@ -759,7 +764,7 @@
   .login-form-wordmark { font-family:var(--serif); font-size:22px; font-weight:900; color:var(--chrome-text); margin-bottom:1.75rem; }
   @media (max-width:860px){
     .login-shell { flex-direction:column; }
-    .login-hero { flex:0 0 auto; max-width:100%; padding:1.75rem 1.5rem; }
+    .login-hero { flex:0 0 auto; max-width:100%; padding:calc(1.75rem + env(safe-area-inset-top)) 1.5rem 1.75rem; }
     .login-hero-headline { font-size:clamp(26px,7vw,36px); }
     .login-hero-desc { display:none; }
     .login-hero-stats { display:none; }
