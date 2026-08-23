@@ -755,6 +755,10 @@
      momento (não tem menu nem pra onde voltar ainda). */
   .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:100000;display:flex;align-items:center;justify-content:center; }
   .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
+  /* Restaurando sessão: só a logo + mensagem direto no fundo, sem "janelinha"
+     por cima — é um estado transitório de carregamento, não um formulário,
+     então não faz sentido ter cara de card. */
+  #login-restaurando { background:transparent; border:none; box-shadow:none; padding:0; }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
