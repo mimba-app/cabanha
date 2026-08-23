@@ -40,14 +40,26 @@ Ou via linha de comando (`xcodebuild`), buildando o scheme `App` do
 (mimba.com.br). Isso fica praticamente permanente depois de publicado nas lojas; não trocar
 sem necessidade real.
 
+## Ícone e splash
+
+Gerados a partir de `resources/icon.png` (1024×1024) e `resources/splash.png` (2732×2732) —
+o monograma "M." da marca (branco, ponto dourado `#E8C567`, fundo gradiente verde
+`#4F6B2E → #33461C`, mesma paleta/tipografia — Manrope ExtraBold — do resto do app) via
+[`@capacitor/assets`](https://github.com/ionic-team/capacitor-assets):
+
+```bash
+cd mobile
+npx @capacitor/assets generate --ios --iconBackgroundColor '#4F6B2E' --iconBackgroundColorDark '#33461C' --splashBackgroundColor '#4F6B2E' --splashBackgroundColorDark '#33461C'
+```
+
+Rodar de novo sempre que `resources/icon.png`/`resources/splash.png` mudarem — sobrescreve
+`ios/App/App/Assets.xcassets/AppIcon.appiconset` e `Splash.imageset` direto.
+
 ## Fora de escopo desta fase (ver ADR 0005)
 
 - **Android** — ainda não adicionado (não tem Android SDK configurado neste ambiente). Pra
   adicionar depois: `npx cap add android` dentro de `mobile/`, com Android Studio + SDK
   instalados.
-- **Ícone/splash reais** — hoje usa os placeholders padrão do Capacitor. Gerar a partir do
-  monograma "M." (verde + ponto dourado — ver o Manual de Identidade Visual) com
-  `@capacitor/assets` a partir de um PNG-fonte 1024×1024.
 - **Offline real, push nativo, deep link do fluxo de recuperação de senha** — ficam pra Fase 2
   (detecção simples de conectividade) e Fase 3 (app nativo de verdade) do ADR 0005.
 - **Publicação nas lojas** (App Store Connect, certificados, provisioning) — passo seguinte,
