@@ -9,11 +9,11 @@
     "sync:android": "npm run sync && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor-community/safe-area": "^8.0.1",
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
-    "@capacitor/ios": "^8.5.0",
-    "@capacitor/status-bar": "^8.0.3"
+    "@capacitor/ios": "^8.5.0"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5"

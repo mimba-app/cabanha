@@ -7645,39 +7645,44 @@ function toggleSidebarMobile(force){
   }, {passive:true});
 })();
 
-// ── Status bar nativa (Android) ─────────────────────────────────────────────
-// No iOS a barra de status não pinta fundo nenhum — é só uma faixa
-// translúcida por cima do WebView, e o #status-bar-mask em CSS (mesmo
-// arquivo, sem diferença nenhuma entre plataformas) já pinta atrás dela. No
-// Android, por padrão, o Capacitor desenha a barra de status com um scrim
-// cinza translúcido próprio por cima do conteúdo — brigando visualmente com
-// a nossa própria máscara. Deixando a barra do Android totalmente
-// transparente e sobrepondo o WebView (mesmo comportamento edge-to-edge do
-// iOS), o #status-bar-mask já existente vira a única fonte de verdade da cor
-// ali em cima nas duas plataformas, sem duplicar estilo nenhum. Roda só
-// dentro do app nativo (window.Capacitor só existe lá) — no navegador normal
-// (mimba.com.br) esse bloco inteiro não faz nada.
-// Cor dos ícones da barra (relógio/wifi/bateria) tem que combinar com o que
-// está pintado embaixo dela pelo #status-bar-mask — e isso NÃO é só "tema
-// claro ou escuro do sistema": o herói da tela de login é verde-escuro fixo
-// (não muda com prefers-color-scheme), enquanto o resto do app (sidebar,
-// conteúdo) usa --bg/--chrome-bg, que aí sim inverte com o tema. 'DEFAULT'
-// (segue só o tema do sistema) deixava os ícones escuros — quase invisíveis
-// — por cima do verde escuro do login quando o sistema estava no tema claro.
-// Ajusta pelo que está realmente visível: fundo escuro (login) → ícones
-// claros; senão, segue o tema do próprio app.
+// ── Status bar / safe area nativa (Android) ─────────────────────────────────
+// No iOS o WebView já reporta env(safe-area-inset-*) certinho e a barra de
+// status é só uma faixa translúcida — nosso #status-bar-mask (mesmo CSS nas
+// duas plataformas) já pinta atrás dela. No Android, o WebView do sistema
+// (Chromium) historicamente reporta os safe-area-inset-* como 0 mesmo em
+// modo edge-to-edge — nosso conteúdo ficava colado debaixo da câmera/sinal/
+// bateria, sem respiro nenhum, porque o "respiro" que o CSS calcula é 0.
+// @capacitor-community/safe-area resolve isso nativamente (detecta a versão
+// do WebView e aplica padding real quando o env() não funciona) — sem
+// precisar reescrever nenhum dos vários lugares que já usam
+// env(safe-area-inset-top/bottom) no CSS. Roda só dentro do app nativo
+// (window.Capacitor só existe lá) — no navegador normal (mimba.com.br) esse
+// bloco inteiro não faz nada.
+// Cor dos ícones da barra (relógio/wifi/bateria) e do respiro atrás dela
+// tem que combinar com o que está pintado embaixo pelo #status-bar-mask —
+// e isso NÃO é só "tema claro ou escuro do sistema": o herói da tela de
+// login é verde-escuro fixo (não muda com prefers-color-scheme), enquanto
+// o resto do app (sidebar, conteúdo) usa --bg/--chrome-bg (= --areia), que
+// aí sim inverte com o tema. Em WebViews "quebrados" (<Chromium 140), o
+// @capacitor-community/safe-area troca o respiro por padding nativo real —
+// só que a versão do plugin usada aqui pinta esse padding sempre em preto
+// ou branco puro (não lê tema nenhum), daí o plugin nativo próprio
+// br.com.mimba.app.MimbaBarsPlugin. Ele só consegue pintar uma cor só pra
+// tela toda (topo e rodapé) — não dá pra pintar cada barra de uma cor
+// independente com targetSdk 36 (edge-to-edge obrigatório desde a API 35
+// faz Window.setStatusBarColor/setNavigationBarColor virarem no-op) — por
+// isso prioriza o topo (é onde fica câmera/sinal/bateria, o bug original).
 function _ajustarStatusBarNativa(){
-  const sb = window.Capacitor?.Plugins?.StatusBar;
-  if (!sb) return;
+  const mb = window.Capacitor?.Plugins?.MimbaBars;
+  if (!mb) return;
   const loginVisivel = document.getElementById('login-screen')?.style.display !== 'none';
-  const escuro = loginVisivel || window.matchMedia('(prefers-color-scheme: dark)').matches;
-  sb.setStyle({ style: escuro ? 'DARK' : 'LIGHT' }).catch(()=>{});
+  const modoEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const escuro = loginVisivel || modoEscuro;
+  const cor = loginVisivel ? '#33461C' : (modoEscuro ? '#1A1A18' : '#F4EFE6');
+  mb.apply({ cor, escuro }).catch(()=>{});
 }
 (function(){
-  const sb = window.Capacitor?.Plugins?.StatusBar;
-  if (!sb) return;
-  sb.setOverlaysWebView({ overlay: true }).catch(()=>{});
-  sb.setBackgroundColor({ color: '#00000000' }).catch(()=>{});
+  if (!window.Capacitor?.Plugins?.MimbaBars) return;
   _ajustarStatusBarNativa();
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', _ajustarStatusBarNativa);
 })();

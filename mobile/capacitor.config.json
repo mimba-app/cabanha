@@ -1,5 +1,10 @@
 {
   "appId": "br.com.mimba.app",
   "appName": "Mimba",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "disable"
+    }
+  }
 }
