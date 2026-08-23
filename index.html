@@ -503,6 +503,10 @@
   @media (max-width:768px) {
     .ficha-header-acoes { margin-left:0; width:100%; padding-top:0; }
     .ficha-avatar { width:76px; height:76px; font-size:28px; }
+    /* No mobile o "‹" da barra superior já volta pra Animais (ver
+       mobileBackTap) — o botão "← Voltar" embutido aqui, ao lado de
+       Editar/Excluir, virou um segundo "voltar" redundante e espremido. */
+    .ficha-voltar-inline { display:none; }
   }
   /* HISTÓRICO SAÚDE */
   .hist-row { display:grid; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
@@ -571,9 +575,22 @@
        próprio HTML, o que sempre vence a regra externa — sem isso os cards de
        métrica ficavam espremidos em 3-4 colunas na largura de mobile. */
     .metrics { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px; }
-    .metric { padding:14px 12px; }
+    .metric { padding:14px 12px; text-align:center; }
     .metric-value { font-size:21px; }
     .two-col { grid-template-columns:1fr; }
+    /* Modal ignorava a safe-area e encostava embaixo do Dynamic Island/notch —
+       a caixa ficava alta o bastante (max-height:90vh) pra sempre tocar o topo
+       da tela, mesmo com align-items:center. O respiro de cima usa a mesma
+       altura da barra de navegação fixa (status-bar-mask, 46px + safe-area)
+       — não só a safe-area sozinha — senão o topo do modal ficava escondido
+       atrás da barra em vez de começar limpo logo abaixo dela. */
+    .modal-bg { padding:calc(env(safe-area-inset-top) + 46px + 12px) 14px calc(env(safe-area-inset-bottom) + 14px); box-sizing:border-box; }
+    /* !important: quase todo modal fixa width/max-height no próprio style=""
+       (ex.: style="width:820px;max-height:92vh"), o que sempre vence a regra
+       externa — sem isso a caixa continuava alta o bastante pra estourar a
+       área segura, voltando a encostar no notch mesmo com o padding do
+       .modal-bg acima. */
+    .modal { max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 72px) !important; width:100% !important; }
     /* Formulários em 2 colunas (usados em quase todo modal de cadastro/edição)
        viram 1 coluna cheia no mobile — 2 campos espremidos lado a lado são
        difíceis de tocar e ler numa tela de ~370px úteis. */
@@ -958,6 +975,7 @@
 
   /* palco — direção B (Confluência de Sangues) */
   .jornada-ac .ja-palco{position:relative;background:var(--ja-pergaminho);border-radius:22px;border:var(--card-border);box-shadow:var(--ja-sh-md);padding:22px 24px;overflow:hidden;}
+  .ja-arvore-dica{display:none;}
   .jornada-ac .ja-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:10px;}
   .jornada-ac .ja-quem-b{max-width:260px;}
   .jornada-ac .ja-quem-papel{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);}
@@ -1072,6 +1090,24 @@
 
     .jornada-ac .ja-dossie-topo{flex-direction:column;}
     .jornada-ac .ja-grade{grid-template-columns:1fr;}
+
+    /* Árvore de linhagens: no desktop o viewBox 1140×300 escala pra caber na
+       largura do palco e ainda dá pra ler; espremido em ~340px de mobile, os
+       nomes dos ancestrais viravam ilegíveis (font-size na casa de 2-3px reais).
+       Em vez de continuar encolhendo tudo pra caber, deixa a árvore no tamanho
+       nativo (a mesma escala do desktop) e vira um retângulo que arrasta —
+       touch-action:pinch-zoom permite beliscar pra ampliar só essa área, apesar
+       do app inteiro estar com o zoom da página travado (user-scalable=no). */
+    .ja-arvore-scroll {
+      overflow:auto; -webkit-overflow-scrolling:touch;
+      touch-action:pan-x pan-y pinch-zoom;
+      border-radius:14px; background:var(--ja-pergaminho2);
+    }
+    .ja-arvore-scroll #ja-svg-arvore { width:1140px !important; max-width:none !important; flex-shrink:0; }
+    .ja-arvore-dica {
+      display:block; text-align:center; font-family:var(--ja-mono); font-size:10px;
+      color:var(--ja-ink-50); margin-top:6px; letter-spacing:.02em;
+    }
   }
 </style>
 </head>
@@ -1237,9 +1273,9 @@
 </div>
 
 <div id="status-bar-mask">
-  <button id="mobile-back-btn" onclick="toggleSidebarMobile(true)" aria-label="Voltar ao menu" title="Menu">
+  <button id="mobile-back-btn" onclick="mobileBackTap()" aria-label="Voltar" title="Voltar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    Menu
+    <span id="mobile-back-label">Menu</span>
   </button>
   <span id="mobile-navbar-title"></span>
 </div>
@@ -1895,7 +1931,10 @@
             </div>
           </div>
 
-          <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+          <div id="ja-arvore-scroll" class="ja-arvore-scroll">
+            <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+          </div>
+          <div class="ja-arvore-dica">↔ arraste e belisque (pinch) pra ampliar</div>
 
           <div id="ja-b-passos" class="ja-passos">
             <div class="ja-passo ja-p1">abrindo as gerações de cada lado</div>
@@ -6042,7 +6081,7 @@ function _fichaAcoesHtml(editando) {
   const ed = editando ? 'none' : '';
   const sv = editando ? '' : 'none';
   return `<div class="ficha-header-acoes">
-    <button class="btn btn-sm" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
+    <button class="btn btn-sm ficha-voltar-inline" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
     <button class="btn btn-sm" id="det-btn-editar" style="display:${ed}" onclick="alternarEdicaoAnimal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar</button>
     <button class="btn btn-sm btn-primary" id="det-btn-salvar" onclick="salvarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Salvar</button>
     <button class="btn btn-sm" id="det-btn-cancelar" onclick="cancelarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</button>
@@ -6557,7 +6596,8 @@ function renderReprodutivo(){
   document.getElementById('ciclos-content').innerHTML=Object.entries(ciclos).sort().map(([c,lista])=>`
     <div class="card">
       <div class="card-title">Ciclo ${c} · <span style="color:var(--text2);font-weight:400">${lista.length} animal${lista.length>1?'is':''}</span></div>
-      <table style="table-layout:fixed;width:100%">
+      <div style="overflow-x:auto">
+      <table style="table-layout:fixed;width:100%;min-width:640px">
       <colgroup><col style="width:20%"><col style="width:12%"><col style="width:9%"><col style="width:13%"><col style="width:15%"><col style="width:15%"><col style="width:16%"></colgroup>
       <thead><tr><th>Nome</th><th>Nascimento</th><th>Sexo</th><th>Pelagem</th><th>Mãe</th><th>Pai</th><th>Situação</th></tr></thead>
       <tbody>${lista.map(a=>`<tr>
@@ -6569,6 +6609,7 @@ function renderReprodutivo(){
         <td style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${a.pai||''}">${a.pai||'—'}</td>
         <td>${sitb(a.situacao)}</td>
       </tr>`).join('')}</tbody></table>
+      </div>
     </div>`).join('');
 
   const maes={};animais.filter(a=>a.mae).forEach(a=>{if(!maes[a.mae])maes[a.mae]=[];maes[a.mae].push(a);});
@@ -7429,7 +7470,22 @@ function showPage(id){
     const tituloEl = document.querySelector('#page-'+id+' .page-title');
     navTitulo.textContent = tituloEl ? tituloEl.textContent : '';
   }
+  // Rótulo do botão "‹" da barra: em qualquer página do menu principal ele
+  // abre o menu tela cheia ("Menu"); na ficha do animal — que não tem item
+  // próprio no menu, só se chega nela a partir da lista — ele volta pra
+  // "Animais" em vez de abrir o menu, igual o padrão nativo de navegação em
+  // pilha (o "voltar" leva pra tela anterior, não pra raiz).
+  const backLabel = document.getElementById('mobile-back-label');
+  if (backLabel) backLabel.textContent = id === 'detalhe-animal' ? 'Animais' : 'Menu';
   toggleSidebarMobile(false); // navegar sempre volta pro conteúdo (fecha o menu) no mobile
+}
+
+// Toque no "‹" da barra mobile: normalmente abre o menu tela cheia, mas na
+// ficha do animal volta direto pra lista de Animais (ver comentário em showPage).
+function mobileBackTap(){
+  const ativa = document.querySelector('.page.active');
+  if (ativa && ativa.id === 'page-detalhe-animal') { showPage('animais'); return; }
+  toggleSidebarMobile(true);
 }
 
 // ── Menu mobile (tela cheia, estilo "Pastas" do Notes — não é mais gaveta
@@ -9036,7 +9092,7 @@ function renderEvtPorAnimal() {
         ${totalPodios>0?`<span class="badge bg">${_iconTrofeu(12)} ${totalPodios} pódio(s)</span>`:''}
       </div>
       ${evts.length===0?'<div class="nut-empty">Nenhum evento registrado para este animal.</div>':
-        `<table style="font-size:11px"><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>
+        `<div style="overflow-x:auto"><table style="font-size:11px;min-width:420px"><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>
           ${evts.map(e=>{
             const p=e.participantes.find(x=>x.nome===a.nome)||{};
             const rc=p.resultado==='1'?'evt-1':p.resultado==='2'?'evt-2':p.resultado==='3'?'evt-3':p.resultado==='Classificado'?'evt-class':'evt-sem';
@@ -9048,7 +9104,7 @@ function renderEvtPorAnimal() {
               <td>${p.pontos||'—'}</td>
             </tr>`;
           }).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
     </div>`;
   }).join('');
 }
@@ -12753,7 +12809,7 @@ function renderUsuarios() {
   // defesa em profundidade no client, não a proteção real.
   const isAdmViewer = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
 
-  el.innerHTML = `<table><thead><tr>
+  el.innerHTML = `<div style="overflow-x:auto"><table style="min-width:560px"><thead><tr>
     <th style="padding:10px 14px">Nome</th>
     <th>E-mail</th>
     <th>Perfil</th>
@@ -12784,7 +12840,7 @@ function renderUsuarios() {
       </td>`}
     </tr>`;
   }).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
 }
 
 function abrirModalUsuario(idx) {
