@@ -330,6 +330,32 @@
   .metric-label { font-size:11.5px; color:var(--text2); margin-bottom:8px; }
   .metric-value { font-size:26px; font-weight:500; color:var(--text); font-family:var(--mono); line-height:1.1; }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+  /* ── Hero de seção — mesmo tratamento tipográfico da landing nova (eyebrow
+     mono + título Manrope grande + texto corrido, não mono) pra momentos que
+     merecem mais impacto que um .page-sub comum, ex. a aba Confirmação ABCCC. ── */
+  .sec-hero { margin:-4px 0 20px; max-width:640px; }
+  .sec-hero-eyebrow { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--terracota); }
+  .sec-hero-title { font-family:var(--serif); font-weight:800; font-size:clamp(23px,2.6vw,30px); line-height:1.1; letter-spacing:-0.02em; color:var(--text); margin:9px 0 10px; text-wrap:balance; }
+  .sec-hero-sub { font-size:14.5px; line-height:1.62; color:var(--text2); }
+  .conf-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:22px 0 24px; }
+  .conf-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-sm); padding:16px 18px; }
+  .conf-card .selo-registro { margin-bottom:10px; }
+  .conf-card h3 { font-family:var(--serif); font-weight:700; font-size:15px; margin:0 0 2px; color:var(--text); }
+  .conf-card p { font-size:11px; color:var(--text3); margin:0; }
+  /* ── Card do animal na grade de Plantel — menos amontoado de badges, mais
+     hierarquia: nome grande (Manrope), uma linha de legenda muda em vez da
+     mini-tabela de campos, tags só quando há algo fora do padrão pra dizer. ── */
+  .an-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-sm); padding:18px; cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; display:flex; flex-direction:column; gap:11px; }
+  .an-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .an-card-top { display:flex; align-items:center; gap:11px; }
+  .an-card-id { min-width:0; flex:1; }
+  .an-card-name { font-family:var(--serif); font-weight:800; font-size:15px; line-height:1.2; letter-spacing:-0.01em; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .an-card-meta { font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--text3); text-transform:uppercase; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .an-card-tags { display:flex; gap:5px; flex-wrap:wrap; }
+  .an-card-tags:empty { display:none; }
+  .an-card-foot { display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text2); flex-wrap:wrap; }
+  .an-card-actions { display:flex; gap:6px; }
+  .an-card-actions .btn:first-child { flex:1; }
   /* Skeleton de carregamento — shimmer animado, usado no dashboard enquanto os
      dados reais não chegam (evita o "flash" de zero/traço parado). */
   @keyframes skel-shimmer { 0%{ background-position:-200px 0; } 100%{ background-position:calc(200px + 100%) 0; } }
@@ -680,6 +706,7 @@
     .metrics { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px; }
     .metric { padding:14px 12px; text-align:center; }
     .metric-value { font-size:21px; }
+    .conf-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .two-col { grid-template-columns:1fr; }
     /* Modal ignorava a safe-area e encostava embaixo do Dynamic Island/notch —
        a caixa ficava alta o bastante (max-height:90vh) pra sempre tocar o topo
@@ -1653,7 +1680,7 @@
 
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
-  <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
+  <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
   <div class="card" id="animais-tabela-wrap" style="padding:0;overflow:hidden;overflow-x:auto;display:none">
     <table>
       <thead><tr>
@@ -1665,12 +1692,16 @@
   </div>
   </div>
   <div id="animais-confirmacao" style="display:none">
-    <div class="page-sub" style="margin:-4px 0 14px">Quem está chegando na hora de confirmar — acompanhe medidas, marque pra confirmação e registre a marcação de RP sem precisar abrir animal por animal.</div>
-    <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px">
-      <div class="metric"><div class="metric-label">A confirmar</div><div class="metric-value" id="conf-m-aguardando">0</div></div>
-      <div class="metric"><div class="metric-label">Em preparação</div><div class="metric-value" id="conf-m-preparo">0</div><div style="font-size:10px;color:var(--red-d)" id="conf-m-preparo-risco"></div></div>
-      <div class="metric"><div class="metric-label">Aptos</div><div class="metric-value" style="color:var(--green-d)" id="conf-m-aptos">0</div></div>
-      <div class="metric"><div class="metric-label">Confirmados</div><div class="metric-value" id="conf-m-confirmados">0</div></div>
+    <div class="sec-hero">
+      <div class="sec-hero-eyebrow">Registro da raça</div>
+      <div class="sec-hero-title">Quem está chegando na hora de confirmar?</div>
+      <div class="sec-hero-sub">Acompanhe os animais que precisam avançar no processo de confirmação junto à ABCCC e enxergue antecipadamente o que merece atenção.</div>
+    </div>
+    <div class="conf-cards">
+      <div class="conf-card"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aguardando">0</span></div></div><h3>A confirmar</h3><p>animais acompanhados</p></div>
+      <div class="conf-card"><div class="selo-registro lg ok" id="conf-m-preparo-selo"><div class="selo-circ"><span class="glyph" id="conf-m-preparo">0</span></div></div><h3>Em preparação</h3><p id="conf-m-preparo-legenda">próximos da etapa</p></div>
+      <div class="conf-card"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aptos">0</span></div></div><h3>Aptos</h3><p>sem pendências visíveis</p></div>
+      <div class="conf-card"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-confirmados">0</span></div></div><h3>Confirmados</h3><p>histórico preservado</p></div>
     </div>
     <div id="animais-confirmacao-content"></div>
   </div>
@@ -4458,10 +4489,11 @@ function _animaisSetView(view) {
   renderAnimais();
 }
 
-function _animalAvatarHtml(a) {
-  if (a.foto_url) return `<img src="${a.foto_url}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">`;
+function _animalAvatarHtml(a, size) {
+  size = size || 44;
+  if (a.foto_url) return `<img src="${a.foto_url}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0">`;
   const inicial = (a.nome||'?').trim().charAt(0).toUpperCase();
-  return `<div style="width:44px;height:44px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${inicial}</div>`;
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.36)}px;font-family:var(--serif);font-weight:800;flex-shrink:0">${inicial}</div>`;
 }
 
 function renderAnimais(){
@@ -4499,30 +4531,30 @@ function renderAnimais(){
 
   document.getElementById('animais-grade-wrap').innerHTML = lista.map(a => {
     const i = animais.indexOf(a);
-    return `<div class="card" style="padding:16px 18px">
-      <div style="display:flex;gap:10px;align-items:center">
-        ${_animalAvatarHtml(a)}
-        <div style="min-width:0;flex:1">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.nome}">${a.nome}</div>
-          <div style="font-size:11px;color:var(--text2)">${sexm(a.sexo)} · ${sbbL(a.sbb)||'sem SBB'}</div>
+    const legenda = [a.sexo||null, a.pelagem||null, a.nasc?fd(a.nasc):null].filter(Boolean).join(' · ');
+    const tags = [
+      a.situacao && a.situacao !== 'NA CABANHA' ? sitb(a.situacao) : '',
+      a.estagio ? estb(a.estagio) : '',
+      a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : '',
+      a.castrado ? '<span class="etq-brinco neutro" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : '',
+      a.receptora_externa ? '<span class="etq-brinco neutro" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : '',
+    ].join('');
+    return `<div class="an-card" onclick="verDetalhe(${i})">
+      <div class="an-card-top">
+        ${_animalAvatarHtml(a, 48)}
+        <div class="an-card-id">
+          <div class="an-card-name" title="${a.nome}">${a.nome}</div>
+          <div class="an-card-meta">${legenda||'—'}</div>
         </div>
+        ${a.confirmado ? '<div class="selo-registro ok" title="Confirmado — técnico validou Crioulo/pedigree/medidas"><div class="selo-circ"><span class="glyph">✓</span></div></div>' : ''}
       </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">
-        ${sitb(a.situacao)}
-        ${a.estagio ? estb(a.estagio) : ''}
-        ${a.ciclo ? `<span class="etq-brinco atencao">${a.ciclo}</span>` : ''}
-        ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
-        ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
-        ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
-        ${a.receptora_externa ? '<span class="etq-brinco neutro" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
+      <div class="an-card-tags">${tags}</div>
+      <div class="an-card-foot">
+        ${a.rp?`<span class="etq-brinco terracota">${a.rp}</span>`:''}
+        ${a.sbb?sbbL(a.sbb):'<span style="color:var(--text3)">sem SBB</span>'}
       </div>
-      <div class="g-cols-2" style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
-        <div>Pelagem: ${a.pelagem||'—'}</div>
-        <div>Nasc.: ${fd(a.nasc)||'—'}</div>
-        <div style="grid-column:1/-1">RP: ${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'}</div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:10px">
-        <button class="btn btn-sm" style="flex:1" onclick="verDetalhe(${i})">Ver</button>
+      <div class="an-card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-sm" onclick="verDetalhe(${i})">Ver ficha</button>
         <button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button>
         <button class="btn btn-sm" title="Excluir" style="color:var(--red-d)" onclick="excluirAnimal(${i})">${_iconLixeira(14)}</button>
       </div>
@@ -10784,8 +10816,10 @@ function renderConfirmacaoAbccc() {
   set('conf-m-preparo', porStatus.em_desenvolvimento.length + porStatus.em_risco.length);
   set('conf-m-aptos', porStatus.apto_confirmacao.length);
   set('conf-m-confirmados', confirmados);
-  const riscoEl = document.getElementById('conf-m-preparo-risco');
-  if (riscoEl) riscoEl.textContent = porStatus.em_risco.length ? `⚠ ${porStatus.em_risco.length} em risco` : '';
+  const selo = document.getElementById('conf-m-preparo-selo');
+  const legenda = document.getElementById('conf-m-preparo-legenda');
+  if (selo) selo.className = 'selo-registro lg ' + (porStatus.em_risco.length ? 'warn' : 'ok');
+  if (legenda) legenda.textContent = porStatus.em_risco.length ? `⚠ ${porStatus.em_risco.length} em risco de não atingir a medida` : 'próximos da etapa';
 
   const ordem = [...porStatus.aguardando_confirmacao, ...porStatus.apto_confirmacao, ...porStatus.em_risco, ...porStatus.em_desenvolvimento];
   if (!ordem.length) {
