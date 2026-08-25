@@ -184,9 +184,15 @@
     padding-top: calc(1.25rem + env(safe-area-inset-top));
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
     padding-left: calc(1rem + env(safe-area-inset-left));
-    overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
+    display: flex; flex-direction: column; z-index: 10;
     color: var(--chrome-text);
   }
+  /* Só esta parte rola (logo + abas) — o rodapé (conta/sair) fica sempre visível,
+     nunca escondido atrás do fim do scroll (bug visto no mobile: a lista de abas
+     é mais alta que a tela, e o cartão de conta/botão Sair ficavam ocultos até
+     rolar tudo pra baixo). */
+  .sidebar-nav-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-footer { flex-shrink: 0; }
   .logo { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--chrome-border); }
   .logo img { max-width:100%; max-height:72px; mix-blend-mode:screen; filter:brightness(1.1); }
   .logo-monogram {
@@ -258,10 +264,56 @@
   :root[data-theme="dark"] .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
+  .pref-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:18px 20px; margin-bottom:14px; box-shadow:var(--sh-sm); }
+  .pref-card-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .pref-card-title-wrap { display:flex; align-items:center; gap:10px; }
+  .pref-icon { width:34px; height:34px; border-radius:10px; background:var(--bg3); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--text2); }
+  .pref-title { font-size:14px; font-weight:700; color:var(--text); }
+  .pref-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+  .pref-body { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); transition:opacity .15s; }
+  .pref-body.disabled { opacity:.4; pointer-events:none; }
+  .pref-row-inline { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .pref-row-inline label { font-size:11px; font-weight:600; color:var(--text2); white-space:nowrap; }
+  .pref-num-input { width:70px !important; text-align:center; font-family:var(--font-mono); }
+  .pref-label-estagios { font-size:11px; font-weight:600; color:var(--text2); margin-bottom:8px; }
+
+  .section-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:20px 22px; margin-bottom:14px; box-shadow:var(--sh-sm); }
+  .section-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .section-hint { font-size:11px; color:var(--text3); margin-bottom:16px; }
+  .char-count { font-size:10px; color:var(--text3); text-align:right; margin-top:-2px; }
+  .avatar-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .avatar-circle { width:72px; height:72px; border-radius:50%; background:var(--bg3); display:flex; align-items:center; justify-content:center; color:var(--text3); flex-shrink:0; border:1px solid var(--border); overflow:hidden; }
+  .avatar-circle img { width:100%; height:100%; object-fit:cover; }
+  .btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text2); padding:8px 14px; border-radius:var(--radius); font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .color-swatch-row { display:flex; align-items:center; gap:10px; }
+  .color-swatch-preview { width:38px; height:34px; border-radius:8px; border:1px solid var(--border2); flex-shrink:0; }
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .toggle-row-hint { font-size:10.5px; color:var(--text3); margin-top:2px; }
+
+  .chip-grid, .chip-select-grid { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:99px; border:1px solid var(--border2); background:var(--bg3); color:var(--text2); cursor:pointer; transition:all .12s; user-select:none; }
+  .chip.on { background:var(--green-l); border-color:var(--green-d); color:var(--green-d); }
+  .chip .chip-check { display:none; font-size:10px; }
+  .chip.on .chip-check { display:inline; }
+
   .pref-estagios-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
   .pref-estagio-chip { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:var(--radius); border:0.5px solid var(--border); cursor:pointer; }
   .pref-estagio-chip input { width:auto; }
-  #conta-dropdown { position:absolute; z-index:400; min-width:220px; background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:none; }
+  /* Abre pra CIMA e alinhado à ESQUERDA do cartão de conta — sem isso (sem
+     top/left/right explícitos) o navegador posiciona o dropdown onde ele cairia
+     no fluxo normal, ao lado do card, saindo tanto da sidebar quanto da tela
+     (scroll lateral E vertical, em desktop e mobile). Ancorar pela direita
+     também não resolve: a sidebar tem só 230px no desktop, então um dropdown de
+     240px alinhado à direita do card vaza pela ESQUERDA da tela. Alinhado à
+     esquerda do card (que já começa perto da borda esquerda da sidebar) cabe
+     nas duas larguras. Altura/largura limitadas ao viewport, com scroll interno
+     próprio como último recurso — nunca extrapola a borda da tela. */
+  #conta-dropdown {
+    position:absolute; z-index:400; left:0; right:auto; top:auto; bottom:calc(100% + 8px);
+    width:min(240px, calc(100vw - 2rem)); max-height:min(360px, calc(100vh - 2rem));
+    background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(0,0,0,.25); overflow-y:auto; display:none;
+  }
   #conta-dropdown.open { display:block; }
   #conta-dropdown-header { padding:12px 14px; border-bottom:0.5px solid var(--border); }
   #conta-dropdown-header .cdh-nome { font-size:13px; font-weight:600; color:var(--text); }
@@ -278,6 +330,37 @@
   .metric-label { font-size:11.5px; color:var(--text2); margin-bottom:8px; }
   .metric-value { font-size:26px; font-weight:500; color:var(--text); font-family:var(--mono); line-height:1.1; }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+  /* ── Hero de seção — mesmo tratamento tipográfico da landing nova (eyebrow
+     mono + título Manrope grande + texto corrido, não mono) pra momentos que
+     merecem mais impacto que um .page-sub comum, ex. a aba Confirmação ABCCC. ── */
+  .sec-hero { margin:-4px 0 20px; max-width:640px; }
+  .sec-hero-eyebrow { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--terracota); }
+  .sec-hero-title { font-family:var(--serif); font-weight:800; font-size:clamp(23px,2.6vw,30px); line-height:1.1; letter-spacing:-0.02em; color:var(--text); margin:9px 0 10px; text-wrap:balance; }
+  .sec-hero-sub { font-size:14.5px; line-height:1.62; color:var(--text2); }
+  .conf-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:22px 0 24px; }
+  .conf-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-sm); padding:16px 18px; transition:transform .16s ease, box-shadow .16s ease; }
+  .conf-card[data-filtro] { cursor:pointer; }
+  .conf-card[data-filtro]:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .conf-card.active { box-shadow:var(--sh-md), 0 0 0 2px var(--campo); }
+  .conf-card .selo-registro { margin-bottom:10px; pointer-events:none; }
+  .conf-card h3 { font-family:var(--serif); font-weight:700; font-size:15px; margin:0 0 2px; color:var(--text); }
+  .conf-card p { font-size:11px; color:var(--text3); margin:0; }
+  .conf-filtro-bar { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); margin:-10px 0 14px; }
+  .conf-filtro-bar a { color:var(--campo-deep); font-weight:600; cursor:pointer; }
+  /* ── Card do animal na grade de Plantel — menos amontoado de badges, mais
+     hierarquia: nome grande (Manrope), uma linha de legenda muda em vez da
+     mini-tabela de campos, tags só quando há algo fora do padrão pra dizer. ── */
+  .an-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-sm); padding:18px; cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; display:flex; flex-direction:column; gap:11px; }
+  .an-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .an-card-top { display:flex; align-items:center; gap:11px; }
+  .an-card-id { min-width:0; flex:1; }
+  .an-card-name { font-family:var(--serif); font-weight:800; font-size:15px; line-height:1.2; letter-spacing:-0.01em; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .an-card-meta { font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--text3); text-transform:uppercase; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .an-card-tags { display:flex; gap:5px; flex-wrap:wrap; }
+  .an-card-tags:empty { display:none; }
+  .an-card-foot { display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text2); flex-wrap:wrap; }
+  .an-card-actions { display:flex; gap:6px; }
+  .an-card-actions .btn:first-child { flex:1; }
   /* Skeleton de carregamento — shimmer animado, usado no dashboard enquanto os
      dados reais não chegam (evita o "flash" de zero/traço parado). */
   @keyframes skel-shimmer { 0%{ background-position:-200px 0; } 100%{ background-position:calc(200px + 100%) 0; } }
@@ -358,9 +441,11 @@
   .filter-row { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
   /* Campo com leve afundamento (inset), como no protótipo — o oposto do card,
      que sobe. Ajuda a distinguir superfície de entrada de superfície de conteúdo. */
-  input, select { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
+  input, select, textarea { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
     box-shadow:inset 0 1px 2px rgba(43,36,25,.06); transition:border-color .14s ease, box-shadow .14s ease; }
-  input:focus, select:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+  textarea { resize:vertical; min-height:80px; line-height:1.5; }
+  input::placeholder, textarea::placeholder { color:var(--text3); }
+  input:focus, select:focus, textarea:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
   input[type=checkbox], input[type=radio] { box-shadow:none; }
   .tab-row { display:flex; margin-bottom:1.1rem; border-bottom:0.5px solid var(--border); overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   .tab-row::-webkit-scrollbar { display:none; }
@@ -626,6 +711,7 @@
     .metrics { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px; }
     .metric { padding:14px 12px; text-align:center; }
     .metric-value { font-size:21px; }
+    .conf-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .two-col { grid-template-columns:1fr; }
     /* Modal ignorava a safe-area e encostava embaixo do Dynamic Island/notch —
        a caixa ficava alta o bastante (max-height:90vh) pra sempre tocar o topo
@@ -775,8 +861,12 @@
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
   .login-logo-title { font-family:var(--serif);font-size:48px;font-weight:900;color:var(--chrome-text);letter-spacing:-0.01em;line-height:1; }
   /* Marca "Mimba." — a palavra assume a cor de texto do contexto (clara em fundo escuro, escura
-     em fundo claro); só o ponto final é sempre dourado (--ouro), a assinatura da marca. */
-  .mimba-dot { color: var(--ouro); }
+     em fundo claro); só o ponto final é sempre dourado (--ouro), a assinatura da marca.
+     Bloco quadrado explícito (não texto "."): o glifo do "." na Manrope, medido de verdade,
+     é um quadrado de cantos retos — mas depender do glifo arrisca render redondo se a fonte
+     falhar ao carregar. Em em, escala igual em qualquer contexto (login 48px, sidebar 24px,
+     powered-by ~11px). Mesmo tratamento usado no MIV (auditoria de marca, 2026-08-25). */
+  .mimba-dot { display:inline-block; width:0.2em; height:0.2em; background:currentColor; color:var(--ouro); vertical-align:baseline; margin-left:0.05em; border-radius:0; }
   .login-logo-sub { font-size:12px;color:var(--chrome-text2);margin-top:8px;letter-spacing:.02em; }
   .login-field { margin-bottom:1rem; }
   .login-field label { display:block;font-size:11px;font-weight:700;color:var(--chrome-text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px; }
@@ -1218,7 +1308,7 @@
     </div>
     <div class="login-form-col">
       <div class="login-box" id="login-box-main">
-        <div class="login-form-wordmark">Mimba<span class="mimba-dot">.</span></div>
+        <div class="login-form-wordmark">Mimba<span class="mimba-dot"></span></div>
         <div id="login-campos-normais">
           <div class="login-field">
             <label>Email</label>
@@ -1280,7 +1370,7 @@
   </div>
   <div class="login-box" id="login-restaurando" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub">Restaurando sua sessão...</div>
     </div>
   </div>
@@ -1289,7 +1379,7 @@
        ainda (isso é o Portal do Cliente, Fase 4) — por ora só orienta a falar com a Mimba. -->
   <div class="login-box" id="login-bloqueado" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub" style="color:var(--red-d)">Acesso temporariamente bloqueado</div>
     </div>
     <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
@@ -1302,7 +1392,7 @@
   <!-- V1.5 (Fase 2, complemento): trial cancelado pelo próprio admin antes da cobrança. -->
   <div class="login-box" id="login-cancelado" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub">Teste cancelado</div>
     </div>
     <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
@@ -1314,7 +1404,7 @@
   </div>
   <div class="login-box" id="definir-senha-box" style="display:none">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub">Primeiro acesso · defina sua senha</div>
     </div>
     <div class="login-field">
@@ -1348,9 +1438,10 @@
 </div>
 
 <div class="sidebar" id="sidebar-main">
+ <div class="sidebar-nav-scroll">
   <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
-    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M<span class="mimba-dot">.</span></span></div>
+    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M<span class="mimba-dot"></span></span></div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
   </div>
@@ -1360,15 +1451,18 @@
   <button class="nav-btn" onclick="showPage('animais')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21.5H20V19H18C18.3 14 17.8 8.5 16.8 5.2L17.6 2.6 15.8 4.1 14.6 2.2 13.3 4.9C10.8 5.8 8.2 7.4 5.6 10c-.6.6-.3 1.4.6 1.5C8.6 11.8 10.2 13.4 10.6 15.6c.3 1.6-.6 2.7-2 3.4H6Z"/><circle cx="14.3" cy="7.6" r="0.8" fill="currentColor" stroke="none"/></svg></span><span>Animais</span></button>
   <button class="nav-btn" onclick="showPage('saude')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span>Saúde & Vacinas</span></button>
   <button class="nav-btn" onclick="showPage('reprodutivo')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.9-9C0.7 8.4 2 5 5.3 5c2 0 3.4 1.2 4.2 2.4C10.3 6.2 11.7 5 13.7 5 17 5 18.3 8.4 16.9 12 14.5 16.4 12 21 12 21z"/></svg></span><span>Reprodutivo</span></button>
-  <button class="nav-btn" onclick="showPage('financeiro')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.2"/></svg></span><span>Financeiro</span></button>
+  <!-- Escondido a pedido do Luciano (2026-08-25) até evoluir a funcionalidade — não removido do código, só oculto do menu. -->
+  <button class="nav-btn" onclick="showPage('financeiro')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.2"/></svg></span><span>Financeiro</span></button>
   <button class="nav-btn" onclick="showPage('nutricional')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21c8 0 14-6 14-14V4h-3C8 4 5 10 5 18v3z"/><path d="M5 21c2-6 5-10 10-13"/></svg></span><span>Nutrição</span></button>
   <button class="nav-btn" onclick="showPage('eventos')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 5H4a3 3 0 0 0 3 3"/><path d="M16 5h4a3 3 0 0 1-3 3"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg></span><span>Eventos</span></button>
-  <button class="nav-btn" onclick="showPage('estoque')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span><span>Estoque</span></button>
+  <!-- Escondido a pedido do Luciano (2026-08-25) até evoluir a funcionalidade — não removido do código, só oculto do menu. -->
+  <button class="nav-btn" onclick="showPage('estoque')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/></svg></span><span>Estoque</span></button>
   <button class="nav-btn" onclick="showPage('medidas')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="6" rx="1"/><line x1="7" y1="9" x2="7" y2="12"/><line x1="11" y1="9" x2="11" y2="12"/><line x1="15" y1="9" x2="15" y2="12"/><line x1="19" y1="9" x2="19" y2="12"/></svg></span><span>Medidas</span></button>
   <button class="nav-btn" onclick="showPage('sangues')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c0 6 12 6 12 12"/><path d="M18 21c0-6-12-6-12-12"/><line x1="7.5" y1="6" x2="16.5" y2="6"/><line x1="8.5" y1="9.5" x2="15.5" y2="9.5"/><line x1="8.5" y1="14.5" x2="15.5" y2="14.5"/><line x1="7.5" y1="18" x2="16.5" y2="18"/></svg></span><span>Sangues</span></button>
   <!-- V1.5 (Fase 4): Relatórios em PDF — só aparece se o plano permitir (features.relatorios). -->
   <button class="nav-btn" id="nav-btn-relatorios" onclick="showPage('relatorios')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span><span>Relatórios</span></button>
-  <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--chrome-border)">
+ </div>
+  <div class="sidebar-footer" style="padding-top:1rem;border-top:0.5px solid var(--chrome-border)">
     <!-- V1.5 (Fase 3): só aparece pra quem está em public.mimba_staff (checado no login). -->
     <button id="sidebar-btn-painel-mimba" onclick="abrirPainelMimba()" style="display:none;width:100%;margin-bottom:8px;padding:7px 8px;border-radius:var(--radius);background:rgba(159,204,86,0.14);color:var(--chrome-accent);border:0.5px solid var(--chrome-accent);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
@@ -1430,7 +1524,7 @@
 <div class="page active" id="page-dashboard">
   <div class="page-header">
     <div><div class="page-title">Dashboard</div><div class="page-sub" id="data-hoje"></div></div>
-    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba<span class="mimba-dot">.</span></span></span>
+    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba<span class="mimba-dot"></span></span></span>
   </div>
 
   <!-- MÉTRICAS -->
@@ -1529,7 +1623,7 @@
 <!-- ANIMAIS -->
 <div class="page" id="page-animais">
   <div class="page-header">
-    <div><div class="page-title">Animais</div><div class="page-sub">Plantel completo · dados ABCCC integrados</div></div>
+    <div><div class="page-title">Animais</div><div class="page-sub">Cada animal da cabanha — genealogia, saúde e situação de confirmação sempre à mão</div></div>
     <div style="display:flex;gap:8px">
       <button id="btn-abccc-update" class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">
         <div class="abccc-fill" style="width:0%"></div>
@@ -1539,6 +1633,15 @@
       <button class="btn btn-primary" onclick="_limparFormNovoAnimal();openModal('modal-novo')">+ Novo animal</button>
     </div>
   </div>
+  <!-- Reprodutivo v4 / crítica de design (2026-08-25): a jornada de confirmação ABCCC
+       (quem está chegando na hora de confirmar) ganhou aba própria, separada do plantel — antes
+       vivia espremida dentro da ficha do animal, entre Exames Sanitários e Medidas, sem
+       nenhum título de seção âncora, e lia como se fizesse parte de Exames. -->
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab(this,'animais-plantel')">Plantel</button>
+    <button class="tab" onclick="switchTab(this,'animais-confirmacao')">Confirmação ABCCC</button>
+  </div>
+  <div id="animais-plantel">
   <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="metric"><div class="metric-label">Ativos na cabanha</div><div class="metric-value" id="an-m-ativos">0</div></div>
     <div class="metric"><div class="metric-label">Fêmeas</div><div class="metric-value" id="an-m-femeas">0</div></div>
@@ -1582,7 +1685,7 @@
 
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
-  <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
+  <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
   <div class="card" id="animais-tabela-wrap" style="padding:0;overflow:hidden;overflow-x:auto;display:none">
     <table>
       <thead><tr>
@@ -1591,6 +1694,22 @@
       </tr></thead>
       <tbody id="tbody-animais"></tbody>
     </table>
+  </div>
+  </div>
+  <div id="animais-confirmacao" style="display:none">
+    <div class="sec-hero">
+      <div class="sec-hero-eyebrow">Registro da raça</div>
+      <div class="sec-hero-title">Quem está chegando na hora de confirmar?</div>
+      <div class="sec-hero-sub">Acompanhe os animais que precisam avançar no processo de confirmação junto à ABCCC e enxergue antecipadamente o que merece atenção.</div>
+    </div>
+    <div class="conf-cards">
+      <div class="conf-card" data-filtro="aguardando_confirmacao" onclick="_confFiltrar('aguardando_confirmacao')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aguardando">0</span></div></div><h3>A confirmar</h3><p>já marcados — aguardando visita do técnico ABCCC</p></div>
+      <div class="conf-card" data-filtro="em_preparo" onclick="_confFiltrar('em_preparo')"><div class="selo-registro lg ok" id="conf-m-preparo-selo"><div class="selo-circ"><span class="glyph" id="conf-m-preparo">0</span></div></div><h3>Em preparação</h3><p id="conf-m-preparo-legenda">ainda não atingiram a medida mínima</p></div>
+      <div class="conf-card" data-filtro="apto_confirmacao" onclick="_confFiltrar('apto_confirmacao')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aptos">0</span></div></div><h3>Aptos</h3><p>medida mínima atingida — já pode marcar para confirmação</p></div>
+      <div class="conf-card" data-filtro="confirmados" onclick="_confFiltrar('confirmados')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-confirmados">0</span></div></div><h3>Confirmados</h3><p>já confirmados pelo técnico ABCCC</p></div>
+    </div>
+    <div class="conf-filtro-bar" id="conf-filtro-bar" style="display:none">Mostrando: <strong id="conf-filtro-nome"></strong> <a onclick="_confFiltrar(null)">ver todos</a></div>
+    <div id="animais-confirmacao-content"></div>
   </div>
 </div>
 
@@ -2474,11 +2593,6 @@
 <!-- Área impressa — invisível na tela normal, é tudo que aparece no diálogo de impressão. -->
 <div id="print-area"></div>
 
-</div><!-- end main -->
-<div class="save-badge" id="save-badge">✓ Dados salvos</div>
-
-<!-- MODAL USUÁRIO -->
-<!-- TELA DE CONTA: cabanha (nome/logo) + usuários da cabanha -->
 <div class="page" id="page-conta">
   <div class="page-header">
     <div><div class="page-title">Conta</div><div class="page-sub">Cabanha, perfil e preferências do sistema</div></div>
@@ -2494,113 +2608,113 @@
 
   <!-- ── ABA CABANHA ─────────────────────────────────────────────────────── -->
   <div id="conta-tab-cabanha">
-    <div class="form-grid" style="max-width:640px">
-      <div class="card-title" style="grid-column:1/-1;margin-bottom:2px">Identidade</div>
-      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
-        <img id="conta-logo-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
-        <div id="conta-logo-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>
-        <label class="btn btn-sm" style="cursor:pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
-        </label>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Nome de exibição</label>
-        <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Cor da marca</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
-          <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
-          <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
-        </div>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Tema</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="pill-switch" id="conta-tema-switch">
-            <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
-            <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
+    <div style="max-width:640px">
+
+      <div class="section-card">
+        <div class="section-title">Identidade</div>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="conta-logo-wrap">
+            <img id="conta-logo-preview" alt="" style="display:none">
+            <svg id="conta-logo-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
           </div>
-          <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
+          <label class="btn-outline" style="cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
+          </label>
+        </div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome de exibição</label>
+            <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus">
+          </div>
+          <div class="form-group">
+            <label>Cor da marca</label>
+            <div class="color-swatch-row">
+              <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:38px;height:34px;padding:2px;cursor:pointer;flex-shrink:0">
+              <button class="btn-outline" type="button" onclick="_resetCorPrimaria()" style="font-size:11px;padding:6px 10px">Restaurar padrão</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tema</label>
+            <div class="pill-switch" id="conta-tema-switch">
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Perfil público</div>
-      <div style="grid-column:1/-1;font-size:11px;color:var(--text3);margin-bottom:6px">Estas informações preparam a futura página da sua cabanha no Marketplace Mimba.</div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Assinatura</label>
-        <input type="text" id="cpp-assinatura" placeholder="Ex: Tradição em genética Crioula desde 1998" maxlength="120" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Sobre a cabanha</label>
-        <textarea id="cpp-sobre" rows="4" maxlength="1000" placeholder="História, especialidade, diferencial da cabanha..." style="width:100%"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Ano de fundação</label>
-        <input type="number" id="cpp-ano-fundacao" placeholder="Ex: 1998" min="1900" max="2100" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Especialidades</label>
-        <select id="cpp-especialidades" multiple style="width:100%;min-height:88px">
-          <option value="Morfologia">Morfologia</option>
-          <option value="Freio">Freio</option>
-          <option value="Doma">Doma</option>
-          <option value="Paleteadas">Paleteadas</option>
-          <option value="Marcha/Resistência">Marcha/Resistência</option>
-        </select>
-      </div>
-
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Localização e contato</div>
-      <div class="form-group">
-        <label>Cidade</label>
-        <input type="text" id="cpp-cidade" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Estado</label>
-        <select id="cpp-estado" style="width:100%">
-          <option value="">—</option>
-          <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
-          <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
-          <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
-          <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
-          <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
-          <option>SE</option><option>TO</option>
-        </select>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Endereço <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
-        <input type="text" id="cpp-endereco" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>WhatsApp</label>
-        <input type="tel" id="cpp-whatsapp" placeholder="(99) 99999-9999" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Telefone</label>
-        <input type="tel" id="cpp-telefone" placeholder="(99) 9999-9999" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>E-mail de contato</label>
-        <input type="email" id="cpp-email-contato" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Instagram</label>
-        <input type="text" id="cpp-instagram" placeholder="@sua_cabanha" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Site</label>
-        <input type="url" id="cpp-site" placeholder="https://..." style="width:100%">
+      <div class="section-card">
+        <div class="section-title">Perfil público</div>
+        <div class="section-hint">Estas informações preparam a futura página da sua cabanha no Marketplace Mimba.</div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Assinatura</label>
+            <input type="text" id="cpp-assinatura" placeholder="Ex: Tradição em genética Crioula desde 1998" maxlength="120">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Sobre a cabanha</label>
+            <textarea id="cpp-sobre" maxlength="1000" placeholder="História, especialidade, diferencial da cabanha..." oninput="document.getElementById('cpp-sobre-count').textContent=this.value.length"></textarea>
+            <div class="char-count"><span id="cpp-sobre-count">0</span> / 1000</div>
+          </div>
+          <div class="form-group">
+            <label>Ano de fundação</label>
+            <input type="number" id="cpp-ano-fundacao" placeholder="Ex: 1998" min="1900" max="2100">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Especialidades</label>
+            <div class="chip-select-grid" id="cpp-especialidades-chips">
+              <span class="chip" data-val="Morfologia" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Morfologia</span>
+              <span class="chip" data-val="Freio" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Freio</span>
+              <span class="chip" data-val="Doma" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Doma</span>
+              <span class="chip" data-val="Paleteadas" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Paleteadas</span>
+              <span class="chip" data-val="Marcha/Resistência" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Marcha/Resistência</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Visibilidade</div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="cpp-visivel-marketplace" style="width:auto">
-          Exibir minha cabanha no Marketplace Mimba
-        </label>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">Nome, cidade, especialidades e assinatura ficarão visíveis publicamente. Endereço completo e contatos diretos só aparecem se você optar por exibi-los.</div>
+      <div class="section-card">
+        <div class="section-title">Localização e contato</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Cidade</label><input type="text" id="cpp-cidade"></div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="cpp-estado">
+              <option value="">—</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
+              <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
+              <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
+              <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
+              <option>SE</option><option>TO</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Endereço <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+            <input type="text" id="cpp-endereco">
+          </div>
+          <div class="form-group"><label>WhatsApp</label><input type="tel" id="cpp-whatsapp" placeholder="(99) 99999-9999"></div>
+          <div class="form-group"><label>Telefone</label><input type="tel" id="cpp-telefone" placeholder="(99) 9999-9999"></div>
+          <div class="form-group"><label>E-mail de contato</label><input type="email" id="cpp-email-contato"></div>
+          <div class="form-group"><label>Instagram</label><input type="text" id="cpp-instagram" placeholder="@sua_cabanha"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Site</label><input type="url" id="cpp-site" placeholder="https://..."></div>
+        </div>
       </div>
+
+      <div class="section-card">
+        <div class="toggle-row">
+          <div>
+            <div class="section-title" style="margin:0">Visibilidade no Marketplace</div>
+            <div class="toggle-row-hint">Nome, cidade, especialidades e assinatura ficarão públicos. Endereço e contatos diretos só se você optar por exibi-los.</div>
+          </div>
+          <div class="pill-switch" id="cpp-visivel-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setVisivelMarketplace(false)">Desligado</button>
+            <button type="button" class="pill-switch-btn" onclick="_setVisivelMarketplace(true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="cpp-visivel-marketplace" style="display:none">
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
       <button class="btn btn-primary" id="conta-btn-salvar-cabanha" onclick="salvarDadosCabanha()">Salvar</button>
@@ -2609,63 +2723,71 @@
 
   <!-- ── ABA MEU PERFIL ──────────────────────────────────────────────────── -->
   <div id="conta-tab-perfil" style="display:none">
-    <div class="form-grid" style="max-width:520px">
-      <div class="card-title" style="grid-column:1/-1;margin-bottom:2px">Dados pessoais</div>
-      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
-        <img id="perfil-foto-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
-        <div id="perfil-foto-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+    <div style="max-width:520px">
+
+      <div class="section-card">
+        <div class="section-title">Dados pessoais</div>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="perfil-foto-wrap">
+            <img id="perfil-foto-preview" alt="" style="display:none">
+            <svg id="perfil-foto-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <label class="btn-outline" style="cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
+          </label>
         </div>
-        <label class="btn btn-sm" style="cursor:pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
-        </label>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Nome completo</label>
-        <input type="text" id="perfil-nome" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Cargo / Função</label>
-        <select id="perfil-cargo" style="width:100%">
-          <option value="">—</option>
-          <option>Proprietário</option>
-          <option>Gerente</option>
-          <option>Veterinário</option>
-          <option>Técnico</option>
-          <option>Outro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Telefone pessoal</label>
-        <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>E-mail de login</label>
-        <input type="text" id="perfil-email" disabled style="width:100%;opacity:.6">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <button class="btn btn-sm" onclick="abrirModalTrocarSenha()">Trocar senha</button>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome completo</label>
+            <input type="text" id="perfil-nome">
+          </div>
+          <div class="form-group">
+            <label>Cargo / Função</label>
+            <select id="perfil-cargo">
+              <option value="">—</option>
+              <option>Proprietário</option>
+              <option>Gerente</option>
+              <option>Veterinário</option>
+              <option>Técnico</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Telefone pessoal</label>
+            <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>E-mail de login</label>
+            <input type="text" id="perfil-email" disabled style="opacity:.6">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <button class="btn-outline" onclick="abrirModalTrocarSenha()">Trocar senha</button>
+          </div>
+        </div>
       </div>
 
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Preferências pessoais</div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="perfil-notif-email" checked style="width:auto">
-          Receber notificações por e-mail
-        </label>
+      <div class="section-card">
+        <div class="section-title">Preferências pessoais</div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <span class="pref-sub" style="font-size:12px;color:var(--text2)">Receber notificações por e-mail</span>
+          <div class="pill-switch" id="perfil-notif-switch">
+            <button type="button" class="pill-switch-btn" onclick="_setNotifEmail(false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_setNotifEmail(true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="perfil-notif-email" checked style="display:none">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Idioma</label>
+            <select id="perfil-idioma"><option value="pt-BR">Português (BR)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Fuso horário</label>
+            <select id="perfil-fuso"><option value="America/Sao_Paulo">América/São Paulo</option></select>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Idioma</label>
-        <select id="perfil-idioma" style="width:100%">
-          <option value="pt-BR">Português (BR)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Fuso horário</label>
-        <select id="perfil-fuso" style="width:100%">
-          <option value="America/Sao_Paulo">América/São Paulo</option>
-        </select>
-      </div>
+
     </div>
     <div class="modal-footer" style="max-width:520px;padding-left:0;padding-right:0">
       <button class="btn btn-primary" onclick="salvarMeuPerfil()">Salvar</button>
@@ -2675,54 +2797,74 @@
   <!-- ── ABA PREFERÊNCIAS DO SISTEMA ─────────────────────────────────────── -->
   <div id="conta-tab-preferencias" style="display:none">
     <div style="max-width:640px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Estas preferências controlam quais alertas o sistema gera, com base no estágio de cada animal.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Controle o que o Mimba monitora automaticamente, por estágio do animal.</div>
 
-      <div class="card-title" style="margin-bottom:8px">Controle de vacinas</div>
-      <div class="form-group" style="margin-bottom:6px">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="pref-controlar-vacinas" checked style="width:auto" onchange="_prefToggleEstagios('vacinas')">
-          Controlar vencimento de vacinas
-        </label>
-      </div>
-      <div id="pref-estagios-vacinas-wrap" style="margin-bottom:20px;padding-left:26px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
-        <div id="pref-estagios-vacinas" class="pref-estagios-grid"></div>
-      </div>
-
-      <div class="card-title" style="margin-bottom:8px">Controle de exames</div>
-      <div class="form-group" style="margin-bottom:6px">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="pref-controlar-exames" checked style="width:auto" onchange="_prefToggleEstagios('exames')">
-          Controlar vencimento de exames
-        </label>
-      </div>
-      <div id="pref-estagios-exames-wrap" style="margin-bottom:20px;padding-left:26px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
-        <div id="pref-estagios-exames" class="pref-estagios-grid"></div>
-      </div>
-
-      <div class="card-title" style="margin-bottom:8px">Controle de vermifugação</div>
-      <div class="form-group" style="margin-bottom:6px">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="pref-controlar-vermifugacao" checked style="width:auto" onchange="_prefToggleEstagios('vermifugacao')">
-          Controlar vermifugação
-        </label>
-      </div>
-      <div id="pref-estagios-vermifugacao-wrap" style="margin-bottom:12px;padding-left:26px">
-        <div class="form-group" style="max-width:200px;margin-bottom:10px">
-          <label>Intervalo padrão (dias)</label>
-          <input type="number" id="pref-intervalo-vermifugacao" value="45" min="1" max="365" style="width:100%">
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg></div>
+            <div><div class="pref-title">Controle de Vacinas</div><div class="pref-sub">Alertas de vencimento no Dashboard e Pendências</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-vacinas">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('vacinas',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('vacinas',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-vacinas" checked style="display:none">
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
-        <div id="pref-estagios-vermifugacao" class="pref-estagios-grid"></div>
+        <div id="pref-estagios-vacinas-wrap" class="pref-body">
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-vacinas" class="chip-grid"></div>
+        </div>
       </div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg></div>
+            <div><div class="pref-title">Controle de Exames</div><div class="pref-sub">Validade de exames sanitários</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-exames">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('exames',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('exames',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-exames" checked style="display:none">
+        </div>
+        <div id="pref-estagios-exames-wrap" class="pref-body">
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-exames" class="chip-grid"></div>
+        </div>
+      </div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg></div>
+            <div><div class="pref-title">Controle de Vermifugação</div><div class="pref-sub">Intervalo padrão e alertas de reaplicação</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-vermifugacao">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('vermifugacao',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('vermifugacao',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-vermifugacao" checked style="display:none">
+        </div>
+        <div id="pref-estagios-vermifugacao-wrap" class="pref-body">
+          <div class="pref-row-inline">
+            <label>Intervalo padrão</label>
+            <input type="number" id="pref-intervalo-vermifugacao" class="pref-num-input" value="45" min="1" max="365">
+            <span style="font-size:11px;color:var(--text3)">dias</span>
+          </div>
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-vermifugacao" class="chip-grid"></div>
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
       <button class="btn btn-primary" onclick="salvarPreferenciasSistema()">Salvar</button>
     </div>
   </div>
 
-  <!-- ── ABA USUÁRIOS (conteúdo original preservado) ─────────────────────── -->
+  <!-- ── ABA USUÁRIOS (preservada) ────────────────────────────────────────── -->
   <div id="conta-tab-usuarios" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
       <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
@@ -2747,7 +2889,7 @@
     </div>
   </div>
 
-  <!-- ── ABA FATURAMENTO (conteúdo original preservado) ──────────────────── -->
+  <!-- ── ABA FATURAMENTO (preservada) ─────────────────────────────────────── -->
   <div id="conta-tab-faturamento" style="display:none">
     <div class="card-title" style="margin-bottom:8px">Seu plano</div>
     <div id="fat-planos-content" style="margin-bottom:22px">
@@ -3656,7 +3798,7 @@
         <input type="text" id="nsbb" placeholder="Ex: B649459" style="width:100%" onblur="_buscarAbccc('novo')" oninput="this.value=this.value.toUpperCase()">
         <div id="nabccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
       </div>
-      <div class="form-group"><label>Sexo</label><select id="nsex" onchange="_toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob')"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
+      <div class="form-group"><label>Sexo</label><select id="nsex" onchange="_toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob','ncastrado')"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
       <div class="form-group"><label>Pelagem</label><input type="text" id="npel" placeholder="Ex: Gateada"></div>
       <div class="form-group"><label>Ciclo</label><input type="text" id="nciclo" placeholder="Ex: 24/25"></div>
       <div class="form-group"><label>Nascimento</label><input type="date" id="nnasc" onchange="_autoCiclo(this.value,'nciclo')"></div>
@@ -3672,9 +3814,14 @@
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="ncastrado" style="width:auto"> Castrado
-        </label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="font-size:13px">Castrado</label>
+          <div class="pill-switch" id="ncastrado-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setCastrado('n',false)">Não</button>
+            <button type="button" class="pill-switch-btn" onclick="_setCastrado('n',true)">Castrado</button>
+          </div>
+          <input type="checkbox" id="ncastrado" style="display:none">
+        </div>
         <div id="ngrp-qtdcob" style="display:none;align-items:center;gap:6px">
           <label style="white-space:nowrap">Coberturas por ciclo (padrão)</label>
           <input type="number" id="nqtdcob" min="0" step="1" value="120" style="width:80px"></div>
@@ -4166,7 +4313,7 @@ function pd(s){if(!s)return null;const d=new Date(s+'T00:00:00');return isNaN(d)
 function fd(s){const d=pd(s);if(!d)return'—';return d.toLocaleDateString('pt-BR');}
 function da(s){const d=pd(s);if(!d)return null;return Math.round((d-HOJE)/864e5);}
 function svac(p){const d=da(p);if(d===null)return{l:'Sem dados',c:'bgr'};if(d<0)return{l:`Vencida (${Math.abs(d)}d)`,c:'br'};if(d<=30)return{l:`${d}d para vencer`,c:'br'};if(d<=60)return{l:`${d}d p/ vencer`,c:'ba'};return{l:'Em dia',c:'bg'};}
-function sexm(s){if(!s)return'<span class="badge bgr">—</span>';return s==='Fêmea'?`<span class="badge bpk">${s}</span>`:`<span class="badge bb">${s}</span>`;}
+function sexm(s){if(!s)return'<span style="color:var(--text3)">—</span>';return `<span style="color:var(--text2);font-size:11px">${s}</span>`;}
 function sitb(s){if(!s)return'<span class="etq-brinco neutro">—</span>';const m={'NA CABANHA':'',   'MORTO':'critico','TRANSFERIDO':'atencao','VENDIDO':'terracota','EMPRESTIMO':'terracota'};return`<span class="etq-brinco ${m[s]!==undefined?m[s]:'neutro'}">${s}</span>`;}
 function estb(e){if(!e||e==='-')return'—';const m={'PISTA MORFOLOGIA':'terracota','PISTA FUNCIONAL':'terracota','CAMPO':'','LAÇO':'atencao','ARREIO CABANHA':'terracota','DOMA':'atencao','CRIA':''};return`<span class="etq-brinco ${m[e]!==undefined?m[e]:'neutro'}">${e}</span>`;}
 function sbbL(s){
@@ -4348,10 +4495,11 @@ function _animaisSetView(view) {
   renderAnimais();
 }
 
-function _animalAvatarHtml(a) {
-  if (a.foto_url) return `<img src="${a.foto_url}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">`;
+function _animalAvatarHtml(a, size) {
+  size = size || 44;
+  if (a.foto_url) return `<img src="${a.foto_url}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0">`;
   const inicial = (a.nome||'?').trim().charAt(0).toUpperCase();
-  return `<div style="width:44px;height:44px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${inicial}</div>`;
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.36)}px;font-family:var(--serif);font-weight:800;flex-shrink:0">${inicial}</div>`;
 }
 
 function renderAnimais(){
@@ -4374,7 +4522,7 @@ function renderAnimais(){
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':_badgeConfirmacao(a)}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="etq-brinco neutro" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
       <td>${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:''}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -4389,30 +4537,30 @@ function renderAnimais(){
 
   document.getElementById('animais-grade-wrap').innerHTML = lista.map(a => {
     const i = animais.indexOf(a);
-    return `<div class="card" style="padding:16px 18px">
-      <div style="display:flex;gap:10px;align-items:center">
-        ${_animalAvatarHtml(a)}
-        <div style="min-width:0;flex:1">
-          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.nome}">${a.nome}</div>
-          <div style="font-size:11px;color:var(--text2)">${sexm(a.sexo)} · ${sbbL(a.sbb)||'sem SBB'}</div>
+    const legenda = [a.sexo||null, a.pelagem||null, a.nasc?fd(a.nasc):null].filter(Boolean).join(' · ');
+    const tags = [
+      a.situacao && a.situacao !== 'NA CABANHA' ? sitb(a.situacao) : '',
+      a.estagio ? estb(a.estagio) : '',
+      a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : '',
+      a.castrado ? '<span class="etq-brinco neutro" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : '',
+      a.receptora_externa ? '<span class="etq-brinco neutro" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : '',
+    ].join('');
+    return `<div class="an-card" onclick="verDetalhe(${i})">
+      <div class="an-card-top">
+        ${_animalAvatarHtml(a, 48)}
+        <div class="an-card-id">
+          <div class="an-card-name" title="${a.nome}">${a.nome}</div>
+          <div class="an-card-meta">${legenda||'—'}</div>
         </div>
+        ${a.confirmado ? '<div class="selo-registro ok" title="Confirmado — técnico validou Crioulo/pedigree/medidas"><div class="selo-circ"><span class="glyph">✓</span></div></div>' : ''}
       </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">
-        ${sitb(a.situacao)}
-        ${a.estagio ? estb(a.estagio) : ''}
-        ${a.ciclo ? `<span class="etq-brinco atencao">${a.ciclo}</span>` : ''}
-        ${!a.confirmado && a.confirmacao_status !== 'nao_confirmado' ? _badgeConfirmacao(a) : ''}${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
-        ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
-        ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
-        ${a.receptora_externa ? '<span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
+      <div class="an-card-tags">${tags}</div>
+      <div class="an-card-foot">
+        ${a.rp?`<span class="etq-brinco terracota">${a.rp}</span>`:''}
+        ${a.sbb?sbbL(a.sbb):'<span style="color:var(--text3)">sem SBB</span>'}
       </div>
-      <div class="g-cols-2" style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
-        <div>Pelagem: ${a.pelagem||'—'}</div>
-        <div>Nasc.: ${fd(a.nasc)||'—'}</div>
-        <div style="grid-column:1/-1">RP: ${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'}</div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:10px">
-        <button class="btn btn-sm" style="flex:1" onclick="verDetalhe(${i})">Ver</button>
+      <div class="an-card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-sm" onclick="verDetalhe(${i})">Ver ficha</button>
         <button class="btn btn-sm" title="Editar" onclick="verDetalheEditando(${i})">${_iconEditar(14)}</button>
         <button class="btn btn-sm" title="Excluir" style="color:var(--red-d)" onclick="excluirAnimal(${i})">${_iconLixeira(14)}</button>
       </div>
@@ -6445,7 +6593,7 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">SBB ABCCC</label>
           <input id="ed-sbb" value="${a.sbb||''}" style="width:100%;font-size:12px" placeholder="Ex: B649459" onblur="_buscarAbccc('edit')" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Sexo</label>
-          <select id="ed-sexo" style="width:100%;font-size:12px" onchange="_toggleQtdCoberturasPadrao('ed-sexo','ed-grp-qtdcob')"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
+          <select id="ed-sexo" style="width:100%;font-size:12px" onchange="_toggleQtdCoberturasPadrao('ed-sexo','ed-grp-qtdcob','ed-castrado')"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pelagem</label>
           <input id="ed-pelagem" value="${a.pelagem||''}" style="width:100%;font-size:12px" placeholder="Ex: Gateada"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nascimento</label>
@@ -6479,10 +6627,15 @@ function _renderDetCorpo(i, editando) {
           </div>
         </div>
         <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="ed-castrado" style="width:auto" ${a.castrado?'checked':''}> Castrado
-          </label>
-          <div id="ed-grp-qtdcob" style="display:${a.sexo==='Macho'?'flex':'none'};align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px">Castrado</label>
+            <div class="pill-switch" id="ed-castrado-switch">
+              <button type="button" class="pill-switch-btn${a.castrado?'':' on'}" onclick="_setCastrado('ed-',false)">Não</button>
+              <button type="button" class="pill-switch-btn${a.castrado?' on':''}" onclick="_setCastrado('ed-',true)">Castrado</button>
+            </div>
+            <input type="checkbox" id="ed-castrado" style="display:none" ${a.castrado?'checked':''}>
+          </div>
+          <div id="ed-grp-qtdcob" style="display:${(a.sexo==='Macho'&&!a.castrado)?'flex':'none'};align-items:center;gap:6px">
             <label style="font-size:12px;white-space:nowrap">Coberturas por ciclo (padrão)</label>
             <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:80px;font-size:12px"></div>
         </div>
@@ -6493,7 +6646,7 @@ function _renderDetCorpo(i, editando) {
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(17)} Identificação
-      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
+      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">✓ Confirmado</span>':''}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge bp" style="margin-left:6px" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
@@ -6545,7 +6698,7 @@ function _renderDetCorpo(i, editando) {
 
   // Painel de confirmação ABCCC (só para não confirmados)
   const S4conf = (!a.confirmado && a.confirmacao_status !== 'nao_confirmado')
-    ? _htmlPainelConfirmacao(a, false)
+    ? `<div class="ficha-section"><div class="ficha-section-title">${_iconRegua(17)} Confirmação ABCCC</div>${_htmlPainelConfirmacao(a, false)}</div>`
     : '';
 
   // Gráfico de linha de medidas
@@ -7540,15 +7693,32 @@ function _limparFormNovoAnimal() {
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
-  _toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob');
+  _setCastrado('n', false);
 }
 
-// "Coberturas por ciclo (padrão)" só faz sentido pra garanhões — campo fica escondido até
-// selecionar Sexo=Macho, em vez de aparecer sempre com um texto explicando "só pra garanhões".
-function _toggleQtdCoberturasPadrao(sexoId, grpId) {
+// "Coberturas por ciclo (padrão)" só faz sentido pra garanhões inteiros — campo fica escondido
+// até selecionar Sexo=Macho, em vez de aparecer sempre com um texto explicando "só pra
+// garanhões". Um castrado nunca cobre, então também esconde mesmo sendo Macho (achado real:
+// antes só olhava sexo, então marcar castrado não escondia o campo — o form continuava
+// sugerindo cobertura pra um animal que não vai cobrir).
+function _toggleQtdCoberturasPadrao(sexoId, grpId, castradoId) {
   const sexo = document.getElementById(sexoId)?.value;
+  const castrado = castradoId ? document.getElementById(castradoId)?.checked : false;
   const grp = document.getElementById(grpId);
-  if (grp) grp.style.display = sexo === 'Macho' ? 'flex' : 'none';
+  if (grp) grp.style.display = (sexo === 'Macho' && !castrado) ? 'flex' : 'none';
+}
+
+// Toggle on/off do campo "Castrado" — mesmo padrão visual do pill-switch de Preferências do
+// Sistema (_prefSetToggle). O <input type="checkbox" hidden> continua existindo por trás pra
+// não quebrar o código que já lê `.checked` ao salvar o animal.
+function _setCastrado(prefixo, ligado) {
+  const chk = document.getElementById(prefixo + 'castrado');
+  if (chk) chk.checked = ligado;
+  const sw = document.getElementById(prefixo + 'castrado-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  const sexoId = prefixo === 'n' ? 'nsex' : 'ed-sexo';
+  const grpId = prefixo === 'n' ? 'ngrp-qtdcob' : 'ed-grp-qtdcob';
+  _toggleQtdCoberturasPadrao(sexoId, grpId, prefixo + 'castrado');
 }
 
 // Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
@@ -7940,7 +8110,7 @@ function _ajustarStatusBarNativa(){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-repro-gestacoes','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-repro-gestacoes','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico','animais-plantel','animais-confirmacao'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -7962,6 +8132,7 @@ function switchTab(btn,tid){
   if(tid==='tab-reprodutivo-vet') renderReprodutivoVet();
   if(tid==='tab-repro-gestacoes') renderReprodutivoVet();
   if(tid==='tab-tratamentos') renderTratamentos();
+  if(tid==='animais-confirmacao') renderConfirmacaoAbccc();
 }
 function saudeTabGrupo(btn,tabId,subId){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
@@ -10615,24 +10786,92 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   const idxAnimal = i;
   const botoesAcao = modoCompacto ? '' :
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" title="Move este animal pra 'A confirmar' — avisa que ele está pronto, aguardando a visita do técnico ABCCC." onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : `<span style="font-size:11px;color:var(--blue-d);align-self:center">Já marcado — aguardando técnico</span>`)
     + (!animal.marcacao_rp_em
-        ? `<button class="btn btn-sm" onclick="_registrarMarcacaoRP(${idxAnimal})">📌 Registrar marcação RP</button>`
+        ? `<button class="btn btn-sm" title="Registra a data da marcação de RP feita no animal — é só um registro histórico, não muda o status de confirmação." onclick="_registrarMarcacaoRP(${idxAnimal})">📌 Registrar marcação RP</button>`
         : `<span style="font-size:11px;color:var(--text3);align-self:center">RP marcado em ${fd(animal.marcacao_rp_em)}</span>`)
-    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : '')
-    + `<button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>`
+    + `<button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" title="Remove este animal do acompanhamento de confirmação." onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>`
     + '</div>';
 
   return '<div style="border-left:3px solid ' + corBorda + ';padding:12px 14px;margin-top:10px;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
     + '<div>'
-    + '<span style="font-size:11px;font-weight:500;color:' + corBorda + ';text-transform:uppercase;letter-spacing:.05em">CONFIRMAÇÃO ABCCC</span>'
-    + '<span style="margin-left:8px;font-size:11px;background:' + corBg + ';color:' + corBorda + ';padding:2px 8px;border-radius:99px;border:0.5px solid ' + corBorda + '">' + labelStatus + '</span>'
+    + '<span style="font-size:11px;background:' + corBg + ';color:' + corBorda + ';padding:2px 8px;border-radius:99px;border:0.5px solid ' + corBorda + '">' + labelStatus + '</span>'
     + '</div>'
     + (meses !== null ? '<span style="font-size:11px;color:var(--text3)">' + meses + ' meses · medido em ' + dataLabel + '</span>' : '')
     + '</div>'
     + linhasMedidas
     + botoesAcao
     + '</div>';
+}
+
+// Aba "Confirmação ABCCC" da tela de Animais — a jornada de confirmação junta num
+// só lugar quem antes só aparecia espremido dentro da ficha de cada animal.
+let _confFiltro = null; // null (todos) | 'aguardando_confirmacao' | 'em_preparo' | 'apto_confirmacao' | 'confirmados'
+function _confFiltrar(tipo) {
+  _confFiltro = (_confFiltro === tipo) ? null : tipo;
+  renderConfirmacaoAbccc();
+}
+function renderConfirmacaoAbccc() {
+  const cont = document.getElementById('animais-confirmacao-content');
+  if (!cont) return;
+
+  const elegiveis = animais.filter(a => isNaCabanha(a) && a.status_cadastro !== 'rascunho'
+    && !a.confirmado && a.confirmacao_status !== 'nao_confirmado');
+  const porStatus = { aguardando_confirmacao: [], apto_confirmacao: [], em_risco: [], em_desenvolvimento: [] };
+  elegiveis.forEach(a => { const st = _calcStatusConfirmacao(a); if (porStatus[st]) porStatus[st].push(a); });
+  const confirmadosLista = animais.filter(a => isNaCabanha(a) && a.confirmado);
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('conf-m-aguardando', porStatus.aguardando_confirmacao.length);
+  set('conf-m-preparo', porStatus.em_desenvolvimento.length + porStatus.em_risco.length);
+  set('conf-m-aptos', porStatus.apto_confirmacao.length);
+  set('conf-m-confirmados', confirmadosLista.length);
+  const selo = document.getElementById('conf-m-preparo-selo');
+  const legenda = document.getElementById('conf-m-preparo-legenda');
+  if (selo) selo.className = 'selo-registro lg ' + (porStatus.em_risco.length ? 'warn' : 'ok');
+  if (legenda) legenda.textContent = porStatus.em_risco.length
+    ? `${porStatus.em_desenvolvimento.length} em desenvolvimento normal · ⚠ ${porStatus.em_risco.length} em risco de não atingir a medida`
+    : 'ainda não atingiram a medida mínima';
+
+  // Card ativo em destaque + barra "mostrando: X"
+  document.querySelectorAll('.conf-card[data-filtro]').forEach(el => el.classList.toggle('active', el.dataset.filtro === _confFiltro));
+  const nomesFiltro = { aguardando_confirmacao:'A confirmar', em_preparo:'Em preparação', apto_confirmacao:'Aptos', confirmados:'Confirmados' };
+  const barra = document.getElementById('conf-filtro-bar');
+  if (barra) {
+    barra.style.display = _confFiltro ? 'flex' : 'none';
+    const nomeEl = document.getElementById('conf-filtro-nome');
+    if (nomeEl) nomeEl.textContent = nomesFiltro[_confFiltro] || '';
+  }
+
+  let lista, vazioMsg = 'Nenhum animal em acompanhamento de confirmação no momento.';
+  if (_confFiltro === 'aguardando_confirmacao') { lista = porStatus.aguardando_confirmacao; vazioMsg = 'Nenhum animal marcado para confirmação no momento.'; }
+  else if (_confFiltro === 'apto_confirmacao')  { lista = porStatus.apto_confirmacao; vazioMsg = 'Nenhum animal apto para confirmação no momento.'; }
+  else if (_confFiltro === 'em_preparo')        { lista = [...porStatus.em_risco, ...porStatus.em_desenvolvimento]; vazioMsg = 'Nenhum animal em preparação no momento.'; }
+  else if (_confFiltro === 'confirmados')       { lista = confirmadosLista; vazioMsg = 'Nenhum animal confirmado ainda.'; }
+  else lista = [...porStatus.aguardando_confirmacao, ...porStatus.apto_confirmacao, ...porStatus.em_risco, ...porStatus.em_desenvolvimento];
+
+  if (!lista.length) {
+    cont.innerHTML = `<div class="nut-empty">${vazioMsg}</div>`;
+    return;
+  }
+  cont.innerHTML = lista.map(a => {
+    const i = animais.indexOf(a);
+    const corpo = a.confirmado
+      ? `<div style="font-size:12px;color:var(--text3);padding-top:8px">✓ Confirmado${a.marcacao_rp_em ? ` · RP marcado em ${fd(a.marcacao_rp_em)}` : ''}</div>`
+      : _htmlPainelConfirmacao(a, false);
+    return `<div class="card" style="padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <span style="font-size:13px;font-weight:700;white-space:nowrap">${a.nome}</span>
+          ${a.rp ? `<span class="etq-brinco neutro">${a.rp}</span>` : ''}
+          ${a.castrado ? '<span class="badge bgr">Castrado</span>' : ''}
+        </div>
+        <button class="btn btn-sm" onclick="verDetalhe(${i})">Ver ficha</button>
+      </div>
+      ${corpo}
+    </div>`;
+  }).join('');
 }
 
 async function _registrarMarcacaoRP(i) {
@@ -10650,6 +10889,7 @@ async function _registrarMarcacaoRP(i) {
     criado_por: usuarioAtual?.id
   });
   _renderDetCorpo(i, false);
+  renderConfirmacaoAbccc();
   _mostrarStatusSync('Marcação RP registrada na linha do tempo.', 'green');
 }
 
@@ -10661,6 +10901,7 @@ async function _marcarParaConfirmacao(i) {
   a.confirmado = false;
   _renderDetCorpo(i, false);
   renderAnimais();
+  renderConfirmacaoAbccc();
   _mostrarStatusSync('Animal marcado para confirmação.', 'green');
 }
 
@@ -10687,6 +10928,7 @@ async function _confirmarNaoConfirmacao() {
   closeModal('modal-nao-confirmar');
   _renderDetCorpo(i, false);
   renderAnimais();
+  renderConfirmacaoAbccc();
   _mostrarStatusSync('Animal marcado como não confirmado — removido do controle de confirmação.', 'green');
 }
 
@@ -12912,9 +13154,12 @@ function renderDashboard(){
     if(ps.cls==='nut-proj-vencido')     als.push({t:'r',m:`${_iconTrigo(14)} Projeto nutricional VENCIDO — ${a.nome}`, fn:"showPage('nutricional')"});
     else if(ps.cls==='nut-proj-vencendo') als.push({t:'a',m:`${_iconTrigo(14)} Projeto nutricional vence — ${a.nome}`,    fn:"showPage('nutricional')"});
   });
-  estoque.filter(e=>Number(e.atual)<=Number(e.minimo)).forEach(e=>{
-    als.push({t:Number(e.atual)===0?'r':'a',m:`${_iconEstoque(14)} Estoque ${Number(e.atual)===0?'ZERADO':'baixo'} — ${e.nome} (${e.atual} ${e.unidade})`, fn:"showPage('estoque')"});
-  });
+  // Alerta de estoque baixo suprimido enquanto a aba Estoque estiver escondida
+  // do menu (pedido do Luciano, 2026-08-25) — não faz sentido apontar pra uma
+  // página que o usuário não acha mais na navegação.
+  // estoque.filter(e=>Number(e.atual)<=Number(e.minimo)).forEach(e=>{
+  //   als.push({t:Number(e.atual)===0?'r':'a',m:`${_iconEstoque(14)} Estoque ${Number(e.atual)===0?'ZERADO':'baixo'} — ${e.nome} (${e.atual} ${e.unidade})`, fn:"showPage('estoque')"});
+  // });
   // Gestações reais (tabela `gestacoes`, Reprodutivo v3) — a partir daqui é o sistema vigente.
   gestacoes.filter(g=>g.status==='gestando'&&g.parto_previsto).forEach(g=>{
     const dtRef=pd(g.parto_previsto);
@@ -13503,7 +13748,6 @@ function _onLogoFileSelect(e) {
   reader.readAsDataURL(file);
 }
 
-async 
 // ═══════════════════════════════════════════════════════════════════════════
 // ABA MEU PERFIL
 // ═══════════════════════════════════════════════════════════════════════════
@@ -13514,7 +13758,7 @@ async function carregarMeuPerfil() {
   document.getElementById('perfil-email').value = usuarioAtual.email || '';
   document.getElementById('perfil-cargo').value = usuarioAtual.cargo || '';
   document.getElementById('perfil-telefone').value = usuarioAtual.telefone_pessoal || '';
-  document.getElementById('perfil-notif-email').checked = usuarioAtual.notif_email !== false;
+  _setNotifEmail(usuarioAtual.notif_email !== false);
   document.getElementById('perfil-idioma').value = usuarioAtual.idioma || 'pt-BR';
   document.getElementById('perfil-fuso').value = usuarioAtual.fuso_horario || 'America/Sao_Paulo';
   const fotoImg = document.getElementById('perfil-foto-preview');
@@ -13578,17 +13822,43 @@ function _renderPrefEstagios(grupo, selecionados) {
   const el = document.getElementById('pref-estagios-' + grupo);
   if (!el) return;
   el.innerHTML = PREF_ESTAGIOS.map(e => {
-    const checked = selecionados.includes(e) ? 'checked' : '';
-    const id = 'pref-est-' + grupo + '-' + e.replace(/\s+/g,'_');
-    return `<label class="pref-estagio-chip" for="${id}"><input type="checkbox" id="${id}" value="${e}" ${checked}> ${e}</label>`;
+    const on = selecionados.includes(e) ? 'on' : '';
+    const label = e.charAt(0) + e.slice(1).toLowerCase();
+    return `<span class="chip ${on}" data-val="${e}" onclick="_toggleChip(this)"><span class="chip-check">✓</span>${label}</span>`;
   }).join('');
 }
 
 function _prefToggleEstagios(grupo) {
   const ligado = document.getElementById('pref-controlar-' + grupo).checked;
   const wrap = document.getElementById('pref-estagios-' + grupo + '-wrap');
-  if (wrap) wrap.style.opacity = ligado ? '1' : '.4';
-  wrap?.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = !ligado);
+  if (wrap) wrap.classList.toggle('disabled', !ligado);
+}
+
+// Alterna o pill-switch Desligado/Ligado de uma preferência (vacinas/exames/vermifugacao)
+function _prefSetToggle(grupo, ligado) {
+  document.getElementById('pref-controlar-' + grupo).checked = ligado;
+  const sw = document.getElementById('pref-switch-' + grupo);
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  _prefToggleEstagios(grupo);
+}
+
+// Alterna um chip (usado em estágios de preferências e especialidades da cabanha)
+function _toggleChip(el) {
+  el.classList.toggle('on');
+}
+
+// Pill-switch da Visibilidade no Marketplace (aba Cabanha)
+function _setVisivelMarketplace(ligado) {
+  document.getElementById('cpp-visivel-marketplace').checked = ligado;
+  const sw = document.getElementById('cpp-visivel-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+}
+
+// Pill-switch de notificação por e-mail (aba Meu Perfil)
+function _setNotifEmail(ligado) {
+  document.getElementById('perfil-notif-email').checked = ligado;
+  const sw = document.getElementById('perfil-notif-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
 }
 
 async function carregarPreferenciasSistema() {
@@ -13596,21 +13866,20 @@ async function carregarPreferenciasSistema() {
   const r = await _supaPub('GET', 'preferencias_sistema', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
   if (r && r[0]) Object.assign(PREFERENCIAS_SISTEMA, r[0]);
 
-  document.getElementById('pref-controlar-vacinas').checked = PREFERENCIAS_SISTEMA.controlar_vacinas;
-  document.getElementById('pref-controlar-exames').checked = PREFERENCIAS_SISTEMA.controlar_exames;
-  document.getElementById('pref-controlar-vermifugacao').checked = PREFERENCIAS_SISTEMA.controlar_vermifugacao;
+  _prefSetToggle('vacinas', PREFERENCIAS_SISTEMA.controlar_vacinas);
+  _prefSetToggle('exames', PREFERENCIAS_SISTEMA.controlar_exames);
+  _prefSetToggle('vermifugacao', PREFERENCIAS_SISTEMA.controlar_vermifugacao);
   document.getElementById('pref-intervalo-vermifugacao').value = PREFERENCIAS_SISTEMA.intervalo_vermifugacao_dias;
 
   _renderPrefEstagios('vacinas', PREFERENCIAS_SISTEMA.estagios_vacinas);
   _renderPrefEstagios('exames', PREFERENCIAS_SISTEMA.estagios_exames);
   _renderPrefEstagios('vermifugacao', PREFERENCIAS_SISTEMA.estagios_vermifugacao);
-  _prefToggleEstagios('vacinas'); _prefToggleEstagios('exames'); _prefToggleEstagios('vermifugacao');
 }
 
 function _lerEstagiosSelecionados(grupo) {
   const el = document.getElementById('pref-estagios-' + grupo);
   if (!el) return [];
-  return [...el.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+  return [...el.querySelectorAll('.chip.on')].map(chip => chip.getAttribute('data-val'));
 }
 
 async function salvarPreferenciasSistema() {
@@ -13641,7 +13910,9 @@ async function carregarPerfilPublicoCabanha() {
   const r = await _supaPub('GET', 'cabanha_perfil_publico', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
   const d = (r && r[0]) || {};
   document.getElementById('cpp-assinatura').value = d.assinatura || '';
-  document.getElementById('cpp-sobre').value = d.sobre || '';
+  const sobreEl = document.getElementById('cpp-sobre');
+  sobreEl.value = d.sobre || '';
+  const cnt = document.getElementById('cpp-sobre-count'); if (cnt) cnt.textContent = sobreEl.value.length;
   document.getElementById('cpp-ano-fundacao').value = d.ano_fundacao || '';
   document.getElementById('cpp-cidade').value = d.cidade || '';
   document.getElementById('cpp-estado').value = d.estado || '';
@@ -13651,16 +13922,16 @@ async function carregarPerfilPublicoCabanha() {
   document.getElementById('cpp-email-contato').value = d.email_contato || '';
   document.getElementById('cpp-instagram').value = d.instagram || '';
   document.getElementById('cpp-site').value = d.site || '';
-  document.getElementById('cpp-visivel-marketplace').checked = !!d.visivel_marketplace;
-  const especSel = document.getElementById('cpp-especialidades');
+  _setVisivelMarketplace(!!d.visivel_marketplace);
   const especArr = d.especialidades || [];
-  [...especSel.options].forEach(opt => opt.selected = especArr.includes(opt.value));
+  document.querySelectorAll('#cpp-especialidades-chips .chip').forEach(chip => {
+    chip.classList.toggle('on', especArr.includes(chip.getAttribute('data-val')));
+  });
 }
 
 async function salvarPerfilPublicoCabanha() {
   if (!TENANT_INFO?.tenant_id) return;
-  const especSel = document.getElementById('cpp-especialidades');
-  const especialidades = [...especSel.selectedOptions].map(o => o.value);
+  const especialidades = [...document.querySelectorAll('#cpp-especialidades-chips .chip.on')].map(c => c.getAttribute('data-val'));
   const patch = {
     tenant_id: TENANT_INFO.tenant_id,
     assinatura: document.getElementById('cpp-assinatura').value.trim() || null,
@@ -15941,13 +16212,17 @@ function _definirTema(novo) {
   document.documentElement.style.colorScheme = novo;
   try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
   _atualizarIconeTema();
+  // Cor customizada da cabanha (--green-l/--green-d) depende do tema efetivo —
+  // sem isso, trocar de tema manualmente deixava o tom "soft" desatualizado
+  // (calculado pro tema anterior) até o próximo login.
+  _aplicarCorPrimaria(TENANT_INFO?.cor_primaria);
 }
 _atualizarIconeTema();
 if (window.matchMedia) {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     let temEscolhaSalva = false;
     try { temEscolhaSalva = !!localStorage.getItem(TEMA_KEY); } catch (e) {}
-    if (!temEscolhaSalva) _atualizarIconeTema();
+    if (!temEscolhaSalva) { _atualizarIconeTema(); _aplicarCorPrimaria(TENANT_INFO?.cor_primaria); }
   });
 }
 function _aplicarCorPrimaria(cor) {
@@ -15958,9 +16233,19 @@ function _aplicarCorPrimaria(cor) {
   // Fase 1, mesmo quem nunca abriu a Tela de Conta pra mexer nisso).
   if (cor === '#2D6A4F') cor = null;
   if (cor && _hexParaRgb(cor)) {
+    // --green-l/--green-d são setados via style inline (maior especificidade que
+    // qualquer regra do <style>, incluindo os blocos de tema escuro) — por isso
+    // precisam ser calculados considerando o tema efetivo aqui, e não só misturar
+    // com branco sempre: isso deixava qualquer elemento "ativo" (nav, chip, plano
+    // atual) com fundo quase branco em cima do tema escuro, sobrepondo até a regra
+    // de dark mode. Light: mistura com branco (fundo pastel). Dark: overlay
+    // translúcido da própria cor sobre o fundo escuro (mesmo padrão dos tokens
+    // estáticos --campo-soft) + versão clareada pro texto, pro contraste não sumir.
+    const escuro = _temaEfetivo() === 'dark';
+    const rgb = _hexParaRgb(cor);
     root.setProperty('--green', cor);
-    root.setProperty('--green-d', cor);
-    root.setProperty('--green-l', _misturarComBranco(cor, 0.88));
+    root.setProperty('--green-d', escuro ? _misturarComBranco(cor, 0.45) : cor);
+    root.setProperty('--green-l', escuro ? `rgba(${rgb.r},${rgb.g},${rgb.b},.16)` : _misturarComBranco(cor, 0.88));
   } else {
     root.removeProperty('--green');
     root.removeProperty('--green-d');
@@ -16160,7 +16445,10 @@ function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
-  _chatIAMostrarFab(true);
+  // Balão do agente de IA escondido a pedido do Luciano (2026-08-25) até
+  // evoluir a funcionalidade — infra (Edge Function, RPCs, painel) continua
+  // pronta, só a exibição do FAB fica desligada aqui.
+  _chatIAMostrarFab(false);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
