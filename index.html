@@ -3811,9 +3811,15 @@
       <div class="form-group"><label>Mãe</label><input type="text" id="nmae"></div>
       <div class="form-group"><label>Pai</label><input type="text" id="npai"></div>
       <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="ncnf" style="width:auto" onchange="_avisarConfirmacaoIdade('nnasc','ncnf','ncnf-aviso')"> Confirmado (técnico validou Crioulo/pedigree/medidas)
-        </label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="font-size:13px">Confirmado</label>
+          <div class="pill-switch" id="nconfirmado-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setConfirmado('n',false)">Não</button>
+            <button type="button" class="pill-switch-btn" onclick="_setConfirmado('n',true)">Confirmado</button>
+          </div>
+          <input type="checkbox" id="ncnf" style="display:none">
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Técnico validou Crioulo/pedigree/medidas</div>
         <div id="ncnf-aviso" style="display:none;margin-top:5px;font-size:11px;padding:6px 9px;background:var(--amber-l);color:var(--amber-d);border-radius:var(--radius)">
           ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
         </div>
@@ -6624,9 +6630,15 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group" style="grid-column:1/-1"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Observações</label>
           <input id="ed-obs" value="${a.obs||''}" style="width:100%;font-size:12px" placeholder="Observações"></div>
         <div class="form-group" style="grid-column:1/-1">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="ed-confirmado" style="width:auto" ${a.confirmado?'checked':''} onchange="_avisarConfirmacaoIdade('ed-nasc','ed-confirmado','ed-confirmado-aviso')"> Confirmado (técnico validou Crioulo/pedigree/medidas)
-          </label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px">Confirmado</label>
+            <div class="pill-switch" id="ed-confirmado-switch">
+              <button type="button" class="pill-switch-btn${a.confirmado?'':' on'}" onclick="_setConfirmado('ed-',false)">Não</button>
+              <button type="button" class="pill-switch-btn${a.confirmado?' on':''}" onclick="_setConfirmado('ed-',true)">Confirmado</button>
+            </div>
+            <input type="checkbox" id="ed-confirmado" style="display:none" ${a.confirmado?'checked':''}>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Técnico validou Crioulo/pedigree/medidas</div>
           <div id="ed-confirmado-aviso" style="display:${a.confirmado&&(_idadeAnos(a.nasc)===null||_idadeAnos(a.nasc)<2)?'':'none'};margin-top:5px;font-size:11px;padding:6px 9px;background:var(--amber-l);color:var(--amber-d);border-radius:var(--radius)">
             ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
           </div>
@@ -7692,13 +7704,11 @@ function _limparFormNovoAnimal() {
   const sexEl = document.getElementById('nsex'); if (sexEl) sexEl.value = '';
   const sitEl = document.getElementById('nsit'); if (sitEl) sitEl.value = 'NA CABANHA';
   const estEl = document.getElementById('nest'); if (estEl) estEl.value = '';
-  const cnfEl = document.getElementById('ncnf'); if (cnfEl) cnfEl.checked = false;
-  const casEl = document.getElementById('ncastrado'); if (casEl) casEl.checked = false;
   const qtdEl = document.getElementById('nqtdcob'); if (qtdEl) qtdEl.value = '120';
-  const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
   _setCastrado('n', false);
+  _setConfirmado('n', false);
 }
 
 // "Coberturas por ciclo (padrão)" só faz sentido pra garanhões inteiros — campo fica escondido
@@ -7724,6 +7734,17 @@ function _setCastrado(prefixo, ligado) {
   const sexoId = prefixo === 'n' ? 'nsex' : 'ed-sexo';
   const grpId = prefixo === 'n' ? 'ngrp-qtdcob' : 'ed-grp-qtdcob';
   _toggleQtdCoberturasPadrao(sexoId, grpId, prefixo + 'castrado');
+}
+
+function _setConfirmado(prefixo, ligado) {
+  const checkId = prefixo === 'n' ? 'ncnf' : 'ed-confirmado';
+  const avisoId = prefixo === 'n' ? 'ncnf-aviso' : 'ed-confirmado-aviso';
+  const nascId = prefixo === 'n' ? 'nnasc' : 'ed-nasc';
+  const chk = document.getElementById(checkId);
+  if (chk) chk.checked = ligado;
+  const sw = document.getElementById(prefixo + 'confirmado-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  _avisarConfirmacaoIdade(nascId, checkId, avisoId);
 }
 
 // Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
@@ -10509,11 +10530,17 @@ async function _atualizarTodosAbccc() {
       if (d.sbb_mae && !a.sbb_mae) { a.sbb_mae = d.sbb_mae; patch.sbb_mae = d.sbb_mae; }
       if (d.pelagem && !a.pelagem) { a.pelagem = d.pelagem; patch.pelagem = d.pelagem; }
       if (d.nasc   && !a.nasc)    { a.nasc   = d.nasc;   patch.nasc   = d.nasc; }
-      if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
-        a.confirmacao_status = 'confirmado'; a.confirmado = true;
-        patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+      // Uma vez confirmado (seja pelo próprio criador marcando o toggle, seja por
+      // uma sincronização anterior), a ABCCC nunca mais mexe nesse campo — o
+      // registro oficial pode demorar a refletir a confirmação, e um "Atualizar
+      // ABCCC" nesse meio-tempo não pode desmarcar o que o criador já confirmou.
+      if (!a.confirmado) {
+        if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
+          a.confirmacao_status = 'confirmado'; a.confirmado = true;
+          patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+        }
+        if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
       }
-      if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
       if (d.situacao === 'Confirmado' && (d.altura || d.torax || d.canela)) {
         const ai = animais.indexOf(a);
         const jaTem = getMedidas(ai).some(m => m.contexto === 'ABCCC' || m.resp === 'ABCCC');
