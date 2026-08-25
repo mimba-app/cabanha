@@ -258,6 +258,38 @@
   :root[data-theme="dark"] .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
+  .pref-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:18px 20px; margin-bottom:14px; box-shadow:var(--sh-sm); }
+  .pref-card-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .pref-card-title-wrap { display:flex; align-items:center; gap:10px; }
+  .pref-icon { width:34px; height:34px; border-radius:10px; background:var(--bg3); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--text2); }
+  .pref-title { font-size:14px; font-weight:700; color:var(--text); }
+  .pref-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+  .pref-body { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); transition:opacity .15s; }
+  .pref-body.disabled { opacity:.4; pointer-events:none; }
+  .pref-row-inline { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .pref-row-inline label { font-size:11px; font-weight:600; color:var(--text2); white-space:nowrap; }
+  .pref-num-input { width:70px !important; text-align:center; font-family:var(--font-mono); }
+  .pref-label-estagios { font-size:11px; font-weight:600; color:var(--text2); margin-bottom:8px; }
+
+  .section-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:20px 22px; margin-bottom:14px; box-shadow:var(--sh-sm); }
+  .section-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .section-hint { font-size:11px; color:var(--text3); margin-bottom:16px; }
+  .char-count { font-size:10px; color:var(--text3); text-align:right; margin-top:-2px; }
+  .avatar-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .avatar-circle { width:72px; height:72px; border-radius:50%; background:var(--bg3); display:flex; align-items:center; justify-content:center; color:var(--text3); flex-shrink:0; border:1px solid var(--border); overflow:hidden; }
+  .avatar-circle img { width:100%; height:100%; object-fit:cover; }
+  .btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text2); padding:8px 14px; border-radius:var(--radius); font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .color-swatch-row { display:flex; align-items:center; gap:10px; }
+  .color-swatch-preview { width:38px; height:34px; border-radius:8px; border:1px solid var(--border2); flex-shrink:0; }
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .toggle-row-hint { font-size:10.5px; color:var(--text3); margin-top:2px; }
+
+  .chip-grid, .chip-select-grid { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:99px; border:1px solid var(--border2); background:var(--bg3); color:var(--text2); cursor:pointer; transition:all .12s; user-select:none; }
+  .chip.on { background:var(--green-l); border-color:var(--green-d); color:var(--green-d); }
+  .chip .chip-check { display:none; font-size:10px; }
+  .chip.on .chip-check { display:inline; }
+
   .pref-estagios-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
   .pref-estagio-chip { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:var(--radius); border:0.5px solid var(--border); cursor:pointer; }
   .pref-estagio-chip input { width:auto; }
@@ -358,9 +390,11 @@
   .filter-row { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
   /* Campo com leve afundamento (inset), como no protótipo — o oposto do card,
      que sobe. Ajuda a distinguir superfície de entrada de superfície de conteúdo. */
-  input, select { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
+  input, select, textarea { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
     box-shadow:inset 0 1px 2px rgba(43,36,25,.06); transition:border-color .14s ease, box-shadow .14s ease; }
-  input:focus, select:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+  textarea { resize:vertical; min-height:80px; line-height:1.5; }
+  input::placeholder, textarea::placeholder { color:var(--text3); }
+  input:focus, select:focus, textarea:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
   input[type=checkbox], input[type=radio] { box-shadow:none; }
   .tab-row { display:flex; margin-bottom:1.1rem; border-bottom:0.5px solid var(--border); overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   .tab-row::-webkit-scrollbar { display:none; }
@@ -2489,113 +2523,113 @@
 
   <!-- ── ABA CABANHA ─────────────────────────────────────────────────────── -->
   <div id="conta-tab-cabanha">
-    <div class="form-grid" style="max-width:640px">
-      <div class="card-title" style="grid-column:1/-1;margin-bottom:2px">Identidade</div>
-      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
-        <img id="conta-logo-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
-        <div id="conta-logo-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>
-        <label class="btn btn-sm" style="cursor:pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
-        </label>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Nome de exibição</label>
-        <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Cor da marca</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
-          <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
-          <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
-        </div>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Tema</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="pill-switch" id="conta-tema-switch">
-            <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
-            <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
+    <div style="max-width:640px">
+
+      <div class="section-card">
+        <div class="section-title">Identidade</div>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="conta-logo-wrap">
+            <img id="conta-logo-preview" alt="" style="display:none">
+            <svg id="conta-logo-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
           </div>
-          <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
+          <label class="btn-outline" style="cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
+          </label>
+        </div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome de exibição</label>
+            <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus">
+          </div>
+          <div class="form-group">
+            <label>Cor da marca</label>
+            <div class="color-swatch-row">
+              <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:38px;height:34px;padding:2px;cursor:pointer;flex-shrink:0">
+              <button class="btn-outline" type="button" onclick="_resetCorPrimaria()" style="font-size:11px;padding:6px 10px">Restaurar padrão</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tema</label>
+            <div class="pill-switch" id="conta-tema-switch">
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
+              <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Perfil público</div>
-      <div style="grid-column:1/-1;font-size:11px;color:var(--text3);margin-bottom:6px">Estas informações preparam a futura página da sua cabanha no Marketplace Mimba.</div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Assinatura</label>
-        <input type="text" id="cpp-assinatura" placeholder="Ex: Tradição em genética Crioula desde 1998" maxlength="120" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Sobre a cabanha</label>
-        <textarea id="cpp-sobre" rows="4" maxlength="1000" placeholder="História, especialidade, diferencial da cabanha..." style="width:100%"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Ano de fundação</label>
-        <input type="number" id="cpp-ano-fundacao" placeholder="Ex: 1998" min="1900" max="2100" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Especialidades</label>
-        <select id="cpp-especialidades" multiple style="width:100%;min-height:88px">
-          <option value="Morfologia">Morfologia</option>
-          <option value="Freio">Freio</option>
-          <option value="Doma">Doma</option>
-          <option value="Paleteadas">Paleteadas</option>
-          <option value="Marcha/Resistência">Marcha/Resistência</option>
-        </select>
-      </div>
-
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Localização e contato</div>
-      <div class="form-group">
-        <label>Cidade</label>
-        <input type="text" id="cpp-cidade" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Estado</label>
-        <select id="cpp-estado" style="width:100%">
-          <option value="">—</option>
-          <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
-          <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
-          <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
-          <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
-          <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
-          <option>SE</option><option>TO</option>
-        </select>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Endereço <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
-        <input type="text" id="cpp-endereco" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>WhatsApp</label>
-        <input type="tel" id="cpp-whatsapp" placeholder="(99) 99999-9999" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Telefone</label>
-        <input type="tel" id="cpp-telefone" placeholder="(99) 9999-9999" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>E-mail de contato</label>
-        <input type="email" id="cpp-email-contato" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Instagram</label>
-        <input type="text" id="cpp-instagram" placeholder="@sua_cabanha" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Site</label>
-        <input type="url" id="cpp-site" placeholder="https://..." style="width:100%">
+      <div class="section-card">
+        <div class="section-title">Perfil público</div>
+        <div class="section-hint">Estas informações preparam a futura página da sua cabanha no Marketplace Mimba.</div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Assinatura</label>
+            <input type="text" id="cpp-assinatura" placeholder="Ex: Tradição em genética Crioula desde 1998" maxlength="120">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Sobre a cabanha</label>
+            <textarea id="cpp-sobre" maxlength="1000" placeholder="História, especialidade, diferencial da cabanha..." oninput="document.getElementById('cpp-sobre-count').textContent=this.value.length"></textarea>
+            <div class="char-count"><span id="cpp-sobre-count">0</span> / 1000</div>
+          </div>
+          <div class="form-group">
+            <label>Ano de fundação</label>
+            <input type="number" id="cpp-ano-fundacao" placeholder="Ex: 1998" min="1900" max="2100">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Especialidades</label>
+            <div class="chip-select-grid" id="cpp-especialidades-chips">
+              <span class="chip" data-val="Morfologia" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Morfologia</span>
+              <span class="chip" data-val="Freio" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Freio</span>
+              <span class="chip" data-val="Doma" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Doma</span>
+              <span class="chip" data-val="Paleteadas" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Paleteadas</span>
+              <span class="chip" data-val="Marcha/Resistência" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Marcha/Resistência</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Visibilidade</div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="cpp-visivel-marketplace" style="width:auto">
-          Exibir minha cabanha no Marketplace Mimba
-        </label>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">Nome, cidade, especialidades e assinatura ficarão visíveis publicamente. Endereço completo e contatos diretos só aparecem se você optar por exibi-los.</div>
+      <div class="section-card">
+        <div class="section-title">Localização e contato</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Cidade</label><input type="text" id="cpp-cidade"></div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="cpp-estado">
+              <option value="">—</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
+              <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
+              <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
+              <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
+              <option>SE</option><option>TO</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Endereço <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+            <input type="text" id="cpp-endereco">
+          </div>
+          <div class="form-group"><label>WhatsApp</label><input type="tel" id="cpp-whatsapp" placeholder="(99) 99999-9999"></div>
+          <div class="form-group"><label>Telefone</label><input type="tel" id="cpp-telefone" placeholder="(99) 9999-9999"></div>
+          <div class="form-group"><label>E-mail de contato</label><input type="email" id="cpp-email-contato"></div>
+          <div class="form-group"><label>Instagram</label><input type="text" id="cpp-instagram" placeholder="@sua_cabanha"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Site</label><input type="url" id="cpp-site" placeholder="https://..."></div>
+        </div>
       </div>
+
+      <div class="section-card">
+        <div class="toggle-row">
+          <div>
+            <div class="section-title" style="margin:0">Visibilidade no Marketplace</div>
+            <div class="toggle-row-hint">Nome, cidade, especialidades e assinatura ficarão públicos. Endereço e contatos diretos só se você optar por exibi-los.</div>
+          </div>
+          <div class="pill-switch" id="cpp-visivel-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setVisivelMarketplace(false)">Desligado</button>
+            <button type="button" class="pill-switch-btn" onclick="_setVisivelMarketplace(true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="cpp-visivel-marketplace" style="display:none">
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
       <button class="btn btn-primary" id="conta-btn-salvar-cabanha" onclick="salvarDadosCabanha()">Salvar</button>
@@ -2604,63 +2638,71 @@
 
   <!-- ── ABA MEU PERFIL ──────────────────────────────────────────────────── -->
   <div id="conta-tab-perfil" style="display:none">
-    <div class="form-grid" style="max-width:520px">
-      <div class="card-title" style="grid-column:1/-1;margin-bottom:2px">Dados pessoais</div>
-      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
-        <img id="perfil-foto-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
-        <div id="perfil-foto-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+    <div style="max-width:520px">
+
+      <div class="section-card">
+        <div class="section-title">Dados pessoais</div>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="perfil-foto-wrap">
+            <img id="perfil-foto-preview" alt="" style="display:none">
+            <svg id="perfil-foto-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <label class="btn-outline" style="cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
+          </label>
         </div>
-        <label class="btn btn-sm" style="cursor:pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
-        </label>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>Nome completo</label>
-        <input type="text" id="perfil-nome" style="width:100%">
-      </div>
-      <div class="form-group">
-        <label>Cargo / Função</label>
-        <select id="perfil-cargo" style="width:100%">
-          <option value="">—</option>
-          <option>Proprietário</option>
-          <option>Gerente</option>
-          <option>Veterinário</option>
-          <option>Técnico</option>
-          <option>Outro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Telefone pessoal</label>
-        <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999" style="width:100%">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label>E-mail de login</label>
-        <input type="text" id="perfil-email" disabled style="width:100%;opacity:.6">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <button class="btn btn-sm" onclick="abrirModalTrocarSenha()">Trocar senha</button>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome completo</label>
+            <input type="text" id="perfil-nome">
+          </div>
+          <div class="form-group">
+            <label>Cargo / Função</label>
+            <select id="perfil-cargo">
+              <option value="">—</option>
+              <option>Proprietário</option>
+              <option>Gerente</option>
+              <option>Veterinário</option>
+              <option>Técnico</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Telefone pessoal</label>
+            <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>E-mail de login</label>
+            <input type="text" id="perfil-email" disabled style="opacity:.6">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <button class="btn-outline" onclick="abrirModalTrocarSenha()">Trocar senha</button>
+          </div>
+        </div>
       </div>
 
-      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Preferências pessoais</div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="perfil-notif-email" checked style="width:auto">
-          Receber notificações por e-mail
-        </label>
+      <div class="section-card">
+        <div class="section-title">Preferências pessoais</div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <span class="pref-sub" style="font-size:12px;color:var(--text2)">Receber notificações por e-mail</span>
+          <div class="pill-switch" id="perfil-notif-switch">
+            <button type="button" class="pill-switch-btn" onclick="_setNotifEmail(false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_setNotifEmail(true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="perfil-notif-email" checked style="display:none">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Idioma</label>
+            <select id="perfil-idioma"><option value="pt-BR">Português (BR)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Fuso horário</label>
+            <select id="perfil-fuso"><option value="America/Sao_Paulo">América/São Paulo</option></select>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Idioma</label>
-        <select id="perfil-idioma" style="width:100%">
-          <option value="pt-BR">Português (BR)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Fuso horário</label>
-        <select id="perfil-fuso" style="width:100%">
-          <option value="America/Sao_Paulo">América/São Paulo</option>
-        </select>
-      </div>
+
     </div>
     <div class="modal-footer" style="max-width:520px;padding-left:0;padding-right:0">
       <button class="btn btn-primary" onclick="salvarMeuPerfil()">Salvar</button>
@@ -2670,54 +2712,74 @@
   <!-- ── ABA PREFERÊNCIAS DO SISTEMA ─────────────────────────────────────── -->
   <div id="conta-tab-preferencias" style="display:none">
     <div style="max-width:640px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Estas preferências controlam quais alertas o sistema gera, com base no estágio de cada animal.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Controle o que o Mimba monitora automaticamente, por estágio do animal.</div>
 
-      <div class="card-title" style="margin-bottom:8px">Controle de vacinas</div>
-      <div class="form-group" style="margin-bottom:6px">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="pref-controlar-vacinas" checked style="width:auto" onchange="_prefToggleEstagios('vacinas')">
-          Controlar vencimento de vacinas
-        </label>
-      </div>
-      <div id="pref-estagios-vacinas-wrap" style="margin-bottom:20px;padding-left:26px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
-        <div id="pref-estagios-vacinas" class="pref-estagios-grid"></div>
-      </div>
-
-      <div class="card-title" style="margin-bottom:8px">Controle de exames</div>
-      <div class="form-group" style="margin-bottom:6px">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="pref-controlar-exames" checked style="width:auto" onchange="_prefToggleEstagios('exames')">
-          Controlar vencimento de exames
-        </label>
-      </div>
-      <div id="pref-estagios-exames-wrap" style="margin-bottom:20px;padding-left:26px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
-        <div id="pref-estagios-exames" class="pref-estagios-grid"></div>
-      </div>
-
-      <div class="card-title" style="margin-bottom:8px">Controle de vermifugação</div>
-      <div class="form-group" style="margin-bottom:6px">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
-          <input type="checkbox" id="pref-controlar-vermifugacao" checked style="width:auto" onchange="_prefToggleEstagios('vermifugacao')">
-          Controlar vermifugação
-        </label>
-      </div>
-      <div id="pref-estagios-vermifugacao-wrap" style="margin-bottom:12px;padding-left:26px">
-        <div class="form-group" style="max-width:200px;margin-bottom:10px">
-          <label>Intervalo padrão (dias)</label>
-          <input type="number" id="pref-intervalo-vermifugacao" value="45" min="1" max="365" style="width:100%">
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg></div>
+            <div><div class="pref-title">Controle de Vacinas</div><div class="pref-sub">Alertas de vencimento no Dashboard e Pendências</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-vacinas">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('vacinas',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('vacinas',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-vacinas" checked style="display:none">
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
-        <div id="pref-estagios-vermifugacao" class="pref-estagios-grid"></div>
+        <div id="pref-estagios-vacinas-wrap" class="pref-body">
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-vacinas" class="chip-grid"></div>
+        </div>
       </div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg></div>
+            <div><div class="pref-title">Controle de Exames</div><div class="pref-sub">Validade de exames sanitários</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-exames">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('exames',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('exames',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-exames" checked style="display:none">
+        </div>
+        <div id="pref-estagios-exames-wrap" class="pref-body">
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-exames" class="chip-grid"></div>
+        </div>
+      </div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg></div>
+            <div><div class="pref-title">Controle de Vermifugação</div><div class="pref-sub">Intervalo padrão e alertas de reaplicação</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-vermifugacao">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('vermifugacao',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('vermifugacao',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-vermifugacao" checked style="display:none">
+        </div>
+        <div id="pref-estagios-vermifugacao-wrap" class="pref-body">
+          <div class="pref-row-inline">
+            <label>Intervalo padrão</label>
+            <input type="number" id="pref-intervalo-vermifugacao" class="pref-num-input" value="45" min="1" max="365">
+            <span style="font-size:11px;color:var(--text3)">dias</span>
+          </div>
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-vermifugacao" class="chip-grid"></div>
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
       <button class="btn btn-primary" onclick="salvarPreferenciasSistema()">Salvar</button>
     </div>
   </div>
 
-  <!-- ── ABA USUÁRIOS (conteúdo original preservado) ─────────────────────── -->
+  <!-- ── ABA USUÁRIOS (preservada) ────────────────────────────────────────── -->
   <div id="conta-tab-usuarios" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
       <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
@@ -2742,7 +2804,7 @@
     </div>
   </div>
 
-  <!-- ── ABA FATURAMENTO (conteúdo original preservado) ──────────────────── -->
+  <!-- ── ABA FATURAMENTO (preservada) ─────────────────────────────────────── -->
   <div id="conta-tab-faturamento" style="display:none">
     <div class="card-title" style="margin-bottom:8px">Seu plano</div>
     <div id="fat-planos-content" style="margin-bottom:22px">
@@ -2760,12 +2822,6 @@
   </div>
 </div>
 
-
-</div><!-- end main -->
-<div class="save-badge" id="save-badge">✓ Dados salvos</div>
-
-<!-- MODAL USUÁRIO -->
-<!-- TELA DE CONTA: cabanha (nome/logo) + usuários da cabanha -->
 <!-- V1.5 (Fase 4): atualizar cartão de cobrança -->
 <div class="modal-bg" id="modal-atualizar-cartao">
   <div class="modal" style="width:440px">
@@ -13514,7 +13570,7 @@ async function carregarMeuPerfil() {
   document.getElementById('perfil-email').value = usuarioAtual.email || '';
   document.getElementById('perfil-cargo').value = usuarioAtual.cargo || '';
   document.getElementById('perfil-telefone').value = usuarioAtual.telefone_pessoal || '';
-  document.getElementById('perfil-notif-email').checked = usuarioAtual.notif_email !== false;
+  _setNotifEmail(usuarioAtual.notif_email !== false);
   document.getElementById('perfil-idioma').value = usuarioAtual.idioma || 'pt-BR';
   document.getElementById('perfil-fuso').value = usuarioAtual.fuso_horario || 'America/Sao_Paulo';
   const fotoImg = document.getElementById('perfil-foto-preview');
@@ -13578,17 +13634,43 @@ function _renderPrefEstagios(grupo, selecionados) {
   const el = document.getElementById('pref-estagios-' + grupo);
   if (!el) return;
   el.innerHTML = PREF_ESTAGIOS.map(e => {
-    const checked = selecionados.includes(e) ? 'checked' : '';
-    const id = 'pref-est-' + grupo + '-' + e.replace(/\s+/g,'_');
-    return `<label class="pref-estagio-chip" for="${id}"><input type="checkbox" id="${id}" value="${e}" ${checked}> ${e}</label>`;
+    const on = selecionados.includes(e) ? 'on' : '';
+    const label = e.charAt(0) + e.slice(1).toLowerCase();
+    return `<span class="chip ${on}" data-val="${e}" onclick="_toggleChip(this)"><span class="chip-check">✓</span>${label}</span>`;
   }).join('');
 }
 
 function _prefToggleEstagios(grupo) {
   const ligado = document.getElementById('pref-controlar-' + grupo).checked;
   const wrap = document.getElementById('pref-estagios-' + grupo + '-wrap');
-  if (wrap) wrap.style.opacity = ligado ? '1' : '.4';
-  wrap?.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = !ligado);
+  if (wrap) wrap.classList.toggle('disabled', !ligado);
+}
+
+// Alterna o pill-switch Desligado/Ligado de uma preferência (vacinas/exames/vermifugacao)
+function _prefSetToggle(grupo, ligado) {
+  document.getElementById('pref-controlar-' + grupo).checked = ligado;
+  const sw = document.getElementById('pref-switch-' + grupo);
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  _prefToggleEstagios(grupo);
+}
+
+// Alterna um chip (usado em estágios de preferências e especialidades da cabanha)
+function _toggleChip(el) {
+  el.classList.toggle('on');
+}
+
+// Pill-switch da Visibilidade no Marketplace (aba Cabanha)
+function _setVisivelMarketplace(ligado) {
+  document.getElementById('cpp-visivel-marketplace').checked = ligado;
+  const sw = document.getElementById('cpp-visivel-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+}
+
+// Pill-switch de notificação por e-mail (aba Meu Perfil)
+function _setNotifEmail(ligado) {
+  document.getElementById('perfil-notif-email').checked = ligado;
+  const sw = document.getElementById('perfil-notif-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
 }
 
 async function carregarPreferenciasSistema() {
@@ -13596,21 +13678,20 @@ async function carregarPreferenciasSistema() {
   const r = await _supaPub('GET', 'preferencias_sistema', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
   if (r && r[0]) Object.assign(PREFERENCIAS_SISTEMA, r[0]);
 
-  document.getElementById('pref-controlar-vacinas').checked = PREFERENCIAS_SISTEMA.controlar_vacinas;
-  document.getElementById('pref-controlar-exames').checked = PREFERENCIAS_SISTEMA.controlar_exames;
-  document.getElementById('pref-controlar-vermifugacao').checked = PREFERENCIAS_SISTEMA.controlar_vermifugacao;
+  _prefSetToggle('vacinas', PREFERENCIAS_SISTEMA.controlar_vacinas);
+  _prefSetToggle('exames', PREFERENCIAS_SISTEMA.controlar_exames);
+  _prefSetToggle('vermifugacao', PREFERENCIAS_SISTEMA.controlar_vermifugacao);
   document.getElementById('pref-intervalo-vermifugacao').value = PREFERENCIAS_SISTEMA.intervalo_vermifugacao_dias;
 
   _renderPrefEstagios('vacinas', PREFERENCIAS_SISTEMA.estagios_vacinas);
   _renderPrefEstagios('exames', PREFERENCIAS_SISTEMA.estagios_exames);
   _renderPrefEstagios('vermifugacao', PREFERENCIAS_SISTEMA.estagios_vermifugacao);
-  _prefToggleEstagios('vacinas'); _prefToggleEstagios('exames'); _prefToggleEstagios('vermifugacao');
 }
 
 function _lerEstagiosSelecionados(grupo) {
   const el = document.getElementById('pref-estagios-' + grupo);
   if (!el) return [];
-  return [...el.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+  return [...el.querySelectorAll('.chip.on')].map(chip => chip.getAttribute('data-val'));
 }
 
 async function salvarPreferenciasSistema() {
@@ -13641,7 +13722,9 @@ async function carregarPerfilPublicoCabanha() {
   const r = await _supaPub('GET', 'cabanha_perfil_publico', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
   const d = (r && r[0]) || {};
   document.getElementById('cpp-assinatura').value = d.assinatura || '';
-  document.getElementById('cpp-sobre').value = d.sobre || '';
+  const sobreEl = document.getElementById('cpp-sobre');
+  sobreEl.value = d.sobre || '';
+  const cnt = document.getElementById('cpp-sobre-count'); if (cnt) cnt.textContent = sobreEl.value.length;
   document.getElementById('cpp-ano-fundacao').value = d.ano_fundacao || '';
   document.getElementById('cpp-cidade').value = d.cidade || '';
   document.getElementById('cpp-estado').value = d.estado || '';
@@ -13651,16 +13734,16 @@ async function carregarPerfilPublicoCabanha() {
   document.getElementById('cpp-email-contato').value = d.email_contato || '';
   document.getElementById('cpp-instagram').value = d.instagram || '';
   document.getElementById('cpp-site').value = d.site || '';
-  document.getElementById('cpp-visivel-marketplace').checked = !!d.visivel_marketplace;
-  const especSel = document.getElementById('cpp-especialidades');
+  _setVisivelMarketplace(!!d.visivel_marketplace);
   const especArr = d.especialidades || [];
-  [...especSel.options].forEach(opt => opt.selected = especArr.includes(opt.value));
+  document.querySelectorAll('#cpp-especialidades-chips .chip').forEach(chip => {
+    chip.classList.toggle('on', especArr.includes(chip.getAttribute('data-val')));
+  });
 }
 
 async function salvarPerfilPublicoCabanha() {
   if (!TENANT_INFO?.tenant_id) return;
-  const especSel = document.getElementById('cpp-especialidades');
-  const especialidades = [...especSel.selectedOptions].map(o => o.value);
+  const especialidades = [...document.querySelectorAll('#cpp-especialidades-chips .chip.on')].map(c => c.getAttribute('data-val'));
   const patch = {
     tenant_id: TENANT_INFO.tenant_id,
     assinatura: document.getElementById('cpp-assinatura').value.trim() || null,
