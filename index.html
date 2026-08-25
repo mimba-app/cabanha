@@ -1656,9 +1656,9 @@
     <select id="f-confirm" onchange="filtrar()">
       <option value="">Confirmação ABCCC</option>
       <option value="nao_confirmados">Não marcados</option>
+      <option value="em_preparo">Em preparação</option>
       <option value="em_risco">Em risco</option>
-      <option value="apto_confirmacao">Aptos para confirmação</option>
-      <option value="aguardando_confirmacao">Aguardando confirmação</option>
+      <option value="aptos">Aptos</option>
     </select>
     <!-- Reprodutivo v4, Fase 7 (spec Menu Animais): grid/swimlane como alternativa à tabela densa —
          toggle, não substituição, pra não tirar quem prefere a lista compacta. -->
@@ -1703,9 +1703,9 @@
       <div class="sec-hero-sub">Acompanhe os animais que precisam avançar no processo de confirmação junto à ABCCC e enxergue antecipadamente o que merece atenção.</div>
     </div>
     <div class="conf-cards">
-      <div class="conf-card" data-filtro="aguardando_confirmacao" onclick="_confFiltrar('aguardando_confirmacao')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aguardando">0</span></div></div><h3>A confirmar</h3><p>já marcados — aguardando visita do técnico ABCCC</p></div>
-      <div class="conf-card" data-filtro="em_preparo" onclick="_confFiltrar('em_preparo')"><div class="selo-registro lg ok" id="conf-m-preparo-selo"><div class="selo-circ"><span class="glyph" id="conf-m-preparo">0</span></div></div><h3>Em preparação</h3><p id="conf-m-preparo-legenda">ainda não atingiram a medida mínima</p></div>
-      <div class="conf-card" data-filtro="apto_confirmacao" onclick="_confFiltrar('apto_confirmacao')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aptos">0</span></div></div><h3>Aptos</h3><p>medida mínima atingida — já pode marcar para confirmação</p></div>
+      <div class="conf-card" data-filtro="em_preparo" onclick="_confFiltrar('em_preparo')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-preparo">0</span></div></div><h3>Em preparação</h3><p>menos de 24 meses ou ainda sem medida lançada</p></div>
+      <div class="conf-card" data-filtro="em_risco" onclick="_confFiltrar('em_risco')"><div class="selo-registro lg crit"><div class="selo-circ"><span class="glyph" id="conf-m-risco">0</span></div></div><h3>Em risco</h3><p>24+ meses, medido, abaixo do mínimo ABCCC</p></div>
+      <div class="conf-card" data-filtro="aptos" onclick="_confFiltrar('aptos')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aptos">0</span></div></div><h3>Aptos</h3><p>medida mínima atingida — aguardando o técnico ABCCC</p></div>
       <div class="conf-card" data-filtro="confirmados" onclick="_confFiltrar('confirmados')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-confirmados">0</span></div></div><h3>Confirmados</h3><p>já confirmados pelo técnico ABCCC</p></div>
     </div>
     <div class="conf-filtro-bar" id="conf-filtro-bar" style="display:none">Mostrando: <strong id="conf-filtro-nome"></strong> <a onclick="_confFiltrar(null)">ver todos</a></div>
@@ -2586,6 +2586,11 @@
       <div class="card-title">Análise de sangues</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Resumo de linhagem e concentração de sangue do plantel.</div>
       <button class="btn btn-primary btn-sm" onclick="gerarRelatorioSangues()">Gerar PDF</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Animais sem marcação RP</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Quem do plantel ainda não tem número/marca da cabanha (RP) cadastrado no perfil.</div>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorioSemRP()">Gerar PDF</button>
     </div>
   </div>
 </div>
@@ -4512,9 +4517,9 @@ function renderAnimais(){
     let confOk = true;
     if (fConf) {
       if (fConf === 'nao_confirmados') confOk = !a.confirmado && a.confirmacao_status !== 'nao_confirmado';
+      else if (fConf === 'em_preparo') confOk = _calcStatusConfirmacao(a) === 'em_desenvolvimento';
       else if (fConf === 'em_risco') confOk = _calcStatusConfirmacao(a) === 'em_risco';
-      else if (fConf === 'apto_confirmacao') confOk = _calcStatusConfirmacao(a) === 'apto_confirmacao';
-      else if (fConf === 'aguardando_confirmacao') confOk = a.confirmacao_status === 'aguardando_confirmacao';
+      else if (fConf === 'aptos') confOk = ['apto_confirmacao','aguardando_confirmacao'].includes(_calcStatusConfirmacao(a));
     }
     return nOk&&sOk&&confOk&&(!fSx||a.sexo===fSx)&&(!fC||a.ciclo===fC);
   });
@@ -10643,8 +10648,15 @@ function _calcStatusConfirmacao(animal) {
   const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
 
   if (!ult) return 'em_desenvolvimento';
+  // Sem nenhuma medida real lançada (cernelha/tórax/canela) — sem dado pra avaliar
+  // risco ou aptidão, então fica em preparação independente da idade. Sem isso,
+  // um animal só com peso registrado passava "apto" por vacuidade (nenhuma
+  // medida pra reprovar não é o mesmo que ter atingido o mínimo).
+  const temMedidaReal = !!(ult.cernelha || ult.torax || ult.canela);
+  if (!temMedidaReal) return 'em_desenvolvimento';
 
-  // >= 24 meses: verificar se medidas atingidas
+  // >= 24 meses e com medida real: único caso que vira "em risco" de verdade —
+  // idade de avaliação batida e ainda assim abaixo do mínimo ABCCC.
   if (meses >= 24) {
     const cOk = !ult.cernelha || (ult.cernelha >= pad.cernelha_min && ult.cernelha <= pad.cernelha_max);
     const tOk = !ult.torax   || ult.torax   >= pad.torax_min;
@@ -10652,35 +10664,10 @@ function _calcStatusConfirmacao(animal) {
     return (cOk && tOk && caN) ? 'apto_confirmacao' : 'em_risco';
   }
 
-  // < 24 meses: projeção
-  const _curvaC = (animal.sexo||''). toLowerCase().includes('macho') ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
-  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _curvaC) : null;
-  const projT  = ult.torax    ? _projetarMedida(ult.torax,    meses, _CURVA_TORAX)    : null;
-  const projCa = ult.canela   ? _projetarMedida(ult.canela,   meses, _CURVA_CANELA)   : null;
-
-  const emRisco = (projC  !== null && (projC  < pad.cernelha_min || projC  > pad.cernelha_max + 0.02))
-               || (projT  !== null && projT  < pad.torax_min)
-               || (projCa !== null && projCa < pad.canela_min);
-
-  return emRisco ? 'em_risco' : 'em_desenvolvimento';
-}
-
-// Badge HTML do status de confirmação (para grade e lista)
-function _badgeConfirmacao(animal) {
-  if (animal.confirmado) return ''; // já confirmado — usa badge existente
-  const status = _calcStatusConfirmacao(animal);
-  const meses = _idadeMeses(animal.nasc);
-  if (status === 'nao_confirmado') return ''; // sai do controle
-  if (status === 'confirmado') return '';
-  if (status === 'aguardando_confirmacao')
-    return '<span class="badge bg-solid" title="Aguardando confirmação com técnico ABCCC">Confirmação marcada</span>';
-  if (status === 'em_risco')
-    return '<span class="badge br-solid" title="Projeção indica risco de não atingir medidas mínimas ABCCC">⚠ Em risco</span>';
-  if (status === 'apto_confirmacao')
-    return '<span class="badge bg-solid" title="Medidas atingidas — pronto para confirmação">Apto — confirmar</span>';
-  // em_desenvolvimento
-  const mesesLabel = meses !== null ? ` · ${meses}m` : '';
-  return `<span class="badge ba" title="Em desenvolvimento${mesesLabel}">Em desenv.${mesesLabel}</span>`;
+  // < 24 meses: ainda em preparação — a projeção de risco por curva de
+  // crescimento fica só como sinalização por medida no painel (_linhaMedida),
+  // não vira o status "em risco" antes da idade de avaliação real.
+  return 'em_desenvolvimento';
 }
 
 // HTML do painel de projeção de confirmação (usado no card do animal e na aba medidas)
@@ -10786,10 +10773,7 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   const idxAnimal = i;
   const botoesAcao = modoCompacto ? '' :
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" title="Move este animal pra 'A confirmar' — avisa que ele está pronto, aguardando a visita do técnico ABCCC." onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : `<span style="font-size:11px;color:var(--blue-d);align-self:center">Já marcado — aguardando técnico</span>`)
-    + (!animal.marcacao_rp_em
-        ? `<button class="btn btn-sm" title="Registra a data da marcação de RP feita no animal — é só um registro histórico, não muda o status de confirmação." onclick="_registrarMarcacaoRP(${idxAnimal})">📌 Registrar marcação RP</button>`
-        : `<span style="font-size:11px;color:var(--text3);align-self:center">RP marcado em ${fd(animal.marcacao_rp_em)}</span>`)
+    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" title="Move este animal pra 'Aptos' — avisa que ele está pronto, aguardando a visita do técnico ABCCC." onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : `<span style="font-size:11px;color:var(--blue-d);align-self:center">Já marcado — aguardando técnico</span>`)
     + `<button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" title="Remove este animal do acompanhamento de confirmação." onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>`
     + '</div>';
 
@@ -10807,7 +10791,7 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
 
 // Aba "Confirmação ABCCC" da tela de Animais — a jornada de confirmação junta num
 // só lugar quem antes só aparecia espremido dentro da ficha de cada animal.
-let _confFiltro = null; // null (todos) | 'aguardando_confirmacao' | 'em_preparo' | 'apto_confirmacao' | 'confirmados'
+let _confFiltro = null; // null (todos) | 'em_preparo' | 'em_risco' | 'aptos' | 'confirmados'
 function _confFiltrar(tipo) {
   _confFiltro = (_confFiltro === tipo) ? null : tipo;
   renderConfirmacaoAbccc();
@@ -10820,23 +10804,22 @@ function renderConfirmacaoAbccc() {
     && !a.confirmado && a.confirmacao_status !== 'nao_confirmado');
   const porStatus = { aguardando_confirmacao: [], apto_confirmacao: [], em_risco: [], em_desenvolvimento: [] };
   elegiveis.forEach(a => { const st = _calcStatusConfirmacao(a); if (porStatus[st]) porStatus[st].push(a); });
+  // "Aptos" junta quem já bateu a medida mínima com quem já foi marcado e só
+  // está aguardando a visita do técnico — pro criador as duas coisas são o
+  // mesmo momento da jornada ("já pode/já vai confirmar"), só muda se alguém
+  // já apertou o botão de marcar ou não.
+  const aptosLista = [...porStatus.apto_confirmacao, ...porStatus.aguardando_confirmacao];
   const confirmadosLista = animais.filter(a => isNaCabanha(a) && a.confirmado);
 
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('conf-m-aguardando', porStatus.aguardando_confirmacao.length);
-  set('conf-m-preparo', porStatus.em_desenvolvimento.length + porStatus.em_risco.length);
-  set('conf-m-aptos', porStatus.apto_confirmacao.length);
+  set('conf-m-preparo', porStatus.em_desenvolvimento.length);
+  set('conf-m-risco', porStatus.em_risco.length);
+  set('conf-m-aptos', aptosLista.length);
   set('conf-m-confirmados', confirmadosLista.length);
-  const selo = document.getElementById('conf-m-preparo-selo');
-  const legenda = document.getElementById('conf-m-preparo-legenda');
-  if (selo) selo.className = 'selo-registro lg ' + (porStatus.em_risco.length ? 'warn' : 'ok');
-  if (legenda) legenda.textContent = porStatus.em_risco.length
-    ? `${porStatus.em_desenvolvimento.length} em desenvolvimento normal · ⚠ ${porStatus.em_risco.length} em risco de não atingir a medida`
-    : 'ainda não atingiram a medida mínima';
 
   // Card ativo em destaque + barra "mostrando: X"
   document.querySelectorAll('.conf-card[data-filtro]').forEach(el => el.classList.toggle('active', el.dataset.filtro === _confFiltro));
-  const nomesFiltro = { aguardando_confirmacao:'A confirmar', em_preparo:'Em preparação', apto_confirmacao:'Aptos', confirmados:'Confirmados' };
+  const nomesFiltro = { em_preparo:'Em preparação', em_risco:'Em risco', aptos:'Aptos', confirmados:'Confirmados' };
   const barra = document.getElementById('conf-filtro-bar');
   if (barra) {
     barra.style.display = _confFiltro ? 'flex' : 'none';
@@ -10845,11 +10828,11 @@ function renderConfirmacaoAbccc() {
   }
 
   let lista, vazioMsg = 'Nenhum animal em acompanhamento de confirmação no momento.';
-  if (_confFiltro === 'aguardando_confirmacao') { lista = porStatus.aguardando_confirmacao; vazioMsg = 'Nenhum animal marcado para confirmação no momento.'; }
-  else if (_confFiltro === 'apto_confirmacao')  { lista = porStatus.apto_confirmacao; vazioMsg = 'Nenhum animal apto para confirmação no momento.'; }
-  else if (_confFiltro === 'em_preparo')        { lista = [...porStatus.em_risco, ...porStatus.em_desenvolvimento]; vazioMsg = 'Nenhum animal em preparação no momento.'; }
-  else if (_confFiltro === 'confirmados')       { lista = confirmadosLista; vazioMsg = 'Nenhum animal confirmado ainda.'; }
-  else lista = [...porStatus.aguardando_confirmacao, ...porStatus.apto_confirmacao, ...porStatus.em_risco, ...porStatus.em_desenvolvimento];
+  if (_confFiltro === 'em_preparo')        { lista = porStatus.em_desenvolvimento; vazioMsg = 'Nenhum animal em preparação no momento.'; }
+  else if (_confFiltro === 'em_risco')     { lista = porStatus.em_risco; vazioMsg = 'Nenhum animal em risco no momento.'; }
+  else if (_confFiltro === 'aptos')        { lista = aptosLista; vazioMsg = 'Nenhum animal apto para confirmação no momento.'; }
+  else if (_confFiltro === 'confirmados')  { lista = confirmadosLista; vazioMsg = 'Nenhum animal confirmado ainda.'; }
+  else lista = [...porStatus.em_risco, ...aptosLista, ...porStatus.em_desenvolvimento];
 
   if (!lista.length) {
     cont.innerHTML = `<div class="nut-empty">${vazioMsg}</div>`;
@@ -10858,7 +10841,7 @@ function renderConfirmacaoAbccc() {
   cont.innerHTML = lista.map(a => {
     const i = animais.indexOf(a);
     const corpo = a.confirmado
-      ? `<div style="font-size:12px;color:var(--text3);padding-top:8px">✓ Confirmado${a.marcacao_rp_em ? ` · RP marcado em ${fd(a.marcacao_rp_em)}` : ''}</div>`
+      ? `<div style="font-size:12px;color:var(--text3);padding-top:8px">✓ Confirmado</div>`
       : _htmlPainelConfirmacao(a, false);
     return `<div class="card" style="padding:14px 16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -10872,25 +10855,6 @@ function renderConfirmacaoAbccc() {
       ${corpo}
     </div>`;
   }).join('');
-}
-
-async function _registrarMarcacaoRP(i) {
-  const a = animais[i];
-  const data = prompt('Data da marcação RP (AAAA-MM-DD):', new Date().toISOString().slice(0,10));
-  if (!data) return;
-  await _supa('PATCH','animais',{marcacao_rp_em:data},`?id=eq.${a.db_id}`);
-  a.marcacao_rp_em = data;
-  // Registrar como evento na linha do tempo
-  await _supa('POST','eventos',{
-    animal_id: a.db_id,
-    data: data,
-    tipo: 'MARCACAO_RP',
-    descricao: `Marcação RP realizada (RP: ${a.rp||'—'})`,
-    criado_por: usuarioAtual?.id
-  });
-  _renderDetCorpo(i, false);
-  renderConfirmacaoAbccc();
-  _mostrarStatusSync('Marcação RP registrada na linha do tempo.', 'green');
 }
 
 async function _marcarParaConfirmacao(i) {
@@ -16379,6 +16343,19 @@ function gerarRelatorioSangues() {
     `<table><thead><tr><th>Animal</th><th>SBB</th><th>Pelagem</th><th>Mãe</th><th>Pai</th></tr></thead>
      <tbody>${linhas || '<tr><td colspan="5">Nenhum animal cadastrado.</td></tr>'}</tbody></table>
      <div class="rel-rodape">Mimba — Gestão Crioulos · Para análise detalhada de consanguinidade, use a página Sangues.</div>`;
+  _imprimirRelatorio(html);
+}
+
+function gerarRelatorioSemRP() {
+  // Marcação RP = número + marca da cabanha postos no animal (sem relação com
+  // a jornada de confirmação ABCCC) — o controle é simplesmente ter ou não o
+  // campo RP preenchido no perfil, não um evento separado pra registrar.
+  const semRp = animais.filter(a => isNaCabanha(a) && a.status_cadastro !== 'rascunho' && !a.rp);
+  const linhas = semRp.map(a => `<tr><td>${a.nome}</td><td>${a.sbb || '—'}</td><td>${a.sexo || '—'}</td><td>${fd(a.nasc) || '—'}</td></tr>`).join('');
+  const html = _cabecalhoRelatorio('Animais sem Marcação RP', `${semRp.length} animal(is) sem número/marca da cabanha no perfil`) +
+    `<table><thead><tr><th>Animal</th><th>SBB</th><th>Sexo</th><th>Nascimento</th></tr></thead>
+     <tbody>${linhas || '<tr><td colspan="4">Todos os animais do plantel já têm RP cadastrado.</td></tr>'}</tbody></table>
+     <div class="rel-rodape">Mimba — Gestão Crioulos · Cadastre o RP no perfil de cada animal (aba Editar) pra sair desta lista.</div>`;
   _imprimirRelatorio(html);
 }
 
