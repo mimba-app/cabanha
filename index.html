@@ -16024,13 +16024,17 @@ function _definirTema(novo) {
   document.documentElement.style.colorScheme = novo;
   try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
   _atualizarIconeTema();
+  // Cor customizada da cabanha (--green-l/--green-d) depende do tema efetivo —
+  // sem isso, trocar de tema manualmente deixava o tom "soft" desatualizado
+  // (calculado pro tema anterior) até o próximo login.
+  _aplicarCorPrimaria(TENANT_INFO?.cor_primaria);
 }
 _atualizarIconeTema();
 if (window.matchMedia) {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     let temEscolhaSalva = false;
     try { temEscolhaSalva = !!localStorage.getItem(TEMA_KEY); } catch (e) {}
-    if (!temEscolhaSalva) _atualizarIconeTema();
+    if (!temEscolhaSalva) { _atualizarIconeTema(); _aplicarCorPrimaria(TENANT_INFO?.cor_primaria); }
   });
 }
 function _aplicarCorPrimaria(cor) {
@@ -16041,9 +16045,19 @@ function _aplicarCorPrimaria(cor) {
   // Fase 1, mesmo quem nunca abriu a Tela de Conta pra mexer nisso).
   if (cor === '#2D6A4F') cor = null;
   if (cor && _hexParaRgb(cor)) {
+    // --green-l/--green-d são setados via style inline (maior especificidade que
+    // qualquer regra do <style>, incluindo os blocos de tema escuro) — por isso
+    // precisam ser calculados considerando o tema efetivo aqui, e não só misturar
+    // com branco sempre: isso deixava qualquer elemento "ativo" (nav, chip, plano
+    // atual) com fundo quase branco em cima do tema escuro, sobrepondo até a regra
+    // de dark mode. Light: mistura com branco (fundo pastel). Dark: overlay
+    // translúcido da própria cor sobre o fundo escuro (mesmo padrão dos tokens
+    // estáticos --campo-soft) + versão clareada pro texto, pro contraste não sumir.
+    const escuro = _temaEfetivo() === 'dark';
+    const rgb = _hexParaRgb(cor);
     root.setProperty('--green', cor);
-    root.setProperty('--green-d', cor);
-    root.setProperty('--green-l', _misturarComBranco(cor, 0.88));
+    root.setProperty('--green-d', escuro ? _misturarComBranco(cor, 0.45) : cor);
+    root.setProperty('--green-l', escuro ? `rgba(${rgb.r},${rgb.g},${rgb.b},.16)` : _misturarComBranco(cor, 0.88));
   } else {
     root.removeProperty('--green');
     root.removeProperty('--green-d');
