@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidade — Mimba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2B2419; --ink-70: rgba(43,36,25,.70); --ink-50: rgba(43,36,25,.50); --ink-15: rgba(43,36,25,.15);
+    --campo: #4F6B2E; --campo-deep: #33461C;
+    --ouro: #B8860B;
+    --areia: #F4EFE6; --pergaminho: #FCF9F3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--areia); color: var(--ink);
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.65; font-size: 15px;
+  }
+  header {
+    background: linear-gradient(135deg, var(--campo) 0%, var(--campo-deep) 100%);
+    color: var(--pergaminho); padding: 2.5rem 1.5rem 2rem;
+  }
+  header .wrap { max-width: 720px; margin: 0 auto; }
+  .wordmark { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 26px; }
+  .wordmark .dot { color: var(--ouro); }
+  header p { margin: 6px 0 0; color: rgba(252,249,243,.75); font-size: 13px; }
+  main { max-width: 720px; margin: 0 auto; padding: 2.25rem 1.5rem 4rem; }
+  h1 { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 26px; margin: 0 0 .25rem; }
+  .atualizado { color: var(--ink-50); font-size: 13px; margin: 0 0 2rem; }
+  h2 { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 18px; margin: 2.25rem 0 .75rem; }
+  p, li { color: var(--ink-70); }
+  ul { padding-left: 1.25rem; }
+  li { margin-bottom: .4rem; }
+  a { color: var(--campo-deep); }
+  .card { background: var(--pergaminho); border: 1px solid var(--ink-15); border-radius: 14px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+  footer { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 3rem; color: var(--ink-50); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="wordmark">Mimba<span class="dot">.</span></div>
+    <p>Gestão de cabanhas de cavalo Crioulo</p>
+  </div>
+</header>
+<main>
+  <h1>Política de Privacidade</h1>
+  <p class="atualizado">Última atualização: 24 de agosto de 2026</p>
+
+  <p>Esta política descreve como o <strong>Mimba</strong> (aplicativo web e móvel, operado por
+  Mimba Tech) coleta, usa e protege os dados de quem usa o sistema — administradores,
+  veterinários e cabanheiros das cabanhas que assinam a plataforma, e visitantes do app antes de
+  criar conta.</p>
+
+  <h2>Quem somos</h2>
+  <p>O Mimba é um sistema de gestão para cabanhas de cavalo Crioulo, integrado à ABCCC
+  (Associação Brasileira de Criadores de Cavalo Crioulo). Cada cabanha assinante tem seus dados
+  isolados das demais — nenhuma cabanha tem acesso ao que outra cadastrou.</p>
+
+  <h2>Dados que coletamos</h2>
+  <ul>
+    <li><strong>Dados de conta:</strong> nome, e-mail e senha (armazenada de forma
+    criptografada, nunca em texto simples) de quem faz login no sistema.</li>
+    <li><strong>Dados operacionais da cabanha:</strong> tudo que você cadastra pra gerenciar o
+    plantel — animais (nome, SBB, pelagem, genealogia), vacinas, exames, medidas, eventos
+    reprodutivos, estoque e lançamentos financeiros da própria cabanha.</li>
+    <li><strong>Dados de cobrança:</strong> ao assinar um plano pago, os dados de cartão/pagamento
+    são processados diretamente pelo nosso parceiro de pagamentos (Asaas) — o Mimba não armazena
+    número de cartão de crédito.</li>
+    <li><strong>Dados técnicos básicos:</strong> registros de acesso ao servidor (como IP e
+    horário), usados só pra segurança e diagnóstico de problemas, nunca pra rastreamento
+    publicitário.</li>
+  </ul>
+
+  <div class="card">
+    <strong>O que NÃO fazemos:</strong> não usamos cookies de rastreamento publicitário, não
+    temos pixels do Facebook/Google Ads, não vendemos nem compartilhamos dados com terceiros pra
+    fins comerciais, e não exibimos anúncios dentro do app.
+  </div>
+
+  <h2>Como usamos os dados</h2>
+  <ul>
+    <li>Operar o sistema — autenticar seu login, mostrar os dados da sua cabanha, gerar os
+    relatórios e alertas que você configura.</li>
+    <li>Consultar dados públicos da ABCCC (genealogia, resultados de competição) quando você
+    pesquisa um animal por código SBB — essa consulta é feita ao vivo na base pública da ABCCC,
+    não envolve compartilhar dado seu com eles.</li>
+    <li>Processar cobrança de assinatura, via o parceiro de pagamentos.</li>
+    <li>Responder pedidos de suporte enviados por você.</li>
+  </ul>
+
+  <h2>Onde os dados ficam armazenados</h2>
+  <p>Os dados são armazenados em infraestrutura do <strong>Supabase</strong> (banco de dados e
+  autenticação), com isolamento técnico entre cabanhas — cada cabanha tem seus dados segregados,
+  e o acesso é sempre autenticado e autorizado por regra de banco antes de qualquer leitura.</p>
+
+  <h2>Com quem compartilhamos</h2>
+  <ul>
+    <li><strong>Asaas</strong> — processamento de pagamento de assinaturas.</li>
+    <li><strong>ABCCC</strong> — apenas consultas de dados públicos (nunca enviamos dado seu
+    pra eles).</li>
+    <li><strong>Autoridades</strong> — só se exigido por lei ou ordem judicial.</li>
+  </ul>
+  <p>Não compartilhamos dados com anunciantes, corretores de dados, nem qualquer outro terceiro
+  fora dessa lista.</p>
+
+  <h2>Assistente de IA (opcional)</h2>
+  <p>O app conta com um assistente de IA que responde perguntas sobre os dados da sua própria
+  cabanha e sobre como usar o sistema. Ele só acessa o que o seu próprio usuário logado já teria
+  acesso normalmente, nunca dados de outra cabanha, e não usa suas conversas pra treinar modelos
+  de terceiros.</p>
+
+  <h2>Seus direitos (LGPD)</h2>
+  <p>Você pode, a qualquer momento, pedir acesso, correção ou exclusão dos seus dados pessoais,
+  ou o encerramento da sua conta — é só entrar em contato pelo e-mail abaixo. Dados operacionais
+  da cabanha (cadastro de animais, histórico) pertencem à cabanha assinante; o pedido de exclusão
+  de conta individual não apaga o histórico da cabanha à qual você estava vinculado.</p>
+
+  <h2>Crianças e adolescentes</h2>
+  <p>O Mimba é uma ferramenta de gestão profissional, não direcionada a menores de 18 anos, e não
+  coletamos intencionalmente dados de crianças.</p>
+
+  <h2>Alterações nesta política</h2>
+  <p>Podemos atualizar esta política conforme o produto evolui. Mudanças relevantes serão
+  comunicadas por e-mail ou aviso dentro do app.</p>
+
+  <h2>Contato</h2>
+  <p>Dúvidas sobre privacidade ou pedidos relacionados aos seus dados:
+  <a href="mailto:app.mimba@gmail.com">app.mimba@gmail.com</a></p>
+</main>
+<footer>© 2026 Mimba Tech. Todos os direitos reservados.</footer>
+</body>
+</html>
