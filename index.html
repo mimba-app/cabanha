@@ -1591,7 +1591,7 @@
 <!-- ANIMAIS -->
 <div class="page" id="page-animais">
   <div class="page-header">
-    <div><div class="page-title">Animais</div><div class="page-sub">Plantel completo · dados ABCCC integrados</div></div>
+    <div><div class="page-title">Animais</div><div class="page-sub">Cada animal da cabanha — genealogia, saúde e situação de confirmação sempre à mão</div></div>
     <div style="display:flex;gap:8px">
       <button id="btn-abccc-update" class="btn btn-sm" onclick="_atualizarTodosAbccc()" title="Atualizar dados de todos os animais com SBB via ABCCC">
         <div class="abccc-fill" style="width:0%"></div>
@@ -1601,6 +1601,15 @@
       <button class="btn btn-primary" onclick="_limparFormNovoAnimal();openModal('modal-novo')">+ Novo animal</button>
     </div>
   </div>
+  <!-- Reprodutivo v4 / crítica de design (2026-08-25): a jornada de confirmação ABCCC
+       (quem está chegando na hora de confirmar) ganhou aba própria, separada do plantel — antes
+       vivia espremida dentro da ficha do animal, entre Exames Sanitários e Medidas, sem
+       nenhum título de seção âncora, e lia como se fizesse parte de Exames. -->
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab(this,'animais-plantel')">Plantel</button>
+    <button class="tab" onclick="switchTab(this,'animais-confirmacao')">Confirmação ABCCC</button>
+  </div>
+  <div id="animais-plantel">
   <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="metric"><div class="metric-label">Ativos na cabanha</div><div class="metric-value" id="an-m-ativos">0</div></div>
     <div class="metric"><div class="metric-label">Fêmeas</div><div class="metric-value" id="an-m-femeas">0</div></div>
@@ -1653,6 +1662,17 @@
       </tr></thead>
       <tbody id="tbody-animais"></tbody>
     </table>
+  </div>
+  </div>
+  <div id="animais-confirmacao" style="display:none">
+    <div class="page-sub" style="margin:-4px 0 14px">Quem está chegando na hora de confirmar — acompanhe medidas, marque pra confirmação e registre a marcação de RP sem precisar abrir animal por animal.</div>
+    <div class="metrics" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px">
+      <div class="metric"><div class="metric-label">A confirmar</div><div class="metric-value" id="conf-m-aguardando">0</div></div>
+      <div class="metric"><div class="metric-label">Em preparação</div><div class="metric-value" id="conf-m-preparo">0</div><div style="font-size:10px;color:var(--red-d)" id="conf-m-preparo-risco"></div></div>
+      <div class="metric"><div class="metric-label">Aptos</div><div class="metric-value" style="color:var(--green-d)" id="conf-m-aptos">0</div></div>
+      <div class="metric"><div class="metric-label">Confirmados</div><div class="metric-value" id="conf-m-confirmados">0</div></div>
+    </div>
+    <div id="animais-confirmacao-content"></div>
   </div>
 </div>
 
@@ -3741,7 +3761,7 @@
         <input type="text" id="nsbb" placeholder="Ex: B649459" style="width:100%" onblur="_buscarAbccc('novo')" oninput="this.value=this.value.toUpperCase()">
         <div id="nabccc-status" style="display:none;margin-top:5px;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:var(--radius)"></div>
       </div>
-      <div class="form-group"><label>Sexo</label><select id="nsex" onchange="_toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob')"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
+      <div class="form-group"><label>Sexo</label><select id="nsex" onchange="_toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob','ncastrado')"><option value="">—</option><option>Fêmea</option><option>Macho</option></select></div>
       <div class="form-group"><label>Pelagem</label><input type="text" id="npel" placeholder="Ex: Gateada"></div>
       <div class="form-group"><label>Ciclo</label><input type="text" id="nciclo" placeholder="Ex: 24/25"></div>
       <div class="form-group"><label>Nascimento</label><input type="date" id="nnasc" onchange="_autoCiclo(this.value,'nciclo')"></div>
@@ -3757,9 +3777,14 @@
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="ncastrado" style="width:auto"> Castrado
-        </label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="font-size:13px">Castrado</label>
+          <div class="pill-switch" id="ncastrado-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setCastrado('n',false)">Não</button>
+            <button type="button" class="pill-switch-btn" onclick="_setCastrado('n',true)">Castrado</button>
+          </div>
+          <input type="checkbox" id="ncastrado" style="display:none">
+        </div>
         <div id="ngrp-qtdcob" style="display:none;align-items:center;gap:6px">
           <label style="white-space:nowrap">Coberturas por ciclo (padrão)</label>
           <input type="number" id="nqtdcob" min="0" step="1" value="120" style="width:80px"></div>
@@ -4251,7 +4276,7 @@ function pd(s){if(!s)return null;const d=new Date(s+'T00:00:00');return isNaN(d)
 function fd(s){const d=pd(s);if(!d)return'—';return d.toLocaleDateString('pt-BR');}
 function da(s){const d=pd(s);if(!d)return null;return Math.round((d-HOJE)/864e5);}
 function svac(p){const d=da(p);if(d===null)return{l:'Sem dados',c:'bgr'};if(d<0)return{l:`Vencida (${Math.abs(d)}d)`,c:'br'};if(d<=30)return{l:`${d}d para vencer`,c:'br'};if(d<=60)return{l:`${d}d p/ vencer`,c:'ba'};return{l:'Em dia',c:'bg'};}
-function sexm(s){if(!s)return'<span class="badge bgr">—</span>';return s==='Fêmea'?`<span class="badge bpk">${s}</span>`:`<span class="badge bb">${s}</span>`;}
+function sexm(s){if(!s)return'<span style="color:var(--text3)">—</span>';return `<span style="color:var(--text2);font-size:11px">${s}</span>`;}
 function sitb(s){if(!s)return'<span class="etq-brinco neutro">—</span>';const m={'NA CABANHA':'',   'MORTO':'critico','TRANSFERIDO':'atencao','VENDIDO':'terracota','EMPRESTIMO':'terracota'};return`<span class="etq-brinco ${m[s]!==undefined?m[s]:'neutro'}">${s}</span>`;}
 function estb(e){if(!e||e==='-')return'—';const m={'PISTA MORFOLOGIA':'terracota','PISTA FUNCIONAL':'terracota','CAMPO':'','LAÇO':'atencao','ARREIO CABANHA':'terracota','DOMA':'atencao','CRIA':''};return`<span class="etq-brinco ${m[e]!==undefined?m[e]:'neutro'}">${e}</span>`;}
 function sbbL(s){
@@ -4459,7 +4484,7 @@ function renderAnimais(){
   document.getElementById('tbody-animais').innerHTML=lista.map((a,_)=>{
     const i=animais.indexOf(a);
     return`<tr>
-      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':_badgeConfirmacao(a)}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
+      <td style="padding:8px 10px;font-weight:600;max-width:170px">${a.nome}${a.status_cadastro==='rascunho'?' <span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho — aguardando SBB</span>':''}${a.confirmado?' <span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>':''}${a.castrado?' <span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>':''}${a.receptora_externa?' <span class="etq-brinco neutro" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}</td>
       <td>${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:''}</td>
       <td>${sbbL(a.sbb)}</td>
       <td>${sexm(a.sexo)}</td>
@@ -4486,10 +4511,10 @@ function renderAnimais(){
         ${sitb(a.situacao)}
         ${a.estagio ? estb(a.estagio) : ''}
         ${a.ciclo ? `<span class="etq-brinco atencao">${a.ciclo}</span>` : ''}
-        ${!a.confirmado && a.confirmacao_status !== 'nao_confirmado' ? _badgeConfirmacao(a) : ''}${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
+        ${a.status_cadastro==='rascunho' ? '<span class="badge ba" title="Aguardando cadastro completo via SBB">Rascunho</span>' : ''}
         ${a.confirmado ? '<span class="badge bg" title="Técnico validou Crioulo/pedigree/medidas">✓ Confirmado</span>' : ''}
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
-        ${a.receptora_externa ? '<span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
+        ${a.receptora_externa ? '<span class="etq-brinco neutro" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
       <div class="g-cols-2" style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
@@ -6530,7 +6555,7 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">SBB ABCCC</label>
           <input id="ed-sbb" value="${a.sbb||''}" style="width:100%;font-size:12px" placeholder="Ex: B649459" onblur="_buscarAbccc('edit')" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Sexo</label>
-          <select id="ed-sexo" style="width:100%;font-size:12px" onchange="_toggleQtdCoberturasPadrao('ed-sexo','ed-grp-qtdcob')"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
+          <select id="ed-sexo" style="width:100%;font-size:12px" onchange="_toggleQtdCoberturasPadrao('ed-sexo','ed-grp-qtdcob','ed-castrado')"><option value="">—</option><option${a.sexo==='Fêmea'?' selected':''}>Fêmea</option><option${a.sexo==='Macho'?' selected':''}>Macho</option></select></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Pelagem</label>
           <input id="ed-pelagem" value="${a.pelagem||''}" style="width:100%;font-size:12px" placeholder="Ex: Gateada"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nascimento</label>
@@ -6564,10 +6589,15 @@ function _renderDetCorpo(i, editando) {
           </div>
         </div>
         <div class="form-group" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:24px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="ed-castrado" style="width:auto" ${a.castrado?'checked':''}> Castrado
-          </label>
-          <div id="ed-grp-qtdcob" style="display:${a.sexo==='Macho'?'flex':'none'};align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px">Castrado</label>
+            <div class="pill-switch" id="ed-castrado-switch">
+              <button type="button" class="pill-switch-btn${a.castrado?'':' on'}" onclick="_setCastrado('ed-',false)">Não</button>
+              <button type="button" class="pill-switch-btn${a.castrado?' on':''}" onclick="_setCastrado('ed-',true)">Castrado</button>
+            </div>
+            <input type="checkbox" id="ed-castrado" style="display:none" ${a.castrado?'checked':''}>
+          </div>
+          <div id="ed-grp-qtdcob" style="display:${(a.sexo==='Macho'&&!a.castrado)?'flex':'none'};align-items:center;gap:6px">
             <label style="font-size:12px;white-space:nowrap">Coberturas por ciclo (padrão)</label>
             <input type="number" id="ed-qtdcob" min="0" step="1" value="${a.qtd_coberturas_padrao ?? 120}" style="width:80px;font-size:12px"></div>
         </div>
@@ -6578,7 +6608,7 @@ function _renderDetCorpo(i, editando) {
     // espremida numa coluna de grid era a causa do texto colado/espaçamento
     // inconsistente). Cada campo tem sua própria altura, sem depender da coluna vizinha.
     S1=`<div class="ficha-section"><div class="ficha-section-title">${_iconCavalo(17)} Identificação
-      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">Confirmado</span>':a.confirmacao_status==='nao_confirmado'?'<span class="badge bgr" style="margin-left:8px">Não confirmar</span>':a.confirmacao_status==='aguardando_confirmacao'?'<span class="badge" style="margin-left:8px;background:var(--amber-l);color:var(--amber-d)">Aguardando confirmação</span>':'<span class="badge" style="margin-left:8px;background:var(--bg3);color:var(--text3)">Não confirmado</span>'}
+      ${a.confirmado?'<span class="badge bg" style="margin-left:8px">✓ Confirmado</span>':''}
       ${a.castrado?'<span class="badge bgr" style="margin-left:6px" title="Não entra no Planejador de ciclo">Castrado</span>':''}
       ${a.receptora_externa?'<span class="badge bp" style="margin-left:6px" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>':''}
       </div>
@@ -6630,7 +6660,7 @@ function _renderDetCorpo(i, editando) {
 
   // Painel de confirmação ABCCC (só para não confirmados)
   const S4conf = (!a.confirmado && a.confirmacao_status !== 'nao_confirmado')
-    ? _htmlPainelConfirmacao(a, false)
+    ? `<div class="ficha-section"><div class="ficha-section-title">${_iconRegua(17)} Confirmação ABCCC</div>${_htmlPainelConfirmacao(a, false)}</div>`
     : '';
 
   // Gráfico de linha de medidas
@@ -7625,15 +7655,32 @@ function _limparFormNovoAnimal() {
   const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
-  _toggleQtdCoberturasPadrao('nsex','ngrp-qtdcob');
+  _setCastrado('n', false);
 }
 
-// "Coberturas por ciclo (padrão)" só faz sentido pra garanhões — campo fica escondido até
-// selecionar Sexo=Macho, em vez de aparecer sempre com um texto explicando "só pra garanhões".
-function _toggleQtdCoberturasPadrao(sexoId, grpId) {
+// "Coberturas por ciclo (padrão)" só faz sentido pra garanhões inteiros — campo fica escondido
+// até selecionar Sexo=Macho, em vez de aparecer sempre com um texto explicando "só pra
+// garanhões". Um castrado nunca cobre, então também esconde mesmo sendo Macho (achado real:
+// antes só olhava sexo, então marcar castrado não escondia o campo — o form continuava
+// sugerindo cobertura pra um animal que não vai cobrir).
+function _toggleQtdCoberturasPadrao(sexoId, grpId, castradoId) {
   const sexo = document.getElementById(sexoId)?.value;
+  const castrado = castradoId ? document.getElementById(castradoId)?.checked : false;
   const grp = document.getElementById(grpId);
-  if (grp) grp.style.display = sexo === 'Macho' ? 'flex' : 'none';
+  if (grp) grp.style.display = (sexo === 'Macho' && !castrado) ? 'flex' : 'none';
+}
+
+// Toggle on/off do campo "Castrado" — mesmo padrão visual do pill-switch de Preferências do
+// Sistema (_prefSetToggle). O <input type="checkbox" hidden> continua existindo por trás pra
+// não quebrar o código que já lê `.checked` ao salvar o animal.
+function _setCastrado(prefixo, ligado) {
+  const chk = document.getElementById(prefixo + 'castrado');
+  if (chk) chk.checked = ligado;
+  const sw = document.getElementById(prefixo + 'castrado-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  const sexoId = prefixo === 'n' ? 'nsex' : 'ed-sexo';
+  const grpId = prefixo === 'n' ? 'ngrp-qtdcob' : 'ed-grp-qtdcob';
+  _toggleQtdCoberturasPadrao(sexoId, grpId, prefixo + 'castrado');
 }
 
 // Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
@@ -8025,7 +8072,7 @@ function _ajustarStatusBarNativa(){
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-repro-gestacoes','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico'];
+  const all=['tab-vac','tab-hist-vac','tab-verm','tab-exam','tab-hist-exam','tab-pendencias','tab-proto-repro','tab-reprodutivo-vet','tab-repro-gestacoes','tab-tratamentos','tab-planejador','tab-ciclos','tab-matrizes','nut-lista','nut-compras','nut-templates','evt-calendario','evt-animais','evt-resultados','gest-acasalamentos','gest-gestacoes','gest-protocolos','est-lista','est-alertas','est-movimentos','med-lista','med-historico','animais-plantel','animais-confirmacao'];
   // Escopar à página atual: essa lista reúne ids de TODAS as páginas — sem escopo,
   // trocar de aba em qualquer página força display:none em ids de mesma "família"
   // de outras páginas (ex.: mexer em Saúde escondia tab-ciclos do Reprodutivo e
@@ -8047,6 +8094,7 @@ function switchTab(btn,tid){
   if(tid==='tab-reprodutivo-vet') renderReprodutivoVet();
   if(tid==='tab-repro-gestacoes') renderReprodutivoVet();
   if(tid==='tab-tratamentos') renderTratamentos();
+  if(tid==='animais-confirmacao') renderConfirmacaoAbccc();
 }
 function saudeTabGrupo(btn,tabId,subId){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
@@ -10710,14 +10758,54 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   return '<div style="border-left:3px solid ' + corBorda + ';padding:12px 14px;margin-top:10px;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
     + '<div>'
-    + '<span style="font-size:11px;font-weight:500;color:' + corBorda + ';text-transform:uppercase;letter-spacing:.05em">CONFIRMAÇÃO ABCCC</span>'
-    + '<span style="margin-left:8px;font-size:11px;background:' + corBg + ';color:' + corBorda + ';padding:2px 8px;border-radius:99px;border:0.5px solid ' + corBorda + '">' + labelStatus + '</span>'
+    + '<span style="font-size:11px;background:' + corBg + ';color:' + corBorda + ';padding:2px 8px;border-radius:99px;border:0.5px solid ' + corBorda + '">' + labelStatus + '</span>'
     + '</div>'
     + (meses !== null ? '<span style="font-size:11px;color:var(--text3)">' + meses + ' meses · medido em ' + dataLabel + '</span>' : '')
     + '</div>'
     + linhasMedidas
     + botoesAcao
     + '</div>';
+}
+
+// Aba "Confirmação ABCCC" da tela de Animais — a jornada de confirmação junta num
+// só lugar quem antes só aparecia espremido dentro da ficha de cada animal.
+function renderConfirmacaoAbccc() {
+  const cont = document.getElementById('animais-confirmacao-content');
+  if (!cont) return;
+
+  const elegiveis = animais.filter(a => isNaCabanha(a) && a.status_cadastro !== 'rascunho'
+    && !a.confirmado && a.confirmacao_status !== 'nao_confirmado');
+  const porStatus = { aguardando_confirmacao: [], apto_confirmacao: [], em_risco: [], em_desenvolvimento: [] };
+  elegiveis.forEach(a => { const st = _calcStatusConfirmacao(a); if (porStatus[st]) porStatus[st].push(a); });
+  const confirmados = animais.filter(a => isNaCabanha(a) && a.confirmado).length;
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('conf-m-aguardando', porStatus.aguardando_confirmacao.length);
+  set('conf-m-preparo', porStatus.em_desenvolvimento.length + porStatus.em_risco.length);
+  set('conf-m-aptos', porStatus.apto_confirmacao.length);
+  set('conf-m-confirmados', confirmados);
+  const riscoEl = document.getElementById('conf-m-preparo-risco');
+  if (riscoEl) riscoEl.textContent = porStatus.em_risco.length ? `⚠ ${porStatus.em_risco.length} em risco` : '';
+
+  const ordem = [...porStatus.aguardando_confirmacao, ...porStatus.apto_confirmacao, ...porStatus.em_risco, ...porStatus.em_desenvolvimento];
+  if (!ordem.length) {
+    cont.innerHTML = '<div class="nut-empty">Nenhum animal em acompanhamento de confirmação no momento.</div>';
+    return;
+  }
+  cont.innerHTML = ordem.map(a => {
+    const i = animais.indexOf(a);
+    return `<div class="card" style="padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <span style="font-size:13px;font-weight:700;white-space:nowrap">${a.nome}</span>
+          ${a.rp ? `<span class="etq-brinco neutro">${a.rp}</span>` : ''}
+          ${a.castrado ? '<span class="badge bgr">Castrado</span>' : ''}
+        </div>
+        <button class="btn btn-sm" onclick="verDetalhe(${i})">Ver ficha</button>
+      </div>
+      ${_htmlPainelConfirmacao(a, false)}
+    </div>`;
+  }).join('');
 }
 
 async function _registrarMarcacaoRP(i) {
@@ -10735,6 +10823,7 @@ async function _registrarMarcacaoRP(i) {
     criado_por: usuarioAtual?.id
   });
   _renderDetCorpo(i, false);
+  renderConfirmacaoAbccc();
   _mostrarStatusSync('Marcação RP registrada na linha do tempo.', 'green');
 }
 
@@ -10746,6 +10835,7 @@ async function _marcarParaConfirmacao(i) {
   a.confirmado = false;
   _renderDetCorpo(i, false);
   renderAnimais();
+  renderConfirmacaoAbccc();
   _mostrarStatusSync('Animal marcado para confirmação.', 'green');
 }
 
@@ -10772,6 +10862,7 @@ async function _confirmarNaoConfirmacao() {
   closeModal('modal-nao-confirmar');
   _renderDetCorpo(i, false);
   renderAnimais();
+  renderConfirmacaoAbccc();
   _mostrarStatusSync('Animal marcado como não confirmado — removido do controle de confirmação.', 'green');
 }
 
