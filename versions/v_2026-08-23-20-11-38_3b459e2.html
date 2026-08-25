@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mimba — Gestão Crioulos</title>
 <script>
   // Aplica o tema salvo (se houver) ANTES do CSS pintar a tela — sem isso, a página
@@ -173,11 +173,17 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow-x: hidden; max-width: 100vw; }
+  /* Sem isso, todo toque em botão/link pisca um retângulo cinza — o "flash"
+     do WebKit em cima de qualquer elemento tocável. Nada nativo mostra isso;
+     os componentes já têm seu próprio hover/active. */
+  * { -webkit-tap-highlight-color: transparent; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
   .sidebar {
     width: 230px; background: var(--chrome-bg); border-right: 0.5px solid var(--chrome-border);
     padding: 1.25rem 1rem; position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
+    padding-top: calc(1.25rem + env(safe-area-inset-top));
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    padding-left: calc(1rem + env(safe-area-inset-left));
     overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
     color: var(--chrome-text);
   }
@@ -210,6 +216,24 @@
   .nav-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .nav-icon svg { width:19px; height:19px; }
   .main { margin-left:230px; padding:2rem 2.4rem; min-height:100vh; min-height:100dvh; }
+  /* Sincronização inicial (login/restaurar sessão): o Dashboard já tem seu
+     próprio skeleton por campo, mas as outras páginas simplesmente renderizam
+     com os arrays vazios (zerados em _sincronizarAoLogin antes de buscar do
+     banco) — parecem "vazias/quebradas" em vez de "carregando". Este overlay
+     cobre a área de conteúdo com um estado de carregamento explícito
+     enquanto a sincronização inicial não termina (sucesso ou erro), pra
+     qualquer página que o usuário tenha aberto nesse meio-tempo. Ver
+     _atualizarOverlayCarregamento(), chamado de showPage() e do fim de
+     _sincronizarAoLogin(). Some sozinho no Dashboard, que já resolve isso à
+     sua própria maneira.
+  */
+  #page-loading-overlay {
+    display:none; position:fixed; top:0; left:230px; right:0; bottom:0; z-index:50;
+    background:var(--bg); align-items:center; justify-content:center; flex-direction:column; gap:14px;
+  }
+  #page-loading-overlay.show { display:flex; }
+  #page-loading-overlay svg { width:26px; height:26px; color:var(--text3); animation:spin 0.8s linear infinite; }
+  #page-loading-overlay span { font-family:var(--mono); font-size:12px; color:var(--text3); letter-spacing:.02em; }
   .page { display:none; }
   .page.active { display:block; }
   .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.6rem; flex-wrap:wrap; gap:10px; }
@@ -375,7 +399,7 @@
   .nut-animal-body.open { display:block; }
   .nut-section { margin-top:1rem; }
   .nut-section-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
-  .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nut-item { display:grid; grid-template-columns:180px 100px 100px 1fr auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:620px; }
   .nut-item:last-child { border-bottom:none; }
   .nut-item-label { font-weight:600; color:var(--text); }
   .nut-item-qty { color:var(--text2); }
@@ -383,14 +407,14 @@
   .nut-item-obs { color:var(--text3); font-style:italic; font-size:11px; }
   .nut-item-edit { cursor:pointer; font-size:11px; color:var(--blue-d); background:none; border:none; padding:2px 6px; border-radius:4px; font-family:var(--font); }
   .nut-item-edit:hover { background:var(--blue-l); }
-  .nut-supl { display:grid; grid-template-columns:160px 120px 1fr 120px auto; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nut-supl { display:grid; grid-template-columns:150px 110px 90px 1fr 110px auto; gap:6px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:650px; }
   .nut-supl:last-child { border-bottom:none; }
   .nut-empty { font-size:12px; color:var(--text3); font-style:italic; padding:8px 0; }
   .nut-add-btn { font-size:11px; color:var(--green-d); background:var(--green-l); border:none; padding:4px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--font); font-weight:600; margin-top:6px; }
   .nut-add-btn:hover { background:#C0DD97; }
   .template-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
   .template-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
-  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; }
+  .template-card-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:0.7rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .compra-item { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .compra-item:last-child { border-bottom:none; }
   .compra-qty { font-weight:700; color:var(--green-d); font-size:13px; }
@@ -417,7 +441,7 @@
   .evt-3 { background:var(--amber-l); color:var(--amber-d); }
   .evt-class { background:var(--purple-l); color:var(--purple-d); }
   .evt-sem { background:var(--gray-l); color:var(--gray-d); }
-  .evt-animal-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .evt-animal-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
   .evt-animal-row:last-child { border-bottom:none; }
   /* GESTAÇÃO */
   .gest-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
@@ -426,7 +450,7 @@
   .gest-prog-fill { height:8px; border-radius:99px; transition:width 0.3s; }
   .gest-dias { font-size:11px; color:var(--text2); display:flex; justify-content:space-between; }
   /* ESTOQUE */
-  .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .est-row { display:grid; grid-template-columns:1fr 100px 100px 120px 80px 80px; gap:10px; align-items:center; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:12px; min-width:640px; }
   .est-row:last-child { border-bottom:none; }
   .est-row-header { font-size:var(--fs-caption); font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; padding:6px 0 8px; border-bottom:0.5px solid var(--border); }
   .est-low { color:var(--red-d); font-weight:700; }
@@ -441,8 +465,27 @@
   .agenda-sub { font-size:11px; color:var(--text2); margin-top:2px; }
   .agenda-data { font-size:var(--fs-caption); color:var(--text3); white-space:nowrap; font-family:var(--mono); }
   /* SAVE BADGE */
-  .save-badge { position:fixed; bottom:1rem; right:1rem; background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .save-badge { position:fixed; bottom:calc(1rem + env(safe-area-inset-bottom)); right:calc(1rem + env(safe-area-inset-right)); background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .save-badge.show { opacity:1; }
+  /* AGENTE DE IA — chat flutuante (ADR 0006). Fica entre os toasts (z-index
+     500) e os modais (até ~400 antes disso)/login-screen (100000), pra poder
+     ficar aberto por cima de qualquer tela sem brigar com nada. */
+  .chat-ia-fab { position:fixed; bottom:calc(1.25rem + env(safe-area-inset-bottom)); right:calc(1.25rem + env(safe-area-inset-right)); width:52px; height:52px; border-radius:50%; background:var(--green-d); color:#fff; border:none; display:none; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,0.25); cursor:pointer; z-index:800; }
+  .chat-ia-fab.visible { display:flex; }
+  .chat-ia-fab svg { width:24px; height:24px; }
+  .chat-ia-panel { position:fixed; bottom:calc(5.5rem + env(safe-area-inset-bottom)); right:calc(1.25rem + env(safe-area-inset-right)); width:380px; max-width:calc(100vw - 2rem); height:min(560px, 70vh); background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 40px rgba(0,0,0,0.3); z-index:900; display:none; flex-direction:column; overflow:hidden; }
+  .chat-ia-panel.open { display:flex; }
+  .chat-ia-header { padding:14px 16px; background:var(--chrome-accent-d); color:#fff; display:flex; align-items:center; justify-content:space-between; font-weight:700; font-size:14px; flex-shrink:0; }
+  .chat-ia-header button { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; line-height:1; padding:0 4px; }
+  .chat-ia-msgs { flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+  .chat-ia-msg { max-width:85%; padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.5; white-space:pre-wrap; }
+  .chat-ia-msg.user { align-self:flex-end; background:var(--green-d); color:#fff; border-bottom-right-radius:3px; }
+  .chat-ia-msg.assistente { align-self:flex-start; background:var(--bg3); color:var(--text); border-bottom-left-radius:3px; }
+  .chat-ia-msg.sistema { align-self:center; background:none; color:var(--text3); font-size:11px; text-align:center; }
+  .chat-ia-input-row { flex-shrink:0; display:flex; gap:8px; padding:12px; border-top:1px solid var(--border); }
+  .chat-ia-input-row textarea { flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; font-family:var(--font); font-size:13px; background:var(--bg); color:var(--text); max-height:80px; }
+  .chat-ia-input-row button { background:var(--green-d); color:#fff; border:none; border-radius:var(--radius); padding:0 16px; font-weight:700; cursor:pointer; }
+  .chat-ia-input-row button:disabled { opacity:0.5; cursor:default; }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
   .san-panel-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
@@ -497,6 +540,10 @@
   @media (max-width:768px) {
     .ficha-header-acoes { margin-left:0; width:100%; padding-top:0; }
     .ficha-avatar { width:76px; height:76px; font-size:28px; }
+    /* No mobile o "‹" da barra superior já volta pra Animais (ver
+       mobileBackTap) — o botão "← Voltar" embutido aqui, ao lado de
+       Editar/Excluir, virou um segundo "voltar" redundante e espremido. */
+    .ficha-voltar-inline { display:none; }
   }
   /* HISTÓRICO SAÚDE */
   .hist-row { display:grid; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--border); font-size:12px; }
@@ -519,26 +566,118 @@
   .med-val-pill.med-status-hi  { background:var(--amber-l); color:var(--amber-d); }
   .med-label { font-size:var(--fs-caption); color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; margin-top:5px; }
   .med-padrão { font-size:9px; color:var(--text3); margin-top:2px; }
-  /* Menu mobile: botão hamburger fixo, escondido em desktop. */
-  #mobile-menu-btn {
-    display:none; position:fixed;
-    top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
-    z-index:30; width:38px; height:38px; align-items:center; justify-content:center;
-    background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius);
-    color:var(--text); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  /* Máscara da status bar/Dynamic Island: sem isso, o conteúdo que rola pra cima
+     aparece "vazando" por trás do notch em vez de mostrar só o fundo — o WKWebView
+     não pinta essa faixa sozinho. Altura = env(safe-area-inset-top) exatamente:
+     0 (invisível) em qualquer tela sem notch/Dynamic Island, web incluído. */
+  #status-bar-mask {
+    position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top);
+    background:var(--bg); z-index:99999; pointer-events:none;
   }
-  #sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9; }
+  /* Navegação mobile nativa: em vez de hambúrguer + gaveta sobreposta, o menu
+     (mesmo conteúdo da sidebar) vira uma TELA CHEIA própria — como a lista de
+     Pastas do app Notes da Apple. Uma barra fixa (embutida na máscara da
+     status bar, por isso ela cresce no mobile) mostra "‹ Menu" à esquerda
+     quando uma página de conteúdo está aberta, e o título da página
+     centralizado — sem hambúrguer flutuante, sem backdrop translúcido. */
+  #mobile-back-btn {
+    display:none; position:absolute; left:8px; bottom:0; z-index:2;
+    align-items:center; gap:2px; background:none; border:none; cursor:pointer;
+    font-family:var(--font); font-weight:600; font-size:15px; color:var(--chrome-accent);
+    padding:8px 10px 8px 4px;
+  }
+  #mobile-back-btn svg { width:22px; height:22px; flex-shrink:0; }
+  #mobile-navbar-title {
+    display:none; font-family:var(--serif); font-weight:800; font-size:16px;
+    color:var(--chrome-text); max-width:62%; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  /* Escondido por padrão (desktop/web) — só existe como recurso mobile. */
+  #ptr-indicator { display:none; }
   @media (max-width: 768px) {
-    /* Sidebar vira painel suspenso (drawer): some por padrão, sem disputar
-       espaço fixo com o conteúdo — só ocupa a tela quando o usuário abre. */
-    #mobile-menu-btn { display:flex; }
-    .sidebar { width:250px; max-width:82vw; transform:translateX(-100%); transition:transform 0.22s ease; box-shadow:2px 0 20px rgba(0,0,0,0.15); }
+    #status-bar-mask {
+      height:calc(env(safe-area-inset-top) + 46px);
+      display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px;
+      border-bottom:0.5px solid var(--chrome-border); pointer-events:auto;
+    }
+    #mobile-back-btn, #mobile-navbar-title { display:flex; }
+    /* Menu vira tela cheia própria (não gaveta estreita sobre um backdrop) —
+       cobre 100% da viewport e desliza inteira, como uma tela de navegação real. */
+    .sidebar { width:100vw; max-width:100vw; transform:translateX(-100%); transition:transform 0.28s cubic-bezier(.25,.1,.25,1); box-shadow:none; z-index:20; padding-top:calc(env(safe-area-inset-top) + 62px); }
     .sidebar.open { transform:translateX(0); }
-    #sidebar-backdrop.open { display:block; }
-    .main { margin-left:0; padding:1rem; padding-top:4rem; max-width:100vw; }
+    .main { margin-left:0; padding:1rem; padding-top:calc(62px + env(safe-area-inset-top) + 1rem); max-width:100vw; }
     #trial-banner-topo { margin:-1rem -1rem 1rem; flex-wrap:wrap; }
-    .metrics { grid-template-columns:1fr 1fr; }
+    #page-loading-overlay { left:0; top:calc(env(safe-area-inset-top) + 46px); }
+    /* !important necessário: várias telas (Animais, Medidas, Financeiro, Painel
+       Mimba) fixam a coluna via style="grid-template-columns:repeat(N,...)" no
+       próprio HTML, o que sempre vence a regra externa — sem isso os cards de
+       métrica ficavam espremidos em 3-4 colunas na largura de mobile. */
+    .metrics { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px; }
+    .metric { padding:14px 12px; text-align:center; }
+    .metric-value { font-size:21px; }
     .two-col { grid-template-columns:1fr; }
+    /* Modal ignorava a safe-area e encostava embaixo do Dynamic Island/notch —
+       a caixa ficava alta o bastante (max-height:90vh) pra sempre tocar o topo
+       da tela, mesmo com align-items:center. O respiro de cima usa a mesma
+       altura da barra de navegação fixa (status-bar-mask, 46px + safe-area)
+       — não só a safe-area sozinha — senão o topo do modal ficava escondido
+       atrás da barra em vez de começar limpo logo abaixo dela. */
+    .modal-bg { padding:calc(env(safe-area-inset-top) + 46px + 12px) 14px calc(env(safe-area-inset-bottom) + 14px); box-sizing:border-box; }
+    /* !important: quase todo modal fixa width/max-height no próprio style=""
+       (ex.: style="width:820px;max-height:92vh"), o que sempre vence a regra
+       externa — sem isso a caixa continuava alta o bastante pra estourar a
+       área segura, voltando a encostar no notch mesmo com o padding do
+       .modal-bg acima. */
+    .modal { max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 72px) !important; width:100% !important; }
+    /* Formulários em 2 colunas (usados em quase todo modal de cadastro/edição)
+       viram 1 coluna cheia no mobile — 2 campos espremidos lado a lado são
+       difíceis de tocar e ler numa tela de ~370px úteis. */
+    .form-grid { grid-template-columns:1fr !important; }
+    /* Utilitários pra grids soltos (sem classe própria, cada um com seu style=
+       "display:grid;grid-template-columns:..." espalhado pelo app) que ficavam
+       espremidos no mobile — telas de Sangues, ficha de animal, Nutrição,
+       Vermifugação/Vacina em lote, planejador de Cruzamentos, drill-down do
+       Dashboard. g-cols-2 (formulário lado a lado, lista+formulário) empilha
+       cheio; g-cols-3 (cards/valores menores) vira 2 colunas. */
+    .g-cols-2 { grid-template-columns:1fr !important; }
+    .g-cols-3, .g-cols-4 { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+    /* Lista do menu com cara de lista nativa: linha divisória e seta à direita
+       em vez do item "achatado" que fazia sentido só numa gaveta estreita. */
+    .nav-btn { padding:13px 4px; border-bottom:0.5px solid var(--chrome-border); border-radius:0; font-size:15px; }
+    .nav-btn::after {
+      content:''; margin-left:auto; width:8px; height:8px; flex-shrink:0;
+      border-right:1.6px solid var(--chrome-text3); border-top:1.6px solid var(--chrome-text3);
+      transform:rotate(45deg); opacity:.7;
+    }
+    /* Trocar de página tem uma transição sutil (fade + leve subida) em vez do
+       corte seco do display:none→block — o mesmo instante em que dá pra
+       arrastar a tela pra baixo e soltar (transform de baixo). */
+    .main { transition:transform 0.25s cubic-bezier(.25,.1,.25,1); }
+    .page.active { animation:mimba-page-in 0.22s cubic-bezier(.25,.1,.25,1); }
+    @keyframes mimba-page-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    /* Toque tem que dar feedback visual — sem isso (e sem o flash cinza padrão
+       do WebKit, removido de propósito acima) botão/item de menu não mostra
+       nenhuma reação ao dedo, o que parece quebrado num app nativo. */
+    .btn:active, .nav-btn:active, .kanban-card:active, .med-card:active,
+    .hist-row:active, .sangue-bar:active, .evt-animal-row:active {
+      transform:scale(0.97); opacity:0.88; transition:transform 0.08s ease, opacity 0.08s ease;
+    }
+    .btn, .nav-btn { -webkit-user-select:none; user-select:none; }
+    /* Indicador de pull-to-refresh: some por trás da barra de navegação (some
+       de vista) e só aparece conforme o dedo arrasta a tela pra baixo, ou
+       gira como spinner enquanto os dados recarregam. Ver a lógica de arrasto
+       junto de toggleSidebarMobile, na seção NAV do JS. */
+    #ptr-indicator {
+      display:flex; position:fixed; left:0; right:0; z-index:15;
+      top:calc(env(safe-area-inset-top) + 46px); height:0;
+      align-items:flex-start; justify-content:center; pointer-events:none;
+    }
+    #ptr-indicator svg { width:20px; height:20px; color:var(--chrome-accent); opacity:0; margin-top:10px; }
+    #ptr-indicator.pulling svg, #ptr-indicator.loading svg { opacity:1; }
+    #ptr-indicator.loading svg { animation:spin 0.7s linear infinite; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page.active { animation:none; }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .sangue-bar { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border); }
@@ -609,8 +748,17 @@
   .verm-grupo-card { background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); padding:1.15rem 1.3rem; margin-bottom:0.75rem; box-shadow:var(--sh-sm); transition:box-shadow .16s ease, transform .16s ease; }
   .verm-grupo-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
   .verm-grupo-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
-  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:999;display:flex;align-items:center;justify-content:center; }
+  /* z-index acima do #status-bar-mask (99999): antes do login, não existe
+     nenhuma "página" nem barra de navegação de verdade — mas o mask/nav-bar
+     mobile é incondicional e ficava pintado por cima da tela de login,
+     cortando a headline do herói com um "‹ Menu" que não faz sentido nesse
+     momento (não tem menu nem pra onde voltar ainda). */
+  .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:100000;display:flex;align-items:center;justify-content:center; }
   .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
+  /* Restaurando sessão: só a logo + mensagem direto no fundo, sem "janelinha"
+     por cima — é um estado transitório de carregamento, não um formulário,
+     então não faz sentido ter cara de card. */
+  #login-restaurando { background:transparent; border:none; box-shadow:none; padding:0; }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
@@ -658,7 +806,7 @@
   .login-form-wordmark { font-family:var(--serif); font-size:22px; font-weight:900; color:var(--chrome-text); margin-bottom:1.75rem; }
   @media (max-width:860px){
     .login-shell { flex-direction:column; }
-    .login-hero { flex:0 0 auto; max-width:100%; padding:1.75rem 1.5rem; }
+    .login-hero { flex:0 0 auto; max-width:100%; padding:calc(1.75rem + env(safe-area-inset-top)) 1.5rem 1.75rem; }
     .login-hero-headline { font-size:clamp(26px,7vw,36px); }
     .login-hero-desc { display:none; }
     .login-hero-stats { display:none; }
@@ -874,6 +1022,7 @@
 
   /* palco — direção B (Confluência de Sangues) */
   .jornada-ac .ja-palco{position:relative;background:var(--ja-pergaminho);border-radius:22px;border:var(--card-border);box-shadow:var(--ja-sh-md);padding:22px 24px;overflow:hidden;}
+  .ja-arvore-dica{display:none;}
   .jornada-ac .ja-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:10px;}
   .jornada-ac .ja-quem-b{max-width:260px;}
   .jornada-ac .ja-quem-papel{font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);}
@@ -955,6 +1104,58 @@
   @keyframes ja-cresce2{from{width:0 !important;}}
   .jornada-ac .ja-acoes{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
   @media (prefers-reduced-motion:reduce){.jornada-ac *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+
+  /* Jornada de acasalamento — mobile. O componente foi desenhado em colunas fixas
+     (cards lado a lado, linhas de ranking com larguras em px somando bem mais que
+     uma tela de celular) — sem isso ele "quebra" (vaza largura/corta conteúdo) em
+     qualquer tela estreita. Empilha em coluna única e troca largura fixa por 100%. */
+  @media (max-width:680px){
+    .jornada-ac{padding:18px 16px;}
+    .jornada-ac .ja-titulo{font-size:19px;}
+    .jornada-ac .ja-alvo{flex-wrap:wrap;}
+    .jornada-ac .ja-alvo > div:last-child{width:100%;justify-content:flex-end;}
+
+    .jornada-ac .ja-baralho{overflow:hidden;}
+
+    .jornada-ac .ja-linha{flex-wrap:wrap;row-gap:8px;}
+    .jornada-ac .ja-porq{width:100%;order:4;}
+    .jornada-ac .ja-nota{order:5;width:auto;margin-left:auto;text-align:right;}
+    .jornada-ac .ja-linha > .ja-btn2{order:6;}
+
+    .jornada-ac .ja-palco{padding:16px 14px;}
+    .jornada-ac .ja-cabeca{flex-direction:column;gap:10px;}
+    .jornada-ac .ja-cabeca .ja-quem-b{max-width:100%;text-align:left !important;}
+
+    .jornada-ac .ja-veredito{flex-direction:column;}
+    .jornada-ac .ja-coef{width:100%;}
+
+    .jornada-ac .ja-arena{flex-direction:column;gap:14px;min-height:0;}
+    .jornada-ac .ja-lado{width:100%;}
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-esq, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-esq,
+    .jornada-ac .ja-arena.ja-fase-1 .ja-lado.ja-dir, .jornada-ac .ja-arena.ja-fase-2 .ja-lado.ja-dir{transform:none;}
+    .jornada-ac .ja-fio{display:none;}
+
+    .jornada-ac .ja-dossie-topo{flex-direction:column;}
+    .jornada-ac .ja-grade{grid-template-columns:1fr;}
+
+    /* Árvore de linhagens: no desktop o viewBox 1140×300 escala pra caber na
+       largura do palco e ainda dá pra ler; espremido em ~340px de mobile, os
+       nomes dos ancestrais viravam ilegíveis (font-size na casa de 2-3px reais).
+       Em vez de continuar encolhendo tudo pra caber, deixa a árvore no tamanho
+       nativo (a mesma escala do desktop) e vira um retângulo que arrasta —
+       touch-action:pinch-zoom permite beliscar pra ampliar só essa área, apesar
+       do app inteiro estar com o zoom da página travado (user-scalable=no). */
+    .ja-arvore-scroll {
+      overflow:auto; -webkit-overflow-scrolling:touch;
+      touch-action:pan-x pan-y pinch-zoom;
+      border-radius:14px; background:var(--ja-pergaminho2);
+    }
+    .ja-arvore-scroll #ja-svg-arvore { width:1140px !important; max-width:none !important; flex-shrink:0; }
+    .ja-arvore-dica {
+      display:block; text-align:center; font-family:var(--ja-mono); font-size:10px;
+      color:var(--ja-ink-50); margin-top:6px; letter-spacing:.02em;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1118,10 +1319,22 @@
   </div>
 </div>
 
-<button id="mobile-menu-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu" title="Menu">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-</button>
-<div id="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
+<div id="status-bar-mask">
+  <button id="mobile-back-btn" onclick="mobileBackTap()" aria-label="Voltar" title="Voltar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    <span id="mobile-back-label">Menu</span>
+  </button>
+  <span id="mobile-navbar-title"></span>
+</div>
+
+<div id="ptr-indicator" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
+
+<div id="page-loading-overlay" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-opacity="0.25"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+  <span>Carregando dados da cabanha…</span>
+</div>
 
 <div class="sidebar" id="sidebar-main">
   <div class="logo">
@@ -1171,7 +1384,7 @@
 
 <!-- V1.5 (Fase 2, complemento): banner de trial perto do vencimento — fixo no topo em toda
      página (não é um toast que some sozinho, fica até o usuário fechar ou o trial acabar). -->
-<div id="trial-banner-topo" style="display:none;align-items:center;gap:10px;position:sticky;top:0;z-index:40;margin:-1.75rem -1.75rem 1.25rem;padding:10px 1.75rem;background:var(--amber-l);color:var(--amber-d);border-bottom:1px solid var(--amber);font-size:12px">
+<div id="trial-banner-topo" style="display:none;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top);z-index:40;margin:-1.75rem -1.75rem 1.25rem;padding:10px 1.75rem;background:var(--amber-l);color:var(--amber-d);border-bottom:1px solid var(--amber);font-size:12px">
   <span id="trial-banner-texto" style="flex:1"></span>
   <button class="btn btn-sm" onclick="_cancelarTrialClick()" style="background:transparent;border-color:var(--amber-d);color:var(--amber-d);white-space:nowrap">Cancelar teste</button>
   <button onclick="_fecharTrialBanner()" title="Fechar aviso" aria-label="Fechar aviso" style="background:none;border:none;cursor:pointer;color:var(--amber-d);font-size:18px;line-height:1;padding:0 4px">×</button>
@@ -1314,6 +1527,23 @@
       <button class="btn btn-sm" id="an-view-btn-grade" onclick="_animaisSetView('grade')">▦ Grade</button>
       <button class="btn btn-sm" id="an-view-btn-lista" onclick="_animaisSetView('lista')">☰ Lista</button>
     </div>
+  <!-- Gerenciamento de Piquetes -->
+  <div style="margin:10px 0;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer"
+         onclick="var b=document.getElementById('piq-body');var t=this.querySelector('.piq-arr');if(b.style.display==='none'){b.style.display='';t.textContent='▾';renderPiquetes();}else{b.style.display='none';t.textContent='▸';}">
+      <span style="font-size:12px;font-weight:600;color:var(--text2)">🏕 Piquetes / Campos</span>
+      <span class="piq-arr" style="color:var(--text3);font-size:12px">▸</span>
+    </div>
+    <div id="piq-body" style="display:none;padding:0 12px 12px">
+      <div id="piquetes-lista" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="piquete-novo-nome" type="text" placeholder="Nome do piquete ou campo..." style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter')_addPiquete()">
+        <button class="btn btn-sm" onclick="_addPiquete()">+ Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
   <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
@@ -1414,7 +1644,7 @@
 
     <!-- PAINEL DE CONTROLE -->
     <div id="verm-painel">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+      <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
 
         <!-- COLUNA 1: seleção de animais -->
         <div class="card" style="padding:0;overflow:hidden">
@@ -1770,7 +2000,10 @@
             </div>
           </div>
 
-          <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+          <div id="ja-arvore-scroll" class="ja-arvore-scroll">
+            <svg id="ja-svg-arvore" viewBox="0 0 1140 300" style="width:100%;height:280px;display:block;"></svg>
+          </div>
+          <div class="ja-arvore-dica">↔ arraste e belisque (pinch) pra ampliar</div>
 
           <div id="ja-b-passos" class="ja-passos">
             <div class="ja-passo ja-p1">abrindo as gerações de cada lado</div>
@@ -1813,7 +2046,7 @@
           <div id="ja-a-dossie"></div>
 
           <div id="ja-a-form" style="display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--ja-ink-08);">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
               <div>
                 <label style="display:block;font-family:var(--ja-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ja-ink-30);margin-bottom:5px;">Ciclo</label>
                 <input type="text" id="ja-a-ciclo" readonly style="width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--ja-ink-15);background:var(--ja-pergaminho2);color:var(--ja-ink);font-family:var(--ja-sans);font-size:13px;">
@@ -2019,7 +2252,7 @@
         <option>Medicamento</option><option>Vacina</option><option>Material veterinário</option><option>Outro</option>
       </select>
     </div>
-    <div class="card" style="padding:0 1.1rem">
+    <div class="card" style="padding:0 1.1rem;overflow-x:auto">
       <div class="est-row est-row-header">
         <span>Item / Marca</span><span>Categoria</span><span>Estoque atual</span><span>Estoque mínimo</span><span>Unidade</span><span></span>
       </div>
@@ -2098,7 +2331,7 @@
     <div id="sangues-meta" style="font-size:11px;color:var(--text2);margin-bottom:1.2rem"></div>
 
     <!-- Linha 1: Pais | Avós Paternos | Avós Maternos -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="g-cols-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
       <div class="card">
         <div class="card-title" style="font-size:13px">👨 Principais Pais</div>
         <div id="sangues-pais"></div>
@@ -2114,7 +2347,7 @@
     </div>
 
     <!-- Linha 2: Afixos | Ancestrais -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
       <div class="card">
         <div class="card-title" style="font-size:13px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Afixos / Cabanhas mais presentes</div>
         <div id="sangues-afixos"></div>
@@ -2128,7 +2361,7 @@
     <!-- Linha 3: Prefixos -->
     <div class="card" style="margin-bottom:1rem">
       <div class="card-title" style="font-size:13px">📛 Prefixos / Marcas mais frequentes</div>
-      <div id="sangues-prefixos" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 2rem"></div>
+      <div id="sangues-prefixos" class="g-cols-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 2rem"></div>
     </div>
 
     <!-- Detalhes por animal -->
@@ -2265,7 +2498,7 @@
         <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
         <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
+      <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
         <div class="card" style="text-align:center;padding:1rem">
           <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
           <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
@@ -3008,7 +3241,7 @@
 <div class="modal-bg" id="modal-vac-lote">
   <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
     <div class="modal-header"><span class="modal-title">Vacinar em lote</span><button class="modal-close" onclick="closeModal('modal-vac-lote')">×</button></div>
-    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+    <div class="g-cols-2" style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
           <div style="font-size:13px;font-weight:700">Selecionar animais</div>
@@ -3040,7 +3273,7 @@
 <div class="modal-bg" id="modal-exam-lote">
   <div class="modal" style="width:820px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column">
     <div class="modal-header"><span class="modal-title">Exame em lote</span><button class="modal-close" onclick="closeModal('modal-exam-lote')">×</button></div>
-    <div style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+    <div class="g-cols-2" style="overflow-y:auto;flex:1;padding:0 1.25rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:0.75rem 1rem;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
           <div style="font-size:13px;font-weight:700">Selecionar animais</div>
@@ -3618,7 +3851,7 @@
         <label style="font-size:12px;font-weight:600;color:var(--text2)">Etapas</label>
         <button class="btn btn-sm" onclick="_prAdicionarEtapaLinha()">+ Adicionar etapa</button>
       </div>
-      <div id="pr-etapas-list"></div>
+      <div id="pr-etapas-list" style="overflow-x:auto"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('modal-protocolo')">Cancelar</button><button class="btn btn-primary" onclick="salvarProtocolo()">Salvar</button></div>
   </div>
@@ -3946,7 +4179,7 @@ function renderAnimais(){
         ${a.castrado ? '<span class="badge bgr" title="Castrado — não entra no Planejador de ciclo">Castrado</span>' : ''}
         ${a.receptora_externa ? '<span class="badge bp" title="Não é do plantel — cadastrada só pra receber embrião, sob cuidado temporário">Receptora externa</span>' : ''}
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
+      <div class="g-cols-2" style="font-size:11px;color:var(--text2);margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px">
         <div>Pelagem: ${a.pelagem||'—'}</div>
         <div>Nasc.: ${fd(a.nasc)||'—'}</div>
         <div style="grid-column:1/-1">RP: ${a.rp?`<span class="etq-brinco neutro">${a.rp}</span>`:'—'}</div>
@@ -5327,7 +5560,7 @@ function renderVermStatusPlantel() {
     <span style="color:var(--text3);font-size:11px">${info}</span>
   </div>`;
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
+    <div class="g-cols-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
       <div style="text-align:center;background:var(--red-l);border-radius:var(--radius);padding:8px">
         <div style="font-size:20px;font-weight:800;color:var(--red-d)">${cols.urgente.length}</div>
         <div style="font-size:10px;color:var(--red-d)">Urgente (>180d)</div>
@@ -5917,7 +6150,7 @@ function _fichaAcoesHtml(editando) {
   const ed = editando ? 'none' : '';
   const sv = editando ? '' : 'none';
   return `<div class="ficha-header-acoes">
-    <button class="btn btn-sm" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
+    <button class="btn btn-sm ficha-voltar-inline" onclick="showPage('animais')" title="Voltar para Animais">← Voltar</button>
     <button class="btn btn-sm" id="det-btn-editar" style="display:${ed}" onclick="alternarEdicaoAnimal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Editar</button>
     <button class="btn btn-sm btn-primary" id="det-btn-salvar" onclick="salvarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Salvar</button>
     <button class="btn btn-sm" id="det-btn-cancelar" onclick="cancelarEdicaoAnimal()" style="display:${sv}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar</button>
@@ -5977,7 +6210,7 @@ function _renderDetCorpo(i, editando) {
         </div>
         <input type="hidden" id="ed-foto-b64" value="${a.foto_url||''}">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Nome</label>
           <input id="ed-nome" value="${a.nome||''}" style="width:100%;font-size:12px" placeholder="Nome em maiúsculas"></div>
         <div class="form-group"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">RP</label>
@@ -6160,7 +6393,7 @@ function _renderDetCorpo(i, editando) {
   const n=getNut(i); const ps=projStatus(n);
   const S5=`<div class="ficha-section"><div class="ficha-section-title">${_iconTrigo(17)} Projeto Nutricional <span class="nut-proj-status ${ps.cls}" style="margin-left:6px">${ps.label}</span></div>
     ${(n.dt_inicio||n.itens.length>0)?`
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+    <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
       ${n.itens.filter(it=>it.tipo!=='suplemento').map(it=>{
         const rotulos={racao:'Ração',aveia:'Aveia',alfafa:'Alfafa',verde:'Verde',sal:'Sal'};
         return [rotulos[it.tipo]||it.tipo, it.produto, it.quantidade||it.frequencia];
@@ -6432,7 +6665,8 @@ function renderReprodutivo(){
   document.getElementById('ciclos-content').innerHTML=Object.entries(ciclos).sort().map(([c,lista])=>`
     <div class="card">
       <div class="card-title">Ciclo ${c} · <span style="color:var(--text2);font-weight:400">${lista.length} animal${lista.length>1?'is':''}</span></div>
-      <table style="table-layout:fixed;width:100%">
+      <div style="overflow-x:auto">
+      <table style="table-layout:fixed;width:100%;min-width:640px">
       <colgroup><col style="width:20%"><col style="width:12%"><col style="width:9%"><col style="width:13%"><col style="width:15%"><col style="width:15%"><col style="width:16%"></colgroup>
       <thead><tr><th>Nome</th><th>Nascimento</th><th>Sexo</th><th>Pelagem</th><th>Mãe</th><th>Pai</th><th>Situação</th></tr></thead>
       <tbody>${lista.map(a=>`<tr>
@@ -6444,6 +6678,7 @@ function renderReprodutivo(){
         <td style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${a.pai||''}">${a.pai||'—'}</td>
         <td>${sitb(a.situacao)}</td>
       </tr>`).join('')}</tbody></table>
+      </div>
     </div>`).join('');
 
   const maes={};animais.filter(a=>a.mae).forEach(a=>{if(!maes[a.mae])maes[a.mae]=[];maes[a.mae].push(a);});
@@ -7297,18 +7532,184 @@ function showPage(id){
   if(id==='saude')renderSaude();
   if(id==='reprodutivo'){renderReprodutivo();renderPlanejadorReprodutivo();}
   if(id==='financeiro')renderFinanceiro();
-  toggleSidebarMobile(false); // navegar sempre fecha o menu suspenso no mobile
+  // Título da barra de navegação mobile: lido do .page-title da própria página,
+  // única fonte de verdade (em vez de duplicar o texto num mapa à parte).
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (navTitulo) {
+    const tituloEl = document.querySelector('#page-'+id+' .page-title');
+    navTitulo.textContent = tituloEl ? tituloEl.textContent : '';
+  }
+  // Rótulo do botão "‹" da barra: em qualquer página do menu principal ele
+  // abre o menu tela cheia ("Menu"); na ficha do animal — que não tem item
+  // próprio no menu, só se chega nela a partir da lista — ele volta pra
+  // "Animais" em vez de abrir o menu, igual o padrão nativo de navegação em
+  // pilha (o "voltar" leva pra tela anterior, não pra raiz).
+  const backLabel = document.getElementById('mobile-back-label');
+  if (backLabel) backLabel.textContent = id === 'detalhe-animal' ? 'Animais' : 'Menu';
+  toggleSidebarMobile(false); // navegar sempre volta pro conteúdo (fecha o menu) no mobile
+  _atualizarOverlayCarregamento();
 }
 
-// ── Menu mobile (painel suspenso) ──────────────────────────────────────────
+// Cobre a página ativa com um estado de carregamento explícito enquanto a
+// sincronização inicial (login/restaurar sessão) não termina — ver o
+// comentário de #page-loading-overlay no CSS. O Dashboard já resolve isso
+// com o próprio skeleton por campo, então o overlay nunca aparece nele.
+function _atualizarOverlayCarregamento(){
+  const overlay = document.getElementById('page-loading-overlay');
+  if(!overlay) return;
+  const ehDashboard = document.getElementById('page-dashboard')?.classList.contains('active');
+  overlay.classList.toggle('show', !!window._syncInicialEmAndamento && !ehDashboard);
+}
+
+// Toque no "‹" da barra mobile: normalmente abre o menu tela cheia, mas na
+// ficha do animal volta direto pra lista de Animais (ver comentário em showPage).
+function mobileBackTap(){
+  const ativa = document.querySelector('.page.active');
+  if (ativa && ativa.id === 'page-detalhe-animal') { showPage('animais'); return; }
+  toggleSidebarMobile(true);
+}
+
+// ── Menu mobile (tela cheia, estilo "Pastas" do Notes — não é mais gaveta
+// sobreposta) — toggleSidebarMobile(true) mostra o menu, (false) mostra o
+// conteúdo. O botão "‹ Menu" e o título centralizado só fazem sentido com o
+// conteúdo visível, por isso somem juntos com o menu.
 function toggleSidebarMobile(force){
   const sb = document.getElementById('sidebar-main');
-  const bd = document.getElementById('sidebar-backdrop');
   if(!sb) return;
   const abrir = typeof force === 'boolean' ? force : !sb.classList.contains('open');
   sb.classList.toggle('open', abrir);
-  if(bd) bd.classList.toggle('open', abrir);
+  const backBtn = document.getElementById('mobile-back-btn');
+  const navTitulo = document.getElementById('mobile-navbar-title');
+  if (backBtn) backBtn.style.visibility = abrir ? 'hidden' : '';
+  if (navTitulo) navTitulo.style.visibility = abrir ? 'hidden' : '';
 }
+
+// ── Pull-to-refresh (mobile, estilo iOS) ────────────────────────────────────
+// Arrastar a tela pra baixo no topo recarrega os dados da cabanha, reusando
+// _sincronizarAoLogin() (mesma busca completa do banco que já roda no login),
+// só que sem registrar um "LOGIN" novo no audit log — ver o parâmetro
+// viaPullRefresh lá. Só faz sentido no layout mobile e com o dedo (touch);
+// desktop já tem F5/atalhos normais do navegador.
+(function(){
+  const LIMIAR = 62; // px arrastados (já com resistência) pra soltar e disparar
+  const RESISTENCIA = 0.45;
+  const MAX_VISUAL = 92;
+  let inicioY = 0, arrastando = false, carregando = false, distAtual = 0;
+
+  function podeComecarArrasto(){
+    if (window.innerWidth > 768) return false;
+    if (window.scrollY > 0) return false;
+    if (document.querySelector('.modal-bg.open')) return false;
+    if (document.getElementById('sidebar-main')?.classList.contains('open')) return false;
+    const login = document.getElementById('login-screen');
+    if (login && login.style.display !== 'none') return false;
+    return true;
+  }
+
+  function aplicarArrasto(dist){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = 'none';
+    main.style.transform = dist ? `translateY(${dist}px)` : '';
+    ind.style.height = dist ? dist+'px' : '';
+    ind.classList.toggle('pulling', dist > 4);
+    const svg = ind.querySelector('svg');
+    if(svg) svg.style.transform = `rotate(${Math.min(dist/LIMIAR,1)*180}deg)`;
+  }
+
+  function soltar(){
+    const main = document.querySelector('.main');
+    const ind = document.getElementById('ptr-indicator');
+    if(!main || !ind) return;
+    main.style.transition = '';
+    if(distAtual >= LIMIAR && !carregando){
+      carregando = true;
+      main.style.transform = `translateY(${LIMIAR}px)`;
+      ind.style.height = LIMIAR+'px';
+      ind.classList.remove('pulling'); ind.classList.add('loading');
+      Promise.resolve(_sincronizarAoLogin({viaPullRefresh:true})).finally(()=>{
+        main.style.transform = '';
+        ind.style.height = '';
+        ind.classList.remove('loading');
+        carregando = false;
+      });
+    } else {
+      main.style.transform = '';
+      ind.style.height = '';
+      ind.classList.remove('pulling');
+    }
+    distAtual = 0;
+  }
+
+  window.addEventListener('touchstart', (e)=>{
+    if(carregando || !podeComecarArrasto()) { arrastando = false; return; }
+    inicioY = e.touches[0].clientY;
+    arrastando = true;
+  }, {passive:true});
+
+  window.addEventListener('touchmove', (e)=>{
+    if(!arrastando || carregando) return;
+    const dy = e.touches[0].clientY - inicioY;
+    if(dy <= 0 || window.scrollY > 0){
+      if(distAtual){ distAtual = 0; aplicarArrasto(0); }
+      arrastando = false;
+      return;
+    }
+    distAtual = Math.min(dy * RESISTENCIA, MAX_VISUAL);
+    e.preventDefault();
+    aplicarArrasto(distAtual);
+  }, {passive:false});
+
+  window.addEventListener('touchend', ()=>{
+    if(!arrastando) return;
+    arrastando = false;
+    soltar();
+  }, {passive:true});
+})();
+
+// ── Status bar / safe area nativa (Android) ─────────────────────────────────
+// No iOS o WebView já reporta env(safe-area-inset-*) certinho e a barra de
+// status é só uma faixa translúcida — nosso #status-bar-mask (mesmo CSS nas
+// duas plataformas) já pinta atrás dela. No Android, o WebView do sistema
+// (Chromium) historicamente reporta os safe-area-inset-* como 0 mesmo em
+// modo edge-to-edge — nosso conteúdo ficava colado debaixo da câmera/sinal/
+// bateria, sem respiro nenhum, porque o "respiro" que o CSS calcula é 0.
+// @capacitor-community/safe-area resolve isso nativamente (detecta a versão
+// do WebView e aplica padding real quando o env() não funciona) — sem
+// precisar reescrever nenhum dos vários lugares que já usam
+// env(safe-area-inset-top/bottom) no CSS. Roda só dentro do app nativo
+// (window.Capacitor só existe lá) — no navegador normal (mimba.com.br) esse
+// bloco inteiro não faz nada.
+// Cor dos ícones da barra (relógio/wifi/bateria) e do respiro atrás dela
+// tem que combinar com o que está pintado embaixo pelo #status-bar-mask —
+// e isso NÃO é só "tema claro ou escuro do sistema": o herói da tela de
+// login é verde-escuro fixo (não muda com prefers-color-scheme), enquanto
+// o resto do app (sidebar, conteúdo) usa --bg/--chrome-bg (= --areia), que
+// aí sim inverte com o tema. Em WebViews "quebrados" (<Chromium 140), o
+// @capacitor-community/safe-area troca o respiro por padding nativo real —
+// só que a versão do plugin usada aqui pinta esse padding sempre em preto
+// ou branco puro (não lê tema nenhum), daí o plugin nativo próprio
+// br.com.mimba.app.MimbaBarsPlugin. Ele só consegue pintar uma cor só pra
+// tela toda (topo e rodapé) — não dá pra pintar cada barra de uma cor
+// independente com targetSdk 36 (edge-to-edge obrigatório desde a API 35
+// faz Window.setStatusBarColor/setNavigationBarColor virarem no-op) — por
+// isso prioriza o topo (é onde fica câmera/sinal/bateria, o bug original).
+function _ajustarStatusBarNativa(){
+  const mb = window.Capacitor?.Plugins?.MimbaBars;
+  if (!mb) return;
+  const loginVisivel = document.getElementById('login-screen')?.style.display !== 'none';
+  const modoEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const escuro = loginVisivel || modoEscuro;
+  const cor = loginVisivel ? '#33461C' : (modoEscuro ? '#1A1A18' : '#F4EFE6');
+  mb.apply({ cor, escuro }).catch(()=>{});
+}
+(function(){
+  if (!window.Capacitor?.Plugins?.MimbaBars) return;
+  _ajustarStatusBarNativa();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', _ajustarStatusBarNativa);
+})();
+
 function switchTab(btn,tid){
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -7576,7 +7977,7 @@ function renderNutBody(i) {
     if(itensCat.length===0){
       html += `<div class="nut-empty" style="margin:0 0 4px">Nenhum item cadastrado.</div>`;
     } else {
-      html += `<div style="display:grid;grid-template-columns:160px 120px 140px 1fr auto;gap:6px;padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+      html += `<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:180px 100px 100px 1fr auto;gap:8px;padding:4px 0 2px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:620px">
         <span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Observações</span><span></span>
       </div>`;
       itensCat.forEach(({it,idx})=>{
@@ -7591,6 +7992,7 @@ function renderNutBody(i) {
           </div>
         </div>`;
       });
+      html += `</div>`;
     }
     html += `</div>`;
   });
@@ -7605,7 +8007,7 @@ function renderNutBody(i) {
   if(suplList.length===0){
     html += `<div class="nut-empty">Nenhum suplemento cadastrado para este animal.</div>`;
   } else {
-    html += `<div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+    html += `<div style="overflow-x:auto"><div style="display:grid;grid-template-columns:150px 110px 90px 1fr 110px auto;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:650px">
       <span>Suplemento</span><span>Marca</span><span>Dosagem</span><span>Frequência</span><span>Período</span><span></span>
     </div>`;
     suplList.forEach(({it:s,idx})=>{
@@ -7621,6 +8023,7 @@ function renderNutBody(i) {
         </div>
       </div>`;
     });
+    html += `</div>`;
   }
   html += '</div>';
 
@@ -7630,7 +8033,7 @@ function renderNutBody(i) {
   </div>
   <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)">
     <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.75rem">${_iconRegua(14)} Medidas do Projeto</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       ${['inicial','final'].map(tipo=>{
         const m = n[`med_${tipo}`]||{};
         const label = tipo==='inicial'?'📍 Medidas iniciais':'🏁 Medidas finais';
@@ -7642,7 +8045,7 @@ function renderNutBody(i) {
             </button>
           </div>
           ${m.cernelha||m.peso?`
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+            <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
               ${m.data?`<div style="grid-column:1/-1;font-size:10px;color:var(--text3)">${fd(m.data)}</div>`:''}
               ${m.cernelha?`<div><span style="color:var(--text3)">Cernelha</span><br><strong>${m.cernelha}m</strong></div>`:''}
               ${m.torax?`<div><span style="color:var(--text3)">Tórax</span><br><strong>${m.torax}m</strong></div>`:''}
@@ -7934,7 +8337,7 @@ function renderTemplatesPage() {
     : nutTemplates.map(tmpl=>{
         const anCount = tmpl.estagio_vinculado ? animais.filter(a=>a.estagio===tmpl.estagio_vinculado&&(a.situacao==='NA CABANHA'||a.situacao==='EMPRESTIMO')).length : null;
         const rows = tmpl.itens.map(it=>`
-          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start">
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:start;min-width:520px">
             <span style="font-weight:600">${icons[it.tipo]||''} ${it.tipo}</span>
             <span style="color:var(--text2)">${it.produto||'—'}</span>
             <span style="color:var(--text2)">${it.quantidade||'—'}</span>
@@ -7957,10 +8360,12 @@ function renderTemplatesPage() {
               <button class="btn btn-sm" style="font-size:10px" onclick="abrirTemplate(undefined);document.getElementById('tmpl-select').value='${tmpl.db_id}';atualizarPreviewTemplate()">Aplicar a animal</button>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">
+          <div style="overflow-x:auto">
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr 2fr;gap:6px;padding:4px 0 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;min-width:520px">
             <span>Tipo</span><span>Produto</span><span>Quantidade/dia</span><span>Frequência</span><span>Obs</span>
           </div>
           ${rows || '<div class="nut-empty" style="margin:4px 0">Sem itens.</div>'}
+          </div>
         </div>`;
       }).join('');
   el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">${novoBtn}</div>${lista}`;
@@ -7981,59 +8386,75 @@ function abrirModalTemplateCRUD(tmplId) {
     estagio: tmpl?.estagio_vinculado||'',
     itens: tmpl ? JSON.parse(JSON.stringify(tmpl.itens)) : []
   };
-  _renderModalTemplateCRUD();
+  _montarModalTemplateCRUD();
 }
 
-function _renderModalTemplateCRUD() {
+// Monta o modal UMA vez só. Diferente da versão anterior (bug real, 2026-08-21): adicionar ou
+// remover um item recriava o modal inteiro do zero a partir de window._tmplEdit — como os campos
+// Nome/Estágio nunca sincronizavam seu valor de volta pro estado ao digitar, cada re-render
+// jogava fora o que a pessoa tinha acabado de escrever. Agora Nome/Estágio têm listener próprio
+// (sincroniza a cada tecla/troca) e adicionar/remover item só re-renderiza a lista de itens
+// (#tmpl-crud-itens), sem tocar no resto do modal.
+function _montarModalTemplateCRUD() {
   document.getElementById('modal-tmpl-crud')?.remove();
   const st = window._tmplEdit;
   const estagios = ['','CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
-  const tipos = ['racao','aveia','alfafa','verde','sal','suplemento','outro'];
-  const itensRows = st.itens.map((it,idx)=>`
-    <div style="display:grid;grid-template-columns:100px 1fr 90px 110px 1fr auto;gap:6px;margin-bottom:6px;align-items:center">
-      <select onchange="window._tmplEdit.itens[${idx}].tipo=this.value">
-        ${tipos.map(t=>`<option value="${t}" ${it.tipo===t?'selected':''}>${t}</option>`).join('')}
-      </select>
-      <input type="text" placeholder="Produto" value="${(it.produto||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].produto=this.value">
-      <input type="text" placeholder="Qtd/dia" value="${(it.quantidade||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].quantidade=this.value">
-      <input type="text" placeholder="Frequência" value="${(it.frequencia||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].frequencia=this.value">
-      <input type="text" placeholder="Obs" value="${(it.obs||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].obs=this.value">
-      <button class="nut-item-edit" style="color:var(--red-d)" onclick="window._tmplEdit.itens.splice(${idx},1);_renderModalTemplateCRUD()">×</button>
-    </div>`).join('');
 
   const bg = document.createElement('div');
   bg.className='modal-bg'; bg.id='modal-tmpl-crud'; bg.style.display='flex';
   bg.innerHTML=`
-    <div class="modal" style="width:680px;max-height:90vh;overflow-y:auto">
+    <div class="modal" style="width:640px">
       <div class="modal-header">
         <span class="modal-title">${st.db_id?'Editar':'Novo'} template</span>
         <button class="modal-close" onclick="document.getElementById('modal-tmpl-crud').remove()">×</button>
       </div>
-      <div style="padding:0 1.25rem 1rem">
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div class="form-group" style="margin:0"><label>Nome do template</label>
-            <input type="text" id="tmpl-crud-nome" value="${st.nome.replace(/"/g,'&quot;')}" placeholder="Ex: Potros em recria"></div>
-          <div class="form-group" style="margin:0"><label>Estágio vinculado (opcional)</label>
-            <select id="tmpl-crud-estagio">
-              ${estagios.map(e=>`<option value="${e}" ${st.estagio===e?'selected':''}>${e||'— nenhum —'}</option>`).join('')}
-            </select></div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Itens do template</div>
-        <div id="tmpl-crud-itens">${itensRows || '<div class="nut-empty">Nenhum item ainda.</div>'}</div>
-        <button class="btn btn-sm" style="margin-top:6px" onclick="window._tmplEdit.itens.push({tipo:'racao',produto:'',quantidade:'',frequencia:'2x ao dia',obs:''});_renderModalTemplateCRUD()">+ Adicionar item</button>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div class="form-group" style="margin:0"><label>Nome do template</label>
+          <input type="text" id="tmpl-crud-nome" value="${st.nome.replace(/"/g,'&quot;')}" placeholder="Ex: Potros em recria" oninput="window._tmplEdit.nome=this.value"></div>
+        <div class="form-group" style="margin:0"><label>Estágio vinculado (opcional)</label>
+          <select id="tmpl-crud-estagio" onchange="window._tmplEdit.estagio=this.value">
+            ${estagios.map(e=>`<option value="${e}" ${st.estagio===e?'selected':''}>${e||'— nenhum —'}</option>`).join('')}
+          </select></div>
       </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Itens do template</div>
+      <div id="tmpl-crud-itens"></div>
+      <button class="btn btn-sm" style="margin-top:4px" onclick="window._tmplEdit.itens.push({tipo:'racao',produto:'',quantidade:'',frequencia:'2x ao dia',obs:''});_renderTmplItensRows()">+ Adicionar item</button>
       <div class="modal-footer">
         <button class="btn" onclick="document.getElementById('modal-tmpl-crud').remove()">Cancelar</button>
         <button class="btn btn-primary" onclick="salvarTemplateCRUD()">Salvar template</button>
       </div>
     </div>`;
   document.body.appendChild(bg);
+  _renderTmplItensRows();
+}
+
+// Cada item vira um card (mesmo padrão visual do resto do app: fundo --bg3, raio --radius) com
+// os campos em flex-wrap — reflow natural em telas estreitas, em vez do grid de colunas fixas
+// (100px/90px/110px...) que forçava scroll horizontal dentro do modal.
+function _renderTmplItensRows() {
+  const el = document.getElementById('tmpl-crud-itens');
+  if(!el) return;
+  const st = window._tmplEdit;
+  const tipos = ['racao','aveia','alfafa','verde','sal','suplemento','outro'];
+  el.innerHTML = st.itens.length===0
+    ? '<div class="nut-empty">Nenhum item ainda.</div>'
+    : st.itens.map((it,idx)=>`
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg3);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px">
+        <select style="flex:1 1 100px" onchange="window._tmplEdit.itens[${idx}].tipo=this.value">
+          ${tipos.map(t=>`<option value="${t}" ${it.tipo===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        <input type="text" style="flex:2 1 140px" placeholder="Produto" value="${(it.produto||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].produto=this.value">
+        <input type="text" style="flex:1 1 90px" placeholder="Qtd/dia" value="${(it.quantidade||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].quantidade=this.value">
+        <input type="text" style="flex:1 1 110px" placeholder="Frequência" value="${(it.frequencia||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].frequencia=this.value">
+        <input type="text" style="flex:2 1 140px" placeholder="Obs" value="${(it.obs||'').replace(/"/g,'&quot;')}" oninput="window._tmplEdit.itens[${idx}].obs=this.value">
+        <button class="nut-item-edit" style="color:var(--red-d)" onclick="window._tmplEdit.itens.splice(${idx},1);_renderTmplItensRows()">×</button>
+      </div>`).join('');
 }
 
 async function salvarTemplateCRUD() {
-  const nome = document.getElementById('tmpl-crud-nome').value.trim();
+  const nome = (window._tmplEdit.nome||'').trim();
   if(!nome) return alert('Informe o nome do template.');
-  const estagio = document.getElementById('tmpl-crud-estagio').value || null;
+  const estagio = window._tmplEdit.estagio || null;
   const st = window._tmplEdit;
   let tmplId = st.db_id;
   if(tmplId) {
@@ -8114,7 +8535,7 @@ function renderEvtAnimaisTemp() {
   }
   let html = evtAnimaisTemp.map((p,pi)=>`
     <div class="evt-animal-row">
-      <span style="font-weight:600;flex:1;font-size:12px">${p.nome}</span>
+      <span style="font-weight:600;flex:1 1 100%;font-size:12px">${p.nome}</span>
       <select style="width:130px;font-size:11px;padding:4px" onchange="evtAnimaisTemp[${pi}].modalidade=this.value">
         <option ${p.modalidade==='Individual'?'selected':''}>Individual</option>
         <option ${p.modalidade==='Conjunto'?'selected':''}>Conjunto</option>
@@ -8794,7 +9215,7 @@ function renderEvtPorAnimal() {
         ${totalPodios>0?`<span class="badge bg">${_iconTrofeu(12)} ${totalPodios} pódio(s)</span>`:''}
       </div>
       ${evts.length===0?'<div class="nut-empty">Nenhum evento registrado para este animal.</div>':
-        `<table style="font-size:11px"><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>
+        `<div style="overflow-x:auto"><table style="font-size:11px;min-width:420px"><thead><tr><th>Evento</th><th>Tipo</th><th>Data</th><th>Resultado</th><th>Pts</th></tr></thead><tbody>
           ${evts.map(e=>{
             const p=e.participantes.find(x=>x.nome===a.nome)||{};
             const rc=p.resultado==='1'?'evt-1':p.resultado==='2'?'evt-2':p.resultado==='3'?'evt-3':p.resultado==='Classificado'?'evt-class':'evt-sem';
@@ -8806,7 +9227,7 @@ function renderEvtPorAnimal() {
               <td>${p.pontos||'—'}</td>
             </tr>`;
           }).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
     </div>`;
   }).join('');
 }
@@ -11623,7 +12044,7 @@ function _prAdicionarEtapaLinha(etapa) {
   const wrap = document.getElementById('pr-etapas-list');
   const row = document.createElement('div');
   row.className = 'pr-etapa-row';
-  row.style.cssText = 'display:grid;grid-template-columns:90px 130px 1fr 90px 26px;gap:6px;align-items:center;margin-bottom:6px';
+  row.style.cssText = 'display:grid;grid-template-columns:90px 130px 1fr 90px 26px;gap:6px;align-items:center;margin-bottom:6px;min-width:460px';
   row.innerHTML = `
     <input type="number" class="pr-et-dia" placeholder="Dia" value="${etapa?.dia_relativo ?? ''}" style="width:100%">
     <select class="pr-et-tipo" style="width:100%">
@@ -12363,7 +12784,7 @@ function dashDrill(tipo, filtro){
     case 'sexo':{
       const fems=ativos.filter(a=>a.sexo==='Fêmea'), macs=ativos.filter(a=>a.sexo==='Macho');
       label=`♀♂ Fêmeas (${fems.length}) / Machos (${macs.length})`;
-      rows=`<div style="display:grid;grid-template-columns:1fr 1fr">
+      rows=`<div class="g-cols-2" style="display:grid;grid-template-columns:1fr 1fr">
         <div style="border-right:0.5px solid var(--border)">
           ${_secHeader(`♀ Fêmeas (${fems.length})`, 'var(--pink-l)', 'var(--pink-d)')}
           ${fems.map(_drillRow).join('')}
@@ -12511,7 +12932,7 @@ function renderUsuarios() {
   // defesa em profundidade no client, não a proteção real.
   const isAdmViewer = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
 
-  el.innerHTML = `<table><thead><tr>
+  el.innerHTML = `<div style="overflow-x:auto"><table style="min-width:560px"><thead><tr>
     <th style="padding:10px 14px">Nome</th>
     <th>E-mail</th>
     <th>Perfil</th>
@@ -12542,7 +12963,7 @@ function renderUsuarios() {
       </td>`}
     </tr>`;
   }).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
 }
 
 function abrirModalUsuario(idx) {
@@ -13868,8 +14289,9 @@ function _mostrarStatusSync(msg, tipo) {
 // ══════════════════════════════════════════════════════════════════════════════
 // SYNC COMPLETO — carrega todos os dados do banco relacional
 // ══════════════════════════════════════════════════════════════════════════════
-async function _sincronizarAoLogin() {
-  _mostrarStatusSync('🔄 Carregando dados do banco...', 'amber');
+async function _sincronizarAoLogin(opts) {
+  const viaPullRefresh = !!(opts && opts.viaPullRefresh);
+  _mostrarStatusSync(viaPullRefresh ? '🔄 Atualizando...' : '🔄 Carregando dados do banco...', 'amber');
   // Limpar arrays locais antes de carregar do banco (evitar duplicatas)
   animais.length = 0;
   fontesCobertura.length = 0;
@@ -14326,9 +14748,12 @@ async function _sincronizarAoLogin() {
       }
     }
 
-    // Registrar login no audit
-    await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
-      {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    // Registrar login no audit — só na sincronização de login de verdade; um
+    // pull-to-refresh não é um novo login e não pode poluir o audit log como se fosse.
+    if (!viaPullRefresh) {
+      await _auditLog('sessao', 'LOGIN', usuarioAtual?.id || '?',
+        {usuario: usuarioAtual?.nome, ts: new Date().toISOString()});
+    }
 
     populaCiclos(); renderDashboard(); renderAnimais(); atualizarBadgePendencias();
     // Se o usuário já tiver navegado para outra página (ex.: Gestação, Medidas)
@@ -14337,6 +14762,7 @@ async function _sincronizarAoLogin() {
     // mostrando vazio/desatualizado até sair e voltar manualmente. Reaproveita
     // o dispatch de showPage (já sabe renderizar cada página) na página que
     // estiver ativa agora, sem precisar listar cada uma na mão.
+    if(!viaPullRefresh) window._syncInicialEmAndamento = false;
     const _paginaAtivaAoTerminarSync = document.querySelector('.page.active');
     if(_paginaAtivaAoTerminarSync) showPage(_paginaAtivaAoTerminarSync.id.replace('page-',''));
     _gerarPendenciasAnimaisAtivos();
@@ -14345,6 +14771,16 @@ async function _sincronizarAoLogin() {
   } catch(err) {
     console.error('Sync error:', err);
     _mostrarStatusSync('⚠️ Erro ao sincronizar — usando dados locais', 'amber');
+    if(!viaPullRefresh) window._syncInicialEmAndamento = false;
+    // Sem isso, quando a sincronização falha o Dashboard (e qualquer página
+    // que já tivesse entrado em skeleton) ficava com o esqueleto de
+    // "carregando" pra sempre — nunca chegava a hora de trocar pelo
+    // conteúdo real, mesmo que "real" aqui signifique 0/vazio. O usuário via
+    // isso como "trava infinita", quando na verdade a sincronização já tinha
+    // terminado (com erro) fazia tempo.
+    populaCiclos(); renderDashboard(); renderAnimais(); atualizarBadgePendencias();
+    const _paginaAtivaNoErro = document.querySelector('.page.active');
+    if(_paginaAtivaNoErro) showPage(_paginaAtivaNoErro.id.replace('page-',''));
   }
 }
 
@@ -15262,6 +15698,8 @@ async function renderPainelMimba() {
 function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
+  _ajustarStatusBarNativa();
+  _chatIAMostrarFab(true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -15303,17 +15741,30 @@ function _entrarApp() {
   if(usrSub) usrSub.textContent = 'Controle de acesso ao sistema' + (nomeCab ? ` — ${nomeCab}` : '');
   _aplicarPermissoes();
   populaCiclos();
+  // Dashboard é sempre a página de entrada (já vem "active" no HTML estático,
+  // sem passar por showPage()) — título da navbar mobile precisa ser setado
+  // aqui manualmente, senão fica vazio até a primeira troca de página.
+  const navTituloInicial = document.getElementById('mobile-navbar-title');
+  if (navTituloInicial) navTituloInicial.textContent = document.querySelector('#page-dashboard .page-title')?.textContent || 'Dashboard';
   // Não renderizar o dashboard com dado real aqui: animais ainda está vazio (limpo
   // em _limparEstadoLocal) — mostra skeleton animado até _sincronizarAoLogin
   // terminar e chamar renderDashboard() de verdade, no final.
   _mostrarDashboardSkeleton();
   atualizarBadgePendencias();
+  // Cobre qualquer página que não seja o Dashboard com o overlay de
+  // carregamento (ver _atualizarOverlayCarregamento) até a sincronização
+  // inicial terminar — sucesso ou erro, ambos limpam a flag no fim de
+  // _sincronizarAoLogin.
+  window._syncInicialEmAndamento = true;
+  _atualizarOverlayCarregamento();
   _sincronizarAoLogin();
 }
 
 function fazerLogout() {
   usuarioAtual = null;
   AUTH_TOKEN = null; AUTH_USER = null; TENANT_INFO = null;
+  _chatIAMostrarFab(false);
+  _chatIAMensagens = [];
   // não deixar dado da cabanha na memória/localStorage após sair
   _limparEstadoLocal();
   _limparSessaoSalva(); // sair de verdade não pode voltar sozinho no próximo reload
@@ -15328,6 +15779,7 @@ function fazerLogout() {
   document.title = 'Mimba — Gestão Crioulos';
   _loadUsuarios();
   document.getElementById('login-screen').style.display='flex';
+  _ajustarStatusBarNativa();
   // restaurar a tela normal de login (pode estar escondida por causa da tela de bloqueio)
   _mostrarLoginShell(true);
   const bloq = document.getElementById('login-bloqueado'); if(bloq) bloq.style.display='none';
@@ -15738,8 +16190,130 @@ if(!_checkRecovery()){
   _tentarRetomarSessao().then(retomou => { if(!retomou) _carregarEmailLembrado(); });
 }
 
+// ── Agente de IA — chat flutuante (ADR 0006/0007) ───────────────────────────
+// Streaming via SSE: primeiro uso desse padrão no projeto (o resto do app só
+// usa fetch simples com await res.json()). Cada RPC que o agente chama já é
+// tenant-scoped/autorizada no Postgres (tem_acesso_tenant) — esta função só
+// repassa o JWT do usuário, nunca monta SQL nem decide autorização aqui.
+let _chatIAMensagens = [];
+let _chatIAEnviando = false;
+
+function _chatIAToggle(){
+  const painel = document.getElementById('chat-ia-panel');
+  const abrindo = !painel.classList.contains('open');
+  painel.classList.toggle('open', abrindo);
+  if(abrindo) document.getElementById('chat-ia-input')?.focus();
+}
+
+function _chatIAMostrarFab(mostrar){
+  document.getElementById('chat-ia-fab')?.classList.toggle('visible', !!mostrar);
+  if(!mostrar) document.getElementById('chat-ia-panel')?.classList.remove('open');
+}
+
+function _chatIARenderMsg(texto, classe){
+  const box = document.getElementById('chat-ia-msgs');
+  const div = document.createElement('div');
+  div.className = 'chat-ia-msg ' + classe;
+  div.textContent = texto;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function _chatIAEnviar(){
+  if(_chatIAEnviando) return;
+  const input = document.getElementById('chat-ia-input');
+  const texto = (input.value||'').trim();
+  if(!texto) return;
+  const tenantId = TENANT_INFO?.tenant_id || TENANT_INFO?.id;
+  if(!tenantId){ _chatIARenderMsg('Nenhuma cabanha ativa.', 'sistema'); return; }
+
+  input.value = '';
+  _chatIARenderMsg(texto, 'user');
+  _chatIAMensagens.push({ role: 'user', content: texto });
+
+  _chatIAEnviando = true;
+  const botaoEnviar = document.getElementById('chat-ia-send');
+  if(botaoEnviar) botaoEnviar.disabled = true;
+  const bolhaResposta = _chatIARenderMsg('', 'assistente');
+
+  try {
+    await _garantirTokenValido();
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/agente-ia`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: tenantId, mensagens: _chatIAMensagens }),
+    });
+
+    if(!r.ok){
+      const d = await r.json().catch(()=>({}));
+      bolhaResposta.remove();
+      _chatIARenderMsg(d?.erro || `Erro ${r.status} ao falar com o assistente.`, 'sistema');
+      _chatIAMensagens.pop();
+      return;
+    }
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let respostaTexto = '';
+
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const partes = buffer.split('\n\n');
+      buffer = partes.pop() || '';
+      for(const parte of partes){
+        const linhas = parte.split('\n');
+        const linhaEvento = linhas.find(l=>l.startsWith('event: '));
+        const linhaDados = linhas.find(l=>l.startsWith('data: '));
+        if(!linhaEvento || !linhaDados) continue;
+        const evento = linhaEvento.slice(7);
+        const dados = JSON.parse(linhaDados.slice(6));
+        if(evento === 'texto'){
+          respostaTexto += dados.delta;
+          bolhaResposta.textContent = respostaTexto;
+          document.getElementById('chat-ia-msgs').scrollTop = 9e9;
+        } else if(evento === 'ferramenta'){
+          bolhaResposta.textContent = respostaTexto || 'consultando...';
+        } else if(evento === 'erro'){
+          bolhaResposta.textContent = respostaTexto || (dados.erro || 'Erro no assistente.');
+        }
+      }
+    }
+
+    if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
+    else bolhaResposta.remove();
+  } catch(e) {
+    bolhaResposta.textContent = 'Falha de conexão com o assistente.';
+  } finally {
+    _chatIAEnviando = false;
+    if(botaoEnviar) botaoEnviar.disabled = false;
+  }
+}
+
 </script>
-<div id="sync-status" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+<div id="sync-status" style="display:none;position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom));right:calc(1.25rem + env(safe-area-inset-right));padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+
+<!-- Agente de IA — chat flutuante (ADR 0006). Escondido por padrão; _entrarApp()/
+     fazerLogout() controlam a visibilidade (só aparece logado, nunca sobre o login). -->
+<button class="chat-ia-fab" id="chat-ia-fab" onclick="_chatIAToggle()" title="Assistente Mimba" aria-label="Abrir assistente">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+</button>
+<div class="chat-ia-panel" id="chat-ia-panel">
+  <div class="chat-ia-header">
+    <span>Assistente Mimba</span>
+    <button onclick="_chatIAToggle()" aria-label="Fechar">×</button>
+  </div>
+  <div class="chat-ia-msgs" id="chat-ia-msgs">
+    <div class="chat-ia-msg sistema">Pergunte sobre os dados da sua cabanha ou como usar o sistema.</div>
+  </div>
+  <div class="chat-ia-input-row">
+    <textarea id="chat-ia-input" rows="1" placeholder="Escreva sua pergunta..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_chatIAEnviar();}"></textarea>
+    <button id="chat-ia-send" onclick="_chatIAEnviar()">Enviar</button>
+  </div>
+</div>
 
 <div class="modal-bg" id="modal-nao-confirmar">
   <div class="modal" style="max-width:420px">
