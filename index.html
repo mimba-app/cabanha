@@ -258,6 +258,17 @@
   :root[data-theme="dark"] .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
+  .pref-estagios-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
+  .pref-estagio-chip { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:var(--radius); border:0.5px solid var(--border); cursor:pointer; }
+  .pref-estagio-chip input { width:auto; }
+  #conta-dropdown { position:absolute; z-index:400; min-width:220px; background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:none; }
+  #conta-dropdown.open { display:block; }
+  #conta-dropdown-header { padding:12px 14px; border-bottom:0.5px solid var(--border); }
+  #conta-dropdown-header .cdh-nome { font-size:13px; font-weight:600; color:var(--text); }
+  #conta-dropdown-header .cdh-email { font-size:11px; color:var(--text3); margin-top:2px; }
+  .conta-dropdown-item { display:flex; align-items:center; gap:10px; padding:9px 14px; font-size:12.5px; color:var(--text2); cursor:pointer; }
+  .conta-dropdown-item:hover { background:var(--bg3); color:var(--text); }
+  .conta-dropdown-sep { height:0.5px; background:var(--border); margin:4px 0; }
   .sidebar .sidebar-icon-btn:hover { background:var(--border); color:var(--chrome-text); }
   .sidebar-logout-btn { width:100%; margin-top:8px; background:var(--red); color:#fff; border:none; padding:9px; border-radius:var(--radius); cursor:pointer; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
   .sidebar-logout-btn:hover { background:var(--red-d); }
@@ -1363,15 +1374,40 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
       Painel Mimba
     </button>
-    <div id="sidebar-account-card" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:var(--bg3);border:0.5px solid var(--chrome-border)">
+    <div id="sidebar-account-card" onclick="_toggleDropdownConta(event)" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:var(--bg3);border:0.5px solid var(--chrome-border);cursor:pointer;position:relative">
       <div id="sidebar-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--chrome-accent);color:var(--chrome-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">?</div>
       <div style="flex:1;min-width:0">
         <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--chrome-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="sidebar-perfil-badge" style="margin-top:2px"></div>
       </div>
-      <button class="sidebar-icon-btn" onclick="abrirTelaConta()" title="Configurações da conta" aria-label="Configurações da conta" style="color:var(--chrome-text3)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--chrome-text3);flex-shrink:0"><polyline points="7 15 12 20 17 15"/><polyline points="7 9 12 4 17 9"/></svg>
+
+      <div id="conta-dropdown">
+        <div id="conta-dropdown-header">
+          <div class="cdh-nome" id="cdh-nome-cabanha">—</div>
+          <div class="cdh-email" id="cdh-email-usuario">—</div>
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-cabanha')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+          Dados da Cabanha
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-perfil')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          Meu Perfil
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-preferencias')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Preferências do Sistema
+        </div>
+        <div class="conta-dropdown-item" id="cdi-faturamento" style="display:none" onclick="_irParaConta(event,'conta-tab-faturamento')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Faturamento
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-usuarios')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/><circle cx="17" cy="8" r="2.6"/><path d="M15.7 14.2c2.7.6 4.8 2.7 4.8 5.8"/></svg>
+          Usuários
+        </div>
+      </div>
     </div>
     <button class="sidebar-logout-btn" onclick="fazerLogout()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -2443,97 +2479,288 @@
 
 <!-- MODAL USUÁRIO -->
 <!-- TELA DE CONTA: cabanha (nome/logo) + usuários da cabanha -->
-<div class="modal-bg" id="modal-conta">
-  <div class="modal" style="width:920px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column">
-    <div class="modal-header">
-      <span class="modal-title">Conta</span>
-      <button class="modal-close" onclick="closeModal('modal-conta')">×</button>
-    </div>
-    <div class="tab-row" style="margin-bottom:1.25rem">
-      <button class="tab active" onclick="switchContaTab(this,'conta-tab-cabanha')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Cabanha</button>
-      <button class="tab" onclick="switchContaTab(this,'conta-tab-usuarios')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg> Usuários</button>
-      <button class="tab" id="conta-tab-btn-faturamento" onclick="switchContaTab(this,'conta-tab-faturamento')" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Faturamento</button>
-    </div>
+<div class="page" id="page-conta">
+  <div class="page-header">
+    <div><div class="page-title">Conta</div><div class="page-sub">Cabanha, perfil e preferências do sistema</div></div>
+  </div>
 
-    <div id="conta-tab-cabanha" style="overflow-y:auto;flex:1">
-      <div class="form-grid" style="max-width:520px;margin:0 auto">
-        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
-          <img id="conta-logo-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
-          <div id="conta-logo-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>
-          <label class="btn btn-sm" style="cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
-          </label>
+  <div class="tab-row" style="margin-bottom:1.25rem">
+    <button class="tab active" onclick="switchContaTab(this,'conta-tab-cabanha')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Cabanha</button>
+    <button class="tab" onclick="switchContaTab(this,'conta-tab-perfil')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg> Meu Perfil</button>
+    <button class="tab" onclick="switchContaTab(this,'conta-tab-preferencias')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Preferências</button>
+    <button class="tab" onclick="switchContaTab(this,'conta-tab-usuarios')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/><circle cx="17" cy="8" r="2.6"/><path d="M15.7 14.2c2.7.6 4.8 2.7 4.8 5.8"/></svg> Usuários</button>
+    <button class="tab" id="conta-tab-btn-faturamento" onclick="switchContaTab(this,'conta-tab-faturamento')" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Faturamento</button>
+  </div>
+
+  <!-- ── ABA CABANHA ─────────────────────────────────────────────────────── -->
+  <div id="conta-tab-cabanha">
+    <div class="form-grid" style="max-width:640px">
+      <div class="card-title" style="grid-column:1/-1;margin-bottom:2px">Identidade</div>
+      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
+        <img id="conta-logo-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
+        <div id="conta-logo-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>
+        <label class="btn btn-sm" style="cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
+        </label>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nome de exibição</label>
+        <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus" style="width:100%">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Cor da marca</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
+          <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
+          <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
         </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Nome de exibição</label>
-          <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus" style="width:100%">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Cor da marca</label>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
-            <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
-            <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Tema</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="pill-switch" id="conta-tema-switch">
+            <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
+            <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
           </div>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Tema</label>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="pill-switch" id="conta-tema-switch">
-              <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
-              <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
-            </div>
-            <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
-          </div>
+          <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeModal('modal-conta')">Fechar</button>
-        <button class="btn btn-primary" id="conta-btn-salvar-cabanha" onclick="salvarDadosCabanha()">Salvar</button>
+
+      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Perfil público</div>
+      <div style="grid-column:1/-1;font-size:11px;color:var(--text3);margin-bottom:6px">Estas informações preparam a futura página da sua cabanha no Marketplace Mimba.</div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Assinatura</label>
+        <input type="text" id="cpp-assinatura" placeholder="Ex: Tradição em genética Crioula desde 1998" maxlength="120" style="width:100%">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Sobre a cabanha</label>
+        <textarea id="cpp-sobre" rows="4" maxlength="1000" placeholder="História, especialidade, diferencial da cabanha..." style="width:100%"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Ano de fundação</label>
+        <input type="number" id="cpp-ano-fundacao" placeholder="Ex: 1998" min="1900" max="2100" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Especialidades</label>
+        <select id="cpp-especialidades" multiple style="width:100%;min-height:88px">
+          <option value="Morfologia">Morfologia</option>
+          <option value="Freio">Freio</option>
+          <option value="Doma">Doma</option>
+          <option value="Paleteadas">Paleteadas</option>
+          <option value="Marcha/Resistência">Marcha/Resistência</option>
+        </select>
+      </div>
+
+      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Localização e contato</div>
+      <div class="form-group">
+        <label>Cidade</label>
+        <input type="text" id="cpp-cidade" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="cpp-estado" style="width:100%">
+          <option value="">—</option>
+          <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
+          <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
+          <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
+          <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+          <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
+          <option>SE</option><option>TO</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Endereço <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+        <input type="text" id="cpp-endereco" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="tel" id="cpp-whatsapp" placeholder="(99) 99999-9999" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="tel" id="cpp-telefone" placeholder="(99) 9999-9999" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>E-mail de contato</label>
+        <input type="email" id="cpp-email-contato" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Instagram</label>
+        <input type="text" id="cpp-instagram" placeholder="@sua_cabanha" style="width:100%">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Site</label>
+        <input type="url" id="cpp-site" placeholder="https://..." style="width:100%">
+      </div>
+
+      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Visibilidade</div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
+          <input type="checkbox" id="cpp-visivel-marketplace" style="width:auto">
+          Exibir minha cabanha no Marketplace Mimba
+        </label>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Nome, cidade, especialidades e assinatura ficarão visíveis publicamente. Endereço completo e contatos diretos só aparecem se você optar por exibi-los.</div>
       </div>
     </div>
+    <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
+      <button class="btn btn-primary" id="conta-btn-salvar-cabanha" onclick="salvarDadosCabanha()">Salvar</button>
+    </div>
+  </div>
 
-    <div id="conta-tab-usuarios" style="display:none;overflow-y:auto;flex:1">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
-        <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
-        <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
+  <!-- ── ABA MEU PERFIL ──────────────────────────────────────────────────── -->
+  <div id="conta-tab-perfil" style="display:none">
+    <div class="form-grid" style="max-width:520px">
+      <div class="card-title" style="grid-column:1/-1;margin-bottom:2px">Dados pessoais</div>
+      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
+        <img id="perfil-foto-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
+        <div id="perfil-foto-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <label class="btn btn-sm" style="cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
+        </label>
       </div>
-      <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
-        <div class="card" style="text-align:center;padding:1rem">
-          <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
-        </div>
-        <div class="card" style="text-align:center;padding:1rem">
-          <div style="font-size:24px;font-weight:800;color:var(--blue-d)" id="usr-count-vet">0</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Veterinários</div>
-        </div>
-        <div class="card" style="text-align:center;padding:1rem">
-          <div style="font-size:24px;font-weight:800;color:var(--text)" id="usr-count-cab">0</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Cabanheiros</div>
-        </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nome completo</label>
+        <input type="text" id="perfil-nome" style="width:100%">
       </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div id="usuarios-table-content"></div>
+      <div class="form-group">
+        <label>Cargo / Função</label>
+        <select id="perfil-cargo" style="width:100%">
+          <option value="">—</option>
+          <option>Proprietário</option>
+          <option>Gerente</option>
+          <option>Veterinário</option>
+          <option>Técnico</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Telefone pessoal</label>
+        <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999" style="width:100%">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>E-mail de login</label>
+        <input type="text" id="perfil-email" disabled style="width:100%;opacity:.6">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <button class="btn btn-sm" onclick="abrirModalTrocarSenha()">Trocar senha</button>
+      </div>
+
+      <div class="card-title" style="grid-column:1/-1;margin:20px 0 2px">Preferências pessoais</div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
+          <input type="checkbox" id="perfil-notif-email" checked style="width:auto">
+          Receber notificações por e-mail
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Idioma</label>
+        <select id="perfil-idioma" style="width:100%">
+          <option value="pt-BR">Português (BR)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fuso horário</label>
+        <select id="perfil-fuso" style="width:100%">
+          <option value="America/Sao_Paulo">América/São Paulo</option>
+        </select>
       </div>
     </div>
+    <div class="modal-footer" style="max-width:520px;padding-left:0;padding-right:0">
+      <button class="btn btn-primary" onclick="salvarMeuPerfil()">Salvar</button>
+    </div>
+  </div>
 
-    <!-- V1.5 (Fase 4): Portal do cliente — faturamento. Só a parte que NÃO depende da lista
-         de limites por plano (troca de plano fica bloqueada até o Pedro mandar essa lista,
-         ver docs/roadmap-v15.md). Admin-only, mesmo padrão de acesso da aba Usuários. -->
-    <div id="conta-tab-faturamento" style="display:none;overflow-y:auto;flex:1">
-      <div class="card-title" style="margin-bottom:8px">Seu plano</div>
-      <div id="fat-planos-content" style="margin-bottom:22px">
-        <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
+  <!-- ── ABA PREFERÊNCIAS DO SISTEMA ─────────────────────────────────────── -->
+  <div id="conta-tab-preferencias" style="display:none">
+    <div style="max-width:640px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Estas preferências controlam quais alertas o sistema gera, com base no estágio de cada animal.</div>
+
+      <div class="card-title" style="margin-bottom:8px">Controle de vacinas</div>
+      <div class="form-group" style="margin-bottom:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
+          <input type="checkbox" id="pref-controlar-vacinas" checked style="width:auto" onchange="_prefToggleEstagios('vacinas')">
+          Controlar vencimento de vacinas
+        </label>
+      </div>
+      <div id="pref-estagios-vacinas-wrap" style="margin-bottom:20px;padding-left:26px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
+        <div id="pref-estagios-vacinas" class="pref-estagios-grid"></div>
       </div>
 
-      <div class="card-title" style="margin-bottom:8px">Cartão de cobrança</div>
-      <div id="fat-cartao-resumo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
-      <button class="btn btn-sm" onclick="abrirModalAtualizarCartao()">Atualizar cartão</button>
-
-      <div class="card-title" style="margin:22px 0 8px">Histórico de faturas</div>
-      <div id="fat-faturas-content">
-        <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
+      <div class="card-title" style="margin-bottom:8px">Controle de exames</div>
+      <div class="form-group" style="margin-bottom:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
+          <input type="checkbox" id="pref-controlar-exames" checked style="width:auto" onchange="_prefToggleEstagios('exames')">
+          Controlar vencimento de exames
+        </label>
       </div>
+      <div id="pref-estagios-exames-wrap" style="margin-bottom:20px;padding-left:26px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
+        <div id="pref-estagios-exames" class="pref-estagios-grid"></div>
+      </div>
+
+      <div class="card-title" style="margin-bottom:8px">Controle de vermifugação</div>
+      <div class="form-group" style="margin-bottom:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
+          <input type="checkbox" id="pref-controlar-vermifugacao" checked style="width:auto" onchange="_prefToggleEstagios('vermifugacao')">
+          Controlar vermifugação
+        </label>
+      </div>
+      <div id="pref-estagios-vermifugacao-wrap" style="margin-bottom:12px;padding-left:26px">
+        <div class="form-group" style="max-width:200px;margin-bottom:10px">
+          <label>Intervalo padrão (dias)</label>
+          <input type="number" id="pref-intervalo-vermifugacao" value="45" min="1" max="365" style="width:100%">
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Aplicar para os estágios:</div>
+        <div id="pref-estagios-vermifugacao" class="pref-estagios-grid"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
+      <button class="btn btn-primary" onclick="salvarPreferenciasSistema()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- ── ABA USUÁRIOS (conteúdo original preservado) ─────────────────────── -->
+  <div id="conta-tab-usuarios" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
+      <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
+      <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
+    </div>
+    <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
+      <div class="card" style="text-align:center;padding:1rem">
+        <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
+      </div>
+      <div class="card" style="text-align:center;padding:1rem">
+        <div style="font-size:24px;font-weight:800;color:var(--blue-d)" id="usr-count-vet">0</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Veterinários</div>
+      </div>
+      <div class="card" style="text-align:center;padding:1rem">
+        <div style="font-size:24px;font-weight:800;color:var(--text)" id="usr-count-cab">0</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Cabanheiros</div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="usuarios-table-content"></div>
+    </div>
+  </div>
+
+  <!-- ── ABA FATURAMENTO (conteúdo original preservado) ──────────────────── -->
+  <div id="conta-tab-faturamento" style="display:none">
+    <div class="card-title" style="margin-bottom:8px">Seu plano</div>
+    <div id="fat-planos-content" style="margin-bottom:22px">
+      <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
+    </div>
+
+    <div class="card-title" style="margin-bottom:8px">Cartão de cobrança</div>
+    <div id="fat-cartao-resumo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+    <button class="btn btn-sm" onclick="abrirModalAtualizarCartao()">Atualizar cartão</button>
+
+    <div class="card-title" style="margin:22px 0 8px">Histórico de faturas</div>
+    <div id="fat-faturas-content">
+      <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
     </div>
   </div>
 </div>
@@ -13172,7 +13399,7 @@ Esta ação não pode ser desfeita.`)) return;
 // ── Tela de Conta (card no rodapé da sidebar) ──────────────────────────────
 // O card só mostra info (avatar/nome/perfil); "Sair" é um link direto e os
 // três-pontinhos (⋮) abrem a Tela de Conta — sem menu intermediário.
-function abrirTelaConta() {
+function abrirTelaConta(abaAlvo) {
   renderPiquetes();
   document.getElementById('conta-nome-exibicao').value = TENANT_INFO?.nome_exibicao || TENANT_INFO?.nome_cabanha || '';
   const logoImg = document.getElementById('conta-logo-preview');
@@ -13182,40 +13409,69 @@ function abrirTelaConta() {
   window._contaNovoLogo = undefined;
   document.getElementById('conta-cor-primaria').value = TENANT_INFO?.cor_primaria || '#2D6A4F';
   _atualizarIconeTema();
-  document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
-  document.getElementById('conta-tab-cabanha').style.display = '';
-  document.getElementById('conta-tab-usuarios').style.display = 'none';
-  document.getElementById('conta-tab-faturamento').style.display = 'none';
-  // Usuários e Faturamento são admin-only — vet/cab não têm permissão de ver, editar
-  // ou excluir usuário nenhum aqui (nem o próprio perfil), então a aba nem aparece em
-  // vez de abrir vazia (achado real, 2026-08-22: cabanheiro via "0 administradores /
-  // 0 veterinários / 0 cabanheiros / Nenhum usuário cadastrado").
+  carregarPerfilPublicoCabanha();
+
+  const ABAS = ['conta-tab-cabanha','conta-tab-perfil','conta-tab-preferencias','conta-tab-usuarios','conta-tab-faturamento'];
+  const alvo = abaAlvo || 'conta-tab-cabanha';
+
+  document.querySelectorAll('#page-conta .tab-row .tab').forEach(t => {
+    const onclk = t.getAttribute('onclick') || '';
+    t.classList.toggle('active', onclk.includes(alvo));
+  });
+  ABAS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = (id === alvo) ? '' : 'none'; });
+
+  // Usuários e Faturamento são admin-only.
   const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
-  const usrBtn = document.querySelector('#modal-conta .tab-row .tab[onclick*="conta-tab-usuarios"]');
+  const usrBtn = document.querySelector('#page-conta .tab-row .tab[onclick*="conta-tab-usuarios"]');
   if (usrBtn) usrBtn.style.display = isAdm ? '' : 'none';
   const fatBtn = document.getElementById('conta-tab-btn-faturamento');
   if (fatBtn) fatBtn.style.display = isAdm ? '' : 'none';
-  // Se a pessoa não é admin, garante que a aba ativa seja sempre Cabanha (a única
-  // que ela pode ver) — nunca deixa a Usuários marcada como ativa por engano.
-  if (!isAdm) {
-    document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
-    document.getElementById('conta-tab-cabanha').style.display = '';
-    document.getElementById('conta-tab-usuarios').style.display = 'none';
-  }
-  renderUsuarios();
-  _carregarStatusPendente();
+
+  if (alvo === 'conta-tab-perfil')       carregarMeuPerfil();
+  if (alvo === 'conta-tab-preferencias') carregarPreferenciasSistema();
+  if (alvo === 'conta-tab-usuarios')     { renderUsuarios(); _carregarStatusPendente(); }
+  if (alvo === 'conta-tab-faturamento')  renderFaturamento();
+
   _aplicarPermissoes();
-  openModal('modal-conta');
+  showPage('conta');
+}
+
+// Dropdown de acesso rápido (card avatar+nome na sidebar)
+function _toggleDropdownConta(ev) {
+  ev.stopPropagation();
+  const dd = document.getElementById('conta-dropdown');
+  if (!dd) return;
+  const abrir = !dd.classList.contains('open');
+  dd.classList.toggle('open', abrir);
+  if (abrir) {
+    document.getElementById('cdh-nome-cabanha').textContent = TENANT_INFO?.nome_exibicao || TENANT_INFO?.nome_cabanha || '—';
+    document.getElementById('cdh-email-usuario').textContent = usuarioAtual?.email || '—';
+    const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
+    const fatItem = document.getElementById('cdi-faturamento');
+    if (fatItem) fatItem.style.display = isAdm ? '' : 'none';
+    // Fechar ao clicar fora
+    setTimeout(() => document.addEventListener('click', _fecharDropdownConta, { once: true }), 0);
+  }
+}
+function _fecharDropdownConta() {
+  const dd = document.getElementById('conta-dropdown');
+  if (dd) dd.classList.remove('open');
+}
+function _irParaConta(ev, aba) {
+  ev.stopPropagation();
+  _fecharDropdownConta();
+  abrirTelaConta(aba);
 }
 
 function switchContaTab(btn, tabId) {
+  const ABAS = ['conta-tab-cabanha','conta-tab-perfil','conta-tab-preferencias','conta-tab-usuarios','conta-tab-faturamento'];
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('conta-tab-cabanha').style.display     = tabId === 'conta-tab-cabanha'     ? '' : 'none';
-  document.getElementById('conta-tab-usuarios').style.display    = tabId === 'conta-tab-usuarios'    ? '' : 'none';
-  document.getElementById('conta-tab-faturamento').style.display = tabId === 'conta-tab-faturamento' ? '' : 'none';
-  if(tabId === 'conta-tab-usuarios') { renderUsuarios(); _carregarStatusPendente(); }
-  if(tabId === 'conta-tab-faturamento') { renderFaturamento(); }
+  ABAS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = (id === tabId) ? '' : 'none'; });
+  if (tabId === 'conta-tab-perfil')       carregarMeuPerfil();
+  if (tabId === 'conta-tab-preferencias') carregarPreferenciasSistema();
+  if (tabId === 'conta-tab-usuarios')     { renderUsuarios(); _carregarStatusPendente(); }
+  if (tabId === 'conta-tab-faturamento')  renderFaturamento();
 }
 
 // "Convite pendente": a pessoa foi convidada mas nunca fez login de verdade (nunca
@@ -13247,6 +13503,184 @@ function _onLogoFileSelect(e) {
   reader.readAsDataURL(file);
 }
 
+async 
+// ═══════════════════════════════════════════════════════════════════════════
+// ABA MEU PERFIL
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function carregarMeuPerfil() {
+  if (!usuarioAtual?.id) return;
+  document.getElementById('perfil-nome').value = usuarioAtual.nome || '';
+  document.getElementById('perfil-email').value = usuarioAtual.email || '';
+  document.getElementById('perfil-cargo').value = usuarioAtual.cargo || '';
+  document.getElementById('perfil-telefone').value = usuarioAtual.telefone_pessoal || '';
+  document.getElementById('perfil-notif-email').checked = usuarioAtual.notif_email !== false;
+  document.getElementById('perfil-idioma').value = usuarioAtual.idioma || 'pt-BR';
+  document.getElementById('perfil-fuso').value = usuarioAtual.fuso_horario || 'America/Sao_Paulo';
+  const fotoImg = document.getElementById('perfil-foto-preview');
+  const fotoPh  = document.getElementById('perfil-foto-placeholder');
+  if (usuarioAtual.foto_url) { fotoImg.src = usuarioAtual.foto_url; fotoImg.style.display=''; fotoPh.style.display='none'; }
+  else { fotoImg.style.display='none'; fotoPh.style.display='flex'; }
+  window._perfilNovaFoto = undefined;
+}
+
+function _onFotoPerfilFileSelect(ev) {
+  const file = ev.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._perfilNovaFoto = e.target.result;
+    const fotoImg = document.getElementById('perfil-foto-preview');
+    const fotoPh  = document.getElementById('perfil-foto-placeholder');
+    fotoImg.src = e.target.result; fotoImg.style.display=''; fotoPh.style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function salvarMeuPerfil() {
+  if (!usuarioAtual?.id) return;
+  const patch = {
+    nome: document.getElementById('perfil-nome').value.trim() || null,
+    cargo: document.getElementById('perfil-cargo').value || null,
+    telefone_pessoal: document.getElementById('perfil-telefone').value.trim() || null,
+    notif_email: document.getElementById('perfil-notif-email').checked,
+    idioma: document.getElementById('perfil-idioma').value,
+    fuso_horario: document.getElementById('perfil-fuso').value,
+  };
+  if (window._perfilNovaFoto !== undefined) patch.foto_url = window._perfilNovaFoto;
+
+  const r = await _supaPub('PATCH', 'usuarios_master', patch, '?id=eq.' + usuarioAtual.id);
+  if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar perfil', 'amber'); return; }
+
+  Object.assign(usuarioAtual, patch);
+  const sbUser = document.getElementById('sidebar-username');
+  if (sbUser && patch.nome) sbUser.textContent = patch.nome;
+  _mostrarStatusSync('✅ Perfil atualizado', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ABA PREFERÊNCIAS DO SISTEMA
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PREF_ESTAGIOS = ['CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
+
+let PREFERENCIAS_SISTEMA = {
+  controlar_vacinas: true,
+  estagios_vacinas: ['PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'],
+  controlar_exames: true,
+  estagios_exames: ['PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'],
+  controlar_vermifugacao: true,
+  intervalo_vermifugacao_dias: 45,
+  estagios_vermifugacao: ['PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'],
+};
+
+function _renderPrefEstagios(grupo, selecionados) {
+  const el = document.getElementById('pref-estagios-' + grupo);
+  if (!el) return;
+  el.innerHTML = PREF_ESTAGIOS.map(e => {
+    const checked = selecionados.includes(e) ? 'checked' : '';
+    const id = 'pref-est-' + grupo + '-' + e.replace(/\s+/g,'_');
+    return `<label class="pref-estagio-chip" for="${id}"><input type="checkbox" id="${id}" value="${e}" ${checked}> ${e}</label>`;
+  }).join('');
+}
+
+function _prefToggleEstagios(grupo) {
+  const ligado = document.getElementById('pref-controlar-' + grupo).checked;
+  const wrap = document.getElementById('pref-estagios-' + grupo + '-wrap');
+  if (wrap) wrap.style.opacity = ligado ? '1' : '.4';
+  wrap?.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = !ligado);
+}
+
+async function carregarPreferenciasSistema() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const r = await _supaPub('GET', 'preferencias_sistema', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
+  if (r && r[0]) Object.assign(PREFERENCIAS_SISTEMA, r[0]);
+
+  document.getElementById('pref-controlar-vacinas').checked = PREFERENCIAS_SISTEMA.controlar_vacinas;
+  document.getElementById('pref-controlar-exames').checked = PREFERENCIAS_SISTEMA.controlar_exames;
+  document.getElementById('pref-controlar-vermifugacao').checked = PREFERENCIAS_SISTEMA.controlar_vermifugacao;
+  document.getElementById('pref-intervalo-vermifugacao').value = PREFERENCIAS_SISTEMA.intervalo_vermifugacao_dias;
+
+  _renderPrefEstagios('vacinas', PREFERENCIAS_SISTEMA.estagios_vacinas);
+  _renderPrefEstagios('exames', PREFERENCIAS_SISTEMA.estagios_exames);
+  _renderPrefEstagios('vermifugacao', PREFERENCIAS_SISTEMA.estagios_vermifugacao);
+  _prefToggleEstagios('vacinas'); _prefToggleEstagios('exames'); _prefToggleEstagios('vermifugacao');
+}
+
+function _lerEstagiosSelecionados(grupo) {
+  const el = document.getElementById('pref-estagios-' + grupo);
+  if (!el) return [];
+  return [...el.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+}
+
+async function salvarPreferenciasSistema() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const patch = {
+    tenant_id: TENANT_INFO.tenant_id,
+    controlar_vacinas: document.getElementById('pref-controlar-vacinas').checked,
+    estagios_vacinas: _lerEstagiosSelecionados('vacinas'),
+    controlar_exames: document.getElementById('pref-controlar-exames').checked,
+    estagios_exames: _lerEstagiosSelecionados('exames'),
+    controlar_vermifugacao: document.getElementById('pref-controlar-vermifugacao').checked,
+    intervalo_vermifugacao_dias: parseInt(document.getElementById('pref-intervalo-vermifugacao').value) || 45,
+    estagios_vermifugacao: _lerEstagiosSelecionados('vermifugacao'),
+    atualizado_em: new Date().toISOString(),
+  };
+  const r = await _supaPub('POST', 'preferencias_sistema', patch);
+  if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar preferências', 'amber'); return; }
+  Object.assign(PREFERENCIAS_SISTEMA, patch);
+  _mostrarStatusSync('✅ Preferências do sistema atualizadas', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PERFIL PÚBLICO DA CABANHA (Marketplace Mimba)
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function carregarPerfilPublicoCabanha() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const r = await _supaPub('GET', 'cabanha_perfil_publico', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
+  const d = (r && r[0]) || {};
+  document.getElementById('cpp-assinatura').value = d.assinatura || '';
+  document.getElementById('cpp-sobre').value = d.sobre || '';
+  document.getElementById('cpp-ano-fundacao').value = d.ano_fundacao || '';
+  document.getElementById('cpp-cidade').value = d.cidade || '';
+  document.getElementById('cpp-estado').value = d.estado || '';
+  document.getElementById('cpp-endereco').value = d.endereco || '';
+  document.getElementById('cpp-whatsapp').value = d.whatsapp || '';
+  document.getElementById('cpp-telefone').value = d.telefone || '';
+  document.getElementById('cpp-email-contato').value = d.email_contato || '';
+  document.getElementById('cpp-instagram').value = d.instagram || '';
+  document.getElementById('cpp-site').value = d.site || '';
+  document.getElementById('cpp-visivel-marketplace').checked = !!d.visivel_marketplace;
+  const especSel = document.getElementById('cpp-especialidades');
+  const especArr = d.especialidades || [];
+  [...especSel.options].forEach(opt => opt.selected = especArr.includes(opt.value));
+}
+
+async function salvarPerfilPublicoCabanha() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const especSel = document.getElementById('cpp-especialidades');
+  const especialidades = [...especSel.selectedOptions].map(o => o.value);
+  const patch = {
+    tenant_id: TENANT_INFO.tenant_id,
+    assinatura: document.getElementById('cpp-assinatura').value.trim() || null,
+    sobre: document.getElementById('cpp-sobre').value.trim() || null,
+    ano_fundacao: parseInt(document.getElementById('cpp-ano-fundacao').value) || null,
+    especialidades,
+    cidade: document.getElementById('cpp-cidade').value.trim() || null,
+    estado: document.getElementById('cpp-estado').value || null,
+    endereco: document.getElementById('cpp-endereco').value.trim() || null,
+    whatsapp: document.getElementById('cpp-whatsapp').value.trim() || null,
+    telefone: document.getElementById('cpp-telefone').value.trim() || null,
+    email_contato: document.getElementById('cpp-email-contato').value.trim() || null,
+    instagram: document.getElementById('cpp-instagram').value.trim() || null,
+    site: document.getElementById('cpp-site').value.trim() || null,
+    visivel_marketplace: document.getElementById('cpp-visivel-marketplace').checked,
+    atualizado_em: new Date().toISOString(),
+  };
+  return await _supaPub('POST', 'cabanha_perfil_publico', patch);
+}
+
 async function salvarDadosCabanha() {
   if(!TENANT_INFO?.tenant_id) return;
   const nome = document.getElementById('conta-nome-exibicao').value.trim();
@@ -13270,6 +13704,7 @@ async function salvarDadosCabanha() {
   }
   if(nome) document.title = `${nome} — Mimba`;
   _aplicarCorPrimaria(cor);
+  await salvarPerfilPublicoCabanha();
   _mostrarStatusSync('✅ Dados da cabanha atualizados', 'green');
 }
 
@@ -15362,6 +15797,32 @@ function _cancelarRetomada() {
 }
 
 // RPC autenticada (usa o JWT do usuário logado)
+
+// Variante de _supa() para tabelas do schema public (preferencias_sistema,
+// cabanha_perfil_publico) — mesmo padrão, mas Accept/Content-Profile='public'
+async function _supaPub(method, table, body=null, query='') {
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile':  'public',
+      'Content-Profile': 'public',
+      'Prefer': method==='POST' ? 'return=representation,resolution=merge-duplicates' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : null
+  });
+  if(!r.ok) {
+    const e = await r.text();
+    if (r.status !== 403) console.error('Supabase (public) error', r.status, e);
+    return null;
+  }
+  if(method==='GET' || method==='POST') { try{ return await r.json(); }catch(e){ return []; } }
+  return true;
+}
+
 async function _rpc(fn, args) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method:'POST',
