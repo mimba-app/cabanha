@@ -258,6 +258,49 @@
   :root[data-theme="dark"] .btn-primary:hover { background:linear-gradient(180deg,#AED77C,#8CBB58); color:#182008; }
   .sidebar-icon-btn { background:none; border:none; cursor:pointer; color:var(--text3); flex-shrink:0; width:30px; height:30px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; padding:0; }
   .sidebar-icon-btn:hover { background:var(--border); color:var(--text); }
+  .pref-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:18px 20px; margin-bottom:14px; box-shadow:var(--sh-sm); }
+  .pref-card-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .pref-card-title-wrap { display:flex; align-items:center; gap:10px; }
+  .pref-icon { width:34px; height:34px; border-radius:10px; background:var(--bg3); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--text2); }
+  .pref-title { font-size:14px; font-weight:700; color:var(--text); }
+  .pref-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+  .pref-body { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); transition:opacity .15s; }
+  .pref-body.disabled { opacity:.4; pointer-events:none; }
+  .pref-row-inline { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .pref-row-inline label { font-size:11px; font-weight:600; color:var(--text2); white-space:nowrap; }
+  .pref-num-input { width:70px !important; text-align:center; font-family:var(--font-mono); }
+  .pref-label-estagios { font-size:11px; font-weight:600; color:var(--text2); margin-bottom:8px; }
+
+  .section-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); padding:20px 22px; margin-bottom:14px; box-shadow:var(--sh-sm); }
+  .section-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .section-hint { font-size:11px; color:var(--text3); margin-bottom:16px; }
+  .char-count { font-size:10px; color:var(--text3); text-align:right; margin-top:-2px; }
+  .avatar-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+  .avatar-circle { width:72px; height:72px; border-radius:50%; background:var(--bg3); display:flex; align-items:center; justify-content:center; color:var(--text3); flex-shrink:0; border:1px solid var(--border); overflow:hidden; }
+  .avatar-circle img { width:100%; height:100%; object-fit:cover; }
+  .btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text2); padding:8px 14px; border-radius:var(--radius); font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .color-swatch-row { display:flex; align-items:center; gap:10px; }
+  .color-swatch-preview { width:38px; height:34px; border-radius:8px; border:1px solid var(--border2); flex-shrink:0; }
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .toggle-row-hint { font-size:10.5px; color:var(--text3); margin-top:2px; }
+
+  .chip-grid, .chip-select-grid { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:99px; border:1px solid var(--border2); background:var(--bg3); color:var(--text2); cursor:pointer; transition:all .12s; user-select:none; }
+  .chip.on { background:var(--green-l); border-color:var(--green-d); color:var(--green-d); }
+  .chip .chip-check { display:none; font-size:10px; }
+  .chip.on .chip-check { display:inline; }
+
+  .pref-estagios-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
+  .pref-estagio-chip { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:var(--radius); border:0.5px solid var(--border); cursor:pointer; }
+  .pref-estagio-chip input { width:auto; }
+  #conta-dropdown { position:absolute; z-index:400; min-width:220px; background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:none; }
+  #conta-dropdown.open { display:block; }
+  #conta-dropdown-header { padding:12px 14px; border-bottom:0.5px solid var(--border); }
+  #conta-dropdown-header .cdh-nome { font-size:13px; font-weight:600; color:var(--text); }
+  #conta-dropdown-header .cdh-email { font-size:11px; color:var(--text3); margin-top:2px; }
+  .conta-dropdown-item { display:flex; align-items:center; gap:10px; padding:9px 14px; font-size:12.5px; color:var(--text2); cursor:pointer; }
+  .conta-dropdown-item:hover { background:var(--bg3); color:var(--text); }
+  .conta-dropdown-sep { height:0.5px; background:var(--border); margin:4px 0; }
   .sidebar .sidebar-icon-btn:hover { background:var(--border); color:var(--chrome-text); }
   .sidebar-logout-btn { width:100%; margin-top:8px; background:var(--red); color:#fff; border:none; padding:9px; border-radius:var(--radius); cursor:pointer; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
   .sidebar-logout-btn:hover { background:var(--red-d); }
@@ -347,9 +390,11 @@
   .filter-row { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
   /* Campo com leve afundamento (inset), como no protótipo — o oposto do card,
      que sobe. Ajuda a distinguir superfície de entrada de superfície de conteúdo. */
-  input, select { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
+  input, select, textarea { padding:9px 12px; border-radius:10px; border:1px solid var(--ink-15); background:var(--bg); font-size:12.5px; color:var(--text); font-family:var(--font); outline:none;
     box-shadow:inset 0 1px 2px rgba(43,36,25,.06); transition:border-color .14s ease, box-shadow .14s ease; }
-  input:focus, select:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+  textarea { resize:vertical; min-height:80px; line-height:1.5; }
+  input::placeholder, textarea::placeholder { color:var(--text3); }
+  input:focus, select:focus, textarea:focus { border-color:var(--green); box-shadow:inset 0 1px 2px rgba(43,36,25,.06), 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
   input[type=checkbox], input[type=radio] { box-shadow:none; }
   .tab-row { display:flex; margin-bottom:1.1rem; border-bottom:0.5px solid var(--border); overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   .tab-row::-webkit-scrollbar { display:none; }
@@ -467,6 +512,25 @@
   /* SAVE BADGE */
   .save-badge { position:fixed; bottom:calc(1rem + env(safe-area-inset-bottom)); right:calc(1rem + env(safe-area-inset-right)); background:var(--green); color:white; padding:8px 16px; border-radius:99px; font-size:12px; font-weight:700; z-index:200; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .save-badge.show { opacity:1; }
+  /* AGENTE DE IA — chat flutuante (ADR 0006). Fica entre os toasts (z-index
+     500) e os modais (até ~400 antes disso)/login-screen (100000), pra poder
+     ficar aberto por cima de qualquer tela sem brigar com nada. */
+  .chat-ia-fab { position:fixed; bottom:calc(1.25rem + env(safe-area-inset-bottom)); right:calc(1.25rem + env(safe-area-inset-right)); width:52px; height:52px; border-radius:50%; background:var(--green-d); color:#fff; border:none; display:none; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(0,0,0,0.25); cursor:pointer; z-index:800; }
+  .chat-ia-fab.visible { display:flex; }
+  .chat-ia-fab svg { width:24px; height:24px; }
+  .chat-ia-panel { position:fixed; bottom:calc(5.5rem + env(safe-area-inset-bottom)); right:calc(1.25rem + env(safe-area-inset-right)); width:380px; max-width:calc(100vw - 2rem); height:min(560px, 70vh); background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 40px rgba(0,0,0,0.3); z-index:900; display:none; flex-direction:column; overflow:hidden; }
+  .chat-ia-panel.open { display:flex; }
+  .chat-ia-header { padding:14px 16px; background:var(--chrome-accent-d); color:#fff; display:flex; align-items:center; justify-content:space-between; font-weight:700; font-size:14px; flex-shrink:0; }
+  .chat-ia-header button { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; line-height:1; padding:0 4px; }
+  .chat-ia-msgs { flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+  .chat-ia-msg { max-width:85%; padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.5; white-space:pre-wrap; }
+  .chat-ia-msg.user { align-self:flex-end; background:var(--green-d); color:#fff; border-bottom-right-radius:3px; }
+  .chat-ia-msg.assistente { align-self:flex-start; background:var(--bg3); color:var(--text); border-bottom-left-radius:3px; }
+  .chat-ia-msg.sistema { align-self:center; background:none; color:var(--text3); font-size:11px; text-align:center; }
+  .chat-ia-input-row { flex-shrink:0; display:flex; gap:8px; padding:12px; border-top:1px solid var(--border); }
+  .chat-ia-input-row textarea { flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; font-family:var(--font); font-size:13px; background:var(--bg); color:var(--text); max-height:80px; }
+  .chat-ia-input-row button { background:var(--green-d); color:#fff; border:none; border-radius:var(--radius); padding:0 16px; font-weight:700; cursor:pointer; }
+  .chat-ia-input-row button:disabled { opacity:0.5; cursor:default; }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
   .san-panel-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
@@ -736,6 +800,10 @@
      momento (não tem menu nem pra onde voltar ainda). */
   .login-screen { position:fixed;inset:0;background:var(--chrome-bg);z-index:100000;display:flex;align-items:center;justify-content:center; }
   .login-box { background:var(--chrome-bg2);border:var(--card-border);border-radius:var(--r-lg);padding:2.5rem 2.25rem;width:380px;max-width:95vw;box-shadow:var(--sh-lg); }
+  /* Restaurando sessão: só a logo + mensagem direto no fundo, sem "janelinha"
+     por cima — é um estado transitório de carregamento, não um formulário,
+     então não faz sentido ter cara de card. */
+  #login-restaurando { background:transparent; border:none; box-shadow:none; padding:0; }
   .login-logo { text-align:center;margin-bottom:1.5rem; }
   .login-logo img { mix-blend-mode:screen; background:transparent; max-width:240px; filter:brightness(1.05); }
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
@@ -1340,15 +1408,40 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
       Painel Mimba
     </button>
-    <div id="sidebar-account-card" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:var(--bg3);border:0.5px solid var(--chrome-border)">
+    <div id="sidebar-account-card" onclick="_toggleDropdownConta(event)" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius);background:var(--bg3);border:0.5px solid var(--chrome-border);cursor:pointer;position:relative">
       <div id="sidebar-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--chrome-accent);color:var(--chrome-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">?</div>
       <div style="flex:1;min-width:0">
         <div id="sidebar-username" style="font-size:12.5px;font-weight:600;color:var(--chrome-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="sidebar-perfil-badge" style="margin-top:2px"></div>
       </div>
-      <button class="sidebar-icon-btn" onclick="abrirTelaConta()" title="Configurações da conta" aria-label="Configurações da conta" style="color:var(--chrome-text3)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--chrome-text3);flex-shrink:0"><polyline points="7 15 12 20 17 15"/><polyline points="7 9 12 4 17 9"/></svg>
+
+      <div id="conta-dropdown">
+        <div id="conta-dropdown-header">
+          <div class="cdh-nome" id="cdh-nome-cabanha">—</div>
+          <div class="cdh-email" id="cdh-email-usuario">—</div>
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-cabanha')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+          Dados da Cabanha
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-perfil')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          Meu Perfil
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-preferencias')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Preferências do Sistema
+        </div>
+        <div class="conta-dropdown-item" id="cdi-faturamento" style="display:none" onclick="_irParaConta(event,'conta-tab-faturamento')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Faturamento
+        </div>
+        <div class="conta-dropdown-item" onclick="_irParaConta(event,'conta-tab-usuarios')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/><circle cx="17" cy="8" r="2.6"/><path d="M15.7 14.2c2.7.6 4.8 2.7 4.8 5.8"/></svg>
+          Usuários
+        </div>
+      </div>
     </div>
     <button class="sidebar-logout-btn" onclick="fazerLogout()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1504,6 +1597,23 @@
       <button class="btn btn-sm" id="an-view-btn-grade" onclick="_animaisSetView('grade')">▦ Grade</button>
       <button class="btn btn-sm" id="an-view-btn-lista" onclick="_animaisSetView('lista')">☰ Lista</button>
     </div>
+  <!-- Gerenciamento de Piquetes -->
+  <div style="margin:10px 0;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer"
+         onclick="var b=document.getElementById('piq-body');var t=this.querySelector('.piq-arr');if(b.style.display==='none'){b.style.display='';t.textContent='▾';renderPiquetes();}else{b.style.display='none';t.textContent='▸';}">
+      <span style="font-size:12px;font-weight:600;color:var(--text2)">🏕 Piquetes / Campos</span>
+      <span class="piq-arr" style="color:var(--text3);font-size:12px">▸</span>
+    </div>
+    <div id="piq-body" style="display:none;padding:0 12px 12px">
+      <div id="piquetes-lista" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="piquete-novo-nome" type="text" placeholder="Nome do piquete ou campo..." style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter')_addPiquete()">
+        <button class="btn btn-sm" onclick="_addPiquete()">+ Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+
   </div>
   <div id="animais-empty" style="display:none;text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum animal encontrado com os filtros atuais.</div>
   <div id="animais-grade-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
@@ -2398,102 +2508,316 @@
 <!-- Área impressa — invisível na tela normal, é tudo que aparece no diálogo de impressão. -->
 <div id="print-area"></div>
 
-</div><!-- end main -->
-<div class="save-badge" id="save-badge">✓ Dados salvos</div>
+<div class="page" id="page-conta">
+  <div class="page-header">
+    <div><div class="page-title">Conta</div><div class="page-sub">Cabanha, perfil e preferências do sistema</div></div>
+  </div>
 
-<!-- MODAL USUÁRIO -->
-<!-- TELA DE CONTA: cabanha (nome/logo) + usuários da cabanha -->
-<div class="modal-bg" id="modal-conta">
-  <div class="modal" style="width:920px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column">
-    <div class="modal-header">
-      <span class="modal-title">Conta</span>
-      <button class="modal-close" onclick="closeModal('modal-conta')">×</button>
-    </div>
-    <div class="tab-row" style="margin-bottom:1.25rem">
-      <button class="tab active" onclick="switchContaTab(this,'conta-tab-cabanha')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Cabanha</button>
-      <button class="tab" onclick="switchContaTab(this,'conta-tab-usuarios')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg> Usuários</button>
-      <button class="tab" id="conta-tab-btn-faturamento" onclick="switchContaTab(this,'conta-tab-faturamento')" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Faturamento</button>
-    </div>
+  <div class="tab-row" style="margin-bottom:1.25rem">
+    <button class="tab active" onclick="switchContaTab(this,'conta-tab-cabanha')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Cabanha</button>
+    <button class="tab" onclick="switchContaTab(this,'conta-tab-perfil')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg> Meu Perfil</button>
+    <button class="tab" onclick="switchContaTab(this,'conta-tab-preferencias')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Preferências</button>
+    <button class="tab" onclick="switchContaTab(this,'conta-tab-usuarios')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/><circle cx="17" cy="8" r="2.6"/><path d="M15.7 14.2c2.7.6 4.8 2.7 4.8 5.8"/></svg> Usuários</button>
+    <button class="tab" id="conta-tab-btn-faturamento" onclick="switchContaTab(this,'conta-tab-faturamento')" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Faturamento</button>
+  </div>
 
-    <div id="conta-tab-cabanha" style="overflow-y:auto;flex:1">
-      <div class="form-grid" style="max-width:520px;margin:0 auto">
-        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:18px">
-          <img id="conta-logo-preview" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--bg3);display:none">
-          <div id="conta-logo-placeholder" style="width:84px;height:84px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text3)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></div>
-          <label class="btn btn-sm" style="cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
+  <!-- ── ABA CABANHA ─────────────────────────────────────────────────────── -->
+  <div id="conta-tab-cabanha">
+    <div style="max-width:640px">
+
+      <div class="section-card">
+        <div class="section-title">Identidade</div>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="conta-logo-wrap">
+            <img id="conta-logo-preview" alt="" style="display:none">
+            <svg id="conta-logo-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+          </div>
+          <label class="btn-outline" style="cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
           </label>
         </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Nome de exibição</label>
-          <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus" style="width:100%">
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Cor da marca</label>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:44px;height:34px;padding:2px;cursor:pointer">
-            <span style="font-size:11px;color:var(--text3)">Usada nos destaques (botões, links, marca) do sistema pra esta cabanha.</span>
-            <button class="btn btn-sm" type="button" onclick="_resetCorPrimaria()" style="margin-left:auto">Restaurar padrão Mimba</button>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome de exibição</label>
+            <input type="text" id="conta-nome-exibicao" placeholder="Ex: Cabanha Mãe de Deus">
           </div>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Tema</label>
-          <div style="display:flex;align-items:center;gap:10px">
+          <div class="form-group">
+            <label>Cor da marca</label>
+            <div class="color-swatch-row">
+              <input type="color" id="conta-cor-primaria" value="#5c3a24" style="width:38px;height:34px;padding:2px;cursor:pointer;flex-shrink:0">
+              <button class="btn-outline" type="button" onclick="_resetCorPrimaria()" style="font-size:11px;padding:6px 10px">Restaurar padrão</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tema</label>
             <div class="pill-switch" id="conta-tema-switch">
               <button type="button" class="pill-switch-btn" id="conta-tema-btn-light" onclick="_definirTema('light')">Claro</button>
               <button type="button" class="pill-switch-btn" id="conta-tema-btn-dark" onclick="_definirTema('dark')">Escuro</button>
             </div>
-            <span style="font-size:11px;color:var(--text3)">Aparência do sistema neste dispositivo.</span>
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeModal('modal-conta')">Fechar</button>
-        <button class="btn btn-primary" id="conta-btn-salvar-cabanha" onclick="salvarDadosCabanha()">Salvar</button>
+
+      <div class="section-card">
+        <div class="section-title">Perfil público</div>
+        <div class="section-hint">Estas informações preparam a futura página da sua cabanha no Marketplace Mimba.</div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Assinatura</label>
+            <input type="text" id="cpp-assinatura" placeholder="Ex: Tradição em genética Crioula desde 1998" maxlength="120">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Sobre a cabanha</label>
+            <textarea id="cpp-sobre" maxlength="1000" placeholder="História, especialidade, diferencial da cabanha..." oninput="document.getElementById('cpp-sobre-count').textContent=this.value.length"></textarea>
+            <div class="char-count"><span id="cpp-sobre-count">0</span> / 1000</div>
+          </div>
+          <div class="form-group">
+            <label>Ano de fundação</label>
+            <input type="number" id="cpp-ano-fundacao" placeholder="Ex: 1998" min="1900" max="2100">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Especialidades</label>
+            <div class="chip-select-grid" id="cpp-especialidades-chips">
+              <span class="chip" data-val="Morfologia" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Morfologia</span>
+              <span class="chip" data-val="Freio" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Freio</span>
+              <span class="chip" data-val="Doma" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Doma</span>
+              <span class="chip" data-val="Paleteadas" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Paleteadas</span>
+              <span class="chip" data-val="Marcha/Resistência" onclick="_toggleChip(this)"><span class="chip-check">✓</span>Marcha/Resistência</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">Localização e contato</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Cidade</label><input type="text" id="cpp-cidade"></div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="cpp-estado">
+              <option value="">—</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
+              <option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option>
+              <option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option>
+              <option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option>
+              <option>SE</option><option>TO</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Endereço <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+            <input type="text" id="cpp-endereco">
+          </div>
+          <div class="form-group"><label>WhatsApp</label><input type="tel" id="cpp-whatsapp" placeholder="(99) 99999-9999"></div>
+          <div class="form-group"><label>Telefone</label><input type="tel" id="cpp-telefone" placeholder="(99) 9999-9999"></div>
+          <div class="form-group"><label>E-mail de contato</label><input type="email" id="cpp-email-contato"></div>
+          <div class="form-group"><label>Instagram</label><input type="text" id="cpp-instagram" placeholder="@sua_cabanha"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Site</label><input type="url" id="cpp-site" placeholder="https://..."></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="toggle-row">
+          <div>
+            <div class="section-title" style="margin:0">Visibilidade no Marketplace</div>
+            <div class="toggle-row-hint">Nome, cidade, especialidades e assinatura ficarão públicos. Endereço e contatos diretos só se você optar por exibi-los.</div>
+          </div>
+          <div class="pill-switch" id="cpp-visivel-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setVisivelMarketplace(false)">Desligado</button>
+            <button type="button" class="pill-switch-btn" onclick="_setVisivelMarketplace(true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="cpp-visivel-marketplace" style="display:none">
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
+      <button class="btn btn-primary" id="conta-btn-salvar-cabanha" onclick="salvarDadosCabanha()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- ── ABA MEU PERFIL ──────────────────────────────────────────────────── -->
+  <div id="conta-tab-perfil" style="display:none">
+    <div style="max-width:520px">
+
+      <div class="section-card">
+        <div class="section-title">Dados pessoais</div>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="perfil-foto-wrap">
+            <img id="perfil-foto-preview" alt="" style="display:none">
+            <svg id="perfil-foto-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <label class="btn-outline" style="cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
+          </label>
+        </div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Nome completo</label>
+            <input type="text" id="perfil-nome">
+          </div>
+          <div class="form-group">
+            <label>Cargo / Função</label>
+            <select id="perfil-cargo">
+              <option value="">—</option>
+              <option>Proprietário</option>
+              <option>Gerente</option>
+              <option>Veterinário</option>
+              <option>Técnico</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Telefone pessoal</label>
+            <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>E-mail de login</label>
+            <input type="text" id="perfil-email" disabled style="opacity:.6">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <button class="btn-outline" onclick="abrirModalTrocarSenha()">Trocar senha</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">Preferências pessoais</div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <span class="pref-sub" style="font-size:12px;color:var(--text2)">Receber notificações por e-mail</span>
+          <div class="pill-switch" id="perfil-notif-switch">
+            <button type="button" class="pill-switch-btn" onclick="_setNotifEmail(false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_setNotifEmail(true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="perfil-notif-email" checked style="display:none">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Idioma</label>
+            <select id="perfil-idioma"><option value="pt-BR">Português (BR)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Fuso horário</label>
+            <select id="perfil-fuso"><option value="America/Sao_Paulo">América/São Paulo</option></select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="max-width:520px;padding-left:0;padding-right:0">
+      <button class="btn btn-primary" onclick="salvarMeuPerfil()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- ── ABA PREFERÊNCIAS DO SISTEMA ─────────────────────────────────────── -->
+  <div id="conta-tab-preferencias" style="display:none">
+    <div style="max-width:640px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Controle o que o Mimba monitora automaticamente, por estágio do animal.</div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5l3 3"/><path d="M17 4l-11 11-3 6 6-3L20 7z"/><line x1="13" y1="8" x2="16" y2="11"/><line x1="10" y1="11" x2="13" y2="14"/><line x1="7" y1="14" x2="10" y2="17"/></svg></div>
+            <div><div class="pref-title">Controle de Vacinas</div><div class="pref-sub">Alertas de vencimento no Dashboard e Pendências</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-vacinas">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('vacinas',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('vacinas',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-vacinas" checked style="display:none">
+        </div>
+        <div id="pref-estagios-vacinas-wrap" class="pref-body">
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-vacinas" class="chip-grid"></div>
+        </div>
+      </div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6"/><path d="M10 2v6.5L5 18a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 20 18l-5-9.5V2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg></div>
+            <div><div class="pref-title">Controle de Exames</div><div class="pref-sub">Validade de exames sanitários</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-exames">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('exames',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('exames',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-exames" checked style="display:none">
+        </div>
+        <div id="pref-estagios-exames-wrap" class="pref-body">
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-exames" class="chip-grid"></div>
+        </div>
+      </div>
+
+      <div class="pref-card">
+        <div class="pref-card-header">
+          <div class="pref-card-title-wrap">
+            <div class="pref-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z"/><path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5"/></svg></div>
+            <div><div class="pref-title">Controle de Vermifugação</div><div class="pref-sub">Intervalo padrão e alertas de reaplicação</div></div>
+          </div>
+          <div class="pill-switch" id="pref-switch-vermifugacao">
+            <button type="button" class="pill-switch-btn" onclick="_prefSetToggle('vermifugacao',false)">Desligado</button>
+            <button type="button" class="pill-switch-btn on" onclick="_prefSetToggle('vermifugacao',true)">Ligado</button>
+          </div>
+          <input type="checkbox" id="pref-controlar-vermifugacao" checked style="display:none">
+        </div>
+        <div id="pref-estagios-vermifugacao-wrap" class="pref-body">
+          <div class="pref-row-inline">
+            <label>Intervalo padrão</label>
+            <input type="number" id="pref-intervalo-vermifugacao" class="pref-num-input" value="45" min="1" max="365">
+            <span style="font-size:11px;color:var(--text3)">dias</span>
+          </div>
+          <div class="pref-label-estagios">Monitorar nestes estágios</div>
+          <div id="pref-estagios-vermifugacao" class="chip-grid"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="max-width:640px;padding-left:0;padding-right:0">
+      <button class="btn btn-primary" onclick="salvarPreferenciasSistema()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- ── ABA USUÁRIOS (preservada) ────────────────────────────────────────── -->
+  <div id="conta-tab-usuarios" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
+      <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
+      <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
+    </div>
+    <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
+      <div class="card" style="text-align:center;padding:1rem">
+        <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
+      </div>
+      <div class="card" style="text-align:center;padding:1rem">
+        <div style="font-size:24px;font-weight:800;color:var(--blue-d)" id="usr-count-vet">0</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Veterinários</div>
+      </div>
+      <div class="card" style="text-align:center;padding:1rem">
+        <div style="font-size:24px;font-weight:800;color:var(--text)" id="usr-count-cab">0</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Cabanheiros</div>
       </div>
     </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="usuarios-table-content"></div>
+    </div>
+  </div>
 
-    <div id="conta-tab-usuarios" style="display:none;overflow-y:auto;flex:1">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
-        <span class="page-sub" id="usuarios-sub" style="margin:0">Controle de acesso ao sistema</span>
-        <button class="btn btn-primary btn-sm" id="conta-btn-convidar" onclick="abrirModalUsuario(-1)">+ Convidar usuário</button>
-      </div>
-      <div class="g-cols-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem">
-        <div class="card" style="text-align:center;padding:1rem">
-          <div style="font-size:24px;font-weight:800;color:var(--green-d)" id="usr-count-adm">0</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Administradores</div>
-        </div>
-        <div class="card" style="text-align:center;padding:1rem">
-          <div style="font-size:24px;font-weight:800;color:var(--blue-d)" id="usr-count-vet">0</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Veterinários</div>
-        </div>
-        <div class="card" style="text-align:center;padding:1rem">
-          <div style="font-size:24px;font-weight:800;color:var(--text)" id="usr-count-cab">0</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">Cabanheiros</div>
-        </div>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div id="usuarios-table-content"></div>
-      </div>
+  <!-- ── ABA FATURAMENTO (preservada) ─────────────────────────────────────── -->
+  <div id="conta-tab-faturamento" style="display:none">
+    <div class="card-title" style="margin-bottom:8px">Seu plano</div>
+    <div id="fat-planos-content" style="margin-bottom:22px">
+      <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
     </div>
 
-    <!-- V1.5 (Fase 4): Portal do cliente — faturamento. Só a parte que NÃO depende da lista
-         de limites por plano (troca de plano fica bloqueada até o Pedro mandar essa lista,
-         ver docs/roadmap-v15.md). Admin-only, mesmo padrão de acesso da aba Usuários. -->
-    <div id="conta-tab-faturamento" style="display:none;overflow-y:auto;flex:1">
-      <div class="card-title" style="margin-bottom:8px">Seu plano</div>
-      <div id="fat-planos-content" style="margin-bottom:22px">
-        <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
-      </div>
+    <div class="card-title" style="margin-bottom:8px">Cartão de cobrança</div>
+    <div id="fat-cartao-resumo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+    <button class="btn btn-sm" onclick="abrirModalAtualizarCartao()">Atualizar cartão</button>
 
-      <div class="card-title" style="margin-bottom:8px">Cartão de cobrança</div>
-      <div id="fat-cartao-resumo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
-      <button class="btn btn-sm" onclick="abrirModalAtualizarCartao()">Atualizar cartão</button>
-
-      <div class="card-title" style="margin:22px 0 8px">Histórico de faturas</div>
-      <div id="fat-faturas-content">
-        <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
-      </div>
+    <div class="card-title" style="margin:22px 0 8px">Histórico de faturas</div>
+    <div id="fat-faturas-content">
+      <div class="card" style="text-align:center;padding:1.5rem;color:var(--text3);font-size:12px">Carregando...</div>
     </div>
   </div>
 </div>
@@ -7626,6 +7950,48 @@ function toggleSidebarMobile(force){
     arrastando = false;
     soltar();
   }, {passive:true});
+})();
+
+// ── Status bar / safe area nativa (Android) ─────────────────────────────────
+// No iOS o WebView já reporta env(safe-area-inset-*) certinho e a barra de
+// status é só uma faixa translúcida — nosso #status-bar-mask (mesmo CSS nas
+// duas plataformas) já pinta atrás dela. No Android, o WebView do sistema
+// (Chromium) historicamente reporta os safe-area-inset-* como 0 mesmo em
+// modo edge-to-edge — nosso conteúdo ficava colado debaixo da câmera/sinal/
+// bateria, sem respiro nenhum, porque o "respiro" que o CSS calcula é 0.
+// @capacitor-community/safe-area resolve isso nativamente (detecta a versão
+// do WebView e aplica padding real quando o env() não funciona) — sem
+// precisar reescrever nenhum dos vários lugares que já usam
+// env(safe-area-inset-top/bottom) no CSS. Roda só dentro do app nativo
+// (window.Capacitor só existe lá) — no navegador normal (mimba.com.br) esse
+// bloco inteiro não faz nada.
+// Cor dos ícones da barra (relógio/wifi/bateria) e do respiro atrás dela
+// tem que combinar com o que está pintado embaixo pelo #status-bar-mask —
+// e isso NÃO é só "tema claro ou escuro do sistema": o herói da tela de
+// login é verde-escuro fixo (não muda com prefers-color-scheme), enquanto
+// o resto do app (sidebar, conteúdo) usa --bg/--chrome-bg (= --areia), que
+// aí sim inverte com o tema. Em WebViews "quebrados" (<Chromium 140), o
+// @capacitor-community/safe-area troca o respiro por padding nativo real —
+// só que a versão do plugin usada aqui pinta esse padding sempre em preto
+// ou branco puro (não lê tema nenhum), daí o plugin nativo próprio
+// br.com.mimba.app.MimbaBarsPlugin. Ele só consegue pintar uma cor só pra
+// tela toda (topo e rodapé) — não dá pra pintar cada barra de uma cor
+// independente com targetSdk 36 (edge-to-edge obrigatório desde a API 35
+// faz Window.setStatusBarColor/setNavigationBarColor virarem no-op) — por
+// isso prioriza o topo (é onde fica câmera/sinal/bateria, o bug original).
+function _ajustarStatusBarNativa(){
+  const mb = window.Capacitor?.Plugins?.MimbaBars;
+  if (!mb) return;
+  const loginVisivel = document.getElementById('login-screen')?.style.display !== 'none';
+  const modoEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const escuro = loginVisivel || modoEscuro;
+  const cor = loginVisivel ? '#33461C' : (modoEscuro ? '#1A1A18' : '#F4EFE6');
+  mb.apply({ cor, escuro }).catch(()=>{});
+}
+(function(){
+  if (!window.Capacitor?.Plugins?.MimbaBars) return;
+  _ajustarStatusBarNativa();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', _ajustarStatusBarNativa);
 })();
 
 function switchTab(btn,tid){
@@ -13090,7 +13456,7 @@ Esta ação não pode ser desfeita.`)) return;
 // ── Tela de Conta (card no rodapé da sidebar) ──────────────────────────────
 // O card só mostra info (avatar/nome/perfil); "Sair" é um link direto e os
 // três-pontinhos (⋮) abrem a Tela de Conta — sem menu intermediário.
-function abrirTelaConta() {
+function abrirTelaConta(abaAlvo) {
   renderPiquetes();
   document.getElementById('conta-nome-exibicao').value = TENANT_INFO?.nome_exibicao || TENANT_INFO?.nome_cabanha || '';
   const logoImg = document.getElementById('conta-logo-preview');
@@ -13100,40 +13466,69 @@ function abrirTelaConta() {
   window._contaNovoLogo = undefined;
   document.getElementById('conta-cor-primaria').value = TENANT_INFO?.cor_primaria || '#2D6A4F';
   _atualizarIconeTema();
-  document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
-  document.getElementById('conta-tab-cabanha').style.display = '';
-  document.getElementById('conta-tab-usuarios').style.display = 'none';
-  document.getElementById('conta-tab-faturamento').style.display = 'none';
-  // Usuários e Faturamento são admin-only — vet/cab não têm permissão de ver, editar
-  // ou excluir usuário nenhum aqui (nem o próprio perfil), então a aba nem aparece em
-  // vez de abrir vazia (achado real, 2026-08-22: cabanheiro via "0 administradores /
-  // 0 veterinários / 0 cabanheiros / Nenhum usuário cadastrado").
+  carregarPerfilPublicoCabanha();
+
+  const ABAS = ['conta-tab-cabanha','conta-tab-perfil','conta-tab-preferencias','conta-tab-usuarios','conta-tab-faturamento'];
+  const alvo = abaAlvo || 'conta-tab-cabanha';
+
+  document.querySelectorAll('#page-conta .tab-row .tab').forEach(t => {
+    const onclk = t.getAttribute('onclick') || '';
+    t.classList.toggle('active', onclk.includes(alvo));
+  });
+  ABAS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = (id === alvo) ? '' : 'none'; });
+
+  // Usuários e Faturamento são admin-only.
   const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
-  const usrBtn = document.querySelector('#modal-conta .tab-row .tab[onclick*="conta-tab-usuarios"]');
+  const usrBtn = document.querySelector('#page-conta .tab-row .tab[onclick*="conta-tab-usuarios"]');
   if (usrBtn) usrBtn.style.display = isAdm ? '' : 'none';
   const fatBtn = document.getElementById('conta-tab-btn-faturamento');
   if (fatBtn) fatBtn.style.display = isAdm ? '' : 'none';
-  // Se a pessoa não é admin, garante que a aba ativa seja sempre Cabanha (a única
-  // que ela pode ver) — nunca deixa a Usuários marcada como ativa por engano.
-  if (!isAdm) {
-    document.querySelectorAll('#modal-conta .tab-row .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
-    document.getElementById('conta-tab-cabanha').style.display = '';
-    document.getElementById('conta-tab-usuarios').style.display = 'none';
-  }
-  renderUsuarios();
-  _carregarStatusPendente();
+
+  if (alvo === 'conta-tab-perfil')       carregarMeuPerfil();
+  if (alvo === 'conta-tab-preferencias') carregarPreferenciasSistema();
+  if (alvo === 'conta-tab-usuarios')     { renderUsuarios(); _carregarStatusPendente(); }
+  if (alvo === 'conta-tab-faturamento')  renderFaturamento();
+
   _aplicarPermissoes();
-  openModal('modal-conta');
+  showPage('conta');
+}
+
+// Dropdown de acesso rápido (card avatar+nome na sidebar)
+function _toggleDropdownConta(ev) {
+  ev.stopPropagation();
+  const dd = document.getElementById('conta-dropdown');
+  if (!dd) return;
+  const abrir = !dd.classList.contains('open');
+  dd.classList.toggle('open', abrir);
+  if (abrir) {
+    document.getElementById('cdh-nome-cabanha').textContent = TENANT_INFO?.nome_exibicao || TENANT_INFO?.nome_cabanha || '—';
+    document.getElementById('cdh-email-usuario').textContent = usuarioAtual?.email || '—';
+    const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
+    const fatItem = document.getElementById('cdi-faturamento');
+    if (fatItem) fatItem.style.display = isAdm ? '' : 'none';
+    // Fechar ao clicar fora
+    setTimeout(() => document.addEventListener('click', _fecharDropdownConta, { once: true }), 0);
+  }
+}
+function _fecharDropdownConta() {
+  const dd = document.getElementById('conta-dropdown');
+  if (dd) dd.classList.remove('open');
+}
+function _irParaConta(ev, aba) {
+  ev.stopPropagation();
+  _fecharDropdownConta();
+  abrirTelaConta(aba);
 }
 
 function switchContaTab(btn, tabId) {
+  const ABAS = ['conta-tab-cabanha','conta-tab-perfil','conta-tab-preferencias','conta-tab-usuarios','conta-tab-faturamento'];
   btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('conta-tab-cabanha').style.display     = tabId === 'conta-tab-cabanha'     ? '' : 'none';
-  document.getElementById('conta-tab-usuarios').style.display    = tabId === 'conta-tab-usuarios'    ? '' : 'none';
-  document.getElementById('conta-tab-faturamento').style.display = tabId === 'conta-tab-faturamento' ? '' : 'none';
-  if(tabId === 'conta-tab-usuarios') { renderUsuarios(); _carregarStatusPendente(); }
-  if(tabId === 'conta-tab-faturamento') { renderFaturamento(); }
+  ABAS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = (id === tabId) ? '' : 'none'; });
+  if (tabId === 'conta-tab-perfil')       carregarMeuPerfil();
+  if (tabId === 'conta-tab-preferencias') carregarPreferenciasSistema();
+  if (tabId === 'conta-tab-usuarios')     { renderUsuarios(); _carregarStatusPendente(); }
+  if (tabId === 'conta-tab-faturamento')  renderFaturamento();
 }
 
 // "Convite pendente": a pessoa foi convidada mas nunca fez login de verdade (nunca
@@ -13165,6 +13560,210 @@ function _onLogoFileSelect(e) {
   reader.readAsDataURL(file);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ABA MEU PERFIL
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function carregarMeuPerfil() {
+  if (!usuarioAtual?.id) return;
+  document.getElementById('perfil-nome').value = usuarioAtual.nome || '';
+  document.getElementById('perfil-email').value = usuarioAtual.email || '';
+  document.getElementById('perfil-cargo').value = usuarioAtual.cargo || '';
+  document.getElementById('perfil-telefone').value = usuarioAtual.telefone_pessoal || '';
+  _setNotifEmail(usuarioAtual.notif_email !== false);
+  document.getElementById('perfil-idioma').value = usuarioAtual.idioma || 'pt-BR';
+  document.getElementById('perfil-fuso').value = usuarioAtual.fuso_horario || 'America/Sao_Paulo';
+  const fotoImg = document.getElementById('perfil-foto-preview');
+  const fotoPh  = document.getElementById('perfil-foto-placeholder');
+  if (usuarioAtual.foto_url) { fotoImg.src = usuarioAtual.foto_url; fotoImg.style.display=''; fotoPh.style.display='none'; }
+  else { fotoImg.style.display='none'; fotoPh.style.display='flex'; }
+  window._perfilNovaFoto = undefined;
+}
+
+function _onFotoPerfilFileSelect(ev) {
+  const file = ev.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._perfilNovaFoto = e.target.result;
+    const fotoImg = document.getElementById('perfil-foto-preview');
+    const fotoPh  = document.getElementById('perfil-foto-placeholder');
+    fotoImg.src = e.target.result; fotoImg.style.display=''; fotoPh.style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function salvarMeuPerfil() {
+  if (!usuarioAtual?.id) return;
+  const patch = {
+    nome: document.getElementById('perfil-nome').value.trim() || null,
+    cargo: document.getElementById('perfil-cargo').value || null,
+    telefone_pessoal: document.getElementById('perfil-telefone').value.trim() || null,
+    notif_email: document.getElementById('perfil-notif-email').checked,
+    idioma: document.getElementById('perfil-idioma').value,
+    fuso_horario: document.getElementById('perfil-fuso').value,
+  };
+  if (window._perfilNovaFoto !== undefined) patch.foto_url = window._perfilNovaFoto;
+
+  const r = await _supaPub('PATCH', 'usuarios_master', patch, '?id=eq.' + usuarioAtual.id);
+  if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar perfil', 'amber'); return; }
+
+  Object.assign(usuarioAtual, patch);
+  const sbUser = document.getElementById('sidebar-username');
+  if (sbUser && patch.nome) sbUser.textContent = patch.nome;
+  _mostrarStatusSync('✅ Perfil atualizado', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ABA PREFERÊNCIAS DO SISTEMA
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PREF_ESTAGIOS = ['CAMPO','PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'];
+
+let PREFERENCIAS_SISTEMA = {
+  controlar_vacinas: true,
+  estagios_vacinas: ['PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'],
+  controlar_exames: true,
+  estagios_exames: ['PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'],
+  controlar_vermifugacao: true,
+  intervalo_vermifugacao_dias: 45,
+  estagios_vermifugacao: ['PISTA MORFOLOGIA','PISTA FUNCIONAL','ARREIO CABANHA','LAÇO','DOMA','CRIA'],
+};
+
+function _renderPrefEstagios(grupo, selecionados) {
+  const el = document.getElementById('pref-estagios-' + grupo);
+  if (!el) return;
+  el.innerHTML = PREF_ESTAGIOS.map(e => {
+    const on = selecionados.includes(e) ? 'on' : '';
+    const label = e.charAt(0) + e.slice(1).toLowerCase();
+    return `<span class="chip ${on}" data-val="${e}" onclick="_toggleChip(this)"><span class="chip-check">✓</span>${label}</span>`;
+  }).join('');
+}
+
+function _prefToggleEstagios(grupo) {
+  const ligado = document.getElementById('pref-controlar-' + grupo).checked;
+  const wrap = document.getElementById('pref-estagios-' + grupo + '-wrap');
+  if (wrap) wrap.classList.toggle('disabled', !ligado);
+}
+
+// Alterna o pill-switch Desligado/Ligado de uma preferência (vacinas/exames/vermifugacao)
+function _prefSetToggle(grupo, ligado) {
+  document.getElementById('pref-controlar-' + grupo).checked = ligado;
+  const sw = document.getElementById('pref-switch-' + grupo);
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  _prefToggleEstagios(grupo);
+}
+
+// Alterna um chip (usado em estágios de preferências e especialidades da cabanha)
+function _toggleChip(el) {
+  el.classList.toggle('on');
+}
+
+// Pill-switch da Visibilidade no Marketplace (aba Cabanha)
+function _setVisivelMarketplace(ligado) {
+  document.getElementById('cpp-visivel-marketplace').checked = ligado;
+  const sw = document.getElementById('cpp-visivel-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+}
+
+// Pill-switch de notificação por e-mail (aba Meu Perfil)
+function _setNotifEmail(ligado) {
+  document.getElementById('perfil-notif-email').checked = ligado;
+  const sw = document.getElementById('perfil-notif-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+}
+
+async function carregarPreferenciasSistema() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const r = await _supaPub('GET', 'preferencias_sistema', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
+  if (r && r[0]) Object.assign(PREFERENCIAS_SISTEMA, r[0]);
+
+  _prefSetToggle('vacinas', PREFERENCIAS_SISTEMA.controlar_vacinas);
+  _prefSetToggle('exames', PREFERENCIAS_SISTEMA.controlar_exames);
+  _prefSetToggle('vermifugacao', PREFERENCIAS_SISTEMA.controlar_vermifugacao);
+  document.getElementById('pref-intervalo-vermifugacao').value = PREFERENCIAS_SISTEMA.intervalo_vermifugacao_dias;
+
+  _renderPrefEstagios('vacinas', PREFERENCIAS_SISTEMA.estagios_vacinas);
+  _renderPrefEstagios('exames', PREFERENCIAS_SISTEMA.estagios_exames);
+  _renderPrefEstagios('vermifugacao', PREFERENCIAS_SISTEMA.estagios_vermifugacao);
+}
+
+function _lerEstagiosSelecionados(grupo) {
+  const el = document.getElementById('pref-estagios-' + grupo);
+  if (!el) return [];
+  return [...el.querySelectorAll('.chip.on')].map(chip => chip.getAttribute('data-val'));
+}
+
+async function salvarPreferenciasSistema() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const patch = {
+    tenant_id: TENANT_INFO.tenant_id,
+    controlar_vacinas: document.getElementById('pref-controlar-vacinas').checked,
+    estagios_vacinas: _lerEstagiosSelecionados('vacinas'),
+    controlar_exames: document.getElementById('pref-controlar-exames').checked,
+    estagios_exames: _lerEstagiosSelecionados('exames'),
+    controlar_vermifugacao: document.getElementById('pref-controlar-vermifugacao').checked,
+    intervalo_vermifugacao_dias: parseInt(document.getElementById('pref-intervalo-vermifugacao').value) || 45,
+    estagios_vermifugacao: _lerEstagiosSelecionados('vermifugacao'),
+    atualizado_em: new Date().toISOString(),
+  };
+  const r = await _supaPub('POST', 'preferencias_sistema', patch);
+  if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar preferências', 'amber'); return; }
+  Object.assign(PREFERENCIAS_SISTEMA, patch);
+  _mostrarStatusSync('✅ Preferências do sistema atualizadas', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PERFIL PÚBLICO DA CABANHA (Marketplace Mimba)
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function carregarPerfilPublicoCabanha() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const r = await _supaPub('GET', 'cabanha_perfil_publico', null, '?tenant_id=eq.' + TENANT_INFO.tenant_id + '&limit=1');
+  const d = (r && r[0]) || {};
+  document.getElementById('cpp-assinatura').value = d.assinatura || '';
+  const sobreEl = document.getElementById('cpp-sobre');
+  sobreEl.value = d.sobre || '';
+  const cnt = document.getElementById('cpp-sobre-count'); if (cnt) cnt.textContent = sobreEl.value.length;
+  document.getElementById('cpp-ano-fundacao').value = d.ano_fundacao || '';
+  document.getElementById('cpp-cidade').value = d.cidade || '';
+  document.getElementById('cpp-estado').value = d.estado || '';
+  document.getElementById('cpp-endereco').value = d.endereco || '';
+  document.getElementById('cpp-whatsapp').value = d.whatsapp || '';
+  document.getElementById('cpp-telefone').value = d.telefone || '';
+  document.getElementById('cpp-email-contato').value = d.email_contato || '';
+  document.getElementById('cpp-instagram').value = d.instagram || '';
+  document.getElementById('cpp-site').value = d.site || '';
+  _setVisivelMarketplace(!!d.visivel_marketplace);
+  const especArr = d.especialidades || [];
+  document.querySelectorAll('#cpp-especialidades-chips .chip').forEach(chip => {
+    chip.classList.toggle('on', especArr.includes(chip.getAttribute('data-val')));
+  });
+}
+
+async function salvarPerfilPublicoCabanha() {
+  if (!TENANT_INFO?.tenant_id) return;
+  const especialidades = [...document.querySelectorAll('#cpp-especialidades-chips .chip.on')].map(c => c.getAttribute('data-val'));
+  const patch = {
+    tenant_id: TENANT_INFO.tenant_id,
+    assinatura: document.getElementById('cpp-assinatura').value.trim() || null,
+    sobre: document.getElementById('cpp-sobre').value.trim() || null,
+    ano_fundacao: parseInt(document.getElementById('cpp-ano-fundacao').value) || null,
+    especialidades,
+    cidade: document.getElementById('cpp-cidade').value.trim() || null,
+    estado: document.getElementById('cpp-estado').value || null,
+    endereco: document.getElementById('cpp-endereco').value.trim() || null,
+    whatsapp: document.getElementById('cpp-whatsapp').value.trim() || null,
+    telefone: document.getElementById('cpp-telefone').value.trim() || null,
+    email_contato: document.getElementById('cpp-email-contato').value.trim() || null,
+    instagram: document.getElementById('cpp-instagram').value.trim() || null,
+    site: document.getElementById('cpp-site').value.trim() || null,
+    visivel_marketplace: document.getElementById('cpp-visivel-marketplace').checked,
+    atualizado_em: new Date().toISOString(),
+  };
+  return await _supaPub('POST', 'cabanha_perfil_publico', patch);
+}
+
 async function salvarDadosCabanha() {
   if(!TENANT_INFO?.tenant_id) return;
   const nome = document.getElementById('conta-nome-exibicao').value.trim();
@@ -13188,6 +13787,7 @@ async function salvarDadosCabanha() {
   }
   if(nome) document.title = `${nome} — Mimba`;
   _aplicarCorPrimaria(cor);
+  await salvarPerfilPublicoCabanha();
   _mostrarStatusSync('✅ Dados da cabanha atualizados', 'green');
 }
 
@@ -15280,6 +15880,32 @@ function _cancelarRetomada() {
 }
 
 // RPC autenticada (usa o JWT do usuário logado)
+
+// Variante de _supa() para tabelas do schema public (preferencias_sistema,
+// cabanha_perfil_publico) — mesmo padrão, mas Accept/Content-Profile='public'
+async function _supaPub(method, table, body=null, query='') {
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile':  'public',
+      'Content-Profile': 'public',
+      'Prefer': method==='POST' ? 'return=representation,resolution=merge-duplicates' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : null
+  });
+  if(!r.ok) {
+    const e = await r.text();
+    if (r.status !== 403) console.error('Supabase (public) error', r.status, e);
+    return null;
+  }
+  if(method==='GET' || method==='POST') { try{ return await r.json(); }catch(e){ return []; } }
+  return true;
+}
+
 async function _rpc(fn, args) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method:'POST',
@@ -15398,13 +16024,17 @@ function _definirTema(novo) {
   document.documentElement.style.colorScheme = novo;
   try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
   _atualizarIconeTema();
+  // Cor customizada da cabanha (--green-l/--green-d) depende do tema efetivo —
+  // sem isso, trocar de tema manualmente deixava o tom "soft" desatualizado
+  // (calculado pro tema anterior) até o próximo login.
+  _aplicarCorPrimaria(TENANT_INFO?.cor_primaria);
 }
 _atualizarIconeTema();
 if (window.matchMedia) {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     let temEscolhaSalva = false;
     try { temEscolhaSalva = !!localStorage.getItem(TEMA_KEY); } catch (e) {}
-    if (!temEscolhaSalva) _atualizarIconeTema();
+    if (!temEscolhaSalva) { _atualizarIconeTema(); _aplicarCorPrimaria(TENANT_INFO?.cor_primaria); }
   });
 }
 function _aplicarCorPrimaria(cor) {
@@ -15415,9 +16045,19 @@ function _aplicarCorPrimaria(cor) {
   // Fase 1, mesmo quem nunca abriu a Tela de Conta pra mexer nisso).
   if (cor === '#2D6A4F') cor = null;
   if (cor && _hexParaRgb(cor)) {
+    // --green-l/--green-d são setados via style inline (maior especificidade que
+    // qualquer regra do <style>, incluindo os blocos de tema escuro) — por isso
+    // precisam ser calculados considerando o tema efetivo aqui, e não só misturar
+    // com branco sempre: isso deixava qualquer elemento "ativo" (nav, chip, plano
+    // atual) com fundo quase branco em cima do tema escuro, sobrepondo até a regra
+    // de dark mode. Light: mistura com branco (fundo pastel). Dark: overlay
+    // translúcido da própria cor sobre o fundo escuro (mesmo padrão dos tokens
+    // estáticos --campo-soft) + versão clareada pro texto, pro contraste não sumir.
+    const escuro = _temaEfetivo() === 'dark';
+    const rgb = _hexParaRgb(cor);
     root.setProperty('--green', cor);
-    root.setProperty('--green-d', cor);
-    root.setProperty('--green-l', _misturarComBranco(cor, 0.88));
+    root.setProperty('--green-d', escuro ? _misturarComBranco(cor, 0.45) : cor);
+    root.setProperty('--green-l', escuro ? `rgba(${rgb.r},${rgb.g},${rgb.b},.16)` : _misturarComBranco(cor, 0.88));
   } else {
     root.removeProperty('--green');
     root.removeProperty('--green-d');
@@ -15616,6 +16256,8 @@ async function renderPainelMimba() {
 function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
+  _ajustarStatusBarNativa();
+  _chatIAMostrarFab(true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -15679,6 +16321,8 @@ function _entrarApp() {
 function fazerLogout() {
   usuarioAtual = null;
   AUTH_TOKEN = null; AUTH_USER = null; TENANT_INFO = null;
+  _chatIAMostrarFab(false);
+  _chatIAMensagens = [];
   // não deixar dado da cabanha na memória/localStorage após sair
   _limparEstadoLocal();
   _limparSessaoSalva(); // sair de verdade não pode voltar sozinho no próximo reload
@@ -15693,6 +16337,7 @@ function fazerLogout() {
   document.title = 'Mimba — Gestão Crioulos';
   _loadUsuarios();
   document.getElementById('login-screen').style.display='flex';
+  _ajustarStatusBarNativa();
   // restaurar a tela normal de login (pode estar escondida por causa da tela de bloqueio)
   _mostrarLoginShell(true);
   const bloq = document.getElementById('login-bloqueado'); if(bloq) bloq.style.display='none';
@@ -16103,8 +16748,130 @@ if(!_checkRecovery()){
   _tentarRetomarSessao().then(retomou => { if(!retomou) _carregarEmailLembrado(); });
 }
 
+// ── Agente de IA — chat flutuante (ADR 0006/0007) ───────────────────────────
+// Streaming via SSE: primeiro uso desse padrão no projeto (o resto do app só
+// usa fetch simples com await res.json()). Cada RPC que o agente chama já é
+// tenant-scoped/autorizada no Postgres (tem_acesso_tenant) — esta função só
+// repassa o JWT do usuário, nunca monta SQL nem decide autorização aqui.
+let _chatIAMensagens = [];
+let _chatIAEnviando = false;
+
+function _chatIAToggle(){
+  const painel = document.getElementById('chat-ia-panel');
+  const abrindo = !painel.classList.contains('open');
+  painel.classList.toggle('open', abrindo);
+  if(abrindo) document.getElementById('chat-ia-input')?.focus();
+}
+
+function _chatIAMostrarFab(mostrar){
+  document.getElementById('chat-ia-fab')?.classList.toggle('visible', !!mostrar);
+  if(!mostrar) document.getElementById('chat-ia-panel')?.classList.remove('open');
+}
+
+function _chatIARenderMsg(texto, classe){
+  const box = document.getElementById('chat-ia-msgs');
+  const div = document.createElement('div');
+  div.className = 'chat-ia-msg ' + classe;
+  div.textContent = texto;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function _chatIAEnviar(){
+  if(_chatIAEnviando) return;
+  const input = document.getElementById('chat-ia-input');
+  const texto = (input.value||'').trim();
+  if(!texto) return;
+  const tenantId = TENANT_INFO?.tenant_id || TENANT_INFO?.id;
+  if(!tenantId){ _chatIARenderMsg('Nenhuma cabanha ativa.', 'sistema'); return; }
+
+  input.value = '';
+  _chatIARenderMsg(texto, 'user');
+  _chatIAMensagens.push({ role: 'user', content: texto });
+
+  _chatIAEnviando = true;
+  const botaoEnviar = document.getElementById('chat-ia-send');
+  if(botaoEnviar) botaoEnviar.disabled = true;
+  const bolhaResposta = _chatIARenderMsg('', 'assistente');
+
+  try {
+    await _garantirTokenValido();
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/agente-ia`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: tenantId, mensagens: _chatIAMensagens }),
+    });
+
+    if(!r.ok){
+      const d = await r.json().catch(()=>({}));
+      bolhaResposta.remove();
+      _chatIARenderMsg(d?.erro || `Erro ${r.status} ao falar com o assistente.`, 'sistema');
+      _chatIAMensagens.pop();
+      return;
+    }
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let respostaTexto = '';
+
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const partes = buffer.split('\n\n');
+      buffer = partes.pop() || '';
+      for(const parte of partes){
+        const linhas = parte.split('\n');
+        const linhaEvento = linhas.find(l=>l.startsWith('event: '));
+        const linhaDados = linhas.find(l=>l.startsWith('data: '));
+        if(!linhaEvento || !linhaDados) continue;
+        const evento = linhaEvento.slice(7);
+        const dados = JSON.parse(linhaDados.slice(6));
+        if(evento === 'texto'){
+          respostaTexto += dados.delta;
+          bolhaResposta.textContent = respostaTexto;
+          document.getElementById('chat-ia-msgs').scrollTop = 9e9;
+        } else if(evento === 'ferramenta'){
+          bolhaResposta.textContent = respostaTexto || 'consultando...';
+        } else if(evento === 'erro'){
+          bolhaResposta.textContent = respostaTexto || (dados.erro || 'Erro no assistente.');
+        }
+      }
+    }
+
+    if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
+    else bolhaResposta.remove();
+  } catch(e) {
+    bolhaResposta.textContent = 'Falha de conexão com o assistente.';
+  } finally {
+    _chatIAEnviando = false;
+    if(botaoEnviar) botaoEnviar.disabled = false;
+  }
+}
+
 </script>
 <div id="sync-status" style="display:none;position:fixed;bottom:calc(1.25rem + env(safe-area-inset-bottom));right:calc(1.25rem + env(safe-area-inset-right));padding:9px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.15)"></div>
+
+<!-- Agente de IA — chat flutuante (ADR 0006). Escondido por padrão; _entrarApp()/
+     fazerLogout() controlam a visibilidade (só aparece logado, nunca sobre o login). -->
+<button class="chat-ia-fab" id="chat-ia-fab" onclick="_chatIAToggle()" title="Assistente Mimba" aria-label="Abrir assistente">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+</button>
+<div class="chat-ia-panel" id="chat-ia-panel">
+  <div class="chat-ia-header">
+    <span>Assistente Mimba</span>
+    <button onclick="_chatIAToggle()" aria-label="Fechar">×</button>
+  </div>
+  <div class="chat-ia-msgs" id="chat-ia-msgs">
+    <div class="chat-ia-msg sistema">Pergunte sobre os dados da sua cabanha ou como usar o sistema.</div>
+  </div>
+  <div class="chat-ia-input-row">
+    <textarea id="chat-ia-input" rows="1" placeholder="Escreva sua pergunta..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_chatIAEnviar();}"></textarea>
+    <button id="chat-ia-send" onclick="_chatIAEnviar()">Enviar</button>
+  </div>
+</div>
 
 <div class="modal-bg" id="modal-nao-confirmar">
   <div class="modal" style="max-width:420px">
