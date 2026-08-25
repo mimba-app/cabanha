@@ -184,9 +184,15 @@
     padding-top: calc(1.25rem + env(safe-area-inset-top));
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
     padding-left: calc(1rem + env(safe-area-inset-left));
-    overflow-y: auto; display: flex; flex-direction: column; gap: 4px; z-index: 10;
+    display: flex; flex-direction: column; z-index: 10;
     color: var(--chrome-text);
   }
+  /* Só esta parte rola (logo + abas) — o rodapé (conta/sair) fica sempre visível,
+     nunca escondido atrás do fim do scroll (bug visto no mobile: a lista de abas
+     é mais alta que a tela, e o cartão de conta/botão Sair ficavam ocultos até
+     rolar tudo pra baixo). */
+  .sidebar-nav-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-footer { flex-shrink: 0; }
   .logo { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--chrome-border); }
   .logo img { max-width:100%; max-height:72px; mix-blend-mode:screen; filter:brightness(1.1); }
   .logo-monogram {
@@ -293,7 +299,21 @@
   .pref-estagios-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
   .pref-estagio-chip { display:flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:var(--radius); border:0.5px solid var(--border); cursor:pointer; }
   .pref-estagio-chip input { width:auto; }
-  #conta-dropdown { position:absolute; z-index:400; min-width:220px; background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden; display:none; }
+  /* Abre pra CIMA e alinhado à ESQUERDA do cartão de conta — sem isso (sem
+     top/left/right explícitos) o navegador posiciona o dropdown onde ele cairia
+     no fluxo normal, ao lado do card, saindo tanto da sidebar quanto da tela
+     (scroll lateral E vertical, em desktop e mobile). Ancorar pela direita
+     também não resolve: a sidebar tem só 230px no desktop, então um dropdown de
+     240px alinhado à direita do card vaza pela ESQUERDA da tela. Alinhado à
+     esquerda do card (que já começa perto da borda esquerda da sidebar) cabe
+     nas duas larguras. Altura/largura limitadas ao viewport, com scroll interno
+     próprio como último recurso — nunca extrapola a borda da tela. */
+  #conta-dropdown {
+    position:absolute; z-index:400; left:0; right:auto; top:auto; bottom:calc(100% + 8px);
+    width:min(240px, calc(100vw - 2rem)); max-height:min(360px, calc(100vh - 2rem));
+    background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(0,0,0,.25); overflow-y:auto; display:none;
+  }
   #conta-dropdown.open { display:block; }
   #conta-dropdown-header { padding:12px 14px; border-bottom:0.5px solid var(--border); }
   #conta-dropdown-header .cdh-nome { font-size:13px; font-weight:600; color:var(--text); }
@@ -1382,6 +1402,7 @@
 </div>
 
 <div class="sidebar" id="sidebar-main">
+ <div class="sidebar-nav-scroll">
   <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
     <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M<span class="mimba-dot">.</span></span></div>
@@ -1402,7 +1423,8 @@
   <button class="nav-btn" onclick="showPage('sangues')"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c0 6 12 6 12 12"/><path d="M18 21c0-6-12-6-12-12"/><line x1="7.5" y1="6" x2="16.5" y2="6"/><line x1="8.5" y1="9.5" x2="15.5" y2="9.5"/><line x1="8.5" y1="14.5" x2="15.5" y2="14.5"/><line x1="7.5" y1="18" x2="16.5" y2="18"/></svg></span><span>Sangues</span></button>
   <!-- V1.5 (Fase 4): Relatórios em PDF — só aparece se o plano permitir (features.relatorios). -->
   <button class="nav-btn" id="nav-btn-relatorios" onclick="showPage('relatorios')" style="display:none"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></span><span>Relatórios</span></button>
-  <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--chrome-border)">
+ </div>
+  <div class="sidebar-footer" style="padding-top:1rem;border-top:0.5px solid var(--chrome-border)">
     <!-- V1.5 (Fase 3): só aparece pra quem está em public.mimba_staff (checado no login). -->
     <button id="sidebar-btn-painel-mimba" onclick="abrirPainelMimba()" style="display:none;width:100%;margin-bottom:8px;padding:7px 8px;border-radius:var(--radius);background:rgba(159,204,86,0.14);color:var(--chrome-accent);border:0.5px solid var(--chrome-accent);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
