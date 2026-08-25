@@ -35,8 +35,8 @@ tratados como primeiros-cidadãos desde a origem. A troca é automática via
 
 | Token | Claro | Escuro | Uso |
 |---|---|---|---|
-| `--ink` | `#2B2419` | `#F0EFE9` | Texto principal |
-| `--campo` / `--campo-deep` | `#4F6B2E` / `#33461C` | `#8FB35A` / `#A9CD7A` | Verde da marca — ação primária, positivo, "aprovado" |
+| `--ink` | `#2B2419` | `#F0EFE9` | **Cor principal da marca** (auditoria 2026-08-25) — texto, e fundo do símbolo/monograma "M." (fixo em `#2B2419`, não muda com o tema — contraste maior que o verde). |
+| `--campo` / `--campo-deep` | `#4F6B2E` / `#33461C` | `#8FB35A` / `#A9CD7A` | Verde da marca — uso pontual (positivo, "aprovado"). **Não é mais a cor primária** — Ink assumiu esse papel. |
 | `--terracota` / `--terracota-ink` | `#B15A2E` / `#7A3B1C` | `#E08A54` / `#E08A54` | Acento secundário — eyebrows, links, destaque editorial |
 | `--ouro` | `#B8860B` | `#E8C567` | **Reservado.** Só no ponto final do wordmark "Mimba." e do monograma "M." (login, rodapé da sidebar, sidebar) — a palavra/letra em si usa a cor de texto do contexto, só o ponto é sempre dourado — e no núcleo/selo da cerimônia de acasalamento. Nunca em fundo, UI ou hover — dourado em excesso vira "app de cassino", não "livro de registro". |
 | `--critico` | `#9B3226` | `#E2776A` | Erro, proibido, consanguinidade alta |
@@ -160,7 +160,7 @@ Tudo em `index.html` (sem framework/bundler — ver `CLAUDE.md`):
   `docs/spec-acasalamento-jornada-tres-direcoes.md` pro fluxo completo.
 - **Marca** (`.mimba-dot`) — a regra do MIV ("Mimba" na cor de texto do
   contexto, ponto sempre `--ouro`) é uma única classe, `.mimba-dot`,
-  aplicada ao `.` em toda ocorrência do wordmark/monograma:
+  aplicada em toda ocorrência do wordmark/monograma:
   `.login-form-wordmark`, `.login-logo-title` (telas de
   restaurando/bloqueado/cancelado/definir-senha), `.powered-by` (rodapé do
   Dashboard) e `.logo-monogram` (avatar da sidebar — sempre "M.", nunca só
@@ -168,6 +168,16 @@ Tudo em `index.html` (sem framework/bundler — ver `CLAUDE.md`):
   de cor própria (`#fff`) mais específica que `.mimba-dot` sozinha — por
   isso existe também `.logo-monogram span.mimba-dot`, que precisa
   continuar junto se a estrutura desse componente mudar.
+  **Formato do ponto (auditoria de marca, 2026-08-25):** o ponto **não** é
+  mais o caractere "." em texto — o glifo real do "." na Manrope
+  ExtraBold, medido pixel a pixel, é um **quadrado de cantos retos**, não
+  um círculo; depender do glifo arrisca renderizar redondo se a fonte
+  falhar/cair pro fallback. `.mimba-dot` agora é um `<span>` vazio
+  estilizado como bloco quadrado explícito (`display:inline-block`,
+  `width`/`height` em `em`, `background:currentColor`, `border-radius:0`)
+  — nunca usar `<span class="mimba-dot">.</span>` (com o caractere "."
+  dentro) em código novo, e nunca com `border-radius` diferente de `0`.
+  Mesmo tratamento aplicado no MIV.
 
 **Regra pra quem for adicionar UI nova:** nunca crie um token de cor/sombra/
 fonte novo sem antes checar se um destes já serve. Se precisar de um

@@ -829,8 +829,12 @@
   .login-logo-icon { font-size:42px;margin-bottom:8px; }
   .login-logo-title { font-family:var(--serif);font-size:48px;font-weight:900;color:var(--chrome-text);letter-spacing:-0.01em;line-height:1; }
   /* Marca "Mimba." — a palavra assume a cor de texto do contexto (clara em fundo escuro, escura
-     em fundo claro); só o ponto final é sempre dourado (--ouro), a assinatura da marca. */
-  .mimba-dot { color: var(--ouro); }
+     em fundo claro); só o ponto final é sempre dourado (--ouro), a assinatura da marca.
+     Bloco quadrado explícito (não texto "."): o glifo do "." na Manrope, medido de verdade,
+     é um quadrado de cantos retos — mas depender do glifo arrisca render redondo se a fonte
+     falhar ao carregar. Em em, escala igual em qualquer contexto (login 48px, sidebar 24px,
+     powered-by ~11px). Mesmo tratamento usado no MIV (auditoria de marca, 2026-08-25). */
+  .mimba-dot { display:inline-block; width:0.2em; height:0.2em; background:currentColor; color:var(--ouro); vertical-align:baseline; margin-left:0.05em; border-radius:0; }
   .login-logo-sub { font-size:12px;color:var(--chrome-text2);margin-top:8px;letter-spacing:.02em; }
   .login-field { margin-bottom:1rem; }
   .login-field label { display:block;font-size:11px;font-weight:700;color:var(--chrome-text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px; }
@@ -1272,7 +1276,7 @@
     </div>
     <div class="login-form-col">
       <div class="login-box" id="login-box-main">
-        <div class="login-form-wordmark">Mimba<span class="mimba-dot">.</span></div>
+        <div class="login-form-wordmark">Mimba<span class="mimba-dot"></span></div>
         <div id="login-campos-normais">
           <div class="login-field">
             <label>Email</label>
@@ -1334,7 +1338,7 @@
   </div>
   <div class="login-box" id="login-restaurando" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub">Restaurando sua sessão...</div>
     </div>
   </div>
@@ -1343,7 +1347,7 @@
        ainda (isso é o Portal do Cliente, Fase 4) — por ora só orienta a falar com a Mimba. -->
   <div class="login-box" id="login-bloqueado" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub" style="color:var(--red-d)">Acesso temporariamente bloqueado</div>
     </div>
     <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
@@ -1356,7 +1360,7 @@
   <!-- V1.5 (Fase 2, complemento): trial cancelado pelo próprio admin antes da cobrança. -->
   <div class="login-box" id="login-cancelado" style="display:none;text-align:center">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub">Teste cancelado</div>
     </div>
     <div style="font-size:13px;color:var(--chrome-text2);line-height:1.6;margin:12px 0 18px">
@@ -1368,7 +1372,7 @@
   </div>
   <div class="login-box" id="definir-senha-box" style="display:none">
     <div class="login-logo">
-      <div class="login-logo-title">Mimba<span class="mimba-dot">.</span></div>
+      <div class="login-logo-title">Mimba<span class="mimba-dot"></span></div>
       <div class="login-logo-sub">Primeiro acesso · defina sua senha</div>
     </div>
     <div class="login-field">
@@ -1405,7 +1409,7 @@
  <div class="sidebar-nav-scroll">
   <div class="logo">
     <img id="sidebar-logo-img" alt="" style="display:none">
-    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M<span class="mimba-dot">.</span></span></div>
+    <div class="logo-monogram" id="sidebar-logo-mark"><span id="sidebar-logo-monogram">M<span class="mimba-dot"></span></span></div>
     <span class="logo-badge" id="sidebar-cabanha"></span>
     <div id="sidebar-trial-aviso" style="display:none;font-size:10px;color:var(--amber-d);background:var(--amber-l);border-radius:var(--radius);padding:4px 8px;margin-top:6px;text-align:center"></div>
   </div>
@@ -1488,7 +1492,7 @@
 <div class="page active" id="page-dashboard">
   <div class="page-header">
     <div><div class="page-title">Dashboard</div><div class="page-sub" id="data-hoje"></div></div>
-    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba<span class="mimba-dot">.</span></span></span>
+    <span style="font-size:11px;color:var(--text3)"><span id="update-label">Dados ABCCC integrados</span> • <span class="powered-by">powered by Mimba<span class="mimba-dot"></span></span></span>
   </div>
 
   <!-- MÉTRICAS -->
