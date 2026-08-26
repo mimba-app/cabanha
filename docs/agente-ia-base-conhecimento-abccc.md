@@ -145,7 +145,47 @@ mesmo tipo de contagem quando os dados de Doma de Ouro/Bocal de Ouro estiverem m
 - Não inventa estatística — toda contagem citada (finalistas produzidos, linhagem em alta) vem de
   consulta real à tabela sincronizada, nunca de estimativa do modelo.
 
-## 6. Notas de cobertura de dado (para calibrar confiança nas respostas)
+## 6. Hierarquia oficial de colocação (fonte: ABCCC e cobertura da Expointer) — resolve "o que conta como Campeão"
+
+Pesquisado em material oficial e jornalístico da própria ABCCC (2026-08-26) pra não adivinhar o
+critério de peso usado nas narrativas de referência (seção 3) e linhagens em alta (seção 4.3).
+
+### Morfologia
+
+1. **Melhor Exemplar da Raça** — topo absoluto do ciclo: o melhor entre os dois Grandes
+   Campeões (macho e fêmea), representa a edição inteira.
+2. **Grande Campeão / Grande Campeã** — 1º colocado geral do sexo (machos e fêmeas julgados
+   separado, cada lado tem seu Grande Campeão).
+3. **Reservado(a) Grande Campeão/ã** — 2º colocado geral do sexo.
+4. **3ª/4ª Melhor Macho/Fêmea** — completam a "fila do Grande Campeonato", 4 animais por sexo.
+5. **Campeão/Campeã de Categoria** — 1º lugar dentro de cada categoria etária (Potranco(a)
+   Menor/Maior, Cavalo/Égua Menor/Adulto) — vários campeões de categoria, só os melhores avançam
+   pro Grande Campeonato.
+
+### Freio de Ouro
+
+Não é uma prova isolada — é um sistema de **camadas dentro da mesma final**: Freio de Ouro,
+Freio de Prata, Freio de Bronze e Freio de Alpaca são níveis por pontuação dentro do mesmo
+evento. Mesmo padrão de "fila de 4" por sexo que a Morfologia usa (4 grandes campeões machos +
+4 campeãs fêmeas na final). "Campeão do Freio de Ouro" é o topo absoluto dentro da camada Ouro.
+
+### Escala de peso pra narrativa de referência (proposta, a confirmar quando o Pedro tiver
+`colocação` carregada no Lab)
+
+| Nível | Peso |
+|---|---|
+| Melhor Exemplar da Raça | Máximo |
+| Grande Campeão/ã (Morfologia) / Campeão do Freio de Ouro | Muito alto |
+| Reservado(a) Grande Campeão/ã | Alto |
+| 3º/4º Melhor Macho/Fêmea ("fila de 4") | Alto |
+| Campeão/ã de Categoria | Médio |
+| Finalista sem título (participou da final, sem colocação de destaque) | Baixo — citável como "finalista", nunca como "campeão" |
+
+Fontes: cavalocrioulo.org.br (notícias oficiais da ABCCC sobre Morfologia Expointer 2020/2025 e
+Final do Freio de Ouro 2025), jornaluniao.com.br, revistahorse.com.br, expointer.rs.gov.br,
+canaldocriador.com.br, comprerural.com.br — pesquisado 2026-08-26.
+
+## 7. Notas de cobertura de dado (para calibrar confiança nas respostas)
 
 - Genealogia (`sbb_pai`/`sbb_mae`) no Mimba Lab: **69% de pai, 27% de mãe** resolvidos, em
   26.593 animais (após backfill de 2026-08-25 — partiu de 3%). Cobertura pré-2000 continua baixa
