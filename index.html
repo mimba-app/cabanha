@@ -3423,9 +3423,9 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Propriedade</div>
       <div class="form-grid">
-        <div class="form-group"><label>Proprietário</label><input type="text" id="aie-proprietario" value="Luciano Luis Mantelli"></div>
-        <div class="form-group"><label>Telefone</label><input type="text" id="aie-prop-tel" value="(51) 9 9216-0620"></div>
-        <div class="form-group" style="grid-column:1/-1"><label>Endereço completo</label><input type="text" id="aie-prop-end" value="Av Getulio Vargas 1000, centro, 98170-000"></div>
+        <div class="form-group"><label>Proprietário</label><input type="text" id="aie-proprietario" value=""></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="aie-prop-tel" value=""></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Endereço completo</label><input type="text" id="aie-prop-end" value=""></div>
         <div class="form-group"><label>Propriedade / Estabelecimento</label><input type="text" id="aie-estabelecimento" value=""></div>
         <div class="form-group"><label>Município / UF</label><input type="text" id="aie-municipio" value=""></div>
         <div class="form-group"><label>Nº Equídeos existentes</label><input type="number" id="aie-num-equideos" value="29" min="1"></div>
@@ -3448,10 +3448,10 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">👨‍⚕️ Veterinário Requisitante</div>
       <div class="form-grid">
-        <div class="form-group"><label>Nome</label><input type="text" id="aie-vet-nome" value="Felipe Farias Bender"></div>
-        <div class="form-group"><label>CRMV</label><input type="text" id="aie-vet-crmv" value="CRMV-RS 12563"></div>
-        <div class="form-group"><label>Endereço do veterinário</label><input type="text" id="aie-vet-end" value="Euclides da Cunha 711"></div>
-        <div class="form-group"><label>Telefone</label><input type="text" id="aie-vet-tel" value="5599001101"></div>
+        <div class="form-group"><label>Nome</label><input type="text" id="aie-vet-nome" value=""></div>
+        <div class="form-group"><label>CRMV</label><input type="text" id="aie-vet-crmv" value=""></div>
+        <div class="form-group"><label>Endereço do veterinário</label><input type="text" id="aie-vet-end" value=""></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="aie-vet-tel" value=""></div>
         <div class="form-group"><label>Motivo da análise</label>
           <select id="aie-motivo">
             <option value="TRANSPORTE NACIONAL">Transporte Nacional</option>
@@ -6076,10 +6076,9 @@ function _aieResetForm() {
   document.getElementById('aie-motivo').value = 'TRANSPORTE NACIONAL';
   document.getElementById('aie-classificacao').value = 'FC';
   document.getElementById('aie-num-equideos').value = '29';
-  // Defaults da cabanha
-  document.getElementById('aie-proprietario').value = 'Luciano Luis Mantelli';
-  document.getElementById('aie-prop-tel').value = '(51) 9 9216-0620';
-  document.getElementById('aie-prop-end').value = 'Av Getulio Vargas 1000, centro, 98170-000';
+  document.getElementById('aie-proprietario').value = '';
+  document.getElementById('aie-prop-tel').value = '';
+  document.getElementById('aie-prop-end').value = '';
   document.getElementById('aie-estabelecimento').value = (TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '';
   document.getElementById('aie-municipio').value = '';
   document.getElementById('aie-vet-nome').value = usuarioAtual?.perfil === 'vet' ? (usuarioAtual.nome || '') : '';
