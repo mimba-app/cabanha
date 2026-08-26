@@ -521,6 +521,34 @@ na tabela `coberturas_arquivadas_legado`). Dois problemas distintos, corrigidos:
   **falta QA de ponta a ponta em `mimba-hml.pages.dev` com login/dado reais** (planejar ciclo do zero,
   negociar cobertura entre duas cabanhas de teste de verdade) **antes de considerar pronto pra produção**.
 
+## 🔑 `sangues_linhagem` lido no schema errado — cache nunca funcionava (2026-08-26)
+Depois do fix do parser acima, Luciano reparou que a Análise de Sangues sempre buscava tudo de
+novo na ABCCC ("22 buscados · 0 do banco" toda vez), mesmo já tendo salvo tudo antes. **Não era
+bug de escrita** — a Edge Function grava certinho em `public.sangues_linhagem` (confirmado direto
+no banco: 22 linhas, pai/mãe preenchidos, timestamp batendo). O bug era de **leitura**: os 3
+lugares do app que consultam essa tabela usavam `_supa()` (helper genérico, sempre manda
+`Accept-Profile`/`Content-Profile` = schema da cabanha, tipo `cab_mae_de_deus`) em vez de
+`_supaPub()` (helper que já existe no código, feito exatamente pra apontar pro `public`). Como
+`sangues_linhagem` também está provisionada (vazia) em cada schema de tenant, toda leitura via
+`_supa()` batia numa tabela vazia e sempre achava "nada em cache".
+
+**Achado mais sério que a tela de Sangues em si**: o mesmo bug estava em mais 2 lugares —
+`_renderSimulacaoAcasalamento` (checagem de meio-irmãos/IC estimado na tela de acasalamento) e
+`_jaConsanguinidade` (alimenta o ranking do Conselho de cruzamento). Os dois caíam sempre no
+texto padrão "Sem dados suficientes para verificar consanguinidade" mesmo quando o dado da
+ABCCC já estava salvo — a checagem de parentesco de 2º/3º grau **nunca rodava de verdade em
+produção**, silenciosamente. Corrigido nos 3 pontos (troca `_supa`→`_supaPub`), commit a seguir.
+
+**Parte 2 — decisão estratégica, ainda pro Pedro avaliar** (não fiz nada aqui, só documentando):
+- A lógica de IC estimado que já existe em `_jaConsanguinidade`/`_renderSimulacaoAcasalamento`
+  (ancestrais comuns por geração, peso `0.5^(gen_egua+gen_gar+1)`) é essencialmente um protótipo
+  funcional do que a spec de Inteligência de Cruzamentos (`analisar_cruzamento` no Mimba Lab) quer
+  formalizar. Vale decidir se isso converge pra um lugar só (Lab) ou continua duplicado
+  (versão rápida local aqui + versão rica no Lab).
+- O parser da `analise-sangues` (agora v15, testado contra HTML real) pode ser reaproveitado pela
+  Fase C do backfill de genealogia do Lab (animais que a resolução por nome não alcançou), em vez
+  de escrever um scraper novo do zero — ver ADR 0008.
+
 ## 🩸 Análise de Sangues — parser da ABCCC estava sistematicamente errado (2026-08-26)
 Luciano reportou "Principais Pais"/"Avós Maternos" sempre vazios e "undefined" em Prefixos.
 Investigação achou 4 bugs reais na Edge Function `analise-sangues` (agora v15), todos

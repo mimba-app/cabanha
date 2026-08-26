@@ -11158,7 +11158,7 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supa('GET', 'sangues_linhagem', null,
+        const rows = await _supaPub('GET', 'sangues_linhagem', null,
           '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
         const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
         const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
@@ -11773,7 +11773,7 @@ async function _jaConsanguinidade(egua, fonte) {
   if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
 
   try {
-    const rows = await _supa('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
+    const rows = await _supaPub('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
     const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
     const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
     if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
@@ -14323,7 +14323,7 @@ async function iniciarAnaliseSangues(forceAll) {
 
   // Verificar no banco quais SBBs já têm dados salvos
   const sbbs = animaisComSBB.map(a => a.sbb.trim().toUpperCase());
-  const cached = await _supa('GET','sangues_linhagem','',
+  const cached = await _supaPub('GET','sangues_linhagem',null,
     '?animal_sbb=in.('+sbbs.map(s=>`"${s}"`).join(',')+')&select=animal_sbb,total_anc,consultado_em');
 
   const cachedSBBs = (cached||[]).filter(r => r.total_anc > 0).map(r => r.animal_sbb);
