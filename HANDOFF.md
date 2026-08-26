@@ -521,6 +521,34 @@ na tabela `coberturas_arquivadas_legado`). Dois problemas distintos, corrigidos:
   **falta QA de ponta a ponta em `mimba-hml.pages.dev` com login/dado reais** (planejar ciclo do zero,
   negociar cobertura entre duas cabanhas de teste de verdade) **antes de considerar pronto pra produção**.
 
+## 🧠 Agente Mimba — caso de uso 3 (ABCCC) destravado pro lançamento (2026-08-25)
+Founder redefiniu o escopo: o Agente Mimba deve ter, desde o lançamento, "dois cérebros" —
+contexto completo da cabanha + inteligência estatística da raça (Mimba Lab), casando os dois no
+mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha decidido.
+
+- **`docs/adr/0008-especialista-abccc-destravado-sincronizacao-periodica.md`** — decisão + a
+  arquitetura que preserva a invariante da ADR 0005 (nenhuma requisição de cabanha toca o Lab):
+  em vez de proxy ao vivo, um job periódico materializa um resumo estatístico do Lab **pra dentro
+  do banco de produção** (tabela nova `abccc_estatisticas_animal`, ainda a criar); o agente
+  consulta essa tabela como dado normal, cruzando com o SBB dos animais da própria cabanha. O
+  cruzamento hipotético ao vivo (par nunca testado) continua fora de escopo.
+- **`docs/agente-ia-base-conhecimento-abccc.md`** — terminologia de mercado (linha alta/baixa,
+  "vem a ser", irmão inteiro) e regras de narrativa (silêncio na ausência de referência, ponte pra
+  ancestral distante, linhagens em alta como dado derivado, não lista fixa) — pronto pra virar
+  system prompt do agente e insumo pro que a tabela sincronizada precisa carregar.
+- **Achado que destravou a decisão**: cobertura de genealogia no Lab subiu de 836/26.000 SBBs
+  (3%, número que embasava o adiamento da ADR 0007) pra **18.391/26.593 (69%) de pai** e
+  **7.286/26.593 (27%) de mãe**, via backfill por casamento de nome dentro da própria base do Lab
+  (função `public.backfill_genealogia_por_nome()`, projeto `njynlsugmvtuvcczmuld`) — sem nenhuma
+  chamada externa à ABCCC.
+- **Achado de dado ainda sem solução**: "Doma de Ouro" (uma das 3 provas principais definidas pro
+  lançamento) **não existe** na base do Lab hoje — só "Bocal de Ouro" está carregado, e são provas
+  diferentes (confirmado com o Luciano). Fonte de dado pra Doma de Ouro ainda não identificada.
+- ⚠️ **Risco de calendário registrado explicitamente na ADR**: lançamento em 4 dias (29/08), e
+  esse escopo (schema novo em produção, job de sync, RPCs do agente, wiring do chat) é trabalho
+  real, empilhado num V1.5 que ainda não tinha nada pronto. Precisa de validação de viabilidade
+  com o Pedro antes de assumir que cabe no prazo exato.
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado

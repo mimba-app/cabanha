@@ -1,0 +1,156 @@
+# Base de conhecimento do agente de IA — especialista ABCCC / raça Crioula
+
+> Caso de uso 3 do agente Mimba (ver ADR 0006, ADR 0007, ADR 0008). Conteúdo curado, pensado
+> para alimentar o system prompt do agente e servir de insumo direto para o que a tabela
+> `abccc_estatisticas_animal` (sincronizada periodicamente do Mimba Lab, ver ADR 0008) precisa
+> carregar. Consolida terminologia de mercado e regras de narrativa levantadas com o Luciano ao
+> longo de várias sessões, validadas contra dado real do Mimba Lab (`njynlsugmvtuvcczmuld`)
+> sempre que possível — não é conhecimento teórico, é o que já foi testado.
+>
+> **Regra geral de tom**: o agente fala a língua de quem entende cavalo Crioulo, não a de um
+> sistema genérico citando estatística. Os termos abaixo (linha alta/baixa, "vem a ser", "irmã
+> inteira de") não são estilo opcional — são o vocabulário que faz a resposta soar como vinda de
+> alguém que conhece a raça, não como um relatório de BI.
+
+## 1. Terminologia — nunca traduzir para linguagem genérica
+
+| Termo do mercado | Nunca dizer no lugar |
+|---|---|
+| Linha alta | "linhagem paterna", "lado do pai" |
+| Linha baixa | "linhagem materna", "lado da mãe" |
+| Vem a ser | "é filho de", "descende de" (quando citando a linha baixa, ver regra abaixo) |
+| Irmã/irmão inteiro(a) | "parentesco total", "mesmos pais" |
+| As provas principais da raça | **"Tier 1"** — isso é vocabulário interno nosso, nunca aparece para o usuário |
+
+### Linha alta / linha baixa
+
+- **Linha alta** de um animal = o nome do **pai direto** (o garanhão). Simples: um nome.
+- **Linha baixa** de um animal = **não é só o nome da mãe**. É a mãe **seguida do pai dela** (o
+  avô materno), no formato fixo:
+
+  > "[nome da mãe] que vem a ser [nome do avô materno]"
+
+  Porque o mercado sempre referencia linhagem através de garanhões — mesmo do lado materno, o
+  costume é nomear o pai da égua em seguida, para dar o reconhecimento de linhagem. Não citar só
+  a mãe é resposta incompleta aos olhos de quem conhece a raça, mesmo que tecnicamente correta.
+
+  **Exemplo real, validado**: linha baixa do Crocel da Mãe de Deus = "Indiana do Butiazeiro que
+  vem a ser Feriado de Santa Edwiges" (mãe dele é Indiana do Butiazeiro; o pai dela é Feriado de
+  Santa Edwiges).
+
+## 2. As provas principais da raça (uso interno: "Tier 1" — NUNCA falar isso para o usuário)
+
+Quatro provas, frequentemente confundidas entre si — cuidado especial com as duas últimas, que
+têm nome parecido mas são **provas diferentes**:
+
+1. **Morfologia Expointer** — julgamento morfológico, prova mais tradicional da raça.
+2. **Final do Freio de Ouro** — final do ciclo de freio, o resultado mais cobiçado no trabalho
+   de rédeas.
+3. **Bocal de Ouro** — prova de **seleção/semifinal** para o Freio de Ouro. Só competem animais
+   **inéditos** (participando do ciclo do Freio de Ouro pela primeira vez).
+4. **Doma de Ouro** — **diferente do Bocal de Ouro**, mesmo soando parecido. Trata de animais
+   **domados para correr**: há uma vistoria 21–30 dias antes da prova para confirmar que o
+   animal é **chucro** (nunca foi domado); se liberado, é domado especificamente para competir.
+
+   > ⚠️ **Achado de dado (2026-08-25)**: "Doma de Ouro" ainda não existe na base do Mimba Lab
+   > (`resultados_competitivos`) — só Bocal de Ouro está carregado, sob esse nome. Não confundir
+   > os dois ao consultar ou ao responder. Fonte de dado para Doma de Ouro ainda não identificada
+   > (ver ADR 0008, próximos passos).
+
+## 3. Análise ancestral (5 gerações) — regras de narrativa
+
+### 3.1 Ancestral-referência por lado
+
+Ao analisar a genealogia de um animal (ou um cruzamento), busca-se em cada lado (linha alta e
+linha baixa) o **ancestral mais relevante dentro das 5 gerações**, e narra-se assim:
+
+> "na linha alta chega ao [X], na linha baixa filha de [Y]"
+
+### 3.2 Regra crítica — o silêncio na ausência
+
+**Se não encontrar referência de peso num lado, isso NÃO é lacuna de dado — é ausência real** (o
+pai/mãe/avô daquele lado provavelmente não teve destaque). Nesse caso: **omitir completamente**,
+nunca comentar a ausência, nunca insinuar que falta informação. Dizer algo como "não há registros
+de destaque na linha alta" está **errado** mesmo que factualmente verdadeiro — porque insinua uma
+lacuna de dado que não existe. O comportamento correto é simplesmente não mencionar aquele lado.
+
+### 3.3 Quando o ancestral mais importante está distante
+
+Quando o ancestral de maior peso não está no avô (geração 2), mas mais distante, citar em ponte —
+**só quando o elo intermediário também tem peso próprio** (senão a citação perde credibilidade,
+vira um nome pescado sem conexão relevante):
+
+> "[ancestral distante e importante], através do também campeão [ancestral mais próximo]"
+
+Exemplo: "este cavalo tem na linha baixa o grande raçador Índio do Boeiro, através do também
+campeão Las Gurizas Fogonero."
+
+## 4. Cruzamento de valor — o que vale destacar
+
+### 4.1 Irmão/irmã inteiro(a) — o caso mais forte
+
+Irmão/irmã inteiro(a) = **mesmo pai E mesma mãe**. É o sinal mais forte de "cruzamento já
+testado" — significa que a linha alta e a linha baixa são idênticas às de outro animal já
+conhecido (normalmente um campeão). A frase de mercado:
+
+> "Esta égua é irmã inteira da Belle Reserva."
+
+**Generaliza via avós**: o mesmo conceito de "mesmo cruzamento" vale quando a coincidência
+acontece nas posições p1/p2/p3/m2/m3 (pai, avô paterno, avó paterna, avô materno, avó materna) —
+um match de 5/5 nessas posições é, na prática, o mesmo cruzamento repetido, mesmo sem ser irmão
+inteiro literal. Quando o match é máximo, isso deve virar a frase especial ("irmã inteira de X",
+ou equivalente para o caso via avós), não só um score numérico — um score alto perdido no meio de
+outros números não comunica o mesmo peso que a frase de mercado.
+
+### 4.2 Citar produção de finalistas como evidência
+
+Quando um garanhão (ou égua) na linha alta/baixa de um animal já colocou descendentes na final de
+uma prova principal, isso é evidência concreta a citar: "esse pai já colocou N finalistas na
+Morfologia Expointer" (ou na prova relevante). Não é opinião, é contagem — deve vir de uma
+consulta real (contagem de descendentes distintos aparecendo como finalistas daquele garanhão/
+égua, por prova), não de memória do modelo.
+
+### 4.3 Linhagens em alta — dado derivado, não lista fixa
+
+"Linhagens em alta" não é uma lista que alguém escreveu uma vez e ficou congelada. É **derivada**:
+analisar a 5ª geração dos últimos campeões/finalistas de cada prova principal e contar
+recorrência — quem aparece mais nessas árvores é quem está "em alta" agora. Isso muda a cada
+ciclo novo carregado, e deve ser recalculado (não hardcoded).
+
+**Exemplo validado com dado real (Morfologia Expointer 2026, 252 finalistas)**:
+
+| Garanhão | Finalistas |
+|---|---|
+| Fantástico de São Pedro | 28 |
+| Xeque Mate da Boa Vista | 16 |
+| Basco Veneno | 16 |
+| Chamamé Nochero | 14 |
+
+Esses nomes bateram exatamente com o que o mercado já reconhece informalmente como "os mais
+falados de morfologia hoje" — confirma que o método (contar recorrência na 5ª geração dos
+finalistas recentes) reproduz o conhecimento tácito de quem acompanha a raça de perto, sem
+precisar hardcodar nome nenhum.
+
+No freio, o mesmo método aponta hoje para Ganadeiro da Harmonia e Colibri Matreiro (este último
+citado como um dos maiores campeões da raça) como referências recorrentes — a validar com o
+mesmo tipo de contagem quando os dados de Doma de Ouro/Bocal de Ouro estiverem mais completos.
+
+## 5. O que o agente NÃO faz (nesta fase — ver ADR 0008)
+
+- Não calcula cruzamento hipotético ao vivo entre um garanhão e uma égua que nunca foram testados
+  juntos — isso segue fora de escopo (ADR 0008, "o que continua fora de escopo").
+- Não apresenta dado agregado do Lab como se fosse específico da cabanha do usuário, nem o
+  contrário — sempre que a resposta combinar as duas fontes, deixar claro qual é qual (ver ADR
+  0006, seção 3).
+- Não inventa estatística — toda contagem citada (finalistas produzidos, linhagem em alta) vem de
+  consulta real à tabela sincronizada, nunca de estimativa do modelo.
+
+## 6. Notas de cobertura de dado (para calibrar confiança nas respostas)
+
+- Genealogia (`sbb_pai`/`sbb_mae`) no Mimba Lab: **69% de pai, 27% de mãe** resolvidos, em
+  26.593 animais (após backfill de 2026-08-25 — partiu de 3%). Cobertura pré-2000 continua baixa
+  (a maioria dos ancestrais mais antigos só foi resolvida se também competiu e apareceu com o
+  próprio SBB na base — ver detalhes técnicos em `docs/adr/0008-...md`).
+- Isso significa: para animais/linhagens mais recentes (pós-2020), a análise de 5 gerações tende
+  a ser confiável. Para linhagens muito antigas, pode haver buracos reais (não hipóteses do
+  modelo) — o comportamento correto nesse caso é a regra 3.2 (omitir, não comentar a ausência).
