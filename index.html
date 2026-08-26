@@ -783,6 +783,27 @@
   .sangue-bar-label { font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
   .sangue-bar-count { font-size:11px;color:var(--text2);white-space:nowrap; }
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
+
+  /* ── Mapa Genealógico (fan chart radial) — Análise de Sangues, Detalhes por animal ── */
+  @keyframes mapa-arco-entra { from { opacity:0; transform:scale(.82); } to { opacity:1; transform:scale(1); } }
+  @keyframes mapa-texto-entra { from { opacity:0; } to { opacity:1; } }
+  @keyframes mapa-centro-entra { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
+  .mapa-gen-svg { transform-box: fill-box; }
+  .mapa-gen-arco { animation: mapa-arco-entra .5s cubic-bezier(.2,.8,.3,1) backwards; transform-box: fill-box; transform-origin: center; cursor:default; }
+  .mapa-gen-arco:hover { filter: brightness(1.08); }
+  .mapa-gen-texto { animation: mapa-texto-entra .4s ease-out backwards; pointer-events:none; }
+  .mapa-gen-centro { animation: mapa-centro-entra .45s cubic-bezier(.2,.8,.3,1) backwards; transform-box: fill-box; transform-origin: center; }
+  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:8px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
+  .mapa-gen-legenda-item { display:flex; align-items:center; gap:5px; }
+  .mapa-gen-legenda-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:12px; }
+  .mapa-gen-narrativa strong { color:var(--campo-deep); }
+  .mapa-gen-narrativa .linha-baixa strong { color:var(--terracota-ink); }
+  .mapa-gen-irmao-badge { display:inline-flex; align-items:center; gap:4px; background:var(--purple-l); color:var(--purple-d); border-radius:var(--radius-badge); padding:3px 9px; font-size:10.5px; font-weight:700; margin-top:8px; }
+  .mapa-gen-toggle { cursor:pointer; user-select:none; }
+  .mapa-gen-toggle:hover { color:var(--campo-deep); }
+  .mapa-gen-wrap { display:none; padding-top:12px; border-top:0.5px solid var(--border); margin-top:10px; }
+  .mapa-gen-wrap.aberto { display:block; }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -14470,21 +14491,164 @@ function _renderSangues(data) {
     const cacheTag = d.fromCache
       ? '<span class="badge bgr" style="font-size:9px">banco</span>'
       : '<span class="badge bg" style="font-size:9px">novo</span>';
-    const geoInfo = [
-      d.pai         ? '👨 <strong>'+d.pai+'</strong>' : '',
-      d.mae         ? '👩 <strong>'+d.mae+'</strong>' : '',
-      d.avo_paterno ? '<strong style="color:var(--blue-d)">'+d.avo_paterno+'</strong>' : '',
-      d.avo_materno ? '<strong style="color:var(--red-d)">'+d.avo_materno+'</strong>' : '',
-    ].filter(Boolean).join(' · ');
-    const ancs = (d.ancestrais||[]).slice(0,6).map(n=>'<span class="sangue-tag">'+n+'</span>').join('');
-    const mais = qtd>6 ? '<span style="font-size:10px;color:var(--text3)">+'+(qtd-6)+' mais</span>' : '';
-    return '<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
-      +'<span style="font-size:12px;font-weight:700">'+nome+'</span>'+cacheTag
-      +'<span style="font-size:10px;color:var(--text2)">SBB '+sbb+' · '+qtd+' ancestrais</span></div>'
-      +(geoInfo?'<div style="font-size:11px;color:var(--text2);margin-bottom:4px">'+geoInfo+'</div>':'')
-      +'<div>'+ancs+mais+'</div></div>';
+    const temArvore = d.ancestrais_pos && d.ancestrais_pos.length > 0;
+    return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div class="mapa-gen-toggle" style="display:flex;align-items:center;gap:6px" onclick="toggleMapaGenealogico('${sbb}')">
+        <span style="font-size:12px;font-weight:700">${nome}</span>${cacheTag}
+        <span style="font-size:10px;color:var(--text2)">SBB ${sbb} · ${qtd} ancestrais</span>
+        ${temArvore ? `<span style="margin-left:auto;font-size:10px;color:var(--text3)" id="mapa-gen-icon-${sbb}">▸ ver mapa genealógico</span>` : ''}
+      </div>
+      ${temArvore ? `<div class="mapa-gen-wrap" id="mapa-gen-wrap-${sbb}" data-carregado="0"></div>` : ''}
+    </div>`;
   }).join('');
+}
+
+// Reconstrói a árvore genealógica a partir da lista plana em pré-ordem que o parser da
+// analise-sangues produz (ver Edge Function, extrairAncestraraisComGen). A ordem do array
+// preserva a ordem de documento da ABCCC, que segue o padrão [pai-subárvore, nó, mãe-subárvore]
+// recursivamente — dá pra reconstruir a árvore real (quem é filho de quem) sem precisar de mais
+// nenhum dado além do que já está salvo em sangues_linhagem.ancestrais_pos.
+function _reconstruirLinhagem(entradas, geracaoAlvo) {
+  if (!entradas.length) return null;
+  const idxSelf = entradas.findIndex(e => e.gen === geracaoAlvo);
+  if (idxSelf === -1) return null;
+  const self = entradas[idxSelf];
+  const antes = entradas.slice(0, idxSelf);
+  const depois = entradas.slice(idxSelf + 1);
+  return {
+    nome: self.nome, gen: geracaoAlvo,
+    pai: _reconstruirLinhagem(antes, geracaoAlvo + 1),
+    mae: _reconstruirLinhagem(depois, geracaoAlvo + 1),
+  };
+}
+
+function _mapaGenPontoPolar(cx, cy, r, angGraus) {
+  const rad = (angGraus - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+function _mapaGenSetorPath(cx, cy, rInner, rOuter, angStart, angEnd) {
+  const [x1,y1] = _mapaGenPontoPolar(cx,cy,rOuter,angStart);
+  const [x2,y2] = _mapaGenPontoPolar(cx,cy,rOuter,angEnd);
+  const [x3,y3] = _mapaGenPontoPolar(cx,cy,rInner,angEnd);
+  const [x4,y4] = _mapaGenPontoPolar(cx,cy,rInner,angStart);
+  const largeArc = (angEnd-angStart) > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${x3.toFixed(2)} ${y3.toFixed(2)} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`;
+}
+function _mapaGenEscXml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const _MAPA_GEN_RAIOS = { 1:[50,98], 2:[102,150], 3:[154,198] };
+const _MAPA_GEN_FONTES = {1:9, 2:7.5, 3:6.3};
+const _MAPA_GEN_TRUNCA = {1:22, 2:17, 3:13};
+
+// Desenha um lado (linha alta OU linha baixa) recursivamente — cada geração subdivide o setor
+// angular ao meio entre a subárvore do pai (primeira metade) e da mãe (segunda metade), gerando
+// a geometria de "fan chart" clássica de genealogia. Só desenha até 3ª geração no SVG — 4ª/5ª
+// (quando existem) viram lista textual abaixo do mapa, senão o desenho fica ilegível.
+function _mapaGenDesenharRamo(node, cx, cy, angStart, angEnd, corVar, partes, maxGenVisual) {
+  if (!node || node.gen > maxGenVisual) return;
+  const [rInner, rOuter] = _MAPA_GEN_RAIOS[node.gen];
+  const d = _mapaGenSetorPath(cx, cy, rInner, rOuter, angStart, angEnd);
+  const angMeio = (angStart + angEnd) / 2;
+  const opacidade = node.gen === 1 ? 1 : node.gen === 2 ? 0.85 : 0.65;
+  const delay = (node.gen - 1) * 140;
+  partes.push(`<path d="${d}" fill="${corVar}" fill-opacity="${opacidade}" stroke="var(--pergaminho)" stroke-width="2" class="mapa-gen-arco" style="animation-delay:${delay}ms"><title>${_mapaGenEscXml(node.nome)}</title></path>`);
+
+  const rTexto = (rInner + rOuter) / 2;
+  const [tx, ty] = _mapaGenPontoPolar(cx, cy, rTexto, angMeio);
+  let rot = angMeio - 90;
+  if (angMeio > 180) rot += 180;
+  const fonte = _MAPA_GEN_FONTES[node.gen];
+  const maxChar = _MAPA_GEN_TRUNCA[node.gen];
+  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0,maxChar-1) + '…' : node.nome;
+  partes.push(`<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" transform="rotate(${rot.toFixed(1)} ${tx.toFixed(2)} ${ty.toFixed(2)})" text-anchor="middle" dominant-baseline="middle" font-size="${fonte}" font-weight="600" fill="var(--pergaminho)" class="mapa-gen-texto" style="animation-delay:${delay+80}ms">${_mapaGenEscXml(nomeCurto)}</text>`);
+
+  _mapaGenDesenharRamo(node.pai, cx, cy, angStart, angMeio, corVar, partes, maxGenVisual);
+  _mapaGenDesenharRamo(node.mae, cx, cy, angMeio, angEnd, corVar, partes, maxGenVisual);
+}
+
+function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
+  const entradasPat = (ancestraisPos||[]).filter(a => a.lado==='pat' && a.gen && a.nome);
+  const entradasMat = (ancestraisPos||[]).filter(a => a.lado==='mat' && a.gen && a.nome);
+  const arvorePat = _reconstruirLinhagem(entradasPat, 1);
+  const arvoreMat = _reconstruirLinhagem(entradasMat, 1);
+
+  const cx = 280, cy = 280;
+  const partes = [];
+  _mapaGenDesenharRamo(arvorePat, cx, cy, 0, 180, 'var(--campo)', partes, 3);
+  _mapaGenDesenharRamo(arvoreMat, cx, cy, 180, 360, 'var(--terracota)', partes, 3);
+
+  const nomeCentro = nomeAnimal.length>18 ? nomeAnimal.slice(0,16)+'…' : nomeAnimal;
+  const centro = `<circle cx="${cx}" cy="${cy}" r="46" fill="var(--pergaminho2)" stroke="var(--text)" stroke-width="1.5" class="mapa-gen-centro"/>
+    <text x="${cx}" y="${cy-3}" text-anchor="middle" font-weight="700" font-size="8" fill="var(--text)">${_mapaGenEscXml(nomeCentro)}</text>
+    <text x="${cx}" y="${cy+11}" text-anchor="middle" font-size="6.5" fill="var(--text3)" letter-spacing="0.5">ANIMAL</text>`;
+
+  // 4ª/5ª geração (quando existem) — lista textual compacta, fora do desenho radial
+  const alemDo3 = [...entradasPat, ...entradasMat].filter(a => a.gen >= 4).sort((a,b)=>a.gen-b.gen);
+  const listaAlem = alemDo3.length ? `<div style="margin-top:10px;font-size:10.5px;color:var(--text2);text-align:center">
+      <strong>${alemDo3.length} ancestrais além da 3ª geração:</strong> ${alemDo3.map(a=>a.nome).join(', ')}
+    </div>` : '';
+
+  return `<svg viewBox="0 0 560 560" class="mapa-gen-svg" style="width:100%;max-width:420px;display:block;margin:0 auto">
+    <text x="140" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="var(--campo-deep)" letter-spacing="0.5">LINHA ALTA</text>
+    <text x="420" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="var(--terracota-ink)" letter-spacing="0.5">LINHA BAIXA</text>
+    ${partes.join('\n')}
+    ${centro}
+  </svg>${listaAlem}
+  <div class="mapa-gen-legenda">
+    <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--campo)"></span>Linha alta (via pai)</span>
+    <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--terracota)"></span>Linha baixa (via mãe)</span>
+  </div>`;
+}
+
+// Narrativa em linguagem de mercado: "linha alta" = pai direto; "linha baixa" = mãe seguida do
+// pai dela ("X que vem a ser Y") — nunca só o nome da mãe sozinho, é assim que o mercado Crioulo
+// referencia a linhagem materna. Detecta também irmão/irmã inteiro(a) dentro da própria manada
+// (mesmo pai E mesma mãe de outro animal já analisado) — sinal de maior peso que existe.
+function _gerarNarrativaLinhagem(sbb, d, todosResultados) {
+  const linhas = [];
+  if (d.pai) {
+    linhas.push(`<div><strong>Linha alta:</strong> ${_mapaGenEscXml(d.pai)}</div>`);
+  }
+  if (d.mae) {
+    const linhaBaixa = d.avo_materno
+      ? `${_mapaGenEscXml(d.mae)} que vem a ser ${_mapaGenEscXml(d.avo_materno)}`
+      : _mapaGenEscXml(d.mae);
+    linhas.push(`<div class="linha-baixa"><strong>Linha baixa:</strong> ${linhaBaixa}</div>`);
+  }
+
+  let irmaoBadge = '';
+  if (d.pai && d.mae && todosResultados) {
+    const irmao = Object.entries(todosResultados).find(([outroSbb, outro]) =>
+      outroSbb !== sbb && outro.pai === d.pai && outro.mae === d.mae
+    );
+    if (irmao) {
+      const nomeIrmao = animais.find(a=>a.sbb===irmao[0])?.nome || irmao[0];
+      const sexoIrmao = (animais.find(a=>a.sbb===irmao[0])?.sexo||'').toLowerCase().includes('fêmea') ? 'irmã inteira' : 'irmão inteiro';
+      irmaoBadge = `<div class="mapa-gen-irmao-badge">🧬 ${sexoIrmao} de ${_mapaGenEscXml(nomeIrmao)} — mesmo pai e mesma mãe</div>`;
+    }
+  }
+
+  if (!linhas.length) return '<div class="mapa-gen-narrativa" style="color:var(--text3)">Sem dados de linha alta/baixa disponíveis pra este animal.</div>';
+  return `<div class="mapa-gen-narrativa">${linhas.join('')}${irmaoBadge}</div>`;
+}
+
+function toggleMapaGenealogico(sbb) {
+  const wrap = document.getElementById('mapa-gen-wrap-'+sbb);
+  const icon = document.getElementById('mapa-gen-icon-'+sbb);
+  if (!wrap) return;
+  const abrindo = !wrap.classList.contains('aberto');
+  wrap.classList.toggle('aberto');
+  if (icon) icon.textContent = abrindo ? '▾ recolher mapa' : '▸ ver mapa genealógico';
+  if (abrindo && wrap.dataset.carregado !== '1') {
+    const d = (_cacheSanguesSessao?.resultados||{})[sbb];
+    const anim = animais.find(a=>a.sbb===sbb);
+    const nome = anim?.nome || sbb;
+    if (d) {
+      wrap.innerHTML = _gerarMapaGenealogicoSVG(nome, d.ancestrais_pos)
+        + _gerarNarrativaLinhagem(sbb, d, _cacheSanguesSessao?.resultados);
+      wrap.dataset.carregado = '1';
+    }
+  }
 }
 
 function toggleSanguesDetalhe() {
