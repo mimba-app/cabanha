@@ -1730,9 +1730,9 @@
     <div><div class="page-title">Saúde & Vacinas</div><div class="page-sub">Controle sanitário do plantel</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="abrirModalVac()">+ Vacinar</button>
-      <button class="btn" onclick="openModal('modal-vac-lote');renderLoteAnimais('vac')">+ Vacinar em lote</button>
+      <button class="btn" onclick="openModal('modal-vac-lote');renderLoteAnimais('vac');document.getElementById('vaclote-vet').value=_assinaturaVet()">+ Vacinar em lote</button>
       <button class="btn" onclick="abrirModalExame()">+ Exame</button>
-      <button class="btn" onclick="openModal('modal-exam-lote');renderLoteAnimais('exam')">+ Exame em lote</button>
+      <button class="btn" onclick="openModal('modal-exam-lote');renderLoteAnimais('exam');document.getElementById('examlote-vet').value=_assinaturaVet()">+ Exame em lote</button>
       <button class="btn" onclick="abrirModalTratamento()">+ Tratamento</button>
     </div>
   </div>
@@ -2760,6 +2760,11 @@
           <div class="form-group">
             <label>Telefone pessoal</label>
             <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999">
+          </div>
+          <div class="form-group" id="perfil-crmv-wrap" style="display:none;grid-column:1/-1">
+            <label>CRMV</label>
+            <input type="text" id="perfil-crmv" placeholder="Ex: CRMV-RS 12563">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Preenche automático o campo de veterinário ao registrar vacina, exame e AIE.</div>
           </div>
           <div class="form-group" style="grid-column:1/-1">
             <label>E-mail de login</label>
@@ -4638,6 +4643,14 @@ function _populaAnimalSel(wrapId, hiddenId, onlyAtivos) {
   if(lista.length) document.getElementById(hiddenId).value = animais.indexOf(lista[0]);
 }
 
+// Autopreenche "Veterinário" com nome + CRMV de quem está logado, só quando o
+// perfil da própria conta é veterinário — pra admin/cabanheiro o campo continua
+// em branco, porque nesse caso quem está cadastrando não é quem assinou.
+function _assinaturaVet() {
+  if (usuarioAtual?.perfil !== 'vet') return '';
+  return [usuarioAtual.nome, usuarioAtual.crmv].filter(Boolean).join(' · ');
+}
+
 // ─── VACINAÇÃO — FLUXO UNIFICADO (inclui AIE) ────────────────────────────────
 let _rvAnexos = []; // [{nome,tipo,tamanho,b64}] múltiplos anexos
 
@@ -4657,6 +4670,7 @@ function abrirModalVac(preIdx) {
   ['rv-prox','rv-vacina','rv-vet','rv-dose','rv-obs','rv-aie-num','rv-aie-lab'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  document.getElementById('rv-vet').value = _assinaturaVet();
   const selAie = document.getElementById('rv-aie-resultado');
   if(selAie) selAie.value='Negativo';
   document.getElementById('rv-aie-extra').style.display='none';
@@ -4685,6 +4699,7 @@ function abrirModalExame(preIdx) {
   ['re-validade','re-vet','re-obs','re-num-laudo'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  document.getElementById('re-vet').value = _assinaturaVet();
   document.getElementById('re-resultado').value = 'Negativo';
   const motivo = document.getElementById('re-motivo');
   if(motivo) motivo.value = 'Transporte Nacional';
@@ -6067,10 +6082,10 @@ function _aieResetForm() {
   document.getElementById('aie-prop-end').value = 'Av Getulio Vargas 1000, centro, 98170-000';
   document.getElementById('aie-estabelecimento').value = (TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '';
   document.getElementById('aie-municipio').value = '';
-  document.getElementById('aie-vet-nome').value = 'Felipe Farias Bender';
-  document.getElementById('aie-vet-crmv').value = 'CRMV-RS 12563';
-  document.getElementById('aie-vet-end').value = 'Euclides da Cunha 711';
-  document.getElementById('aie-vet-tel').value = '5599001101';
+  document.getElementById('aie-vet-nome').value = usuarioAtual?.perfil === 'vet' ? (usuarioAtual.nome || '') : '';
+  document.getElementById('aie-vet-crmv').value = usuarioAtual?.perfil === 'vet' ? (usuarioAtual.crmv || '') : '';
+  document.getElementById('aie-vet-end').value = '';
+  document.getElementById('aie-vet-tel').value = '';
   document.getElementById('aie-alerta-positivo').style.display = 'none';
   // Data de coleta = hoje
   document.getElementById('aie-data-coleta').value = HOJE.toISOString().slice(0,10);
@@ -13564,13 +13579,13 @@ async function _chamarConvidarUsuario(payload) {
 
 // Recarrega a lista de usuários da cabanha ativa a partir do banco (após convite/edição).
 async function _recarregarUsuarios() {
-  const rows = await _supa('GET','usuarios','','?select=id,login,nome,perfil,ativo,criado_em,auth_user_id,especialidade_reproducao&order=nome');
+  const rows = await _supa('GET','usuarios','','?select=id,login,nome,perfil,ativo,criado_em,auth_user_id,especialidade_reproducao,crmv&order=nome');
   if(!rows) return;
   USUARIOS.length = 0;
   rows.forEach(u => USUARIOS.push({
     id: u.id, db_id: u.id, login: u.login, authUserId: u.auth_user_id, nome: u.nome, perfil: u.perfil,
     label: PERFIS_INFO[u.perfil]?.label || u.perfil, ativo: u.ativo, criadoEm: u.criado_em?.slice(0,10),
-    especialidade_reproducao: !!u.especialidade_reproducao
+    especialidade_reproducao: !!u.especialidade_reproducao, crmv: u.crmv || ''
   }));
   _saveUsuarios();
   renderUsuarios();
@@ -13749,6 +13764,8 @@ async function carregarMeuPerfil() {
   document.getElementById('perfil-email').value = usuarioAtual.email || '';
   document.getElementById('perfil-cargo').value = usuarioAtual.cargo || '';
   document.getElementById('perfil-telefone').value = usuarioAtual.telefone_pessoal || '';
+  document.getElementById('perfil-crmv-wrap').style.display = usuarioAtual.perfil === 'vet' ? '' : 'none';
+  document.getElementById('perfil-crmv').value = usuarioAtual.crmv || '';
   _setNotifEmail(usuarioAtual.notif_email !== false);
   document.getElementById('perfil-idioma').value = usuarioAtual.idioma || 'pt-BR';
   document.getElementById('perfil-fuso').value = usuarioAtual.fuso_horario || 'America/Sao_Paulo';
@@ -13786,6 +13803,17 @@ async function salvarMeuPerfil() {
 
   const r = await _supaPub('PATCH', 'usuarios_master', patch, '?id=eq.' + usuarioAtual.id);
   if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar perfil', 'amber'); return; }
+
+  // CRMV mora na tabela `usuarios` da própria cabanha (é o registro que já é
+  // carregado de verdade em usuarioAtual no login), não em usuarios_master —
+  // por isso é um PATCH separado, com o helper de banco da cabanha ativa.
+  if (usuarioAtual.perfil === 'vet' && usuarioAtual.db_id) {
+    const crmv = document.getElementById('perfil-crmv').value.trim() || null;
+    await _supa('PATCH', 'usuarios', { crmv }, '?id=eq.' + usuarioAtual.db_id);
+    patch.crmv = crmv;
+    const meIdx = USUARIOS.findIndex(u => u.id === usuarioAtual.db_id);
+    if (meIdx >= 0) USUARIOS[meIdx].crmv = crmv || '';
+  }
 
   Object.assign(usuarioAtual, patch);
   const sbUser = document.getElementById('sidebar-username');
@@ -15439,7 +15467,7 @@ async function _sincronizarAoLogin(opts) {
           nome: u.nome, perfil: u.perfil,
           label: PERFIS_INFO[u.perfil]?.label || u.perfil,
           ativo: u.ativo, criadoEm: u.criado_em?.slice(0,10),
-          especialidade_reproducao: !!u.especialidade_reproducao
+          especialidade_reproducao: !!u.especialidade_reproducao, crmv: u.crmv || ''
         }));
         renderUsuarios();
       }
@@ -16147,7 +16175,7 @@ async function _entrarCabanha(cab) {
   _limparEstadoLocal();   // nunca renderizar a cabanha nova com dado da anterior
   let u = null;
   try {
-    const rows = await _supa('GET','usuarios','',`?auth_user_id=eq.${AUTH_USER?.id}&select=id,nome,perfil,ativo&limit=1`);
+    const rows = await _supa('GET','usuarios','',`?auth_user_id=eq.${AUTH_USER?.id}&select=id,nome,perfil,ativo,crmv&limit=1`);
     u = rows && rows[0];
   } catch(e){}
   const perfil = cab.perfil || u?.perfil || 'cab';
@@ -16155,7 +16183,7 @@ async function _entrarCabanha(cab) {
     id: u?.id, db_id: u?.id, login: AUTH_USER?.email,
     nome: u?.nome || AUTH_USER?.email, perfil,
     label: PERFIS_INFO[perfil]?.label || perfil,
-    ativo: u?.ativo !== false
+    ativo: u?.ativo !== false, crmv: u?.crmv || ''
   };
   _entrarApp();
 }
