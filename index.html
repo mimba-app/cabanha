@@ -13789,9 +13789,9 @@ function _onFotoPerfilFileSelect(ev) {
 }
 
 async function salvarMeuPerfil() {
-  if (!usuarioAtual?.id) return;
+  if (!usuarioAtual?.id || !AUTH_USER?.id) return;
   const patch = {
-    nome: document.getElementById('perfil-nome').value.trim() || null,
+    auth_user_id: AUTH_USER.id,
     cargo: document.getElementById('perfil-cargo').value || null,
     telefone_pessoal: document.getElementById('perfil-telefone').value.trim() || null,
     notif_email: document.getElementById('perfil-notif-email').checked,
@@ -13800,20 +13800,27 @@ async function salvarMeuPerfil() {
   };
   if (window._perfilNovaFoto !== undefined) patch.foto_url = window._perfilNovaFoto;
 
-  const r = await _supaPub('PATCH', 'usuarios_master', patch, '?id=eq.' + usuarioAtual.id);
+  // Upsert (POST + Prefer: resolution=merge-duplicates, já no helper) por
+  // auth_user_id — preferencias_usuario é 1:1 com a identidade global, não
+  // com a cabanha ativa. Ver ADR 0008: PATCH por id não funciona aqui porque
+  // não existe uma linha garantida até o primeiro save.
+  const r = await _supaPub('POST', 'preferencias_usuario', patch);
   if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar perfil', 'amber'); return; }
 
-  // CRMV mora na tabela `usuarios` da própria cabanha (é o registro que já é
-  // carregado de verdade em usuarioAtual no login), não em usuarios_master —
-  // por isso é um PATCH separado, com o helper de banco da cabanha ativa.
-  if (usuarioAtual.perfil === 'vet' && usuarioAtual.db_id) {
-    const crmv = document.getElementById('perfil-crmv').value.trim() || null;
-    await _supa('PATCH', 'usuarios', { crmv }, '?id=eq.' + usuarioAtual.db_id);
-    patch.crmv = crmv;
+  const nome = document.getElementById('perfil-nome').value.trim() || null;
+  // CRMV e nome moram na tabela `usuarios` da própria cabanha (é o registro
+  // que já é carregado de verdade em usuarioAtual no login), não em
+  // preferencias_usuario — por isso é um PATCH separado, com o helper de
+  // banco da cabanha ativa.
+  const usuariosPatch = { nome };
+  if (usuarioAtual.perfil === 'vet') usuariosPatch.crmv = document.getElementById('perfil-crmv').value.trim() || null;
+  if (usuarioAtual.db_id) {
+    await _supa('PATCH', 'usuarios', usuariosPatch, '?id=eq.' + usuarioAtual.db_id);
     const meIdx = USUARIOS.findIndex(u => u.id === usuarioAtual.db_id);
-    if (meIdx >= 0) USUARIOS[meIdx].crmv = crmv || '';
+    if (meIdx >= 0) Object.assign(USUARIOS[meIdx], { nome: nome || USUARIOS[meIdx].nome, crmv: usuariosPatch.crmv ?? USUARIOS[meIdx].crmv });
   }
-
+  Object.assign(patch, usuariosPatch);
+  delete patch.auth_user_id;
   Object.assign(usuarioAtual, patch);
   const sbUser = document.getElementById('sidebar-username');
   if (sbUser && patch.nome) sbUser.textContent = patch.nome;
@@ -16177,12 +16184,25 @@ async function _entrarCabanha(cab) {
     const rows = await _supa('GET','usuarios','',`?auth_user_id=eq.${AUTH_USER?.id}&select=id,nome,perfil,ativo,crmv&limit=1`);
     u = rows && rows[0];
   } catch(e){}
+  // Preferências pessoais (cargo, telefone, foto, notif, idioma, fuso) são por
+  // identidade global (auth.users), não por cabanha — ver ADR 0008. 1 linha por
+  // pessoa em public.preferencias_usuario, recarregada a cada entrada de
+  // cabanha (troca de TENANT_SCHEMA não muda o resultado, mas mantém o dado
+  // fresco sem precisar de um evento de sessão à parte).
+  let pref = null;
+  try {
+    const prows = await _supaPub('GET', 'preferencias_usuario', null, `?auth_user_id=eq.${AUTH_USER?.id}&limit=1`);
+    pref = prows && prows[0];
+  } catch(e){}
   const perfil = cab.perfil || u?.perfil || 'cab';
   usuarioAtual = {
     id: u?.id, db_id: u?.id, login: AUTH_USER?.email,
     nome: u?.nome || AUTH_USER?.email, perfil,
     label: PERFIS_INFO[perfil]?.label || perfil,
-    ativo: u?.ativo !== false, crmv: u?.crmv || ''
+    ativo: u?.ativo !== false, crmv: u?.crmv || '',
+    cargo: pref?.cargo || '', telefone_pessoal: pref?.telefone_pessoal || '',
+    foto_url: pref?.foto_url || '', notif_email: pref?.notif_email !== false,
+    idioma: pref?.idioma || 'pt-BR', fuso_horario: pref?.fuso_horario || 'America/Sao_Paulo'
   };
   _entrarApp();
 }

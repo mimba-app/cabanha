@@ -20,5 +20,6 @@ Um ADR é curto (~1 página). Escreva quando a decisão for difícil de reverter
 - [0005](0005-empacotamento-mobile-em-3-fases.md) — Empacotamento mobile em 3 fases (Capacitor primeiro, nativo depois)
 - [0006](0006-agente-de-ia-interno-arquitetura.md) — Agente de IA interno: orquestração, ferramentas seguras e custo
 - [0007](0007-agente-ia-especialista-abccc-adiado.md) — Agente de IA, caso de uso 3 (especialista ABCCC): adiar, não decidir acoplamento agora
+- [0008](0008-perfil-pessoal-do-usuario-em-tabela-global.md) — Perfil pessoal do usuário: tabela global em `public`, não `usuarios_master`
 
 _Próximo ADR provável: como quebrar o `index.html` (mono-arquivo) preservando o deploy leve._
