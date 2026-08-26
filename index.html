@@ -784,20 +784,33 @@
   .sangue-bar-count { font-size:11px;color:var(--text2);white-space:nowrap; }
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
 
-  /* ── Mapa Genealógico (estrutura ABCCC — colunas por geração, chaves de conexão) —
-     Análise de Sangues, Detalhes por animal ── */
-  @keyframes mapa-conecta { to { stroke-dashoffset: 0; } }
-  @keyframes mapa-surge { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
-  @keyframes mapa-surge-central { to { opacity:1; } }
-  .mapa-gen-conector { fill:none; stroke-width:1.6; stroke-dasharray:var(--mgc-len); stroke-dashoffset:var(--mgc-len); animation:mapa-conecta .55s cubic-bezier(.4,0,.2,1) forwards; }
-  .mapa-gen-caixa { opacity:0; animation:mapa-surge .4s cubic-bezier(.2,.8,.3,1) forwards; }
-  .mapa-gen-caixa-central { opacity:0; animation:mapa-surge-central .4s ease forwards; }
-  .mapa-gen-colhead { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; fill:var(--text3); }
-  .mapa-gen-rotulo { font-family:var(--font); font-size:10.5px; font-weight:600; }
-  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:10px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
+  /* ── Mapa Genealógico (estrutura ABCCC — colunas por geração) — Análise de Sangues,
+     Detalhes por animal. Reaproveita literalmente o tratamento visual da Jornada de
+     Acasalamento, Direção A "O Dossiê Selado" (.ja-lado / .ja-bloco / .ja-selo) — cartões de
+     pergaminho com borda/sombra reais, selo carimbado no centro — em vez de formas SVG
+     preenchidas com cor sólida, que fugiam do design system (feedback do Luciano, 2026-08-26). */
+  @keyframes mapa-gen-sobe { from { opacity:0; transform:translateY(9px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes mapa-gen-carimbo { 0% { transform:scale(2.2) rotate(-16deg); opacity:0; } 60% { transform:scale(.94) rotate(-5deg); opacity:1; } 100% { transform:scale(1) rotate(-4deg); opacity:1; } }
+  @keyframes mapa-gen-traca { to { stroke-dashoffset:0; } }
+  .mapa-gen-container { position:relative; margin:0 auto; }
+  .mapa-gen-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .mapa-gen-linhas { position:absolute; top:0; left:0; pointer-events:none; }
+  .mapa-gen-conector { fill:none; stroke-width:1.4; opacity:.6; stroke-dasharray:var(--mgc-len); stroke-dashoffset:var(--mgc-len); animation:mapa-gen-traca .6s cubic-bezier(.4,0,.2,1) forwards; }
+  .mapa-gen-colhead { position:absolute; font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); transform:translateX(-50%); }
+  .mapa-gen-card { position:absolute; background:var(--pergaminho); border-radius:var(--radius); padding:8px 12px; border:var(--card-border); box-shadow:var(--sh-sm); opacity:0; animation:mapa-gen-sobe .45s cubic-bezier(.22,1,.36,1) forwards; transform:translate(-50%,-50%); }
+  .mapa-gen-card.gen1 { border-radius:var(--radius-lg); padding:12px 16px; box-shadow:var(--sh-md); }
+  .mapa-gen-card.gen1.mg-alta { background:linear-gradient(100deg,var(--campo-soft) 0%, var(--pergaminho) 62%); }
+  .mapa-gen-card.gen1.mg-baixa { background:linear-gradient(100deg,var(--terracota-soft) 0%, var(--pergaminho) 62%); }
+  .mapa-gen-nome { display:flex; align-items:center; font-family:var(--font); font-weight:600; font-size:11.5px; line-height:1.25; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mapa-gen-card.gen1 .mapa-gen-nome { font-family:var(--serif); font-weight:700; font-size:14px; }
+  .mapa-gen-dot { width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:5px; flex-shrink:0; }
+  .mapa-gen-selo { position:absolute; width:68px; height:68px; border-radius:50%; background:var(--pergaminho2); border:var(--card-border); box-shadow:var(--sh-md); display:flex; flex-direction:column; align-items:center; justify-content:center; transform:translate(-50%,-50%) rotate(-4deg); animation:mapa-gen-carimbo .6s cubic-bezier(.2,1.5,.4,1) both; }
+  .mapa-gen-selo-aro { position:absolute; inset:6px; border-radius:50%; border:1.3px dashed var(--text3); opacity:.5; }
+  .mapa-gen-selo-txt { font-family:var(--serif); font-weight:700; font-size:9px; text-align:center; padding:0 7px; line-height:1.18; position:relative; color:var(--text); }
+  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:14px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
   .mapa-gen-legenda-item { display:flex; align-items:center; gap:5px; }
   .mapa-gen-legenda-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
-  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:12px; opacity:0; animation:mapa-surge-central .5s ease forwards; animation-delay:1.6s; }
+  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:14px; opacity:0; animation:mapa-gen-sobe .5s ease forwards; animation-delay:1.5s; }
   .mapa-gen-narrativa strong { color:var(--campo-deep); }
   .mapa-gen-narrativa .linha-baixa strong { color:var(--terracota-ink); }
   .mapa-gen-irmao-badge { display:inline-flex; align-items:center; gap:4px; background:var(--purple-l); color:var(--purple-d); border-radius:var(--radius-badge); padding:3px 9px; font-size:10.5px; font-weight:700; margin-top:8px; }
@@ -14556,26 +14569,28 @@ function _mapaGenElbow(x1, y1, x2, y2) {
   return `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
 }
 
-// Desenha um lado (linha alta OU linha baixa) recursivamente, coluna por geração, com chaves
-// de conexão — mesma estrutura que o site da ABCCC usa pra 5ª geração (pai/mãe/avós em colunas
-// sucessivas), só que redesenhada com a tipografia e cor da Mimba em vez da tabela HTML antiga.
-function _mapaGenDesenhar(node, corVar, colX, filhoX, filhoY, conectores, caixas) {
+// Desenha um lado (linha alta OU linha baixa) recursivamente, coluna por geração. As linhas de
+// conexão continuam SVG (mais barato de curvar), mas cada ancestral agora é um cartão HTML de
+// verdade — pergaminho, borda e sombra reais (var(--card-border)/var(--sh-sm)), reaproveitando
+// literalmente o tratamento visual de .ja-lado/.ja-bloco (Jornada de Acasalamento, Direção A —
+// "O Dossiê Selado") em vez de formas SVG preenchidas com cor sólida.
+function _mapaGenDesenhar(node, corVar, ladoClasse, colX, filhoX, filhoY, conectores, cards) {
   if (!node || node.gen > _MAPA_GEN_MAXGEN) return;
   const x = colX[node.gen];
   const delay = (node.gen === 1 ? 0.15 : node.gen === 2 ? 0.55 : 0.95).toFixed(2);
   conectores.push(`<path class="mapa-gen-conector" d="${_mapaGenElbow(x, node.yAbs, filhoX, filhoY)}" stroke="${corVar}" style="animation-delay:${delay}s"></path>`);
 
-  const w = node.gen === 1 ? 200 : node.gen === 2 ? 178 : 160;
-  const maxChar = node.gen === 1 ? 24 : node.gen === 2 ? 21 : 18;
-  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0, maxChar-1) + '…' : node.nome;
   const ehGen1 = node.gen === 1;
-  caixas.push(`<g class="mapa-gen-caixa" style="animation-delay:${delay}s">
-    <rect x="${x-w/2}" y="${node.yAbs-11}" width="${w}" height="22" rx="5" fill="${ehGen1?corVar:'var(--bg3)'}" stroke="${corVar}" stroke-width="${ehGen1?0:1}"></rect>
-    <text class="mapa-gen-rotulo" x="${x}" y="${node.yAbs+4}" text-anchor="middle" fill="${ehGen1?'var(--pergaminho)':'var(--text)'}"><title>${_mapaGenEscXml(node.nome)}</title>${_mapaGenEscXml(nomeCurto)}</text>
-  </g>`);
+  const maxChar = node.gen === 1 ? 26 : node.gen === 2 ? 22 : 19;
+  const maxW = node.gen === 1 ? 190 : node.gen === 2 ? 168 : 152;
+  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0, maxChar-1) + '…' : node.nome;
+  const dot = ehGen1 ? '' : `<span class="mapa-gen-dot" style="background:${corVar}"></span>`;
+  cards.push(`<div class="mapa-gen-card gen${node.gen}${ehGen1?' '+ladoClasse:''}" style="left:${x}px;top:${node.yAbs}px;max-width:${maxW}px;animation-delay:${delay}s" title="${_mapaGenEscXml(node.nome)}">
+    <span class="mapa-gen-nome">${dot}${_mapaGenEscXml(nomeCurto)}</span>
+  </div>`);
 
-  _mapaGenDesenhar(node.pai, corVar, colX, x, node.yAbs, conectores, caixas);
-  _mapaGenDesenhar(node.mae, corVar, colX, x, node.yAbs, conectores, caixas);
+  _mapaGenDesenhar(node.pai, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards);
+  _mapaGenDesenhar(node.mae, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards);
 }
 
 function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
@@ -14589,40 +14604,42 @@ function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
   c = {v:0}; _mapaGenAssignY(arvoreMat, c);
   const alturaMat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
 
-  const topoPat = 34, topoMat = topoPat + alturaPat + 56;
+  const topoPat = 40, topoMat = topoPat + alturaPat + 60;
   _mapaGenAplicarOffset(arvorePat, topoPat);
   _mapaGenAplicarOffset(arvoreMat, topoMat);
 
-  const colX = {1:210, 2:400, 3:580};
-  const animalX = 60, animalY = (topoPat + alturaPat + topoMat) / 2;
-  const alturaTotal = topoMat + alturaMat + 40;
+  const colX = {1:200, 2:380, 3:560};
+  const animalX = 56, animalY = (topoPat + alturaPat + topoMat) / 2;
+  const alturaTotal = topoMat + alturaMat + 30;
+  const larguraTotal = 660;
 
-  const partes = { conectores: [], caixas: [] };
-  _mapaGenDesenhar(arvorePat, 'var(--campo)', colX, animalX+24, animalY, partes.conectores, partes.caixas);
-  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', colX, animalX+24, animalY, partes.conectores, partes.caixas);
+  const conectores = [], cards = [];
+  _mapaGenDesenhar(arvorePat, 'var(--campo)', 'mg-alta', colX, animalX, animalY, conectores, cards);
+  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', 'mg-baixa', colX, animalX, animalY, conectores, cards);
 
-  const nomeCentro = nomeAnimal.length>16 ? nomeAnimal.slice(0,15)+'…' : nomeAnimal;
-  const centro = `<g class="mapa-gen-caixa-central" style="animation-delay:0s">
-    <circle cx="${animalX}" cy="${animalY}" r="28" fill="var(--bg3)" stroke="var(--text)" stroke-width="1.5"></circle>
-    <text x="${animalX}" y="${animalY+3}" text-anchor="middle" font-family="var(--font)" font-size="7.5" font-weight="700" fill="var(--text)">${_mapaGenEscXml(nomeCentro)}</text>
-  </g>`;
+  const nomeCentro = nomeAnimal.length>14 ? nomeAnimal.slice(0,13)+'…' : nomeAnimal;
+  const selo = `<div class="mapa-gen-selo" style="left:${animalX}px;top:${animalY}px" title="${_mapaGenEscXml(nomeAnimal)}">
+    <div class="mapa-gen-selo-aro"></div>
+    <span class="mapa-gen-selo-txt">${_mapaGenEscXml(nomeCentro)}</span>
+  </div>`;
 
   const cabecalhos = [1,2,3].map(g =>
-    `<text class="mapa-gen-colhead" x="${colX[g]}" y="16" text-anchor="middle">${g}ª geração</text>`
+    `<div class="mapa-gen-colhead" style="left:${colX[g]}px;top:12px">${g}ª geração</div>`
   ).join('');
 
   const alemDo3 = [...entradasPat, ...entradasMat].filter(a => a.gen >= _MAPA_GEN_MAXGEN+1).sort((a,b)=>a.gen-b.gen);
-  const listaAlem = alemDo3.length ? `<div style="margin-top:8px;font-size:10.5px;color:var(--text2);text-align:center">
+  const listaAlem = alemDo3.length ? `<div style="margin-top:10px;font-size:10.5px;color:var(--text2);text-align:center">
       <strong>${alemDo3.length} ancestrais além da 3ª geração:</strong> ${alemDo3.map(a=>_mapaGenEscXml(a.nome)).join(', ')}
     </div>` : '';
 
-  const svgId = 'mapasvg-' + Math.random().toString(36).slice(2,8);
-  return `<svg viewBox="0 0 660 ${alturaTotal.toFixed(0)}" id="${svgId}" style="width:100%;display:block">
+  return `<div class="mapa-gen-scroll"><div class="mapa-gen-container" style="width:${larguraTotal}px;height:${alturaTotal.toFixed(0)}px;min-width:${larguraTotal}px">
+    <svg class="mapa-gen-linhas" width="${larguraTotal}" height="${alturaTotal.toFixed(0)}" viewBox="0 0 ${larguraTotal} ${alturaTotal.toFixed(0)}">
+      ${conectores.join('\n')}
+    </svg>
     ${cabecalhos}
-    ${partes.conectores.join('\n')}
-    ${partes.caixas.join('\n')}
-    ${centro}
-  </svg>${listaAlem}
+    ${cards.join('\n')}
+    ${selo}
+  </div></div>${listaAlem}
   <div class="mapa-gen-legenda">
     <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--campo)"></span>Linha alta (via pai)</span>
     <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--terracota)"></span>Linha baixa (via mãe)</span>
