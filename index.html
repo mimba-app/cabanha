@@ -2527,33 +2527,6 @@
       </div>
       <div id="sangues-detalhe" style="display:none;margin-top:8px"></div>
     </div>
-  </div><div id="sangues-resultado" style="display:none">
-    <div id="sangues-meta" style="font-size:11px;color:var(--text2);margin-bottom:1rem"></div>
-    <div class="two-col" style="gap:1.5rem">
-      <div>
-        <div class="card">
-          <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Afixos / Cabanhas mais presentes</div>
-          <div id="sangues-afixos"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📛 Prefixos / Marcas mais frequentes</div>
-          <div id="sangues-prefixos"></div>
-        </div>
-      </div>
-      <div>
-        <div class="card">
-          <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 20l1-5 2-6c.5-1.5 2-3 4-3h2c2 0 3 1.5 3.5 3l1.5 4"/><path d="M17 9c1 0 2-1 2-2s-1-2-2-1-1 2 0 3z"/><path d="M9 6V3"/><path d="M6 20l1-3"/><path d="M13 20l1-3"/><circle cx="16" cy="7" r="0.5" fill="currentColor"/></svg> Ancestrais mais repetidos</div>
-          <div id="sangues-ancestrais"></div>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1rem">
-      <div class="card-title" style="cursor:pointer" onclick="toggleSanguesDetalhe()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Detalhes por animal
-        <span id="sangues-detalhe-icon" style="float:right;font-size:11px;color:var(--text2)">▼ expandir</span>
-      </div>
-      <div id="sangues-detalhe" style="display:none;margin-top:8px"></div>
-    </div>
   </div>
 </div>
 
@@ -14452,9 +14425,9 @@ function _renderSangues(data) {
   const maxA   = ranking.topAfixo[0]?.total || 1;
   const maxN   = ranking.topAncestral[0]?.total || 1;
   const maxP   = ranking.topPrefixo[0]?.total || 1;
-  const maxPai    = (ranking.topPai||[])[0]?.total || 1;
-  const maxAvoPat = (ranking.topAvoPat||[])[0]?.total || 1;
-  const maxAvoMat = (ranking.topAvoMat||[])[0]?.total || 1;
+  const maxPai    = (ranking.topPais||[])[0]?.total || 1;
+  const maxAvoPat = (ranking.topAvosPat||[])[0]?.total || 1;
+  const maxAvoMat = (ranking.topAvosMat||[])[0]?.total || 1;
 
   document.getElementById('sangues-afixos').innerHTML = barHTML(
     ranking.topAfixo.slice(0,20), maxA, d=>d.afixo,
@@ -14462,7 +14435,7 @@ function _renderSangues(data) {
   );
   document.getElementById('sangues-prefixos').innerHTML = barHTML(
     ranking.topPrefixo.slice(0,15), maxP,
-    d=>'<span style="font-family:var(--mono)">'+d.prefixo+'</span>',
+    d=>'<span style="font-family:var(--mono)">'+d.nome+'</span>',
     ()=>'var(--purple)'
   );
   document.getElementById('sangues-ancestrais').innerHTML = barHTML(
@@ -14475,17 +14448,17 @@ function _renderSangues(data) {
     i=>i<3?'var(--amber)':i<8?'var(--teal)':'var(--gray-d)'
   );
   document.getElementById('sangues-pais').innerHTML = barHTML(
-    (ranking.topPai||[]).slice(0,20), maxPai,
+    (ranking.topPais||[]).slice(0,20), maxPai,
     d=>'<strong>'+d.nome+'</strong>',
     i=>i<3?'var(--green)':i<8?'var(--blue)':'var(--gray-d)'
   );
   document.getElementById('sangues-avopat').innerHTML = barHTML(
-    (ranking.topAvoPat||[]).slice(0,20), maxAvoPat,
+    (ranking.topAvosPat||[]).slice(0,20), maxAvoPat,
     d=>d.nome,
     i=>i<3?'var(--blue)':i<8?'var(--teal)':'var(--gray-d)'
   );
   document.getElementById('sangues-avomat').innerHTML = barHTML(
-    (ranking.topAvoMat||[]).slice(0,20), maxAvoMat,
+    (ranking.topAvosMat||[]).slice(0,20), maxAvoMat,
     d=>d.nome,
     i=>i<3?'var(--red)':i<8?'var(--amber)':'var(--gray-d)'
   );
