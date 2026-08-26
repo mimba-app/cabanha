@@ -338,10 +338,15 @@
   .sec-hero-title { font-family:var(--serif); font-weight:800; font-size:clamp(23px,2.6vw,30px); line-height:1.1; letter-spacing:-0.02em; color:var(--text); margin:9px 0 10px; text-wrap:balance; }
   .sec-hero-sub { font-size:14.5px; line-height:1.62; color:var(--text2); }
   .conf-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:22px 0 24px; }
-  .conf-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-sm); padding:16px 18px; }
-  .conf-card .selo-registro { margin-bottom:10px; }
+  .conf-card { background:var(--bg2); border-radius:var(--radius-lg); border:var(--card-border); box-shadow:var(--sh-sm); padding:16px 18px; transition:transform .16s ease, box-shadow .16s ease; }
+  .conf-card[data-filtro] { cursor:pointer; }
+  .conf-card[data-filtro]:hover { transform:translateY(-2px); box-shadow:var(--sh-md), 0 0 0 1px var(--border2); }
+  .conf-card.active { box-shadow:var(--sh-md), 0 0 0 2px var(--campo); }
+  .conf-card .selo-registro { margin-bottom:10px; pointer-events:none; }
   .conf-card h3 { font-family:var(--serif); font-weight:700; font-size:15px; margin:0 0 2px; color:var(--text); }
   .conf-card p { font-size:11px; color:var(--text3); margin:0; }
+  .conf-filtro-bar { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text2); margin:-10px 0 14px; }
+  .conf-filtro-bar a { color:var(--campo-deep); font-weight:600; cursor:pointer; }
   /* ── Card do animal na grade de Plantel — menos amontoado de badges, mais
      hierarquia: nome grande (Manrope), uma linha de legenda muda em vez da
      mini-tabela de campos, tags só quando há algo fora do padrão pra dizer. ── */
@@ -778,6 +783,28 @@
   .sangue-bar-label { font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
   .sangue-bar-count { font-size:11px;color:var(--text2);white-space:nowrap; }
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
+
+  /* ── Mapa Genealógico (estrutura ABCCC — colunas por geração, chaves de conexão) —
+     Análise de Sangues, Detalhes por animal ── */
+  @keyframes mapa-conecta { to { stroke-dashoffset: 0; } }
+  @keyframes mapa-surge { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes mapa-surge-central { to { opacity:1; } }
+  .mapa-gen-conector { fill:none; stroke-width:1.6; stroke-dasharray:var(--mgc-len); stroke-dashoffset:var(--mgc-len); animation:mapa-conecta .55s cubic-bezier(.4,0,.2,1) forwards; }
+  .mapa-gen-caixa { opacity:0; animation:mapa-surge .4s cubic-bezier(.2,.8,.3,1) forwards; }
+  .mapa-gen-caixa-central { opacity:0; animation:mapa-surge-central .4s ease forwards; }
+  .mapa-gen-colhead { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; fill:var(--text3); }
+  .mapa-gen-rotulo { font-family:var(--font); font-size:10.5px; font-weight:600; }
+  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:10px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
+  .mapa-gen-legenda-item { display:flex; align-items:center; gap:5px; }
+  .mapa-gen-legenda-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:12px; opacity:0; animation:mapa-surge-central .5s ease forwards; animation-delay:1.6s; }
+  .mapa-gen-narrativa strong { color:var(--campo-deep); }
+  .mapa-gen-narrativa .linha-baixa strong { color:var(--terracota-ink); }
+  .mapa-gen-irmao-badge { display:inline-flex; align-items:center; gap:4px; background:var(--purple-l); color:var(--purple-d); border-radius:var(--radius-badge); padding:3px 9px; font-size:10.5px; font-weight:700; margin-top:8px; }
+  .mapa-gen-toggle { cursor:pointer; user-select:none; }
+  .mapa-gen-toggle:hover { color:var(--campo-deep); }
+  .mapa-gen-wrap { display:none; padding-top:12px; border-top:0.5px solid var(--border); margin-top:10px; }
+  .mapa-gen-wrap.aberto { display:block; }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -1651,9 +1678,9 @@
     <select id="f-confirm" onchange="filtrar()">
       <option value="">Confirmação ABCCC</option>
       <option value="nao_confirmados">Não marcados</option>
+      <option value="em_preparo">Em preparação</option>
       <option value="em_risco">Em risco</option>
-      <option value="apto_confirmacao">Aptos para confirmação</option>
-      <option value="aguardando_confirmacao">Aguardando confirmação</option>
+      <option value="aptos">Aptos</option>
     </select>
     <!-- Reprodutivo v4, Fase 7 (spec Menu Animais): grid/swimlane como alternativa à tabela densa —
          toggle, não substituição, pra não tirar quem prefere a lista compacta. -->
@@ -1698,11 +1725,12 @@
       <div class="sec-hero-sub">Acompanhe os animais que precisam avançar no processo de confirmação junto à ABCCC e enxergue antecipadamente o que merece atenção.</div>
     </div>
     <div class="conf-cards">
-      <div class="conf-card"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aguardando">0</span></div></div><h3>A confirmar</h3><p>animais acompanhados</p></div>
-      <div class="conf-card"><div class="selo-registro lg ok" id="conf-m-preparo-selo"><div class="selo-circ"><span class="glyph" id="conf-m-preparo">0</span></div></div><h3>Em preparação</h3><p id="conf-m-preparo-legenda">próximos da etapa</p></div>
-      <div class="conf-card"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aptos">0</span></div></div><h3>Aptos</h3><p>sem pendências visíveis</p></div>
-      <div class="conf-card"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-confirmados">0</span></div></div><h3>Confirmados</h3><p>histórico preservado</p></div>
+      <div class="conf-card" data-filtro="em_preparo" onclick="_confFiltrar('em_preparo')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-preparo">0</span></div></div><h3>Em preparação</h3><p>menos de 24 meses ou ainda sem medida lançada</p></div>
+      <div class="conf-card" data-filtro="em_risco" onclick="_confFiltrar('em_risco')"><div class="selo-registro lg crit"><div class="selo-circ"><span class="glyph" id="conf-m-risco">0</span></div></div><h3>Em risco</h3><p>24+ meses, medido, abaixo do mínimo ABCCC</p></div>
+      <div class="conf-card" data-filtro="aptos" onclick="_confFiltrar('aptos')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-aptos">0</span></div></div><h3>Aptos</h3><p>medida mínima atingida — aguardando o técnico ABCCC</p></div>
+      <div class="conf-card" data-filtro="confirmados" onclick="_confFiltrar('confirmados')"><div class="selo-registro lg ok"><div class="selo-circ"><span class="glyph" id="conf-m-confirmados">0</span></div></div><h3>Confirmados</h3><p>já confirmados pelo técnico ABCCC</p></div>
     </div>
+    <div class="conf-filtro-bar" id="conf-filtro-bar" style="display:none">Mostrando: <strong id="conf-filtro-nome"></strong> <a onclick="_confFiltrar(null)">ver todos</a></div>
     <div id="animais-confirmacao-content"></div>
   </div>
 </div>
@@ -1724,9 +1752,9 @@
     <div><div class="page-title">Saúde & Vacinas</div><div class="page-sub">Controle sanitário do plantel</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="abrirModalVac()">+ Vacinar</button>
-      <button class="btn" onclick="openModal('modal-vac-lote');renderLoteAnimais('vac')">+ Vacinar em lote</button>
+      <button class="btn" onclick="openModal('modal-vac-lote');renderLoteAnimais('vac');document.getElementById('vaclote-vet').value=_assinaturaVet()">+ Vacinar em lote</button>
       <button class="btn" onclick="abrirModalExame()">+ Exame</button>
-      <button class="btn" onclick="openModal('modal-exam-lote');renderLoteAnimais('exam')">+ Exame em lote</button>
+      <button class="btn" onclick="openModal('modal-exam-lote');renderLoteAnimais('exam');document.getElementById('examlote-vet').value=_assinaturaVet()">+ Exame em lote</button>
       <button class="btn" onclick="abrirModalTratamento()">+ Tratamento</button>
     </div>
   </div>
@@ -2521,33 +2549,6 @@
       </div>
       <div id="sangues-detalhe" style="display:none;margin-top:8px"></div>
     </div>
-  </div><div id="sangues-resultado" style="display:none">
-    <div id="sangues-meta" style="font-size:11px;color:var(--text2);margin-bottom:1rem"></div>
-    <div class="two-col" style="gap:1.5rem">
-      <div>
-        <div class="card">
-          <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Afixos / Cabanhas mais presentes</div>
-          <div id="sangues-afixos"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📛 Prefixos / Marcas mais frequentes</div>
-          <div id="sangues-prefixos"></div>
-        </div>
-      </div>
-      <div>
-        <div class="card">
-          <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 20l1-5 2-6c.5-1.5 2-3 4-3h2c2 0 3 1.5 3.5 3l1.5 4"/><path d="M17 9c1 0 2-1 2-2s-1-2-2-1-1 2 0 3z"/><path d="M9 6V3"/><path d="M6 20l1-3"/><path d="M13 20l1-3"/><circle cx="16" cy="7" r="0.5" fill="currentColor"/></svg> Ancestrais mais repetidos</div>
-          <div id="sangues-ancestrais"></div>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1rem">
-      <div class="card-title" style="cursor:pointer" onclick="toggleSanguesDetalhe()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Detalhes por animal
-        <span id="sangues-detalhe-icon" style="float:right;font-size:11px;color:var(--text2)">▼ expandir</span>
-      </div>
-      <div id="sangues-detalhe" style="display:none;margin-top:8px"></div>
-    </div>
   </div>
 </div>
 
@@ -2580,6 +2581,11 @@
       <div class="card-title">Análise de sangues</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Resumo de linhagem e concentração de sangue do plantel.</div>
       <button class="btn btn-primary btn-sm" onclick="gerarRelatorioSangues()">Gerar PDF</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Animais sem marcação RP</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Quem do plantel ainda não tem número/marca da cabanha (RP) cadastrado no perfil.</div>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorioSemRP()">Gerar PDF</button>
     </div>
   </div>
 </div>
@@ -2749,6 +2755,11 @@
           <div class="form-group">
             <label>Telefone pessoal</label>
             <input type="tel" id="perfil-telefone" placeholder="(99) 99999-9999">
+          </div>
+          <div class="form-group" id="perfil-crmv-wrap" style="display:none;grid-column:1/-1">
+            <label>CRMV</label>
+            <input type="text" id="perfil-crmv" placeholder="Ex: CRMV-RS 12563">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Preenche automático o campo de veterinário ao registrar vacina, exame e AIE.</div>
           </div>
           <div class="form-group" style="grid-column:1/-1">
             <label>E-mail de login</label>
@@ -3407,9 +3418,9 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Propriedade</div>
       <div class="form-grid">
-        <div class="form-group"><label>Proprietário</label><input type="text" id="aie-proprietario" value="Luciano Luis Mantelli"></div>
-        <div class="form-group"><label>Telefone</label><input type="text" id="aie-prop-tel" value="(51) 9 9216-0620"></div>
-        <div class="form-group" style="grid-column:1/-1"><label>Endereço completo</label><input type="text" id="aie-prop-end" value="Av Getulio Vargas 1000, centro, 98170-000"></div>
+        <div class="form-group"><label>Proprietário</label><input type="text" id="aie-proprietario" value=""></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="aie-prop-tel" value=""></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Endereço completo</label><input type="text" id="aie-prop-end" value=""></div>
         <div class="form-group"><label>Propriedade / Estabelecimento</label><input type="text" id="aie-estabelecimento" value=""></div>
         <div class="form-group"><label>Município / UF</label><input type="text" id="aie-municipio" value=""></div>
         <div class="form-group"><label>Nº Equídeos existentes</label><input type="number" id="aie-num-equideos" value="29" min="1"></div>
@@ -3432,10 +3443,10 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">👨‍⚕️ Veterinário Requisitante</div>
       <div class="form-grid">
-        <div class="form-group"><label>Nome</label><input type="text" id="aie-vet-nome" value="Felipe Farias Bender"></div>
-        <div class="form-group"><label>CRMV</label><input type="text" id="aie-vet-crmv" value="CRMV-RS 12563"></div>
-        <div class="form-group"><label>Endereço do veterinário</label><input type="text" id="aie-vet-end" value="Euclides da Cunha 711"></div>
-        <div class="form-group"><label>Telefone</label><input type="text" id="aie-vet-tel" value="5599001101"></div>
+        <div class="form-group"><label>Nome</label><input type="text" id="aie-vet-nome" value=""></div>
+        <div class="form-group"><label>CRMV</label><input type="text" id="aie-vet-crmv" value=""></div>
+        <div class="form-group"><label>Endereço do veterinário</label><input type="text" id="aie-vet-end" value=""></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="aie-vet-tel" value=""></div>
         <div class="form-group"><label>Motivo da análise</label>
           <select id="aie-motivo">
             <option value="TRANSPORTE NACIONAL">Transporte Nacional</option>
@@ -3800,9 +3811,15 @@
       <div class="form-group"><label>Mãe</label><input type="text" id="nmae"></div>
       <div class="form-group"><label>Pai</label><input type="text" id="npai"></div>
       <div class="form-group" style="grid-column:1/-1">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="ncnf" style="width:auto" onchange="_avisarConfirmacaoIdade('nnasc','ncnf','ncnf-aviso')"> Confirmado (técnico validou Crioulo/pedigree/medidas)
-        </label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="font-size:13px">Confirmado</label>
+          <div class="pill-switch" id="nconfirmado-switch">
+            <button type="button" class="pill-switch-btn on" onclick="_setConfirmado('n',false)">Não</button>
+            <button type="button" class="pill-switch-btn" onclick="_setConfirmado('n',true)">Confirmado</button>
+          </div>
+          <input type="checkbox" id="ncnf" style="display:none">
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Técnico validou Crioulo/pedigree/medidas</div>
         <div id="ncnf-aviso" style="display:none;margin-top:5px;font-size:11px;padding:6px 9px;background:var(--amber-l);color:var(--amber-d);border-radius:var(--radius)">
           ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
         </div>
@@ -4506,9 +4523,9 @@ function renderAnimais(){
     let confOk = true;
     if (fConf) {
       if (fConf === 'nao_confirmados') confOk = !a.confirmado && a.confirmacao_status !== 'nao_confirmado';
+      else if (fConf === 'em_preparo') confOk = _calcStatusConfirmacao(a) === 'em_desenvolvimento';
       else if (fConf === 'em_risco') confOk = _calcStatusConfirmacao(a) === 'em_risco';
-      else if (fConf === 'apto_confirmacao') confOk = _calcStatusConfirmacao(a) === 'apto_confirmacao';
-      else if (fConf === 'aguardando_confirmacao') confOk = a.confirmacao_status === 'aguardando_confirmacao';
+      else if (fConf === 'aptos') confOk = ['apto_confirmacao','aguardando_confirmacao'].includes(_calcStatusConfirmacao(a));
     }
     return nOk&&sOk&&confOk&&(!fSx||a.sexo===fSx)&&(!fC||a.ciclo===fC);
   });
@@ -4621,6 +4638,14 @@ function _populaAnimalSel(wrapId, hiddenId, onlyAtivos) {
   if(lista.length) document.getElementById(hiddenId).value = animais.indexOf(lista[0]);
 }
 
+// Autopreenche "Veterinário" com nome + CRMV de quem está logado, só quando o
+// perfil da própria conta é veterinário — pra admin/cabanheiro o campo continua
+// em branco, porque nesse caso quem está cadastrando não é quem assinou.
+function _assinaturaVet() {
+  if (usuarioAtual?.perfil !== 'vet') return '';
+  return [usuarioAtual.nome, usuarioAtual.crmv].filter(Boolean).join(' · ');
+}
+
 // ─── VACINAÇÃO — FLUXO UNIFICADO (inclui AIE) ────────────────────────────────
 let _rvAnexos = []; // [{nome,tipo,tamanho,b64}] múltiplos anexos
 
@@ -4640,6 +4665,7 @@ function abrirModalVac(preIdx) {
   ['rv-prox','rv-vacina','rv-vet','rv-dose','rv-obs','rv-aie-num','rv-aie-lab'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  document.getElementById('rv-vet').value = _assinaturaVet();
   const selAie = document.getElementById('rv-aie-resultado');
   if(selAie) selAie.value='Negativo';
   document.getElementById('rv-aie-extra').style.display='none';
@@ -4668,6 +4694,7 @@ function abrirModalExame(preIdx) {
   ['re-validade','re-vet','re-obs','re-num-laudo'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  document.getElementById('re-vet').value = _assinaturaVet();
   document.getElementById('re-resultado').value = 'Negativo';
   const motivo = document.getElementById('re-motivo');
   if(motivo) motivo.value = 'Transporte Nacional';
@@ -6044,16 +6071,15 @@ function _aieResetForm() {
   document.getElementById('aie-motivo').value = 'TRANSPORTE NACIONAL';
   document.getElementById('aie-classificacao').value = 'FC';
   document.getElementById('aie-num-equideos').value = '29';
-  // Defaults da cabanha
-  document.getElementById('aie-proprietario').value = 'Luciano Luis Mantelli';
-  document.getElementById('aie-prop-tel').value = '(51) 9 9216-0620';
-  document.getElementById('aie-prop-end').value = 'Av Getulio Vargas 1000, centro, 98170-000';
+  document.getElementById('aie-proprietario').value = '';
+  document.getElementById('aie-prop-tel').value = '';
+  document.getElementById('aie-prop-end').value = '';
   document.getElementById('aie-estabelecimento').value = (TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '';
   document.getElementById('aie-municipio').value = '';
-  document.getElementById('aie-vet-nome').value = 'Felipe Farias Bender';
-  document.getElementById('aie-vet-crmv').value = 'CRMV-RS 12563';
-  document.getElementById('aie-vet-end').value = 'Euclides da Cunha 711';
-  document.getElementById('aie-vet-tel').value = '5599001101';
+  document.getElementById('aie-vet-nome').value = usuarioAtual?.perfil === 'vet' ? (usuarioAtual.nome || '') : '';
+  document.getElementById('aie-vet-crmv').value = usuarioAtual?.perfil === 'vet' ? (usuarioAtual.crmv || '') : '';
+  document.getElementById('aie-vet-end').value = '';
+  document.getElementById('aie-vet-tel').value = '';
   document.getElementById('aie-alerta-positivo').style.display = 'none';
   // Data de coleta = hoje
   document.getElementById('aie-data-coleta').value = HOJE.toISOString().slice(0,10);
@@ -6613,9 +6639,15 @@ function _renderDetCorpo(i, editando) {
         <div class="form-group" style="grid-column:1/-1"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Observações</label>
           <input id="ed-obs" value="${a.obs||''}" style="width:100%;font-size:12px" placeholder="Observações"></div>
         <div class="form-group" style="grid-column:1/-1">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
-            <input type="checkbox" id="ed-confirmado" style="width:auto" ${a.confirmado?'checked':''} onchange="_avisarConfirmacaoIdade('ed-nasc','ed-confirmado','ed-confirmado-aviso')"> Confirmado (técnico validou Crioulo/pedigree/medidas)
-          </label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px">Confirmado</label>
+            <div class="pill-switch" id="ed-confirmado-switch">
+              <button type="button" class="pill-switch-btn${a.confirmado?'':' on'}" onclick="_setConfirmado('ed-',false)">Não</button>
+              <button type="button" class="pill-switch-btn${a.confirmado?' on':''}" onclick="_setConfirmado('ed-',true)">Confirmado</button>
+            </div>
+            <input type="checkbox" id="ed-confirmado" style="display:none" ${a.confirmado?'checked':''}>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Técnico validou Crioulo/pedigree/medidas</div>
           <div id="ed-confirmado-aviso" style="display:${a.confirmado&&(_idadeAnos(a.nasc)===null||_idadeAnos(a.nasc)<2)?'':'none'};margin-top:5px;font-size:11px;padding:6px 9px;background:var(--amber-l);color:var(--amber-d);border-radius:var(--radius)">
             ⚠️ Confirmação normalmente só acontece a partir de 2 anos de idade — a responsabilidade pela informação é sua.
           </div>
@@ -7681,13 +7713,11 @@ function _limparFormNovoAnimal() {
   const sexEl = document.getElementById('nsex'); if (sexEl) sexEl.value = '';
   const sitEl = document.getElementById('nsit'); if (sitEl) sitEl.value = 'NA CABANHA';
   const estEl = document.getElementById('nest'); if (estEl) estEl.value = '';
-  const cnfEl = document.getElementById('ncnf'); if (cnfEl) cnfEl.checked = false;
-  const casEl = document.getElementById('ncastrado'); if (casEl) casEl.checked = false;
   const qtdEl = document.getElementById('nqtdcob'); if (qtdEl) qtdEl.value = '120';
-  const avisoEl = document.getElementById('ncnf-aviso'); if (avisoEl) avisoEl.style.display = 'none';
   const statusEl = document.getElementById('nabccc-status'); if (statusEl) statusEl.style.display = 'none';
   _animalFotoRemover('nfoto-preview','nfoto-b64');
   _setCastrado('n', false);
+  _setConfirmado('n', false);
 }
 
 // "Coberturas por ciclo (padrão)" só faz sentido pra garanhões inteiros — campo fica escondido
@@ -7713,6 +7743,17 @@ function _setCastrado(prefixo, ligado) {
   const sexoId = prefixo === 'n' ? 'nsex' : 'ed-sexo';
   const grpId = prefixo === 'n' ? 'ngrp-qtdcob' : 'ed-grp-qtdcob';
   _toggleQtdCoberturasPadrao(sexoId, grpId, prefixo + 'castrado');
+}
+
+function _setConfirmado(prefixo, ligado) {
+  const checkId = prefixo === 'n' ? 'ncnf' : 'ed-confirmado';
+  const avisoId = prefixo === 'n' ? 'ncnf-aviso' : 'ed-confirmado-aviso';
+  const nascId = prefixo === 'n' ? 'nnasc' : 'ed-nasc';
+  const chk = document.getElementById(checkId);
+  if (chk) chk.checked = ligado;
+  const sw = document.getElementById(prefixo + 'confirmado-switch');
+  if (sw) sw.querySelectorAll('.pill-switch-btn').forEach((b, i) => b.classList.toggle('on', (i === 1) === ligado));
+  _avisarConfirmacaoIdade(nascId, checkId, avisoId);
 }
 
 // Reprodutivo v4, Fase 7 (spec Menu Animais): upload de foto — mesmo padrão de leitura já usado
@@ -10498,11 +10539,17 @@ async function _atualizarTodosAbccc() {
       if (d.sbb_mae && !a.sbb_mae) { a.sbb_mae = d.sbb_mae; patch.sbb_mae = d.sbb_mae; }
       if (d.pelagem && !a.pelagem) { a.pelagem = d.pelagem; patch.pelagem = d.pelagem; }
       if (d.nasc   && !a.nasc)    { a.nasc   = d.nasc;   patch.nasc   = d.nasc; }
-      if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
-        a.confirmacao_status = 'confirmado'; a.confirmado = true;
-        patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+      // Uma vez confirmado (seja pelo próprio criador marcando o toggle, seja por
+      // uma sincronização anterior), a ABCCC nunca mais mexe nesse campo — o
+      // registro oficial pode demorar a refletir a confirmação, e um "Atualizar
+      // ABCCC" nesse meio-tempo não pode desmarcar o que o criador já confirmou.
+      if (!a.confirmado) {
+        if (d.situacao === 'Confirmado' && a.confirmacao_status !== 'confirmado') {
+          a.confirmacao_status = 'confirmado'; a.confirmado = true;
+          patch.confirmacao_status = 'confirmado'; patch.confirmado = true; confirmados++;
+        }
+        if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
       }
-      if (d.confirmacao_data && !a.confirmado_em) { a.confirmado_em = d.confirmacao_data; patch.confirmado_em = d.confirmacao_data; }
       if (d.situacao === 'Confirmado' && (d.altura || d.torax || d.canela)) {
         const ai = animais.indexOf(a);
         const jaTem = getMedidas(ai).some(m => m.contexto === 'ABCCC' || m.resp === 'ABCCC');
@@ -10637,8 +10684,15 @@ function _calcStatusConfirmacao(animal) {
   const pad = (animal.sexo||'').toLowerCase().includes('macho') ? PADRÃO_ABCCC.macho : PADRÃO_ABCCC.femea;
 
   if (!ult) return 'em_desenvolvimento';
+  // Sem nenhuma medida real lançada (cernelha/tórax/canela) — sem dado pra avaliar
+  // risco ou aptidão, então fica em preparação independente da idade. Sem isso,
+  // um animal só com peso registrado passava "apto" por vacuidade (nenhuma
+  // medida pra reprovar não é o mesmo que ter atingido o mínimo).
+  const temMedidaReal = !!(ult.cernelha || ult.torax || ult.canela);
+  if (!temMedidaReal) return 'em_desenvolvimento';
 
-  // >= 24 meses: verificar se medidas atingidas
+  // >= 24 meses e com medida real: único caso que vira "em risco" de verdade —
+  // idade de avaliação batida e ainda assim abaixo do mínimo ABCCC.
   if (meses >= 24) {
     const cOk = !ult.cernelha || (ult.cernelha >= pad.cernelha_min && ult.cernelha <= pad.cernelha_max);
     const tOk = !ult.torax   || ult.torax   >= pad.torax_min;
@@ -10646,35 +10700,10 @@ function _calcStatusConfirmacao(animal) {
     return (cOk && tOk && caN) ? 'apto_confirmacao' : 'em_risco';
   }
 
-  // < 24 meses: projeção
-  const _curvaC = (animal.sexo||''). toLowerCase().includes('macho') ? _CURVA_CERNELHA_MACHO : _CURVA_CERNELHA_FEMEA;
-  const projC  = ult.cernelha ? _projetarMedida(ult.cernelha, meses, _curvaC) : null;
-  const projT  = ult.torax    ? _projetarMedida(ult.torax,    meses, _CURVA_TORAX)    : null;
-  const projCa = ult.canela   ? _projetarMedida(ult.canela,   meses, _CURVA_CANELA)   : null;
-
-  const emRisco = (projC  !== null && (projC  < pad.cernelha_min || projC  > pad.cernelha_max + 0.02))
-               || (projT  !== null && projT  < pad.torax_min)
-               || (projCa !== null && projCa < pad.canela_min);
-
-  return emRisco ? 'em_risco' : 'em_desenvolvimento';
-}
-
-// Badge HTML do status de confirmação (para grade e lista)
-function _badgeConfirmacao(animal) {
-  if (animal.confirmado) return ''; // já confirmado — usa badge existente
-  const status = _calcStatusConfirmacao(animal);
-  const meses = _idadeMeses(animal.nasc);
-  if (status === 'nao_confirmado') return ''; // sai do controle
-  if (status === 'confirmado') return '';
-  if (status === 'aguardando_confirmacao')
-    return '<span class="badge bg-solid" title="Aguardando confirmação com técnico ABCCC">Confirmação marcada</span>';
-  if (status === 'em_risco')
-    return '<span class="badge br-solid" title="Projeção indica risco de não atingir medidas mínimas ABCCC">⚠ Em risco</span>';
-  if (status === 'apto_confirmacao')
-    return '<span class="badge bg-solid" title="Medidas atingidas — pronto para confirmação">Apto — confirmar</span>';
-  // em_desenvolvimento
-  const mesesLabel = meses !== null ? ` · ${meses}m` : '';
-  return `<span class="badge ba" title="Em desenvolvimento${mesesLabel}">Em desenv.${mesesLabel}</span>`;
+  // < 24 meses: ainda em preparação — a projeção de risco por curva de
+  // crescimento fica só como sinalização por medida no painel (_linhaMedida),
+  // não vira o status "em risco" antes da idade de avaliação real.
+  return 'em_desenvolvimento';
 }
 
 // HTML do painel de projeção de confirmação (usado no card do animal e na aba medidas)
@@ -10780,11 +10809,8 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
   const idxAnimal = i;
   const botoesAcao = modoCompacto ? '' :
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-    + (!animal.marcacao_rp_em
-        ? `<button class="btn btn-sm" onclick="_registrarMarcacaoRP(${idxAnimal})">📌 Registrar marcação RP</button>`
-        : `<span style="font-size:11px;color:var(--text3);align-self:center">RP marcado em ${fd(animal.marcacao_rp_em)}</span>`)
-    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : '')
-    + `<button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>`
+    + (status !== 'aguardando_confirmacao' ? `<button class="btn btn-sm" style="background:var(--green-l);color:var(--green-d);border-color:var(--green-d)" title="Move este animal pra 'Aptos' — avisa que ele está pronto, aguardando a visita do técnico ABCCC." onclick="_marcarParaConfirmacao(${idxAnimal})">✓ Marcar para confirmação</button>` : `<span style="font-size:11px;color:var(--blue-d);align-self:center">Já marcado — aguardando técnico</span>`)
+    + `<button class="btn btn-sm" style="color:var(--text3);border-color:var(--border)" title="Remove este animal do acompanhamento de confirmação." onclick="_abrirModalNaoConfirmar(${idxAnimal})">✕ Não confirmar</button>`
     + '</div>';
 
   return '<div style="border-left:3px solid ' + corBorda + ';padding:12px 14px;margin-top:10px;background:var(--bg);border-radius:0 var(--radius) var(--radius) 0">'
@@ -10801,6 +10827,11 @@ function _htmlPainelConfirmacao(animal, modoCompacto) {
 
 // Aba "Confirmação ABCCC" da tela de Animais — a jornada de confirmação junta num
 // só lugar quem antes só aparecia espremido dentro da ficha de cada animal.
+let _confFiltro = null; // null (todos) | 'em_preparo' | 'em_risco' | 'aptos' | 'confirmados'
+function _confFiltrar(tipo) {
+  _confFiltro = (_confFiltro === tipo) ? null : tipo;
+  renderConfirmacaoAbccc();
+}
 function renderConfirmacaoAbccc() {
   const cont = document.getElementById('animais-confirmacao-content');
   if (!cont) return;
@@ -10809,25 +10840,45 @@ function renderConfirmacaoAbccc() {
     && !a.confirmado && a.confirmacao_status !== 'nao_confirmado');
   const porStatus = { aguardando_confirmacao: [], apto_confirmacao: [], em_risco: [], em_desenvolvimento: [] };
   elegiveis.forEach(a => { const st = _calcStatusConfirmacao(a); if (porStatus[st]) porStatus[st].push(a); });
-  const confirmados = animais.filter(a => isNaCabanha(a) && a.confirmado).length;
+  // "Aptos" junta quem já bateu a medida mínima com quem já foi marcado e só
+  // está aguardando a visita do técnico — pro criador as duas coisas são o
+  // mesmo momento da jornada ("já pode/já vai confirmar"), só muda se alguém
+  // já apertou o botão de marcar ou não.
+  const aptosLista = [...porStatus.apto_confirmacao, ...porStatus.aguardando_confirmacao];
+  const confirmadosLista = animais.filter(a => isNaCabanha(a) && a.confirmado);
 
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('conf-m-aguardando', porStatus.aguardando_confirmacao.length);
-  set('conf-m-preparo', porStatus.em_desenvolvimento.length + porStatus.em_risco.length);
-  set('conf-m-aptos', porStatus.apto_confirmacao.length);
-  set('conf-m-confirmados', confirmados);
-  const selo = document.getElementById('conf-m-preparo-selo');
-  const legenda = document.getElementById('conf-m-preparo-legenda');
-  if (selo) selo.className = 'selo-registro lg ' + (porStatus.em_risco.length ? 'warn' : 'ok');
-  if (legenda) legenda.textContent = porStatus.em_risco.length ? `⚠ ${porStatus.em_risco.length} em risco de não atingir a medida` : 'próximos da etapa';
+  set('conf-m-preparo', porStatus.em_desenvolvimento.length);
+  set('conf-m-risco', porStatus.em_risco.length);
+  set('conf-m-aptos', aptosLista.length);
+  set('conf-m-confirmados', confirmadosLista.length);
 
-  const ordem = [...porStatus.aguardando_confirmacao, ...porStatus.apto_confirmacao, ...porStatus.em_risco, ...porStatus.em_desenvolvimento];
-  if (!ordem.length) {
-    cont.innerHTML = '<div class="nut-empty">Nenhum animal em acompanhamento de confirmação no momento.</div>';
+  // Card ativo em destaque + barra "mostrando: X"
+  document.querySelectorAll('.conf-card[data-filtro]').forEach(el => el.classList.toggle('active', el.dataset.filtro === _confFiltro));
+  const nomesFiltro = { em_preparo:'Em preparação', em_risco:'Em risco', aptos:'Aptos', confirmados:'Confirmados' };
+  const barra = document.getElementById('conf-filtro-bar');
+  if (barra) {
+    barra.style.display = _confFiltro ? 'flex' : 'none';
+    const nomeEl = document.getElementById('conf-filtro-nome');
+    if (nomeEl) nomeEl.textContent = nomesFiltro[_confFiltro] || '';
+  }
+
+  let lista, vazioMsg = 'Nenhum animal em acompanhamento de confirmação no momento.';
+  if (_confFiltro === 'em_preparo')        { lista = porStatus.em_desenvolvimento; vazioMsg = 'Nenhum animal em preparação no momento.'; }
+  else if (_confFiltro === 'em_risco')     { lista = porStatus.em_risco; vazioMsg = 'Nenhum animal em risco no momento.'; }
+  else if (_confFiltro === 'aptos')        { lista = aptosLista; vazioMsg = 'Nenhum animal apto para confirmação no momento.'; }
+  else if (_confFiltro === 'confirmados')  { lista = confirmadosLista; vazioMsg = 'Nenhum animal confirmado ainda.'; }
+  else lista = [...porStatus.em_risco, ...aptosLista, ...porStatus.em_desenvolvimento];
+
+  if (!lista.length) {
+    cont.innerHTML = `<div class="nut-empty">${vazioMsg}</div>`;
     return;
   }
-  cont.innerHTML = ordem.map(a => {
+  cont.innerHTML = lista.map(a => {
     const i = animais.indexOf(a);
+    const corpo = a.confirmado
+      ? `<div style="font-size:12px;color:var(--text3);padding-top:8px">✓ Confirmado</div>`
+      : _htmlPainelConfirmacao(a, false);
     return `<div class="card" style="padding:14px 16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;min-width:0">
@@ -10837,28 +10888,9 @@ function renderConfirmacaoAbccc() {
         </div>
         <button class="btn btn-sm" onclick="verDetalhe(${i})">Ver ficha</button>
       </div>
-      ${_htmlPainelConfirmacao(a, false)}
+      ${corpo}
     </div>`;
   }).join('');
-}
-
-async function _registrarMarcacaoRP(i) {
-  const a = animais[i];
-  const data = prompt('Data da marcação RP (AAAA-MM-DD):', new Date().toISOString().slice(0,10));
-  if (!data) return;
-  await _supa('PATCH','animais',{marcacao_rp_em:data},`?id=eq.${a.db_id}`);
-  a.marcacao_rp_em = data;
-  // Registrar como evento na linha do tempo
-  await _supa('POST','eventos',{
-    animal_id: a.db_id,
-    data: data,
-    tipo: 'MARCACAO_RP',
-    descricao: `Marcação RP realizada (RP: ${a.rp||'—'})`,
-    criado_por: usuarioAtual?.id
-  });
-  _renderDetCorpo(i, false);
-  renderConfirmacaoAbccc();
-  _mostrarStatusSync('Marcação RP registrada na linha do tempo.', 'green');
 }
 
 async function _marcarParaConfirmacao(i) {
@@ -11148,7 +11180,7 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supa('GET', 'sangues_linhagem', null,
+        const rows = await _supaPub('GET', 'sangues_linhagem', null,
           '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
         const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
         const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
@@ -11763,7 +11795,7 @@ async function _jaConsanguinidade(egua, fonte) {
   if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
 
   try {
-    const rows = await _supa('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
+    const rows = await _supaPub('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
     const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
     const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
     if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
@@ -13541,13 +13573,13 @@ async function _chamarConvidarUsuario(payload) {
 
 // Recarrega a lista de usuários da cabanha ativa a partir do banco (após convite/edição).
 async function _recarregarUsuarios() {
-  const rows = await _supa('GET','usuarios','','?select=id,login,nome,perfil,ativo,criado_em,auth_user_id,especialidade_reproducao&order=nome');
+  const rows = await _supa('GET','usuarios','','?select=id,login,nome,perfil,ativo,criado_em,auth_user_id,especialidade_reproducao,crmv&order=nome');
   if(!rows) return;
   USUARIOS.length = 0;
   rows.forEach(u => USUARIOS.push({
     id: u.id, db_id: u.id, login: u.login, authUserId: u.auth_user_id, nome: u.nome, perfil: u.perfil,
     label: PERFIS_INFO[u.perfil]?.label || u.perfil, ativo: u.ativo, criadoEm: u.criado_em?.slice(0,10),
-    especialidade_reproducao: !!u.especialidade_reproducao
+    especialidade_reproducao: !!u.especialidade_reproducao, crmv: u.crmv || ''
   }));
   _saveUsuarios();
   renderUsuarios();
@@ -13726,6 +13758,8 @@ async function carregarMeuPerfil() {
   document.getElementById('perfil-email').value = usuarioAtual.email || '';
   document.getElementById('perfil-cargo').value = usuarioAtual.cargo || '';
   document.getElementById('perfil-telefone').value = usuarioAtual.telefone_pessoal || '';
+  document.getElementById('perfil-crmv-wrap').style.display = usuarioAtual.perfil === 'vet' ? '' : 'none';
+  document.getElementById('perfil-crmv').value = usuarioAtual.crmv || '';
   _setNotifEmail(usuarioAtual.notif_email !== false);
   document.getElementById('perfil-idioma').value = usuarioAtual.idioma || 'pt-BR';
   document.getElementById('perfil-fuso').value = usuarioAtual.fuso_horario || 'America/Sao_Paulo';
@@ -13750,9 +13784,9 @@ function _onFotoPerfilFileSelect(ev) {
 }
 
 async function salvarMeuPerfil() {
-  if (!usuarioAtual?.id) return;
+  if (!usuarioAtual?.id || !AUTH_USER?.id) return;
   const patch = {
-    nome: document.getElementById('perfil-nome').value.trim() || null,
+    auth_user_id: AUTH_USER.id,
     cargo: document.getElementById('perfil-cargo').value || null,
     telefone_pessoal: document.getElementById('perfil-telefone').value.trim() || null,
     notif_email: document.getElementById('perfil-notif-email').checked,
@@ -13761,9 +13795,27 @@ async function salvarMeuPerfil() {
   };
   if (window._perfilNovaFoto !== undefined) patch.foto_url = window._perfilNovaFoto;
 
-  const r = await _supaPub('PATCH', 'usuarios_master', patch, '?id=eq.' + usuarioAtual.id);
+  // Upsert (POST + Prefer: resolution=merge-duplicates, já no helper) por
+  // auth_user_id — preferencias_usuario é 1:1 com a identidade global, não
+  // com a cabanha ativa. Ver ADR 0008: PATCH por id não funciona aqui porque
+  // não existe uma linha garantida até o primeiro save.
+  const r = await _supaPub('POST', 'preferencias_usuario', patch);
   if (r === null) { _mostrarStatusSync('⚠️ Falha ao salvar perfil', 'amber'); return; }
 
+  const nome = document.getElementById('perfil-nome').value.trim() || null;
+  // CRMV e nome moram na tabela `usuarios` da própria cabanha (é o registro
+  // que já é carregado de verdade em usuarioAtual no login), não em
+  // preferencias_usuario — por isso é um PATCH separado, com o helper de
+  // banco da cabanha ativa.
+  const usuariosPatch = { nome };
+  if (usuarioAtual.perfil === 'vet') usuariosPatch.crmv = document.getElementById('perfil-crmv').value.trim() || null;
+  if (usuarioAtual.db_id) {
+    await _supa('PATCH', 'usuarios', usuariosPatch, '?id=eq.' + usuarioAtual.db_id);
+    const meIdx = USUARIOS.findIndex(u => u.id === usuarioAtual.db_id);
+    if (meIdx >= 0) Object.assign(USUARIOS[meIdx], { nome: nome || USUARIOS[meIdx].nome, crmv: usuariosPatch.crmv ?? USUARIOS[meIdx].crmv });
+  }
+  Object.assign(patch, usuariosPatch);
+  delete patch.auth_user_id;
   Object.assign(usuarioAtual, patch);
   const sbUser = document.getElementById('sidebar-username');
   if (sbUser && patch.nome) sbUser.textContent = patch.nome;
@@ -14293,7 +14345,7 @@ async function iniciarAnaliseSangues(forceAll) {
 
   // Verificar no banco quais SBBs já têm dados salvos
   const sbbs = animaisComSBB.map(a => a.sbb.trim().toUpperCase());
-  const cached = await _supa('GET','sangues_linhagem','',
+  const cached = await _supaPub('GET','sangues_linhagem',null,
     '?animal_sbb=in.('+sbbs.map(s=>`"${s}"`).join(',')+')&select=animal_sbb,total_anc,consultado_em');
 
   const cachedSBBs = (cached||[]).filter(r => r.total_anc > 0).map(r => r.animal_sbb);
@@ -14395,9 +14447,9 @@ function _renderSangues(data) {
   const maxA   = ranking.topAfixo[0]?.total || 1;
   const maxN   = ranking.topAncestral[0]?.total || 1;
   const maxP   = ranking.topPrefixo[0]?.total || 1;
-  const maxPai    = (ranking.topPai||[])[0]?.total || 1;
-  const maxAvoPat = (ranking.topAvoPat||[])[0]?.total || 1;
-  const maxAvoMat = (ranking.topAvoMat||[])[0]?.total || 1;
+  const maxPai    = (ranking.topPais||[])[0]?.total || 1;
+  const maxAvoPat = (ranking.topAvosPat||[])[0]?.total || 1;
+  const maxAvoMat = (ranking.topAvosMat||[])[0]?.total || 1;
 
   document.getElementById('sangues-afixos').innerHTML = barHTML(
     ranking.topAfixo.slice(0,20), maxA, d=>d.afixo,
@@ -14405,7 +14457,7 @@ function _renderSangues(data) {
   );
   document.getElementById('sangues-prefixos').innerHTML = barHTML(
     ranking.topPrefixo.slice(0,15), maxP,
-    d=>'<span style="font-family:var(--mono)">'+d.prefixo+'</span>',
+    d=>'<span style="font-family:var(--mono)">'+d.nome+'</span>',
     ()=>'var(--purple)'
   );
   document.getElementById('sangues-ancestrais').innerHTML = barHTML(
@@ -14418,17 +14470,17 @@ function _renderSangues(data) {
     i=>i<3?'var(--amber)':i<8?'var(--teal)':'var(--gray-d)'
   );
   document.getElementById('sangues-pais').innerHTML = barHTML(
-    (ranking.topPai||[]).slice(0,20), maxPai,
+    (ranking.topPais||[]).slice(0,20), maxPai,
     d=>'<strong>'+d.nome+'</strong>',
     i=>i<3?'var(--green)':i<8?'var(--blue)':'var(--gray-d)'
   );
   document.getElementById('sangues-avopat').innerHTML = barHTML(
-    (ranking.topAvoPat||[]).slice(0,20), maxAvoPat,
+    (ranking.topAvosPat||[]).slice(0,20), maxAvoPat,
     d=>d.nome,
     i=>i<3?'var(--blue)':i<8?'var(--teal)':'var(--gray-d)'
   );
   document.getElementById('sangues-avomat').innerHTML = barHTML(
-    (ranking.topAvoMat||[]).slice(0,20), maxAvoMat,
+    (ranking.topAvosMat||[]).slice(0,20), maxAvoMat,
     d=>d.nome,
     i=>i<3?'var(--red)':i<8?'var(--amber)':'var(--gray-d)'
   );
@@ -14440,21 +14492,203 @@ function _renderSangues(data) {
     const cacheTag = d.fromCache
       ? '<span class="badge bgr" style="font-size:9px">banco</span>'
       : '<span class="badge bg" style="font-size:9px">novo</span>';
-    const geoInfo = [
-      d.pai         ? '👨 <strong>'+d.pai+'</strong>' : '',
-      d.mae         ? '👩 <strong>'+d.mae+'</strong>' : '',
-      d.avo_paterno ? '<strong style="color:var(--blue-d)">'+d.avo_paterno+'</strong>' : '',
-      d.avo_materno ? '<strong style="color:var(--red-d)">'+d.avo_materno+'</strong>' : '',
-    ].filter(Boolean).join(' · ');
-    const ancs = (d.ancestrais||[]).slice(0,6).map(n=>'<span class="sangue-tag">'+n+'</span>').join('');
-    const mais = qtd>6 ? '<span style="font-size:10px;color:var(--text3)">+'+(qtd-6)+' mais</span>' : '';
-    return '<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
-      +'<span style="font-size:12px;font-weight:700">'+nome+'</span>'+cacheTag
-      +'<span style="font-size:10px;color:var(--text2)">SBB '+sbb+' · '+qtd+' ancestrais</span></div>'
-      +(geoInfo?'<div style="font-size:11px;color:var(--text2);margin-bottom:4px">'+geoInfo+'</div>':'')
-      +'<div>'+ancs+mais+'</div></div>';
+    const temArvore = d.ancestrais_pos && d.ancestrais_pos.length > 0;
+    return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div class="mapa-gen-toggle" style="display:flex;align-items:center;gap:6px" onclick="toggleMapaGenealogico('${sbb}')">
+        <span style="font-size:12px;font-weight:700">${nome}</span>${cacheTag}
+        <span style="font-size:10px;color:var(--text2)">SBB ${sbb} · ${qtd} ancestrais</span>
+        ${temArvore ? `<span style="margin-left:auto;font-size:10px;color:var(--text3)" id="mapa-gen-icon-${sbb}">▸ ver mapa genealógico</span>` : ''}
+      </div>
+      ${temArvore ? `<div class="mapa-gen-wrap" id="mapa-gen-wrap-${sbb}" data-carregado="0"></div>` : ''}
+    </div>`;
   }).join('');
+}
+
+// Reconstrói a árvore genealógica a partir da lista plana em pré-ordem que o parser da
+// analise-sangues produz (ver Edge Function, extrairAncestraraisComGen). A ordem do array
+// preserva a ordem de documento da ABCCC, que segue o padrão [pai-subárvore, nó, mãe-subárvore]
+// recursivamente — dá pra reconstruir a árvore real (quem é filho de quem) sem precisar de mais
+// nenhum dado além do que já está salvo em sangues_linhagem.ancestrais_pos.
+function _reconstruirLinhagem(entradas, geracaoAlvo) {
+  if (!entradas.length) return null;
+  const idxSelf = entradas.findIndex(e => e.gen === geracaoAlvo);
+  if (idxSelf === -1) return null;
+  const self = entradas[idxSelf];
+  const antes = entradas.slice(0, idxSelf);
+  const depois = entradas.slice(idxSelf + 1);
+  return {
+    nome: self.nome, gen: geracaoAlvo,
+    pai: _reconstruirLinhagem(antes, geracaoAlvo + 1),
+    mae: _reconstruirLinhagem(depois, geracaoAlvo + 1),
+  };
+}
+
+function _mapaGenEscXml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Layout tipo dendrograma: gerações mais distantes (folhas) recebem posições verticais
+// sequenciais, e cada geração mais próxima do animal fica na média Y dos seus dois "filhos"
+// genealógicos — mesmo princípio de árvore genealógica de qualquer software de pedigree.
+// maxGen limita o desenho até a 3ª geração (mais que isso fica ilegível em coluna) — 4ª/5ª,
+// quando existem, viram lista textual compacta abaixo do mapa.
+const _MAPA_GEN_MAXGEN = 3;
+const _MAPA_GEN_ROWH = 26;
+
+function _mapaGenAssignY(node, contador) {
+  if (!node) return;
+  if (node.gen >= _MAPA_GEN_MAXGEN || (!node.pai && !node.mae)) {
+    node.y = contador.v * _MAPA_GEN_ROWH;
+    contador.v++;
+    return;
+  }
+  _mapaGenAssignY(node.pai, contador);
+  _mapaGenAssignY(node.mae, contador);
+  const ys = [node.pai?.y, node.mae?.y].filter(v => v != null);
+  node.y = ys.length ? ys.reduce((a,b)=>a+b,0) / ys.length : (contador.v++ * _MAPA_GEN_ROWH);
+}
+function _mapaGenAplicarOffset(node, topo) {
+  if (!node) return;
+  node.yAbs = node.y + topo;
+  _mapaGenAplicarOffset(node.pai, topo);
+  _mapaGenAplicarOffset(node.mae, topo);
+}
+function _mapaGenElbow(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2;
+  return `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
+
+// Desenha um lado (linha alta OU linha baixa) recursivamente, coluna por geração, com chaves
+// de conexão — mesma estrutura que o site da ABCCC usa pra 5ª geração (pai/mãe/avós em colunas
+// sucessivas), só que redesenhada com a tipografia e cor da Mimba em vez da tabela HTML antiga.
+function _mapaGenDesenhar(node, corVar, colX, filhoX, filhoY, conectores, caixas) {
+  if (!node || node.gen > _MAPA_GEN_MAXGEN) return;
+  const x = colX[node.gen];
+  const delay = (node.gen === 1 ? 0.15 : node.gen === 2 ? 0.55 : 0.95).toFixed(2);
+  conectores.push(`<path class="mapa-gen-conector" d="${_mapaGenElbow(x, node.yAbs, filhoX, filhoY)}" stroke="${corVar}" style="animation-delay:${delay}s"></path>`);
+
+  const w = node.gen === 1 ? 200 : node.gen === 2 ? 178 : 160;
+  const maxChar = node.gen === 1 ? 24 : node.gen === 2 ? 21 : 18;
+  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0, maxChar-1) + '…' : node.nome;
+  const ehGen1 = node.gen === 1;
+  caixas.push(`<g class="mapa-gen-caixa" style="animation-delay:${delay}s">
+    <rect x="${x-w/2}" y="${node.yAbs-11}" width="${w}" height="22" rx="5" fill="${ehGen1?corVar:'var(--bg3)'}" stroke="${corVar}" stroke-width="${ehGen1?0:1}"></rect>
+    <text class="mapa-gen-rotulo" x="${x}" y="${node.yAbs+4}" text-anchor="middle" fill="${ehGen1?'var(--pergaminho)':'var(--text)'}"><title>${_mapaGenEscXml(node.nome)}</title>${_mapaGenEscXml(nomeCurto)}</text>
+  </g>`);
+
+  _mapaGenDesenhar(node.pai, corVar, colX, x, node.yAbs, conectores, caixas);
+  _mapaGenDesenhar(node.mae, corVar, colX, x, node.yAbs, conectores, caixas);
+}
+
+function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
+  const entradasPat = (ancestraisPos||[]).filter(a => a.lado==='pat' && a.gen && a.nome);
+  const entradasMat = (ancestraisPos||[]).filter(a => a.lado==='mat' && a.gen && a.nome);
+  const arvorePat = _reconstruirLinhagem(entradasPat, 1);
+  const arvoreMat = _reconstruirLinhagem(entradasMat, 1);
+
+  let c = {v:0}; _mapaGenAssignY(arvorePat, c);
+  const alturaPat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
+  c = {v:0}; _mapaGenAssignY(arvoreMat, c);
+  const alturaMat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
+
+  const topoPat = 34, topoMat = topoPat + alturaPat + 56;
+  _mapaGenAplicarOffset(arvorePat, topoPat);
+  _mapaGenAplicarOffset(arvoreMat, topoMat);
+
+  const colX = {1:210, 2:400, 3:580};
+  const animalX = 60, animalY = (topoPat + alturaPat + topoMat) / 2;
+  const alturaTotal = topoMat + alturaMat + 40;
+
+  const partes = { conectores: [], caixas: [] };
+  _mapaGenDesenhar(arvorePat, 'var(--campo)', colX, animalX+24, animalY, partes.conectores, partes.caixas);
+  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', colX, animalX+24, animalY, partes.conectores, partes.caixas);
+
+  const nomeCentro = nomeAnimal.length>16 ? nomeAnimal.slice(0,15)+'…' : nomeAnimal;
+  const centro = `<g class="mapa-gen-caixa-central" style="animation-delay:0s">
+    <circle cx="${animalX}" cy="${animalY}" r="28" fill="var(--bg3)" stroke="var(--text)" stroke-width="1.5"></circle>
+    <text x="${animalX}" y="${animalY+3}" text-anchor="middle" font-family="var(--font)" font-size="7.5" font-weight="700" fill="var(--text)">${_mapaGenEscXml(nomeCentro)}</text>
+  </g>`;
+
+  const cabecalhos = [1,2,3].map(g =>
+    `<text class="mapa-gen-colhead" x="${colX[g]}" y="16" text-anchor="middle">${g}ª geração</text>`
+  ).join('');
+
+  const alemDo3 = [...entradasPat, ...entradasMat].filter(a => a.gen >= _MAPA_GEN_MAXGEN+1).sort((a,b)=>a.gen-b.gen);
+  const listaAlem = alemDo3.length ? `<div style="margin-top:8px;font-size:10.5px;color:var(--text2);text-align:center">
+      <strong>${alemDo3.length} ancestrais além da 3ª geração:</strong> ${alemDo3.map(a=>_mapaGenEscXml(a.nome)).join(', ')}
+    </div>` : '';
+
+  const svgId = 'mapasvg-' + Math.random().toString(36).slice(2,8);
+  return `<svg viewBox="0 0 660 ${alturaTotal.toFixed(0)}" id="${svgId}" style="width:100%;display:block">
+    ${cabecalhos}
+    ${partes.conectores.join('\n')}
+    ${partes.caixas.join('\n')}
+    ${centro}
+  </svg>${listaAlem}
+  <div class="mapa-gen-legenda">
+    <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--campo)"></span>Linha alta (via pai)</span>
+    <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--terracota)"></span>Linha baixa (via mãe)</span>
+  </div>`;
+}
+
+// innerHTML nunca executa <script> injetado — a medição do comprimento real de cada conector
+// (pra animação de "puxar a linha", stroke-dasharray/--mgc-len) precisa rodar depois de inserir
+// o SVG no DOM de verdade. Chamado pelo toggleMapaGenealogico logo após o innerHTML.
+function _mapaGenMedirConectores(containerEl) {
+  containerEl.querySelectorAll('.mapa-gen-conector').forEach(p => {
+    const len = p.getTotalLength();
+    p.style.setProperty('--mgc-len', len);
+  });
+}
+
+// Narrativa em linguagem de mercado: "linha alta" = pai direto; "linha baixa" = mãe seguida do
+// pai dela ("X que vem a ser Y") — nunca só o nome da mãe sozinho, é assim que o mercado Crioulo
+// referencia a linhagem materna. Detecta também irmão/irmã inteiro(a) dentro da própria manada
+// (mesmo pai E mesma mãe de outro animal já analisado) — sinal de maior peso que existe.
+function _gerarNarrativaLinhagem(sbb, d, todosResultados) {
+  const linhas = [];
+  if (d.pai) {
+    linhas.push(`<div><strong>Linha alta:</strong> ${_mapaGenEscXml(d.pai)}</div>`);
+  }
+  if (d.mae) {
+    const linhaBaixa = d.avo_materno
+      ? `${_mapaGenEscXml(d.mae)} que vem a ser ${_mapaGenEscXml(d.avo_materno)}`
+      : _mapaGenEscXml(d.mae);
+    linhas.push(`<div class="linha-baixa"><strong>Linha baixa:</strong> ${linhaBaixa}</div>`);
+  }
+
+  let irmaoBadge = '';
+  if (d.pai && d.mae && todosResultados) {
+    const irmao = Object.entries(todosResultados).find(([outroSbb, outro]) =>
+      outroSbb !== sbb && outro.pai === d.pai && outro.mae === d.mae
+    );
+    if (irmao) {
+      const nomeIrmao = animais.find(a=>a.sbb===irmao[0])?.nome || irmao[0];
+      const sexoIrmao = (animais.find(a=>a.sbb===irmao[0])?.sexo||'').toLowerCase().includes('fêmea') ? 'irmã inteira' : 'irmão inteiro';
+      irmaoBadge = `<div class="mapa-gen-irmao-badge">🧬 ${sexoIrmao} de ${_mapaGenEscXml(nomeIrmao)} — mesmo pai e mesma mãe</div>`;
+    }
+  }
+
+  if (!linhas.length) return '<div class="mapa-gen-narrativa" style="color:var(--text3)">Sem dados de linha alta/baixa disponíveis pra este animal.</div>';
+  return `<div class="mapa-gen-narrativa">${linhas.join('')}${irmaoBadge}</div>`;
+}
+
+function toggleMapaGenealogico(sbb) {
+  const wrap = document.getElementById('mapa-gen-wrap-'+sbb);
+  const icon = document.getElementById('mapa-gen-icon-'+sbb);
+  if (!wrap) return;
+  const abrindo = !wrap.classList.contains('aberto');
+  wrap.classList.toggle('aberto');
+  if (icon) icon.textContent = abrindo ? '▾ recolher mapa' : '▸ ver mapa genealógico';
+  if (abrindo && wrap.dataset.carregado !== '1') {
+    const d = (_cacheSanguesSessao?.resultados||{})[sbb];
+    const anim = animais.find(a=>a.sbb===sbb);
+    const nome = anim?.nome || sbb;
+    if (d) {
+      wrap.innerHTML = _gerarMapaGenealogicoSVG(nome, d.ancestrais_pos)
+        + _gerarNarrativaLinhagem(sbb, d, _cacheSanguesSessao?.resultados);
+      _mapaGenMedirConectores(wrap);
+      wrap.dataset.carregado = '1';
+    }
+  }
 }
 
 function toggleSanguesDetalhe() {
@@ -15416,7 +15650,7 @@ async function _sincronizarAoLogin(opts) {
           nome: u.nome, perfil: u.perfil,
           label: PERFIS_INFO[u.perfil]?.label || u.perfil,
           ativo: u.ativo, criadoEm: u.criado_em?.slice(0,10),
-          especialidade_reproducao: !!u.especialidade_reproducao
+          especialidade_reproducao: !!u.especialidade_reproducao, crmv: u.crmv || ''
         }));
         renderUsuarios();
       }
@@ -16124,15 +16358,28 @@ async function _entrarCabanha(cab) {
   _limparEstadoLocal();   // nunca renderizar a cabanha nova com dado da anterior
   let u = null;
   try {
-    const rows = await _supa('GET','usuarios','',`?auth_user_id=eq.${AUTH_USER?.id}&select=id,nome,perfil,ativo&limit=1`);
+    const rows = await _supa('GET','usuarios','',`?auth_user_id=eq.${AUTH_USER?.id}&select=id,nome,perfil,ativo,crmv&limit=1`);
     u = rows && rows[0];
+  } catch(e){}
+  // Preferências pessoais (cargo, telefone, foto, notif, idioma, fuso) são por
+  // identidade global (auth.users), não por cabanha — ver ADR 0008. 1 linha por
+  // pessoa em public.preferencias_usuario, recarregada a cada entrada de
+  // cabanha (troca de TENANT_SCHEMA não muda o resultado, mas mantém o dado
+  // fresco sem precisar de um evento de sessão à parte).
+  let pref = null;
+  try {
+    const prows = await _supaPub('GET', 'preferencias_usuario', null, `?auth_user_id=eq.${AUTH_USER?.id}&limit=1`);
+    pref = prows && prows[0];
   } catch(e){}
   const perfil = cab.perfil || u?.perfil || 'cab';
   usuarioAtual = {
     id: u?.id, db_id: u?.id, login: AUTH_USER?.email,
     nome: u?.nome || AUTH_USER?.email, perfil,
     label: PERFIS_INFO[perfil]?.label || perfil,
-    ativo: u?.ativo !== false
+    ativo: u?.ativo !== false, crmv: u?.crmv || '',
+    cargo: pref?.cargo || '', telefone_pessoal: pref?.telefone_pessoal || '',
+    foto_url: pref?.foto_url || '', notif_email: pref?.notif_email !== false,
+    idioma: pref?.idioma || 'pt-BR', fuso_horario: pref?.fuso_horario || 'America/Sao_Paulo'
   };
   _entrarApp();
 }
@@ -16347,6 +16594,19 @@ function gerarRelatorioSangues() {
     `<table><thead><tr><th>Animal</th><th>SBB</th><th>Pelagem</th><th>Mãe</th><th>Pai</th></tr></thead>
      <tbody>${linhas || '<tr><td colspan="5">Nenhum animal cadastrado.</td></tr>'}</tbody></table>
      <div class="rel-rodape">Mimba — Gestão Crioulos · Para análise detalhada de consanguinidade, use a página Sangues.</div>`;
+  _imprimirRelatorio(html);
+}
+
+function gerarRelatorioSemRP() {
+  // Marcação RP = número + marca da cabanha postos no animal (sem relação com
+  // a jornada de confirmação ABCCC) — o controle é simplesmente ter ou não o
+  // campo RP preenchido no perfil, não um evento separado pra registrar.
+  const semRp = animais.filter(a => isNaCabanha(a) && a.status_cadastro !== 'rascunho' && !a.rp);
+  const linhas = semRp.map(a => `<tr><td>${a.nome}</td><td>${a.sbb || '—'}</td><td>${a.sexo || '—'}</td><td>${fd(a.nasc) || '—'}</td></tr>`).join('');
+  const html = _cabecalhoRelatorio('Animais sem Marcação RP', `${semRp.length} animal(is) sem número/marca da cabanha no perfil`) +
+    `<table><thead><tr><th>Animal</th><th>SBB</th><th>Sexo</th><th>Nascimento</th></tr></thead>
+     <tbody>${linhas || '<tr><td colspan="4">Todos os animais do plantel já têm RP cadastrado.</td></tr>'}</tbody></table>
+     <div class="rel-rodape">Mimba — Gestão Crioulos · Cadastre o RP no perfil de cada animal (aba Editar) pra sair desta lista.</div>`;
   _imprimirRelatorio(html);
 }
 
