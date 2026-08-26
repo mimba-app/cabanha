@@ -521,6 +521,46 @@ na tabela `coberturas_arquivadas_legado`). Dois problemas distintos, corrigidos:
   **falta QA de ponta a ponta em `mimba-hml.pages.dev` com login/dado reais** (planejar ciclo do zero,
   negociar cobertura entre duas cabanhas de teste de verdade) **antes de considerar pronto pra produção**.
 
+## 🩸 Análise de Sangues — parser da ABCCC estava sistematicamente errado (2026-08-26)
+Luciano reportou "Principais Pais"/"Avós Maternos" sempre vazios e "undefined" em Prefixos.
+Investigação achou 4 bugs reais na Edge Function `analise-sangues` (agora v15), todos
+confirmados contra HTML real da árvore de 5 gerações (usuário conseguiu extrair via
+"Inspecionar elemento" → Copy outerHTML, já que a página é carregada num popup/fancybox, então
+Ctrl+U não funciona — reenvia o formulário de busca em vez de mostrar o HTML da árvore):
+
+1. **Regressão de nome de campo no frontend** (`index.html`) — backend retorna `topPais`/
+   `topAvosPat`/`topAvosMat` (plural), frontend lia `topPai`/`topAvoPat`/`topAvoMat` (singular).
+   Corrigido, commit `5b80119`.
+2. **"undefined" nos Prefixos** — `topPrefixo` não tinha o alias `prefixo` que `topAfixo` recebe;
+   frontend lia campo inexistente. Corrigido no mesmo commit.
+3. **Geração sempre errada** (achado maior, só apareceu depois que os 2 acima já tinham sido
+   corrigidos e o usuário reparou que "avô paterno" mostrava o avô *do* avô, não o avô certo) —
+   o parser decidia a geração pela PRIMEIRA largura de coluna >10px da linha, mas a estrutura
+   real da tabela ABCCC tem várias células de indentação por linha, e a primeira isolada não
+   identifica geração de forma confiável (duas gerações diferentes podem compartilhar a mesma
+   primeira largura). Corrigido pra somar TODAS as larguras da linha — calibrado e validado
+   contra uma árvore real confirmada manualmente pelo usuário (50→ger.1, 100→ger.2, 200→ger.3,
+   300→ger.4), consistente em 2 subárvores independentes (paterna e materna).
+4. **Metade dos ancestrais descartada silenciosamente** — a tabela real usa
+   `bgcolor="#CCCCCC"` pra ancestral MACHO e `bgcolor="#FFFFCC"` pra ancestral FÊMEA; o regex de
+   extração só reconhecia CCCCCC, jogando fora toda ancestral fêmea da árvore — incluindo a
+   própria mãe do animal. Isso explica por que `mae`/`avo_materno` vinham sempre nulos mesmo
+   depois do fix de geração. Corrigido pra aceitar os dois. Também corrigido o regex que separa
+   lado paterno/materno (procurava a marca da linha do próprio animal, mas o padrão nunca batia
+   contra a estrutura real — caía sempre no fallback ingênuo de cortar a página na metade dos
+   caracteres, o que não corresponde à divisão real da árvore).
+- **Validado**: testado em Node contra o HTML real (não simulado) do animal Barulho da Mãe de
+  Deus (B672331) — os 4 campos (pai, avô paterno, mãe, avô materno) batem exatamente com o que
+  o usuário confirmou manualmente pelo print da árvore. Antes do fix: só 15/30 ancestrais reais
+  capturados (só os machos); depois: 30/30.
+- **Cache limpo**: as 41 linhas em `public.sangues_linhagem` (cache de 30 dias) tinham sido
+  salvas pela versão quebrada — deletadas as que tinham `pai is null and mae is null and erro is
+  null`, forçando rebusca automática com o parser corrigido no próximo "Analisar manada" de cada
+  cabanha (sem precisar ninguém lembrar de clicar "Rebuscar todos"). Schemas de tenant não
+  tinham cópia (frontend nunca passa `tenant_schema` pra função hoje).
+- **Edge Function `analise-sangues` está em v15** agora (era v14) — se for tocar nela de novo,
+  puxar a versão atual antes de editar, mesma disciplina do `index.html`.
+
 ## 🧠 Agente Mimba — caso de uso 3 (ABCCC) destravado pro lançamento (2026-08-25)
 Founder redefiniu o escopo: o Agente Mimba deve ter, desde o lançamento, "dois cérebros" —
 contexto completo da cabanha + inteligência estatística da raça (Mimba Lab), casando os dois no
