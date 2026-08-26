@@ -784,19 +784,20 @@
   .sangue-bar-count { font-size:11px;color:var(--text2);white-space:nowrap; }
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
 
-  /* ── Mapa Genealógico (fan chart radial) — Análise de Sangues, Detalhes por animal ── */
-  @keyframes mapa-arco-entra { from { opacity:0; transform:scale(.82); } to { opacity:1; transform:scale(1); } }
-  @keyframes mapa-texto-entra { from { opacity:0; } to { opacity:1; } }
-  @keyframes mapa-centro-entra { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
-  .mapa-gen-svg { transform-box: fill-box; }
-  .mapa-gen-arco { animation: mapa-arco-entra .5s cubic-bezier(.2,.8,.3,1) backwards; transform-box: fill-box; transform-origin: center; cursor:default; }
-  .mapa-gen-arco:hover { filter: brightness(1.08); }
-  .mapa-gen-texto { animation: mapa-texto-entra .4s ease-out backwards; pointer-events:none; }
-  .mapa-gen-centro { animation: mapa-centro-entra .45s cubic-bezier(.2,.8,.3,1) backwards; transform-box: fill-box; transform-origin: center; }
-  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:8px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
+  /* ── Mapa Genealógico (estrutura ABCCC — colunas por geração, chaves de conexão) —
+     Análise de Sangues, Detalhes por animal ── */
+  @keyframes mapa-conecta { to { stroke-dashoffset: 0; } }
+  @keyframes mapa-surge { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes mapa-surge-central { to { opacity:1; } }
+  .mapa-gen-conector { fill:none; stroke-width:1.6; stroke-dasharray:var(--mgc-len); stroke-dashoffset:var(--mgc-len); animation:mapa-conecta .55s cubic-bezier(.4,0,.2,1) forwards; }
+  .mapa-gen-caixa { opacity:0; animation:mapa-surge .4s cubic-bezier(.2,.8,.3,1) forwards; }
+  .mapa-gen-caixa-central { opacity:0; animation:mapa-surge-central .4s ease forwards; }
+  .mapa-gen-colhead { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; fill:var(--text3); }
+  .mapa-gen-rotulo { font-family:var(--font); font-size:10.5px; font-weight:600; }
+  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:10px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
   .mapa-gen-legenda-item { display:flex; align-items:center; gap:5px; }
   .mapa-gen-legenda-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
-  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:12px; }
+  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:12px; opacity:0; animation:mapa-surge-central .5s ease forwards; animation-delay:1.6s; }
   .mapa-gen-narrativa strong { color:var(--campo-deep); }
   .mapa-gen-narrativa .linha-baixa strong { color:var(--terracota-ink); }
   .mapa-gen-irmao-badge { display:inline-flex; align-items:center; gap:4px; background:var(--purple-l); color:var(--purple-d); border-radius:var(--radius-badge); padding:3px 9px; font-size:10.5px; font-weight:700; margin-top:8px; }
@@ -14522,48 +14523,59 @@ function _reconstruirLinhagem(entradas, geracaoAlvo) {
   };
 }
 
-function _mapaGenPontoPolar(cx, cy, r, angGraus) {
-  const rad = (angGraus - 90) * Math.PI / 180;
-  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-}
-function _mapaGenSetorPath(cx, cy, rInner, rOuter, angStart, angEnd) {
-  const [x1,y1] = _mapaGenPontoPolar(cx,cy,rOuter,angStart);
-  const [x2,y2] = _mapaGenPontoPolar(cx,cy,rOuter,angEnd);
-  const [x3,y3] = _mapaGenPontoPolar(cx,cy,rInner,angEnd);
-  const [x4,y4] = _mapaGenPontoPolar(cx,cy,rInner,angStart);
-  const largeArc = (angEnd-angStart) > 180 ? 1 : 0;
-  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${x3.toFixed(2)} ${y3.toFixed(2)} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`;
-}
 function _mapaGenEscXml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-const _MAPA_GEN_RAIOS = { 1:[50,98], 2:[102,150], 3:[154,198] };
-const _MAPA_GEN_FONTES = {1:9, 2:7.5, 3:6.3};
-const _MAPA_GEN_TRUNCA = {1:22, 2:17, 3:13};
+// Layout tipo dendrograma: gerações mais distantes (folhas) recebem posições verticais
+// sequenciais, e cada geração mais próxima do animal fica na média Y dos seus dois "filhos"
+// genealógicos — mesmo princípio de árvore genealógica de qualquer software de pedigree.
+// maxGen limita o desenho até a 3ª geração (mais que isso fica ilegível em coluna) — 4ª/5ª,
+// quando existem, viram lista textual compacta abaixo do mapa.
+const _MAPA_GEN_MAXGEN = 3;
+const _MAPA_GEN_ROWH = 26;
 
-// Desenha um lado (linha alta OU linha baixa) recursivamente — cada geração subdivide o setor
-// angular ao meio entre a subárvore do pai (primeira metade) e da mãe (segunda metade), gerando
-// a geometria de "fan chart" clássica de genealogia. Só desenha até 3ª geração no SVG — 4ª/5ª
-// (quando existem) viram lista textual abaixo do mapa, senão o desenho fica ilegível.
-function _mapaGenDesenharRamo(node, cx, cy, angStart, angEnd, corVar, partes, maxGenVisual) {
-  if (!node || node.gen > maxGenVisual) return;
-  const [rInner, rOuter] = _MAPA_GEN_RAIOS[node.gen];
-  const d = _mapaGenSetorPath(cx, cy, rInner, rOuter, angStart, angEnd);
-  const angMeio = (angStart + angEnd) / 2;
-  const opacidade = node.gen === 1 ? 1 : node.gen === 2 ? 0.85 : 0.65;
-  const delay = (node.gen - 1) * 140;
-  partes.push(`<path d="${d}" fill="${corVar}" fill-opacity="${opacidade}" stroke="var(--pergaminho)" stroke-width="2" class="mapa-gen-arco" style="animation-delay:${delay}ms"><title>${_mapaGenEscXml(node.nome)}</title></path>`);
+function _mapaGenAssignY(node, contador) {
+  if (!node) return;
+  if (node.gen >= _MAPA_GEN_MAXGEN || (!node.pai && !node.mae)) {
+    node.y = contador.v * _MAPA_GEN_ROWH;
+    contador.v++;
+    return;
+  }
+  _mapaGenAssignY(node.pai, contador);
+  _mapaGenAssignY(node.mae, contador);
+  const ys = [node.pai?.y, node.mae?.y].filter(v => v != null);
+  node.y = ys.length ? ys.reduce((a,b)=>a+b,0) / ys.length : (contador.v++ * _MAPA_GEN_ROWH);
+}
+function _mapaGenAplicarOffset(node, topo) {
+  if (!node) return;
+  node.yAbs = node.y + topo;
+  _mapaGenAplicarOffset(node.pai, topo);
+  _mapaGenAplicarOffset(node.mae, topo);
+}
+function _mapaGenElbow(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2;
+  return `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
 
-  const rTexto = (rInner + rOuter) / 2;
-  const [tx, ty] = _mapaGenPontoPolar(cx, cy, rTexto, angMeio);
-  let rot = angMeio - 90;
-  if (angMeio > 180) rot += 180;
-  const fonte = _MAPA_GEN_FONTES[node.gen];
-  const maxChar = _MAPA_GEN_TRUNCA[node.gen];
-  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0,maxChar-1) + '…' : node.nome;
-  partes.push(`<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" transform="rotate(${rot.toFixed(1)} ${tx.toFixed(2)} ${ty.toFixed(2)})" text-anchor="middle" dominant-baseline="middle" font-size="${fonte}" font-weight="600" fill="var(--pergaminho)" class="mapa-gen-texto" style="animation-delay:${delay+80}ms">${_mapaGenEscXml(nomeCurto)}</text>`);
+// Desenha um lado (linha alta OU linha baixa) recursivamente, coluna por geração, com chaves
+// de conexão — mesma estrutura que o site da ABCCC usa pra 5ª geração (pai/mãe/avós em colunas
+// sucessivas), só que redesenhada com a tipografia e cor da Mimba em vez da tabela HTML antiga.
+function _mapaGenDesenhar(node, corVar, colX, filhoX, filhoY, conectores, caixas) {
+  if (!node || node.gen > _MAPA_GEN_MAXGEN) return;
+  const x = colX[node.gen];
+  const delay = (node.gen === 1 ? 0.15 : node.gen === 2 ? 0.55 : 0.95).toFixed(2);
+  conectores.push(`<path class="mapa-gen-conector" d="${_mapaGenElbow(x, node.yAbs, filhoX, filhoY)}" stroke="${corVar}" style="animation-delay:${delay}s"></path>`);
 
-  _mapaGenDesenharRamo(node.pai, cx, cy, angStart, angMeio, corVar, partes, maxGenVisual);
-  _mapaGenDesenharRamo(node.mae, cx, cy, angMeio, angEnd, corVar, partes, maxGenVisual);
+  const w = node.gen === 1 ? 200 : node.gen === 2 ? 178 : 160;
+  const maxChar = node.gen === 1 ? 24 : node.gen === 2 ? 21 : 18;
+  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0, maxChar-1) + '…' : node.nome;
+  const ehGen1 = node.gen === 1;
+  caixas.push(`<g class="mapa-gen-caixa" style="animation-delay:${delay}s">
+    <rect x="${x-w/2}" y="${node.yAbs-11}" width="${w}" height="22" rx="5" fill="${ehGen1?corVar:'var(--bg3)'}" stroke="${corVar}" stroke-width="${ehGen1?0:1}"></rect>
+    <text class="mapa-gen-rotulo" x="${x}" y="${node.yAbs+4}" text-anchor="middle" fill="${ehGen1?'var(--pergaminho)':'var(--text)'}"><title>${_mapaGenEscXml(node.nome)}</title>${_mapaGenEscXml(nomeCurto)}</text>
+  </g>`);
+
+  _mapaGenDesenhar(node.pai, corVar, colX, x, node.yAbs, conectores, caixas);
+  _mapaGenDesenhar(node.mae, corVar, colX, x, node.yAbs, conectores, caixas);
 }
 
 function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
@@ -14572,32 +14584,59 @@ function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
   const arvorePat = _reconstruirLinhagem(entradasPat, 1);
   const arvoreMat = _reconstruirLinhagem(entradasMat, 1);
 
-  const cx = 280, cy = 280;
-  const partes = [];
-  _mapaGenDesenharRamo(arvorePat, cx, cy, 0, 180, 'var(--campo)', partes, 3);
-  _mapaGenDesenharRamo(arvoreMat, cx, cy, 180, 360, 'var(--terracota)', partes, 3);
+  let c = {v:0}; _mapaGenAssignY(arvorePat, c);
+  const alturaPat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
+  c = {v:0}; _mapaGenAssignY(arvoreMat, c);
+  const alturaMat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
 
-  const nomeCentro = nomeAnimal.length>18 ? nomeAnimal.slice(0,16)+'…' : nomeAnimal;
-  const centro = `<circle cx="${cx}" cy="${cy}" r="46" fill="var(--pergaminho2)" stroke="var(--text)" stroke-width="1.5" class="mapa-gen-centro"/>
-    <text x="${cx}" y="${cy-3}" text-anchor="middle" font-weight="700" font-size="8" fill="var(--text)">${_mapaGenEscXml(nomeCentro)}</text>
-    <text x="${cx}" y="${cy+11}" text-anchor="middle" font-size="6.5" fill="var(--text3)" letter-spacing="0.5">ANIMAL</text>`;
+  const topoPat = 34, topoMat = topoPat + alturaPat + 56;
+  _mapaGenAplicarOffset(arvorePat, topoPat);
+  _mapaGenAplicarOffset(arvoreMat, topoMat);
 
-  // 4ª/5ª geração (quando existem) — lista textual compacta, fora do desenho radial
-  const alemDo3 = [...entradasPat, ...entradasMat].filter(a => a.gen >= 4).sort((a,b)=>a.gen-b.gen);
-  const listaAlem = alemDo3.length ? `<div style="margin-top:10px;font-size:10.5px;color:var(--text2);text-align:center">
-      <strong>${alemDo3.length} ancestrais além da 3ª geração:</strong> ${alemDo3.map(a=>a.nome).join(', ')}
+  const colX = {1:210, 2:400, 3:580};
+  const animalX = 60, animalY = (topoPat + alturaPat + topoMat) / 2;
+  const alturaTotal = topoMat + alturaMat + 40;
+
+  const partes = { conectores: [], caixas: [] };
+  _mapaGenDesenhar(arvorePat, 'var(--campo)', colX, animalX+24, animalY, partes.conectores, partes.caixas);
+  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', colX, animalX+24, animalY, partes.conectores, partes.caixas);
+
+  const nomeCentro = nomeAnimal.length>16 ? nomeAnimal.slice(0,15)+'…' : nomeAnimal;
+  const centro = `<g class="mapa-gen-caixa-central" style="animation-delay:0s">
+    <circle cx="${animalX}" cy="${animalY}" r="28" fill="var(--bg3)" stroke="var(--text)" stroke-width="1.5"></circle>
+    <text x="${animalX}" y="${animalY+3}" text-anchor="middle" font-family="var(--font)" font-size="7.5" font-weight="700" fill="var(--text)">${_mapaGenEscXml(nomeCentro)}</text>
+  </g>`;
+
+  const cabecalhos = [1,2,3].map(g =>
+    `<text class="mapa-gen-colhead" x="${colX[g]}" y="16" text-anchor="middle">${g}ª geração</text>`
+  ).join('');
+
+  const alemDo3 = [...entradasPat, ...entradasMat].filter(a => a.gen >= _MAPA_GEN_MAXGEN+1).sort((a,b)=>a.gen-b.gen);
+  const listaAlem = alemDo3.length ? `<div style="margin-top:8px;font-size:10.5px;color:var(--text2);text-align:center">
+      <strong>${alemDo3.length} ancestrais além da 3ª geração:</strong> ${alemDo3.map(a=>_mapaGenEscXml(a.nome)).join(', ')}
     </div>` : '';
 
-  return `<svg viewBox="0 0 560 560" class="mapa-gen-svg" style="width:100%;max-width:420px;display:block;margin:0 auto">
-    <text x="140" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="var(--campo-deep)" letter-spacing="0.5">LINHA ALTA</text>
-    <text x="420" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="var(--terracota-ink)" letter-spacing="0.5">LINHA BAIXA</text>
-    ${partes.join('\n')}
+  const svgId = 'mapasvg-' + Math.random().toString(36).slice(2,8);
+  return `<svg viewBox="0 0 660 ${alturaTotal.toFixed(0)}" id="${svgId}" style="width:100%;display:block">
+    ${cabecalhos}
+    ${partes.conectores.join('\n')}
+    ${partes.caixas.join('\n')}
     ${centro}
   </svg>${listaAlem}
   <div class="mapa-gen-legenda">
     <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--campo)"></span>Linha alta (via pai)</span>
     <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--terracota)"></span>Linha baixa (via mãe)</span>
   </div>`;
+}
+
+// innerHTML nunca executa <script> injetado — a medição do comprimento real de cada conector
+// (pra animação de "puxar a linha", stroke-dasharray/--mgc-len) precisa rodar depois de inserir
+// o SVG no DOM de verdade. Chamado pelo toggleMapaGenealogico logo após o innerHTML.
+function _mapaGenMedirConectores(containerEl) {
+  containerEl.querySelectorAll('.mapa-gen-conector').forEach(p => {
+    const len = p.getTotalLength();
+    p.style.setProperty('--mgc-len', len);
+  });
 }
 
 // Narrativa em linguagem de mercado: "linha alta" = pai direto; "linha baixa" = mãe seguida do
@@ -14646,6 +14685,7 @@ function toggleMapaGenealogico(sbb) {
     if (d) {
       wrap.innerHTML = _gerarMapaGenealogicoSVG(nome, d.ancestrais_pos)
         + _gerarNarrativaLinhagem(sbb, d, _cacheSanguesSessao?.resultados);
+      _mapaGenMedirConectores(wrap);
       wrap.dataset.carregado = '1';
     }
   }
