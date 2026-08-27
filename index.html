@@ -17250,6 +17250,7 @@ async function _chatIAEnviar(){
     const decoder = new TextDecoder();
     let buffer = '';
     let respostaTexto = '';
+    let houveErro = false;
 
     while(true){
       const { done, value } = await reader.read();
@@ -17271,13 +17272,20 @@ async function _chatIAEnviar(){
         } else if(evento === 'ferramenta'){
           bolhaResposta.textContent = respostaTexto || 'consultando...';
         } else if(evento === 'erro'){
-          bolhaResposta.textContent = respostaTexto || (dados.erro || 'Erro no assistente.');
+          // Erro chegado NO MEIO do streaming (ex.: sem crédito na Anthropic) —
+          // servidor já respondeu 200 e abriu o stream antes de descobrir o
+          // problema, então isso não passa pelo `if(!r.ok)` acima. Sem o flag
+          // `houveErro`, a bolha com a mensagem era apagada logo depois (bug
+          // real: o código só olhava `respostaTexto`, que nunca recebe texto
+          // de erro) — usuário via a tela simplesmente não responder nada.
+          bolhaResposta.textContent = dados.erro || 'Erro no assistente.';
+          houveErro = true;
         }
       }
     }
 
     if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
-    else bolhaResposta.remove();
+    else if(!houveErro) bolhaResposta.remove();
   } catch(e) {
     bolhaResposta.textContent = 'Falha de conexão com o assistente.';
   } finally {
