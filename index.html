@@ -16690,10 +16690,9 @@ function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
-  // Balão do agente de IA escondido a pedido do Luciano (2026-08-25) até
-  // evoluir a funcionalidade — infra (Edge Function, RPCs, painel) continua
-  // pronta, só a exibição do FAB fica desligada aqui.
-  _chatIAMostrarFab(false);
+  // Balão do agente de IA reativado em 2026-08-27 — caso de uso 3
+  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF.
+  _chatIAMostrarFab(true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
