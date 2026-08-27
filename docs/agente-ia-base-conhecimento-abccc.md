@@ -52,10 +52,11 @@ têm nome parecido mas são **provas diferentes**:
    **domados para correr**: há uma vistoria 21–30 dias antes da prova para confirmar que o
    animal é **chucro** (nunca foi domado); se liberado, é domado especificamente para competir.
 
-   > ⚠️ **Achado de dado (2026-08-25)**: "Doma de Ouro" ainda não existe na base do Mimba Lab
-   > (`resultados_competitivos`) — só Bocal de Ouro está carregado, sob esse nome. Não confundir
-   > os dois ao consultar ou ao responder. Fonte de dado para Doma de Ouro ainda não identificada
-   > (ver ADR 0009, próximos passos).
+   > ⚠️ **Correção (2026-08-26)**: achado anterior (2026-08-25) dizia que "Doma de Ouro" não
+   > existia na base — na verdade está carregada (336 linhas, `tier=2`, distinta de Bocal de Ouro).
+   > Colocação de Doma de Ouro é só posição numérica (`01`, `04`...), sem a hierarquia textual
+   > (Grande Campeão etc.) que Morfologia e Freio de Ouro têm — dá pra citar posição/finalista,
+   > não o nível de detalhe da seção 6. Não confundir Doma de Ouro com Bocal de Ouro ao responder.
 
 ## 3. Análise ancestral (5 gerações) — regras de narrativa
 

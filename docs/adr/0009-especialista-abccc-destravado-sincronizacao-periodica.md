@@ -34,11 +34,15 @@ Duas coisas mudaram desde então, ambas em 2026-08-25:
   é vocabulário interno, nunca aparece para o usuário) são Morfologia Expointer, Final do Freio de
   Ouro e Doma de Ouro.
 
-**Achado no caminho, ainda sem solução**: "Doma de Ouro" **não existe hoje** como prova na base do
-Lab (`resultados_competitivos`). O que existe é "Bocal de Ouro" — prova **diferente** (semifinal de
-seleção para o Freio de Ouro, só animais inéditos), confirmado com o Luciano que não são a mesma
-coisa. Doma de Ouro (animal domado para correr, com vistoria de 21–30 dias antes) provavelmente
-precisa de uma fonte de dado própria, ainda não identificada.
+**Achado no caminho, corrigido em 2026-08-26**: esta ADR originalmente registrava "Doma de Ouro"
+como prova sem fonte de dado identificada. Verificado direto no Lab ao desenhar o schema desta
+ADR: **"Doma de Ouro" já está carregada** em `resultados_competitivos` (336 linhas, `tier=2`),
+distinta de "Bocal de Ouro" (1038 linhas, `tier=2` — semifinal de seleção para o Freio de Ouro, só
+animais inéditos, confirmado com o Luciano que não são a mesma prova). Colocação de Doma de Ouro
+vem como posição numérica (`01`, `04`...), sem a hierarquia textual (Grande Campeão etc.) que
+"Morfologia Expointer" e "Final Freio de Ouro" têm — dá pra citar posição/finalista, não a
+hierarquia completa da seção 6. As 3 provas principais prometidas para o lançamento **já têm dado
+carregado no Lab** — deixa de ser um risco em aberto.
 
 **Risco de calendário, registrado explicitamente**: o lançamento é 29/08, ou seja, 4 dias a partir
 desta ADR. O escopo abaixo — schema novo em produção, job de sincronização, RPCs novas do agente,
@@ -102,8 +106,6 @@ adiado por decisão" — se a necessidade aparecer, é uma nova decisão a tomar
 - (−) Trabalho de implementação real e novo, apertado contra o prazo de 4 dias: schema novo,
   job de sync, RPCs do agente, wiring do chat — precisa de validação explícita de viabilidade
   com o Pedro, não presumida por esta ADR.
-- (−) "Doma de Ouro" não tem fonte de dado identificada ainda — uma das 3 provas prometidas para
-  o lançamento fica sem histórico até isso ser resolvido.
 - (−) Cruzamento hipotético ao vivo continua fora do escopo — expectativa do usuário final
   precisa ser calibrada para não prometer isso ainda.
 - (?) Frequência do job de sincronização (diário? por evento de carga no Lab?) não decidida
@@ -112,7 +114,7 @@ adiado por decisão" — se a necessidade aparecer, é uma nova decisão a tomar
 ## Alternativas consideradas
 
 - **Proxy de produção ao vivo (opção B da ADR 0007)**: rejeitada pelos mesmos motivos que a
-  0007 já registrou — reabre a invariante da 0005 sem necessidade, e ainda tensiona o plano
+  0007 já registrou — reabre a invariante da ADR 0010 sem necessidade, e ainda tensiona o plano
   free do projeto do Lab a cada conversa de qualquer cabanha.
 - **Artefato estático simples (texto/markdown, opção A da ADR 0007)**: rejeitado para este
   escopo — perde a capacidade de `JOIN` com o SBB específico do animal da cabanha do usuário,
@@ -128,11 +130,9 @@ adiado por decisão" — se a necessidade aparecer, é uma nova decisão a tomar
 
 - Validar com o Pedro a viabilidade desse escopo nos 4 dias restantes — se não couber, decidir o
   que sai da lista ou se o caso de uso 3 ativa logo após o dia 29, não no lançamento em si.
-- Identificar a fonte de dado para Doma de Ouro (mesma origem do painel público da ABCCC que
-  alimentou as outras provas, ou outra fonte — a definir).
-- Desenhar o schema exato de `abccc_estatisticas_animal` e a RPC que o agente vai chamar
-  (`revisor-isolamento` no loop, mesma regra de sempre para qualquer tabela/RPC nova tocando
-  dado de produção).
+- Schema de `abccc_estatisticas_animal` + `abccc_linhagens_em_alta` desenhado em 2026-08-26
+  (`docs/migrations/2026-08-26-agente-caso-uso3-schema-abccc.sql`) — falta aplicar (após
+  `revisor-isolamento`), o job de sync, e as RPCs `abccc_*` que o agente vai chamar.
 - Definir a frequência do job de sincronização.
 - Base de conhecimento de terminologia/regras de narrativa (`docs/agente-ia-base-conhecimento-abccc.md`)
   já escrita nesta mesma sessão — serve de insumo direto para o conteúdo que a

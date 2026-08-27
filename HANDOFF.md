@@ -612,13 +612,19 @@ mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha de
   **7.286/26.593 (27%) de mãe**, via backfill por casamento de nome dentro da própria base do Lab
   (função `public.backfill_genealogia_por_nome()`, projeto `njynlsugmvtuvcczmuld`) — sem nenhuma
   chamada externa à ABCCC.
-- **Achado de dado ainda sem solução**: "Doma de Ouro" (uma das 3 provas principais definidas pro
-  lançamento) **não existe** na base do Lab hoje — só "Bocal de Ouro" está carregado, e são provas
-  diferentes (confirmado com o Luciano). Fonte de dado pra Doma de Ouro ainda não identificada.
-- ⚠️ **Risco de calendário registrado explicitamente na ADR**: lançamento em 4 dias (29/08), e
-  esse escopo (schema novo em produção, job de sync, RPCs do agente, wiring do chat) é trabalho
-  real, empilhado num V1.5 que ainda não tinha nada pronto. Precisa de validação de viabilidade
-  com o Pedro antes de assumir que cabe no prazo exato.
+- **Correção (2026-08-26)**: achado anterior dizia que "Doma de Ouro" não existia na base — na
+  verdade está carregada (336 linhas, `tier=2`, confirmado ao desenhar o schema abaixo). As 3
+  provas principais do lançamento já têm dado no Lab; deixa de ser um risco em aberto.
+- **Schema desenhado (2026-08-26)**: `docs/migrations/2026-08-26-agente-caso-uso3-schema-abccc.sql`
+  — `abccc_estatisticas_animal` (resumo por SBB: linha alta/baixa, participações com peso,
+  finalistas produzidos, árvore crua de 5 gerações) + `abccc_linhagens_em_alta` (ranking
+  recalculado a cada sync). Nenhuma das duas entra na lista hardcoded de `provisionar_schema_cabanha()`
+  — confirmado antes de escrever a migration, não vaza pra schemas `cab_*`. Falta aplicar (depois
+  do `revisor-isolamento`), o job de sync e as RPCs `abccc_*`.
+- ⚠️ **Risco de calendário registrado explicitamente na ADR**: lançamento em 3 dias (29/08), e
+  esse escopo (job de sync, RPCs do agente, wiring do chat) é trabalho real, empilhado num V1.5
+  que ainda não tinha nada pronto. Precisa de validação de viabilidade com o Pedro antes de
+  assumir que cabe no prazo exato.
 
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
