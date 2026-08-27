@@ -2,6 +2,10 @@
 .claude/settings.local.json
 .claude/worktrees/
 
+# CSVs gerados por scraping do painel ABCCC — reproduzíveis, ~13MB, e os
+# dados já estão carregados no Mimba Lab (dados/genealogia/scraper-5geracoes.mjs).
+dados/abccc/*.csv
+
 # mobile/ — wrapper Capacitor (docs/adr/0005-empacotamento-mobile-em-3-fases.md).
 # Isolado do resto do repo: tem seu próprio npm/build step, que não existe no
 # frontend web (index.html continua sem framework/bundler).
