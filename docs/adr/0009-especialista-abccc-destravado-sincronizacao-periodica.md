@@ -126,14 +126,30 @@ adiado por decisão" — se a necessidade aparecer, é uma nova decisão a tomar
   entendimento de que a cobertura pré-2000 continua baixa e vai crescer com o trabalho do Pedro
   (catálogos + campeões + 5ª geração) em paralelo, não como bloqueio.
 
-## Próximos passos (fora desta ADR)
+## Status (atualizado 2026-08-27): implementado e no ar
 
-- Validar com o Pedro a viabilidade desse escopo nos 4 dias restantes — se não couber, decidir o
-  que sai da lista ou se o caso de uso 3 ativa logo após o dia 29, não no lançamento em si.
-- Schema de `abccc_estatisticas_animal` + `abccc_linhagens_em_alta` desenhado em 2026-08-26
-  (`docs/migrations/2026-08-26-agente-caso-uso3-schema-abccc.sql`) — falta aplicar (após
-  `revisor-isolamento`), o job de sync, e as RPCs `abccc_*` que o agente vai chamar.
-- Definir a frequência do job de sincronização.
-- Base de conhecimento de terminologia/regras de narrativa (`docs/agente-ia-base-conhecimento-abccc.md`)
-  já escrita nesta mesma sessão — serve de insumo direto para o conteúdo que a
-  `abccc_estatisticas_animal` precisa carregar e para o system prompt do agente.
+Todo o escopo técnico desta ADR foi implementado, revisado (`revisor-isolamento`, aprovado nas
+duas rodadas) e validado com dado real em produção:
+
+- Schema `abccc_estatisticas_animal` + `abccc_linhagens_em_alta` aplicado
+  (`docs/migrations/2026-08-26-agente-caso-uso3-schema-abccc.sql`).
+- Job de sincronização (`supabase/functions/sync-abccc-estatisticas/index.ts`) deployado e
+  testado ponta a ponta: 29.282 animais sincronizados, ranking de linhagens em alta batendo
+  exatamente com os números validados na base de conhecimento.
+- Agendado via `pg_cron`/`pg_net`/Vault pra rodar sozinho todo dia às 06:00 UTC
+  (`docs/migrations/2026-08-27-cron-sync-abccc-estatisticas.sql`).
+- RPCs `abccc_resumo_animal`/`abccc_ranking_linhagens` aplicadas e conectadas ao `agente-ia`
+  (`docs/migrations/2026-08-27-agente-caso-uso3-rpcs-abccc.sql`), sem nenhum JOIN cross-schema
+  com dado de tenant — a ponte com o animal da própria cabanha do usuário acontece em duas
+  chamadas de tool-use separadas do modelo.
+- FAB do chat reativado no `index.html` (estava escondido a pedido do Luciano desde 2026-08-25).
+
+**Único bloqueio real**: `ANTHROPIC_API_KEY` configurada, mas sem créditos carregados ainda —
+sem isso não dá pra validar o comportamento do modelo numa conversa de verdade (a parte de banco/
+RPC/job já foi validada independente da Anthropic).
+
+**Achado corrigido no caminho**: "Doma de Ouro" (registrado nesta ADR como sem fonte de dado
+identificada) na verdade já estava carregada no Lab — não era um risco real. Metodologia de
+"linhagens em alta" também foi corrigida (era descrita como recorrência na 5ª geração da árvore
+inteira; a validada de fato é pai direto do ciclo mais recente — ver base de conhecimento seção
+4.3 e o comentário em `abccc_exportar_linhagens_em_alta` no Mimba Lab).

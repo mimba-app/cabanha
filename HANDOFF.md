@@ -621,10 +621,14 @@ mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha de
   recalculado a cada sync). Nenhuma das duas entra na lista hardcoded de `provisionar_schema_cabanha()`
   — confirmado antes de escrever a migration, não vaza pra schemas `cab_*`. Falta aplicar (depois
   do `revisor-isolamento`), o job de sync e as RPCs `abccc_*`.
-- ⚠️ **Risco de calendário registrado explicitamente na ADR**: lançamento em 3 dias (29/08), e
-  esse escopo (job de sync, RPCs do agente, wiring do chat) é trabalho real, empilhado num V1.5
-  que ainda não tinha nada pronto. Precisa de validação de viabilidade com o Pedro antes de
-  assumir que cabe no prazo exato.
+- ✅ **Concluído (2026-08-27)**: job de sincronização deployado, testado (29.282 animais, ranking
+  batendo com os números validados) e agendado via `pg_cron`/`pg_net`/Vault (diário, 06:00 UTC).
+  RPCs `abccc_resumo_animal`/`abccc_ranking_linhagens` aplicadas, revisadas
+  (`revisor-isolamento`, aprovado) e conectadas ao `agente-ia` (v7) — system prompt reescrito com
+  a terminologia/regras da base de conhecimento ABCCC. FAB do chat reativado no `index.html`
+  (estava escondido a pedido do Luciano desde 2026-08-25).
+  **Único bloqueio real**: `ANTHROPIC_API_KEY` configurada, sem créditos carregados ainda — falta
+  só isso pra validar o comportamento do modelo numa conversa de verdade.
 
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
