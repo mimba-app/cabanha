@@ -14543,18 +14543,19 @@ function _mapaGenEscXml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g
 // genealógicos — mesmo princípio de árvore genealógica de qualquer software de pedigree.
 // maxGen limita o desenho até a 3ª geração (mais que isso fica ilegível em coluna) — 4ª/5ª,
 // quando existem, viram lista textual compacta abaixo do mapa.
-const _MAPA_GEN_MAXGEN = 3;
+// maxGen agora é decidido por _mapaGenConfigTela() (responsivo à largura da tela), não mais
+// uma constante fixa — ver função abaixo, antes de _gerarMapaGenealogicoSVG.
 const _MAPA_GEN_ROWH = 26;
 
-function _mapaGenAssignY(node, contador) {
+function _mapaGenAssignY(node, contador, maxGen) {
   if (!node) return;
-  if (node.gen >= _MAPA_GEN_MAXGEN || (!node.pai && !node.mae)) {
+  if (node.gen >= maxGen || (!node.pai && !node.mae)) {
     node.y = contador.v * _MAPA_GEN_ROWH;
     contador.v++;
     return;
   }
-  _mapaGenAssignY(node.pai, contador);
-  _mapaGenAssignY(node.mae, contador);
+  _mapaGenAssignY(node.pai, contador, maxGen);
+  _mapaGenAssignY(node.mae, contador, maxGen);
   const ys = [node.pai?.y, node.mae?.y].filter(v => v != null);
   node.y = ys.length ? ys.reduce((a,b)=>a+b,0) / ys.length : (contador.v++ * _MAPA_GEN_ROWH);
 }
@@ -14574,48 +14575,63 @@ function _mapaGenElbow(x1, y1, x2, y2) {
 // verdade — pergaminho, borda e sombra reais (var(--card-border)/var(--sh-sm)), reaproveitando
 // literalmente o tratamento visual de .ja-lado/.ja-bloco (Jornada de Acasalamento, Direção A —
 // "O Dossiê Selado") em vez de formas SVG preenchidas com cor sólida.
-function _mapaGenDesenhar(node, corVar, ladoClasse, colX, filhoX, filhoY, conectores, cards) {
-  if (!node || node.gen > _MAPA_GEN_MAXGEN) return;
+function _mapaGenDesenhar(node, corVar, ladoClasse, colX, filhoX, filhoY, conectores, cards, maxGen) {
+  if (!node || node.gen > maxGen) return;
   const x = colX[node.gen];
   const delay = (node.gen === 1 ? 0.15 : node.gen === 2 ? 0.55 : 0.95).toFixed(2);
   conectores.push(`<path class="mapa-gen-conector" d="${_mapaGenElbow(x, node.yAbs, filhoX, filhoY)}" stroke="${corVar}" style="animation-delay:${delay}s"></path>`);
 
   const ehGen1 = node.gen === 1;
-  const maxChar = node.gen === 1 ? 26 : node.gen === 2 ? 22 : 19;
-  const maxW = node.gen === 1 ? 190 : node.gen === 2 ? 168 : 152;
+  const estreita = maxGen === 2;
+  const maxChar = node.gen === 1 ? (estreita?20:26) : node.gen === 2 ? (estreita?17:22) : 19;
+  const maxW = node.gen === 1 ? (estreita?150:190) : node.gen === 2 ? (estreita?128:168) : 152;
   const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0, maxChar-1) + '…' : node.nome;
   const dot = ehGen1 ? '' : `<span class="mapa-gen-dot" style="background:${corVar}"></span>`;
   cards.push(`<div class="mapa-gen-card gen${node.gen}${ehGen1?' '+ladoClasse:''}" style="left:${x}px;top:${node.yAbs}px;max-width:${maxW}px;animation-delay:${delay}s" title="${_mapaGenEscXml(node.nome)}">
     <span class="mapa-gen-nome">${dot}${_mapaGenEscXml(nomeCurto)}</span>
   </div>`);
 
-  _mapaGenDesenhar(node.pai, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards);
-  _mapaGenDesenhar(node.mae, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards);
+  _mapaGenDesenhar(node.pai, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards, maxGen);
+  _mapaGenDesenhar(node.mae, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards, maxGen);
+}
+
+// Decide quantas gerações cabem no mapa sem estourar a tela ou encolher o texto até ficar
+// ilegível. Testado em produção (2026-08-27): telas de celular (~360-400px) cortavam a 1ª
+// coluna na borda, sem indicação de que dava pra rolar — dá pra estreitar as colunas, mas
+// escalar o layout inteiro pra caber deixaria a fonte pequena demais pra ler. Solução: mostrar
+// menos gerações no mapa (2, não 3) em telas estreitas — a 3ª cai na lista de texto que já
+// existe pra 4ª/5ª geração, em vez de tentar espremer tudo no desenho.
+function _mapaGenConfigTela() {
+  const estreita = (window.innerWidth || 999) < 480;
+  return estreita
+    ? { maxGen: 2, colX: {1:150, 2:300}, larguraTotal: 380, animalX: 40 }
+    : { maxGen: 3, colX: {1:200, 2:380, 3:560}, larguraTotal: 660, animalX: 56 };
 }
 
 function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
+  const cfg = _mapaGenConfigTela();
   const entradasPat = (ancestraisPos||[]).filter(a => a.lado==='pat' && a.gen && a.nome);
   const entradasMat = (ancestraisPos||[]).filter(a => a.lado==='mat' && a.gen && a.nome);
   const arvorePat = _reconstruirLinhagem(entradasPat, 1);
   const arvoreMat = _reconstruirLinhagem(entradasMat, 1);
 
-  let c = {v:0}; _mapaGenAssignY(arvorePat, c);
+  let c = {v:0}; _mapaGenAssignY(arvorePat, c, cfg.maxGen);
   const alturaPat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
-  c = {v:0}; _mapaGenAssignY(arvoreMat, c);
+  c = {v:0}; _mapaGenAssignY(arvoreMat, c, cfg.maxGen);
   const alturaMat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
 
   const topoPat = 40, topoMat = topoPat + alturaPat + 60;
   _mapaGenAplicarOffset(arvorePat, topoPat);
   _mapaGenAplicarOffset(arvoreMat, topoMat);
 
-  const colX = {1:200, 2:380, 3:560};
-  const animalX = 56, animalY = (topoPat + alturaPat + topoMat) / 2;
+  const colX = cfg.colX;
+  const animalX = cfg.animalX, animalY = (topoPat + alturaPat + topoMat) / 2;
   const alturaTotal = topoMat + alturaMat + 30;
-  const larguraTotal = 660;
+  const larguraTotal = cfg.larguraTotal;
 
   const conectores = [], cards = [];
-  _mapaGenDesenhar(arvorePat, 'var(--campo)', 'mg-alta', colX, animalX, animalY, conectores, cards);
-  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', 'mg-baixa', colX, animalX, animalY, conectores, cards);
+  _mapaGenDesenhar(arvorePat, 'var(--campo)', 'mg-alta', colX, animalX, animalY, conectores, cards, cfg.maxGen);
+  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', 'mg-baixa', colX, animalX, animalY, conectores, cards, cfg.maxGen);
 
   const nomeCentro = nomeAnimal.length>14 ? nomeAnimal.slice(0,13)+'…' : nomeAnimal;
   const selo = `<div class="mapa-gen-selo" style="left:${animalX}px;top:${animalY}px" title="${_mapaGenEscXml(nomeAnimal)}">
@@ -14623,13 +14639,13 @@ function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
     <span class="mapa-gen-selo-txt">${_mapaGenEscXml(nomeCentro)}</span>
   </div>`;
 
-  const cabecalhos = [1,2,3].map(g =>
+  const cabecalhos = Object.keys(colX).map(g =>
     `<div class="mapa-gen-colhead" style="left:${colX[g]}px;top:12px">${g}ª geração</div>`
   ).join('');
 
-  const alemDo3 = [...entradasPat, ...entradasMat].filter(a => a.gen >= _MAPA_GEN_MAXGEN+1).sort((a,b)=>a.gen-b.gen);
-  const listaAlem = alemDo3.length ? `<div style="margin-top:10px;font-size:10.5px;color:var(--text2);text-align:center">
-      <strong>${alemDo3.length} ancestrais além da 3ª geração:</strong> ${alemDo3.map(a=>_mapaGenEscXml(a.nome)).join(', ')}
+  const alemDoMax = [...entradasPat, ...entradasMat].filter(a => a.gen >= cfg.maxGen+1).sort((a,b)=>a.gen-b.gen);
+  const listaAlem = alemDoMax.length ? `<div style="margin-top:10px;font-size:10.5px;color:var(--text2);text-align:center">
+      <strong>${alemDoMax.length} ancestrais além da ${cfg.maxGen}ª geração:</strong> ${alemDoMax.map(a=>_mapaGenEscXml(a.nome)).join(', ')}
     </div>` : '';
 
   return `<div class="mapa-gen-scroll"><div class="mapa-gen-container" style="width:${larguraTotal}px;height:${alturaTotal.toFixed(0)}px;min-width:${larguraTotal}px">
