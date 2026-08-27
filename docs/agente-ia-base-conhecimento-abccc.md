@@ -114,13 +114,21 @@ consulta real (contagem de descendentes distintos aparecendo como finalistas daq
 ### 4.3 Linhagens em alta — dado derivado, não lista fixa
 
 "Linhagens em alta" não é uma lista que alguém escreveu uma vez e ficou congelada. É **derivada**:
-analisar a 5ª geração dos últimos campeões/finalistas de cada prova principal e contar
-recorrência — quem aparece mais nessas árvores é quem está "em alta" agora. Isso muda a cada
-ciclo novo carregado, e deve ser recalculado (não hardcoded).
+contar, entre os finalistas do ciclo mais recente de cada prova principal, quantos têm cada
+garanhão como **pai direto** — quem produziu mais finalistas nesse ciclo é quem está "em alta"
+agora. Isso muda a cada ciclo novo carregado, e deve ser recalculado (não hardcoded).
 
-**Exemplo validado com dado real (Morfologia Expointer 2026, 252 finalistas)**:
+> ⚠️ **Correção de metodologia (2026-08-27)**: a versão anterior deste texto descrevia o método
+> como "recorrência na 5ª geração" (árvore inteira). Ao implementar o job de sincronização
+> (ADR 0009), essa versão foi testada contra o dado real e devolvia um resultado sem sentido —
+> um fundador antigo qualquer aparecia em quase metade de todas as árvores só por profundidade
+> de pedigree, o que não sinaliza nada sobre "quem está em alta agora". A metodologia que
+> realmente bate com os números já validados abaixo é mais simples: **só o pai direto**
+> (`sbb_pai`) dos finalistas do ciclo mais recente, contado por prova.
 
-| Garanhão | Finalistas |
+**Exemplo validado com dado real (Morfologia Expointer 2026, 503 finalistas)**:
+
+| Garanhão | Finalistas produzidos como pai direto |
 |---|---|
 | Fantástico de São Pedro | 28 |
 | Xeque Mate da Boa Vista | 16 |
@@ -128,13 +136,13 @@ ciclo novo carregado, e deve ser recalculado (não hardcoded).
 | Chamamé Nochero | 14 |
 
 Esses nomes bateram exatamente com o que o mercado já reconhece informalmente como "os mais
-falados de morfologia hoje" — confirma que o método (contar recorrência na 5ª geração dos
-finalistas recentes) reproduz o conhecimento tácito de quem acompanha a raça de perto, sem
-precisar hardcodar nome nenhum.
+falados de morfologia hoje" — confirma que o método (contar quantos finalistas recentes têm
+aquele garanhão como pai direto) reproduz o conhecimento tácito de quem acompanha a raça de
+perto, sem precisar hardcodar nome nenhum.
 
-No freio, o mesmo método aponta hoje para Ganadeiro da Harmonia e Colibri Matreiro (este último
-citado como um dos maiores campeões da raça) como referências recorrentes — a validar com o
-mesmo tipo de contagem quando os dados de Doma de Ouro/Bocal de Ouro estiverem mais completos.
+No freio (Final Freio de Ouro 2026, 217 finalistas), o mesmo método aponta hoje para Ganadero da
+Harmonia e Colibri Matrero (este último citado como um dos maiores campeões da raça) empatados
+em 8 finalistas cada como pai direto — confirmado com dado real, mesmo padrão de recorrência.
 
 ## 5. O que o agente NÃO faz (nesta fase — ver ADR 0009)
 
