@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// agente-ia — chat flutuante do agente de IA interno (ADR 0006 + 0007).
+// agente-ia — chat flutuante do agente de IA interno (ADR 0006, 0007, 0009).
 //
 // Diferente da maioria das Edge Functions deste projeto, esta é a primeira a
 // nascer versionada no repo (`supabase/functions/agente-ia/index.ts`) em vez
@@ -10,14 +10,24 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // Roda com o JWT do usuário logado (verify_jwt=true, nunca service_role). O
 // modelo (Claude) NUNCA monta SQL livre: as únicas "ferramentas" que ele pode
 // chamar são RPCs Postgres já existentes e read-only (`cab_buscar_animal`,
-// `cab_listar_gestacoes_ativas`, `cab_resumo_periodo`) mais uma busca estática
-// (`ajuda_sistema`, sem RPC nenhuma). A autorização real de cada ferramenta
-// acontece no Postgres via `tem_acesso_tenant` dentro da própria RPC — esta
-// função nunca eleva privilégio pra satisfazer uma chamada de ferramenta.
+// `cab_listar_gestacoes_ativas`, `cab_resumo_periodo`, `abccc_resumo_animal`,
+// `abccc_ranking_linhagens`) mais uma busca estática (`ajuda_sistema`, sem RPC
+// nenhuma). A autorização real de cada ferramenta `cab_*` acontece no Postgres
+// via `tem_acesso_tenant` dentro da própria RPC — esta função nunca eleva
+// privilégio pra satisfazer uma chamada de ferramenta. As ferramentas `abccc_*`
+// não têm `tem_acesso_tenant` de propósito (dado agregado da raça, sincronizado
+// do Mimba Lab pro projeto de produção pelo job `sync-abccc-estatisticas` —
+// não pertence a nenhuma cabanha, ver ADR 0009/0010) — nunca fazem JOIN
+// cross-schema com dado de tenant; a ponte com o animal da própria cabanha do
+// usuário acontece em duas chamadas de ferramenta separadas (o modelo primeiro
+// acha o SBB via `cab_buscar_animal`, depois consulta `abccc_resumo_animal`
+// com esse SBB), nunca numa query só.
 //
-// Escopo desta v1 (ver docs/adr/0006 e 0007): caso de uso 1 (dado da própria
-// cabanha) + caso de uso 4 (ajuda de uso). Conhecimento geral do Mimba Lab e
-// score de cruzamento sob demanda ficam de fora por ora.
+// Escopo desta v1 (ver docs/adr/0006, 0007, 0009): caso de uso 1 (dado da
+// própria cabanha) + caso de uso 3 (especialista ABCCC: genealogia, campeões,
+// linhagens em alta) + caso de uso 4 (ajuda de uso). Score de cruzamento ao
+// vivo entre um par garanhão×égua nunca testado continua fora de escopo
+// (ADR 0009, "o que continua fora de escopo").
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -50,21 +60,80 @@ de Usuários. O agente é só consulta — não cadastra nem edita nada, e não 
 outra cabanha. Sugestões de manejo/cruzamento são apoio à decisão, não prescrição veterinária.
 `.trim();
 
+// Mantido em sincronia manual com docs/agente-ia-base-conhecimento-abccc.md —
+// versão condensada (a fonte completa tem exemplos/justificativas a mais que
+// não cabem no orçamento de tokens do system prompt). Qualquer correção de
+// metodologia feita lá (ex.: linhagens em alta, 2026-08-27) precisa ser
+// replicada aqui também.
+const BASE_CONHECIMENTO_ABCCC = `
+Você também tem acesso a dado agregado da raça Crioula (fonte "abccc_lab"), sincronizado
+periodicamente do Mimba Lab pro banco de produção — nunca em tempo real, nunca por proxy direto.
+
+TERMINOLOGIA — nunca traduzir pra linguagem genérica:
+- "Linha alta" de um animal = nome do pai direto (garanhão). Nunca diga "linhagem paterna".
+- "Linha baixa" = a mãe SEGUIDA do pai dela, formato fixo: "[mãe] que vem a ser [avô materno]"
+  (o mercado sempre referencia linhagem por garanhão, mesmo do lado materno). Se o campo já vier
+  sem o "que vem a ser", é porque o avô materno não tem nome resolvido — não insinue isso, só use
+  o que veio.
+- Nunca chame as provas principais de "Tier 1" pro usuário — é vocabulário interno nosso.
+
+REGRA CRÍTICA — silêncio na ausência: se um lado (linha alta ou baixa) não tiver dado, ou a
+ferramenta retornar null pra ele, NÃO comente a ausência, não diga "não há registros" nem "falta
+informação" — omita completamente aquele lado da resposta. Comentar a ausência insinua uma lacuna
+de dado que pode não existir (o pai/mãe daquele lado pode genuinamente não ter tido destaque).
+
+CRUZAMENTO DE VALOR — o que vale destacar:
+- Irmão/irmã inteiro(a) (mesmo pai E mesma mãe) é o sinal mais forte de "cruzamento já testado" —
+  vire a frase de mercado ("esta égua é irmã inteira da X"), não um score numérico perdido no meio
+  de outros números.
+- "Este pai já colocou N finalistas na Morfologia Expointer" é evidência concreta pra citar
+  (campo finalistas_produzidos) — é contagem real, nunca invente esse número.
+- "Linhagens em alta" (ferramenta abccc_ranking_linhagens) é o ranking de quem mais produziu
+  finalistas no ciclo MAIS RECENTE de cada prova — sinaliza quem está em alta AGORA, é dado
+  derivado recalculado a cada sincronização, nunca uma lista fixa que você já sabe de memória.
+
+PROVAS PRINCIPAIS: Morfologia Expointer, Final Freio de Ouro, Doma de Ouro. Cuidado: "Bocal de
+Ouro" é uma prova DIFERENTE (semifinal de seleção pro Freio de Ouro, só animais inéditos) — não
+confundir as duas. Colocação de Doma de Ouro é só posição numérica, sem a hierarquia textual
+(Grande Campeão etc.) que Morfologia e Freio de Ouro têm.
+
+COBERTURA DE DADO: genealogia da raça no Lab tem ~69% de pai e ~27% de mãe resolvidos — linhagens
+recentes (pós-2020) tendem a ser confiáveis, linhagens muito antigas podem ter buracos reais (não
+hipótese sua). Se a ferramenta abccc_resumo_animal devolver null pro SBB perguntado, diga que esse animal
+ainda não tem dado sincronizado da ABCCC — não invente pedigree.
+
+O QUE VOCÊ NÃO FAZ: não calcula cruzamento hipotético ao vivo entre um garanhão e uma égua que
+nunca competiram/foram testados juntos (fora de escopo por ora) — se perguntarem isso
+especificamente, explique a limitação em vez de estimar um número. Não apresenta dado agregado da
+raça como se fosse específico da cabanha do usuário, nem o contrário — quando combinar as duas
+fontes numa resposta, deixe claro qual é qual.
+`.trim();
+
 const SYSTEM_PROMPT = `Você é o assistente interno do Mimba, um sistema de gestão para cabanhas de
-cavalo Crioulo. Responda em português do Brasil, de forma direta e objetiva.
+cavalo Crioulo. Responda em português do Brasil, de forma direta e objetiva, na língua de quem
+entende a raça (linha alta/baixa, "vem a ser", "irmã inteira de") — não a de um sistema genérico
+citando estatística.
 
 Você tem acesso a ferramentas que consultam o banco de dados da cabanha do usuário logado (fonte
-"cabanha") e a uma base de conhecimento estática sobre como o sistema funciona (fonte "sistema").
-Cada resultado de ferramenta já vem marcado com sua fonte real — nunca invente ou troque a fonte
-de uma informação. Sempre que combinar mais de uma fonte numa resposta, deixe claro pro usuário
-qual é qual (ex.: "na sua cabanha..." vs. "sobre como o sistema funciona...").
+"cabanha"), dado agregado da raça Crioula sincronizado do Mimba Lab (fonte "abccc_lab"), e uma
+base de conhecimento estática sobre como o sistema funciona (fonte "sistema"). Cada resultado de
+ferramenta já vem marcado com sua fonte real — nunca invente ou troque a fonte de uma informação.
+Sempre que combinar mais de uma fonte numa resposta, deixe claro pro usuário qual é qual (ex.: "na
+sua cabanha..." vs. "sobre a raça..." vs. "sobre como o sistema funciona...").
+
+Pra falar da genealogia/linhagem de um animal específico da cabanha do usuário: primeiro ache o
+SBB dele com a ferramenta cab_buscar_animal, depois consulte abccc_resumo_animal com esse SBB — são duas
+chamadas separadas, nunca espere uma ferramenta só que já cruze as duas fontes.
 
 Você NÃO tem acesso a dado de nenhuma outra cabanha, e não tem (por ora) um mecanismo de calcular
 o score de cruzamento sob demanda entre um garanhão e uma égua específicos fora da tela do
 Conselho — se perguntarem isso, explique essa limitação em vez de inventar um número.
 
 Base de conhecimento de uso do sistema (fonte "sistema"):
-${BASE_CONHECIMENTO_USO}`;
+${BASE_CONHECIMENTO_USO}
+
+Base de conhecimento da raça Crioula / ABCCC (fonte "abccc_lab"):
+${BASE_CONHECIMENTO_ABCCC}`;
 
 const TOOLS = [
   {
@@ -102,6 +171,27 @@ const TOOLS = [
       required: ["topico"],
     },
   },
+  {
+    name: "abccc_resumo_animal",
+    description:
+      "Consulta o resumo genealógico/competitivo de um animal da raça Crioula por SBB (linha alta/baixa, participações em provas com peso, finalistas produzidos, árvore de 5 gerações). Dado agregado da raça, sincronizado do Mimba Lab — não é específico de nenhuma cabanha. Pra usar com o animal da própria cabanha do usuário, ache o SBB antes com cab_buscar_animal.",
+    input_schema: {
+      type: "object",
+      properties: { sbb: { type: "string", description: "Código SBB do animal na ABCCC" } },
+      required: ["sbb"],
+    },
+  },
+  {
+    name: "abccc_ranking_linhagens",
+    description:
+      "Ranking dos garanhões que mais produziram finalistas no ciclo mais recente de cada prova principal (Morfologia Expointer, Final Freio de Ouro, Doma de Ouro) — 'linhagens em alta', dado derivado recalculado a cada sincronização.",
+    input_schema: {
+      type: "object",
+      properties: {
+        prova: { type: "string", description: "Nome exato da prova (opcional — sem isso, devolve o top de cada uma das 3 provas principais)" },
+      },
+    },
+  },
 ];
 
 type Ferramenta = { id: string; name: string; input: Record<string, unknown> };
@@ -129,6 +219,18 @@ async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantI
     }
     case "ajuda_sistema":
       return { fonte: "sistema", resultado: BASE_CONHECIMENTO_USO };
+    case "abccc_resumo_animal": {
+      const { data, error } = await supa.rpc("abccc_resumo_animal", { p_sbb: chamada.input.sbb });
+      if (error) return { fonte: "abccc_lab", erro: error.message };
+      return { fonte: "abccc_lab", resultado: data };
+    }
+    case "abccc_ranking_linhagens": {
+      const { data, error } = await supa.rpc("abccc_ranking_linhagens", {
+        p_prova: chamada.input.prova ?? null,
+      });
+      if (error) return { fonte: "abccc_lab", erro: error.message };
+      return { fonte: "abccc_lab", resultado: data };
+    }
     default:
       return { fonte: "sistema", erro: `ferramenta desconhecida: ${chamada.name}` };
   }
