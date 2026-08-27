@@ -73,12 +73,70 @@ tempo real.
 
 ## O que já está pronto e testado
 
-- ✅ Duas tabelas novas em produção com o resumo da raça (29.282 animais sincronizados).
+- ✅ Duas tabelas novas em produção com o resumo da raça (30.037 animais sincronizados, já
+  incluindo o backfill de campeões concluído em 27/08).
 - ✅ Job de sincronização automática, rodando sozinho todo dia.
 - ✅ As perguntas/respostas do agente sobre genealogia, testadas direto no banco com dado real.
 - ✅ Balão do chat reativado no app (estava escondido desde 25/08 esperando essa evolução).
 - ✅ Toda mudança que toca segurança/isolamento entre cabanhas passou por revisão dedicada antes
   de ir pro ar — nada foi aplicado sem essa checagem.
+
+## Como "treinar" e corrigir a inteligência do agente
+
+Primeiro, o ponto mais importante: **isso não é treinamento de IA no sentido técnico** (não existe
+um modelo sendo re-treinado com dado novo). O agente usa um modelo de linguagem pronto (Claude, da
+Anthropic) e "ensina" ele em tempo real, a cada pergunta, de duas formas — e são essas duas coisas
+que dá pra editar/corrigir:
+
+1. **O que o agente já sabe de cara** (vocabulário, regras de narrativa, o que destacar/omitir) —
+   um texto que vai junto de toda pergunta, chamado "system prompt".
+2. **O que o agente busca no banco na hora** (ferramentas/RPCs) — dado real, nunca inventado.
+
+Não existe "período de treinamento": qualquer correção no texto ou no dado entra em vigor na
+**próxima mensagem** depois de publicada, sem esperar nada.
+
+### As 3 camadas onde uma correção pode acontecer
+
+| Camada | O que é | Onde vive | Quem edita |
+|---|---|---|---|
+| **1. Vocabulário e regras de narrativa** | "linha alta = pai direto", "nunca comente ausência de dado", como citar prova/colocação | `docs/agente-ia-base-conhecimento-abccc.md` — texto normal, sem código | Qualquer um (Luciano inclusive) — é markdown puro |
+| **2. Metodologia dos números derivados** | Como calcular peso de uma colocação, como calcular "linhagens em alta" | Funções SQL no Mimba Lab (`abccc_peso_colocacao`, `abccc_exportar_linhagens_em_alta`) | Precisa de uma sessão com acesso ao banco (Pedro ou Luciano via Claude Code) |
+| **3. Cobertura de dado bruto** | Quantos animais/pedigrees estão carregados, quais catálogos/campeões já foram raspados da ABCCC | Scraper + job de sincronização (roda sozinho 1x/dia) | Cresce sozinho — só precisa rodar mais scraping quando aparecer catálogo novo |
+
+### Como o Luciano interage com isso, na prática
+
+O Luciano já roda sua própria sessão de Claude Code (foi assim que ele preparou o material que
+"bebemos" pra montar tudo isso). O fluxo de correção é:
+
+1. **Usar o agente de verdade no chat do app** e reparar quando uma resposta soa errada, incompleta
+   ou no vocabulário errado.
+2. **Abrir a sessão de Claude Code dele** (mesmo repositório, `projetos/cabanha`) e descrever a
+   correção em português simples — não precisa saber programar. Exemplos reais de como isso
+   aconteceu nesta própria sessão, pra servir de modelo:
+   - *"A base de conhecimento fala em recorrência na 5ª geração pra linhagem em alta, mas os
+     números batidos são só do pai direto — corrige o texto e a lógica."* → resultado: achamos o
+     erro, corrigimos a função SQL e o texto da base de conhecimento, testamos contra dado real de
+     novo antes de aceitar.
+   - *"Doma de Ouro não é a mesma coisa que Bocal de Ouro, não deixa o agente confundir."* → já
+     está no texto da base de conhecimento, seção 2.
+3. **A sessão de Claude Code edita o arquivo** `docs/agente-ia-base-conhecimento-abccc.md` (camada
+   1) e, se for regra de cálculo, também a função SQL correspondente (camada 2) — sempre testando
+   contra dado real do Mimba Lab antes de aceitar a mudança, nunca só "parece certo".
+4. **Alguém com acesso ao Supabase publica a atualização** — hoje esse é o único passo manual
+   real: o texto que vai pro agente (dentro da Edge Function `agente-ia`) é uma cópia resumida do
+   markdown, então depois de editar o `.md` é preciso também atualizar essa cópia e reimplantar a
+   função. Isso é rápido (minutos), mas não é automático ainda — é um ponto real de fricção que dá
+   pra melhorar depois (fazer o agente ler o `.md` direto, sem cópia).
+5. **Testar de novo no chat** pra confirmar que a resposta mudou como esperado.
+
+### E o dado bruto (genealogia, campeões, finalistas)?
+
+Isso já está rodando sozinho — o job de sincronização lê o Mimba Lab todo dia de madrugada e
+atualiza a tabela que o agente consulta. Sempre que um scraping novo terminar (tipo o que você
+acabou de rodar agora — 22.966 animais processados, 30.037 no total), a sincronização automática
+do dia seguinte já pega o dado novo sozinha. Se quiser que apareça **na hora**, sem esperar a
+próxima madrugada, é só pedir pra rodar a sincronização manual (foi o que fizemos agora mesmo,
+levou 44 segundos).
 
 ## O que falta
 
