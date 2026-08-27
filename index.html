@@ -818,6 +818,43 @@
   .mapa-gen-toggle:hover { color:var(--campo-deep); }
   .mapa-gen-wrap { display:none; padding-top:12px; border-top:0.5px solid var(--border); margin-top:10px; }
   .mapa-gen-wrap.aberto { display:block; }
+
+  /* ── Onboarding (index-7.html, mockup do Luciano, 2026-08-27) — jornada de primeira
+     configuração da cabanha. Reaproveita .card/.btn/.btn-primary/.page-title já existentes;
+     só define o que é específico do wizard (overlay, steps, chat, grid de foco). ── */
+  .onb-overlay { position:fixed; inset:0; z-index:9999; background:var(--pergaminho); overflow-y:auto; display:none; }
+  .onb-overlay.on { display:block; }
+  .onb-header { height:64px; border-bottom:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; position:sticky; top:0; background:var(--pergaminho); z-index:2; }
+  .onb-brand { font-family:var(--serif); font-size:21px; font-weight:800; color:var(--text); }
+  .onb-brand .dot { color:var(--ouro); }
+  .onb-main { max-width:760px; margin:0 auto; padding:44px 20px 90px; position:relative; }
+  .onb-step { display:none; animation:onb-entra .4s cubic-bezier(.2,.8,.3,1); }
+  .onb-step.on { display:block; }
+  @keyframes onb-entra { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  .onb-eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--terracota-ink); font-weight:700; }
+  .onb-h1 { font-family:var(--serif); font-weight:800; font-size:clamp(32px,5.2vw,50px); line-height:1.04; letter-spacing:-0.02em; color:var(--text); margin:10px 0 16px; }
+  .onb-h2 { font-family:var(--serif); font-weight:800; font-size:clamp(24px,3.6vw,32px); line-height:1.1; letter-spacing:-0.01em; color:var(--text); margin:8px 0 14px; }
+  .onb-p { color:var(--text2); font-size:15px; line-height:1.6; max-width:560px; }
+  .onb-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .onb-stepnum { font-family:var(--mono); font-size:11px; color:var(--text3); }
+  .onb-back { border:0; background:none; color:var(--campo-deep); font-weight:700; cursor:pointer; font-size:13px; padding:6px 0; font-family:var(--font); }
+  .onb-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
+  .onb-label { font-size:12px; color:var(--text2); font-weight:600; margin:14px 0 6px; }
+  .onb-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+  .onb-card { cursor:pointer; }
+  .onb-card.sel { border:2px solid var(--campo); }
+  .onb-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0; }
+  .onb-stat { padding:16px 14px !important; }
+  .onb-stat b { font-family:var(--serif); font-size:26px; display:block; color:var(--text); }
+  .onb-chat { max-width:600px; background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); box-shadow:var(--sh-sm); padding:18px; margin-top:18px; }
+  .onb-bubble { padding:10px 13px; border-radius:12px; margin:8px 0; max-width:85%; font-size:13.5px; line-height:1.5; }
+  .onb-bubble.bot { background:var(--bg3); color:var(--text); }
+  .onb-bubble.user { background:var(--campo-soft); color:var(--campo-deep); margin-left:auto; }
+  .onb-suggest { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .onb-suggest button { border:var(--card-border); background:var(--pergaminho); border-radius:999px; padding:7px 12px; cursor:pointer; font-size:12px; color:var(--text2); font-family:var(--font); }
+  .onb-suggest button:hover { border-color:var(--campo); color:var(--campo-deep); }
+  .onb-skip { position:absolute; top:0; right:20px; font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); }
+  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-skip{position:static;display:block;text-align:right;margin-bottom:10px;} }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -7949,7 +7986,220 @@ function _finalizarImportSBB(){
   populaCiclos(); renderDashboard(); renderAnimais();
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// Onboarding (index-7.html, mockup do Luciano, 2026-08-27) — jornada de
+// primeira configuração da cabanha. Só aparece pro admin, só se
+// tenants.onboarding_completo=false — ver gatilho em _sincronizarAoLogin.
+// Cabanhas já existentes na data desta migration foram marcadas como
+// concluídas, então isso nunca interrompe quem já usa o Mimba.
+//
+// Reaproveita infraestrutura já existente em vez de duplicar: a busca de
+// animal usa a mesma _buscarUmSbbParaImport() da importação em lote
+// (modal-import-sbb) — o mockup original sugeria "encontramos sua manada
+// inteira" buscando pelo criador na ABCCC, mas isso exigiria um endpoint
+// de busca por criador que não existe hoje e que eu não ia inventar sem
+// verificar contra HTML real (mesmo cuidado do parser de sangues). A
+// etapa 2 real primeiro confirma 1 animal, depois reaproveita o mesmo
+// fluxo de colar/importar lista de SBBs que já está em produção.
+// ═══════════════════════════════════════════════════════════════════════
+let _onbFocoEscolhido = null;
+let _onbAnimalConfirmado = null;
+
+function _abrirOnboarding() {
+  document.getElementById('onb-nome-cabanha').value = TENANT_INFO?.nome_cabanha || '';
+  document.getElementById('onb-afixo').value = TENANT_INFO?.afixo || '';
+  document.getElementById('onb-cidade').value = TENANT_INFO?.cidade || '';
+  document.getElementById('onb-uf').value = TENANT_INFO?.uf || '';
+  document.getElementById('onb-overlay').classList.add('on');
+  _onbGo(0);
+}
+
+function _onbGo(n) {
+  document.querySelectorAll('.onb-step').forEach(e => e.classList.remove('on'));
+  document.getElementById('onb-s'+n).classList.add('on');
+  document.getElementById('onb-overlay').scrollTo(0,0);
+  const lbl = document.getElementById('onb-lbl');
+  if (lbl) lbl.textContent = n===0 ? 'Bem-vindo' : n===5 ? 'Ativação concluída' : `Onboarding · etapa ${n} de 5`;
+  if (n === 4) _onbMontarPainel4();
+}
+
+async function _onbSalvarCabanha() {
+  const nome = document.getElementById('onb-nome-cabanha').value.trim();
+  if (!nome) return alert('Informe o nome da cabanha.');
+  const afixo = document.getElementById('onb-afixo').value.trim();
+  const cidade = document.getElementById('onb-cidade').value.trim();
+  const uf = document.getElementById('onb-uf').value.trim().toUpperCase();
+  await _rpc('atualizar_tenant_onboarding', {
+    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf
+  });
+  // A RPC sincroniza nome_exibicao com nome_cabanha quando não veio um valor explícito pra
+  // nome_exibicao (é a primeira nomeação da cabanha) — espelha isso localmente também, senão
+  // a sidebar (que prioriza nome_exibicao sobre nome_cabanha) continua com o nome antigo.
+  TENANT_INFO.nome_cabanha = nome; TENANT_INFO.nome_exibicao = nome;
+  TENANT_INFO.afixo = afixo; TENANT_INFO.cidade = cidade; TENANT_INFO.uf = uf;
+  const cabEl = document.getElementById('sidebar-cabanha');
+  if (cabEl) cabEl.textContent = nome;
+  _onbGo(2);
+}
+
+async function _onbBuscarAnimal() {
+  const sbb = document.getElementById('onb-sbb-busca').value.trim().toUpperCase();
+  const statusEl = document.getElementById('onb-sbb-status');
+  if (!sbb) { statusEl.textContent = 'Informe um SBB.'; return; }
+  statusEl.textContent = 'Buscando na ABCCC...';
+  document.getElementById('onb-found').style.display = 'none';
+  const r = await _buscarUmSbbParaImport(sbb);
+  if (!r.ok) {
+    statusEl.innerHTML = `<span style="color:var(--red-d)">${r.motivo}</span>`;
+    return;
+  }
+  statusEl.textContent = '';
+  _onbAnimalConfirmado = r;
+  const f = document.getElementById('onb-found');
+  f.style.display = '';
+  f.innerHTML = `<div style="display:flex;gap:12px;align-items:center">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--campo-soft);color:var(--campo-deep);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--serif);flex-shrink:0">${(r.dados.nome||'?').charAt(0)}</div>
+    <div><strong>${r.dados.nome}</strong><div style="font-size:12px;color:var(--text2)">SBB ${r.sbb} · ${r.dados.sexo||'—'} · ${r.dados.pelagem||'—'}</div></div>
+  </div>
+  <div class="onb-actions"><button class="btn btn-primary" onclick="_onbConfirmarPrimeiroAnimal()">É ele. Adicionar à cabanha</button></div>`;
+}
+
+function _onbPayloadAnimal(r) {
+  return {
+    rp: r.dados.rp||null, sbb: r.sbb, nome: r.dados.nome, ciclo: r.dados.ciclo||null,
+    nasc: r.dados.nasc||null, sexo: r.dados.sexo||null, pelagem: r.dados.pelagem||null,
+    mae: r.dados.mae||null, pai: r.dados.pai||null, situacao: 'NA CABANHA',
+    criado_por: usuarioAtual?.db_id || null
+  };
+}
+function _onbEmpurrarAnimalLocal(ins) {
+  animais.push({
+    db_id: ins.id, rp: ins.rp||'', sbb: ins.sbb||'', nome: ins.nome,
+    ciclo: ins.ciclo||'', nasc: ins.nasc||'', mae: ins.mae||'', pai: ins.pai||'',
+    situacao: 'NA CABANHA', estagio: '', obs: '', sexo: ins.sexo||'', pelagem: ins.pelagem||'',
+    ult_vac:'', prox_vac:'', ult_verm:'', val_exame:'', ativo: true
+  });
+}
+
+async function _onbConfirmarPrimeiroAnimal() {
+  const r = _onbAnimalConfirmado;
+  if (!r) return;
+  const inseridos = await _supa('POST','animais',[_onbPayloadAnimal(r)]);
+  if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  document.getElementById('onb-lote').style.display = '';
+}
+
+async function _onbImportarLote() {
+  const lista = _parseListaSBB(document.getElementById('onb-sbb-lote').value);
+  if (!lista.length) { _onbGo(3); return; }
+  const existentesSet = new Set(animais.filter(a=>a.sbb).map(a=>a.sbb.trim().toUpperCase()));
+  const pendentes = lista.filter(sbb => !existentesSet.has(sbb));
+  const progEl = document.getElementById('onb-lote-progresso');
+  if (!pendentes.length) { progEl.textContent = 'Todos esses já estavam cadastrados.'; setTimeout(()=>_onbGo(3), 900); return; }
+
+  let concluidos = 0;
+  const resultados = [];
+  const CONCORRENCIA = 3;
+  let cursor = 0;
+  async function worker() {
+    while (cursor < pendentes.length) {
+      const sbb = pendentes[cursor++];
+      const r = await _buscarUmSbbParaImport(sbb);
+      resultados.push(r);
+      concluidos++;
+      progEl.textContent = `Buscando na ABCCC... ${concluidos}/${pendentes.length}`;
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(CONCORRENCIA, pendentes.length)}, worker));
+
+  const encontrados = resultados.filter(r=>r.ok);
+  if (encontrados.length) {
+    const inseridos = await _supa('POST','animais', encontrados.map(_onbPayloadAnimal));
+    if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  }
+  const naoEncontrados = resultados.length - encontrados.length;
+  progEl.textContent = `Concluído: ${encontrados.length} importado(s)` + (naoEncontrados ? `, ${naoEncontrados} não encontrado(s).` : '.');
+  setTimeout(() => _onbGo(3), 1100);
+}
+
+function _onbEscolherFoco(el, foco) {
+  document.querySelectorAll('#onb-foco-grid .onb-card').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  _onbFocoEscolhido = foco;
+}
+
+// Etapa 4 usa dado real, não números fixos do mockup: os animais recém-importados ainda não
+// têm vacina/exame registrados, então _gerarPendenciasAnimaisAtivos() (já rodou sozinha ao
+// fim do sync) sempre encontra pendências de verdade aqui — é o "uau" de "o Mimba já sabe o
+// que sua manada precisa" sendo literalmente verdadeiro, não simulado.
+function _onbMontarPainel4() {
+  const ativos = animais.filter(isNaCabanha);
+  const femeas = ativos.filter(a => (a.sexo||'').toLowerCase().startsWith('f')).length;
+  const machos = ativos.length - femeas;
+  const abertas = pendencias.filter(p => !p.resolvida).length;
+  document.getElementById('onb-stats').innerHTML = `
+    <div class="card onb-stat"><b>${ativos.length}</b><span style="font-size:11px;color:var(--text2)">Crioulos na cabanha</span></div>
+    <div class="card onb-stat"><b>${femeas}</b><span style="font-size:11px;color:var(--text2)">fêmeas</span></div>
+    <div class="card onb-stat"><b>${machos}</b><span style="font-size:11px;color:var(--text2)">machos</span></div>
+    <div class="card onb-stat"><b style="color:${abertas>0?'var(--terracota-ink)':'var(--campo-deep)'}">${abertas}</b><span style="font-size:11px;color:var(--text2)">pendências já encontradas</span></div>`;
+
+  document.getElementById('onb-chat-intro').textContent = abertas > 0
+    ? `Já organizei uma primeira visão da sua cabanha — e encontrei ${abertas} pendência(s) só de olhar os animais que você trouxe. Quer ver?`
+    : 'Já organizei uma primeira visão da sua cabanha. Quer começar por alguma pergunta?';
+
+  document.getElementById('onb-suggest').innerHTML = `
+    <button onclick="_onbPerguntar('atencao')">Quais animais precisam da minha atenção?</button>
+    <button onclick="_onbPerguntar('sexo')">Quantos machos e fêmeas eu tenho?</button>
+    <button onclick="_onbPerguntar('pendencias')">O que são essas pendências?</button>`;
+  document.getElementById('onb-conv').innerHTML = '';
+}
+
+function _onbPerguntar(tipo) {
+  const perguntas = {
+    atencao: 'Quais animais precisam da minha atenção?',
+    sexo: 'Quantos machos e fêmeas eu tenho?',
+    pendencias: 'O que são essas pendências?'
+  };
+  const ativos = animais.filter(isNaCabanha);
+  const femeas = ativos.filter(a => (a.sexo||'').toLowerCase().startsWith('f')).length;
+  const abertas = pendencias.filter(p => !p.resolvida);
+  let resposta;
+  if (tipo === 'atencao') {
+    if (!abertas.length) {
+      resposta = 'Por enquanto nenhuma pendência em aberto — mas isso pode mudar conforme você registra vacinas e exames.';
+    } else {
+      const exemplos = abertas.slice(0,3).map(p => `${p.animal} (${p.tipo.toLowerCase()})`).join(', ');
+      resposta = `Encontrei ${abertas.length} pendência(s): ${exemplos}${abertas.length>3?', entre outras':''}. Dá pra ver a lista completa em Saúde → Pendências, a qualquer momento.`;
+    }
+  } else if (tipo === 'sexo') {
+    resposta = `${femeas} fêmea(s) e ${ativos.length-femeas} macho(s), de ${ativos.length} animal(is) na cabanha.`;
+  } else {
+    resposta = 'Pendências são coisas que o Mimba percebe sozinho olhando seus animais — tipo vacina ou exame sanitário que ainda não foi registrado. Elas somem assim que você completa o registro.';
+  }
+  document.getElementById('onb-conv').innerHTML =
+    `<div class="onb-bubble user">${perguntas[tipo]}</div><div class="onb-bubble bot">${resposta}</div>`;
+}
+
+async function _onbPular() {
+  if (!confirm('Pular o onboarding? Você pode configurar tudo isso depois, a qualquer momento.')) return;
+  await _onbFinalizar('dashboard');
+}
+
+async function _onbFinalizar(destino) {
+  await _rpc('atualizar_tenant_onboarding', {
+    p_tenant_id: TENANT_INFO.tenant_id,
+    p_foco_inicial: _onbFocoEscolhido,
+    p_onboarding_completo: true
+  });
+  TENANT_INFO.onboarding_completo = true;
+  TENANT_INFO.foco_inicial = _onbFocoEscolhido;
+  document.getElementById('onb-overlay').classList.remove('on');
+  populaCiclos(); renderDashboard(); renderAnimais();
+  if (destino && destino !== 'dashboard') showPage(destino);
+}
+
 function salvarEvento(){closeModal('modal-evento');}
+
 
 function salvarLancamento(){
   const desc=document.getElementById('lan-desc').value.trim(),val=document.getElementById('lan-val').value;
@@ -15708,6 +15958,12 @@ async function _sincronizarAoLogin(opts) {
     if(_paginaAtivaAoTerminarSync) showPage(_paginaAtivaAoTerminarSync.id.replace('page-',''));
     _gerarPendenciasAnimaisAtivos();
     _mostrarStatusSync('✅ Dados sincronizados', 'green');
+    // Onboarding (index-7.html, 2026-08-27): só pra quem ainda não completou/pulou,
+    // e só pro admin (é ele quem configura a cabanha) — nunca interrompe um convidado
+    // entrando pela primeira vez numa cabanha que outra pessoa já configurou.
+    if (!viaPullRefresh && TENANT_INFO?.onboarding_completo === false && usuarioAtual?.perfil === 'adm') {
+      _abrirOnboarding();
+    }
 
   } catch(err) {
     console.error('Sync error:', err);
@@ -17361,6 +17617,106 @@ async function _chatIAEnviar(){
   </div>
 </div>
 
+<!-- Onboarding (index-7.html) — jornada de primeira configuração da cabanha -->
+<div class="onb-overlay" id="onb-overlay">
+  <div class="onb-header">
+    <div class="onb-brand">Mimba<span class="dot">.</span></div>
+    <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+  </div>
+  <div class="onb-main">
+    <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
+
+    <div class="onb-step on" id="onb-s0">
+      <div class="onb-eyebrow">BEM-VINDO AO MIMBA</div>
+      <div class="onb-h1">Sua cabanha começa aqui.</div>
+      <div class="onb-p">Vamos colocar seus Crioulos no Mimba e preparar o essencial pra você começar a usar. O resto pode ser completado depois.</div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbGo(1)">Começar</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s1">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(0)">← Voltar</button><span class="onb-stepnum">1 de 5</span></div>
+      <div class="onb-eyebrow">SUA CABANHA</div>
+      <div class="onb-h2">Primeiro, como ela se chama?</div>
+      <div class="onb-label">Nome da cabanha</div>
+      <input class="input" id="onb-nome-cabanha" style="width:100%;max-width:480px">
+      <div class="onb-label">Afixo</div>
+      <input class="input" id="onb-afixo" style="width:100%;max-width:480px">
+      <div class="onb-label">Cidade / UF</div>
+      <div style="display:flex;gap:8px;max-width:480px">
+        <input class="input" id="onb-cidade" placeholder="Cidade" style="flex:2">
+        <input class="input" id="onb-uf" placeholder="UF" maxlength="2" style="flex:1;text-transform:uppercase">
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbSalvarCabanha()">Continuar</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s2">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(1)">← Voltar</button><span class="onb-stepnum">2 de 5</span></div>
+      <div class="onb-eyebrow">SUA MANADA</div>
+      <div class="onb-h2">Agora vamos buscar seus Crioulos.</div>
+      <div class="onb-p">Digite o SBB de um animal seu pra confirmarmos que estamos no lugar certo.</div>
+      <div style="display:flex;gap:8px;max-width:420px">
+        <input class="input" id="onb-sbb-busca" placeholder="SBB">
+        <button class="btn btn-primary" onclick="_onbBuscarAnimal()">Buscar</button>
+      </div>
+      <div id="onb-sbb-status" style="margin-top:10px;font-size:13px;color:var(--text2)"></div>
+      <div id="onb-found" class="card" style="display:none;margin-top:18px"></div>
+      <div id="onb-lote" style="display:none;margin-top:26px">
+        <div class="onb-h2" style="font-size:21px">Agora cole o SBB dos demais animais.</div>
+        <p class="onb-p">Um por linha, ou separados por vírgula — buscamos todos na ABCCC e já trazemos pra cá. Se não tiver mais nenhum agora, pode pular.</p>
+        <textarea class="input" id="onb-sbb-lote" rows="5" style="width:100%;max-width:560px;font-family:var(--mono);font-size:12px" placeholder="B123456
+B234567
+B345678"></textarea>
+        <div class="onb-actions">
+          <button class="btn btn-primary" onclick="_onbImportarLote()">Buscar e importar</button>
+          <button class="btn" onclick="_onbGo(3)">Pular — só este animal por enquanto</button>
+        </div>
+        <div id="onb-lote-progresso" style="margin-top:14px;font-size:12px;color:var(--text2)"></div>
+      </div>
+    </div>
+
+    <div class="onb-step" id="onb-s3">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(2)">← Voltar</button><span class="onb-stepnum">3 de 5</span></div>
+      <div class="onb-eyebrow">PRIMEIRO FOCO</div>
+      <div class="onb-h2">O que você mais quer organizar agora?</div>
+      <div class="onb-p">Isso só personaliza os primeiros passos. Todo o Mimba continua disponível.</div>
+      <div class="onb-grid" id="onb-foco-grid">
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'manada')">🐴 <b>Minha manada</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Tudo sobre meus animais.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'reproducao')">🧬 <b>Reprodução</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Cruzamentos e gestações.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'eventos')">🏆 <b>Eventos</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Provas e exposições.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'saude')">💉 <b>Saúde</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Vacinas e exames.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'nutricao')">🌱 <b>Nutrição</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Projetos dos animais.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'confirmacao')">📏 <b>Confirmação ABCCC</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Desenvolvimento e preparação.</div></div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbGo(4)">Continuar</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s4">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(3)">← Voltar</button><span class="onb-stepnum">4 de 5</span></div>
+      <div class="onb-eyebrow">O MIMBA JÁ COMEÇOU</div>
+      <div class="onb-h2">Pronto. O Mimba já conhece sua cabanha.</div>
+      <div class="onb-stats" id="onb-stats"></div>
+      <div class="onb-chat">
+        <b style="font-family:var(--serif)">Mimba.</b>
+        <div class="onb-bubble bot" id="onb-chat-intro"></div>
+        <div id="onb-conv"></div>
+        <div class="onb-suggest" id="onb-suggest"></div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbGo(5)">Entrar no Mimba</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s5">
+      <div class="onb-eyebrow">ATIVAÇÃO CONCLUÍDA</div>
+      <div class="onb-h1" style="font-size:clamp(28px,4.2vw,42px)">Agora a cabanha começa a ganhar vida.</div>
+      <div class="onb-p">O onboarding obrigatório termina aqui. Saúde, reprodução, eventos, nutrição, equipe e Registro Vivo passam a ser enriquecidos durante o uso.</div>
+      <div class="onb-grid">
+        <div class="card"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
+        <div class="card"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
+        <div class="card"><b>Equipe</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem cuida com você?</div><button class="btn" onclick="_onbFinalizar('conta')">Convidar</button></div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbFinalizar('dashboard')">Ir pro Dashboard</button></div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
