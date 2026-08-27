@@ -547,7 +547,7 @@ produção**, silenciosamente. Corrigido nos 3 pontos (troca `_supa`→`_supaPub
   (versão rápida local aqui + versão rica no Lab).
 - O parser da `analise-sangues` (agora v15, testado contra HTML real) pode ser reaproveitado pela
   Fase C do backfill de genealogia do Lab (animais que a resolução por nome não alcançou), em vez
-  de escrever um scraper novo do zero — ver ADR 0008.
+  de escrever um scraper novo do zero — ver ADR 0009.
 
 ## 🩸 Análise de Sangues — parser da ABCCC estava sistematicamente errado (2026-08-26)
 Luciano reportou "Principais Pais"/"Avós Maternos" sempre vazios e "undefined" em Prefixos.
@@ -594,8 +594,11 @@ Founder redefiniu o escopo: o Agente Mimba deve ter, desde o lançamento, "dois 
 contexto completo da cabanha + inteligência estatística da raça (Mimba Lab), casando os dois no
 mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha decidido.
 
-- **`docs/adr/0008-especialista-abccc-destravado-sincronizacao-periodica.md`** — decisão + a
-  arquitetura que preserva a invariante da ADR 0005 (nenhuma requisição de cabanha toca o Lab):
+- **`docs/adr/0009-especialista-abccc-destravado-sincronizacao-periodica.md`** (renumerada de 0008
+  em 2026-08-26 — colidia com `0008-perfil-pessoal-do-usuario-em-tabela-global.md`) — decisão + a
+  arquitetura que preserva a invariante da ADR 0010 (nenhuma requisição de cabanha toca o Lab —
+  ADR trazida da branch `recuperacao/area-dados-fora-de-producao` pra `main` na mesma ocasião,
+  renumerada de 0005 pra não colidir com `0005-empacotamento-mobile-em-3-fases.md`):
   em vez de proxy ao vivo, um job periódico materializa um resumo estatístico do Lab **pra dentro
   do banco de produção** (tabela nova `abccc_estatisticas_animal`, ainda a criar); o agente
   consulta essa tabela como dado normal, cruzando com o SBB dos animais da própria cabanha. O

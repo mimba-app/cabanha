@@ -1,8 +1,8 @@
 # Base de conhecimento do agente de IA — especialista ABCCC / raça Crioula
 
-> Caso de uso 3 do agente Mimba (ver ADR 0006, ADR 0007, ADR 0008). Conteúdo curado, pensado
+> Caso de uso 3 do agente Mimba (ver ADR 0006, ADR 0007, ADR 0009). Conteúdo curado, pensado
 > para alimentar o system prompt do agente e servir de insumo direto para o que a tabela
-> `abccc_estatisticas_animal` (sincronizada periodicamente do Mimba Lab, ver ADR 0008) precisa
+> `abccc_estatisticas_animal` (sincronizada periodicamente do Mimba Lab, ver ADR 0009) precisa
 > carregar. Consolida terminologia de mercado e regras de narrativa levantadas com o Luciano ao
 > longo de várias sessões, validadas contra dado real do Mimba Lab (`njynlsugmvtuvcczmuld`)
 > sempre que possível — não é conhecimento teórico, é o que já foi testado.
@@ -55,7 +55,7 @@ têm nome parecido mas são **provas diferentes**:
    > ⚠️ **Achado de dado (2026-08-25)**: "Doma de Ouro" ainda não existe na base do Mimba Lab
    > (`resultados_competitivos`) — só Bocal de Ouro está carregado, sob esse nome. Não confundir
    > os dois ao consultar ou ao responder. Fonte de dado para Doma de Ouro ainda não identificada
-   > (ver ADR 0008, próximos passos).
+   > (ver ADR 0009, próximos passos).
 
 ## 3. Análise ancestral (5 gerações) — regras de narrativa
 
@@ -135,10 +135,10 @@ No freio, o mesmo método aponta hoje para Ganadeiro da Harmonia e Colibri Matre
 citado como um dos maiores campeões da raça) como referências recorrentes — a validar com o
 mesmo tipo de contagem quando os dados de Doma de Ouro/Bocal de Ouro estiverem mais completos.
 
-## 5. O que o agente NÃO faz (nesta fase — ver ADR 0008)
+## 5. O que o agente NÃO faz (nesta fase — ver ADR 0009)
 
 - Não calcula cruzamento hipotético ao vivo entre um garanhão e uma égua que nunca foram testados
-  juntos — isso segue fora de escopo (ADR 0008, "o que continua fora de escopo").
+  juntos — isso segue fora de escopo (ADR 0009, "o que continua fora de escopo").
 - Não apresenta dado agregado do Lab como se fosse específico da cabanha do usuário, nem o
   contrário — sempre que a resposta combinar as duas fontes, deixar claro qual é qual (ver ADR
   0006, seção 3).
@@ -190,7 +190,7 @@ canaldocriador.com.br, comprerural.com.br — pesquisado 2026-08-26.
 - Genealogia (`sbb_pai`/`sbb_mae`) no Mimba Lab: **69% de pai, 27% de mãe** resolvidos, em
   26.593 animais (após backfill de 2026-08-25 — partiu de 3%). Cobertura pré-2000 continua baixa
   (a maioria dos ancestrais mais antigos só foi resolvida se também competiu e apareceu com o
-  próprio SBB na base — ver detalhes técnicos em `docs/adr/0008-...md`).
+  próprio SBB na base — ver detalhes técnicos em `docs/adr/0009-especialista-abccc-destravado-sincronizacao-periodica.md`).
 - Isso significa: para animais/linhagens mais recentes (pós-2020), a análise de 5 gerações tende
   a ser confiável. Para linhagens muito antigas, pode haver buracos reais (não hipóteses do
   modelo) — o comportamento correto nesse caso é a regra 3.2 (omitir, não comentar a ausência).

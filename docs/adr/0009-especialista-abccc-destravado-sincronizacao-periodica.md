@@ -1,4 +1,4 @@
-# 0008 — Especialista ABCCC (caso de uso 3): destravado para o lançamento via sincronização periódica pra produção
+# 0009 — Especialista ABCCC (caso de uso 3): destravado para o lançamento via sincronização periódica pra produção
 
 **Status:** Proposto (2026-08-25). Decisão de escopo do founder (Luciano); arquitetura técnica desenhada nesta ADR, **a validar com o Pedro antes de implementar** — em especial a viabilidade no prazo (ver "Risco de calendário" abaixo).
 
@@ -7,7 +7,7 @@
 A ADR 0007 adiou o caso de uso 3 do agente de IA (especialista ABCCC — genealogia, campeões,
 ancestralidade) por dois motivos:
 
-1. A invariante da ADR 0005 (nenhuma requisição originada de uma cabanha pode tocar o projeto
+1. A invariante da ADR 0010 (nenhuma requisição originada de uma cabanha pode tocar o projeto
    `mimba-analytics`, nem direta nem por proxy) só deixava duas opções — (A) artefato estático
    agregado, que não serve para consulta paramétrica sob demanda, ou (B) proxy de produção, que
    reabre o risco do incidente de 19/08 sem necessidade validada.
@@ -50,7 +50,7 @@ ou se "no lançamento" admite ativar o caso de uso 3 logo em seguida, não no di
 ## Decisão
 
 **Tirar o caso de uso 3 do "adiado" — entra no escopo do lançamento**, mas com o mecanismo técnico
-desenhado para preservar a invariante da ADR 0005 (não reabri-la), diferente da opção (B) que a
+desenhado para preservar a invariante da ADR 0010 (não reabri-la), diferente da opção (B) que a
 ADR 0007 descrevia como único caminho para atender consulta paramétrica sob demanda.
 
 ### Mecanismo: sincronização periódica, não proxy ao vivo
@@ -77,7 +77,7 @@ projeto de produção** (`fmjfvfufkqswweyasjyp`).
   do usuário, na mesma consulta — é exatamente esse cruzamento que entrega "os dois cérebros se
   encontrando".
 
-Isso preserva a invariante da ADR 0005 **literalmente**: nenhuma requisição de cabanha toca o
+Isso preserva a invariante da ADR 0010 **literalmente**: nenhuma requisição de cabanha toca o
 projeto `mimba-analytics`, nem direta nem por proxy — o Lab só é tocado pelo job de sincronização,
 que não nasce de nenhuma cabanha.
 
@@ -91,7 +91,7 @@ adiado por decisão" — se a necessidade aparecer, é uma nova decisão a tomar
 
 ## Consequências
 
-- (+) Preserva a invariante da ADR 0005 mesmo destravando o caso de uso 3 — não reabre o
+- (+) Preserva a invariante da ADR 0010 mesmo destravando o caso de uso 3 — não reabre o
   acoplamento que causou o incidente de 19/08.
 - (+) Entrega a visão de produto do founder para o lançamento — os "dois cérebros" se encontram
   de verdade, com poder de consulta/`JOIN`, não só um texto estático genérico.

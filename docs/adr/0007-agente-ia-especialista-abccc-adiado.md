@@ -19,8 +19,10 @@ Três fatores relevantes, todos levantados em `docs/handoff-mimba-lab-cruzamento
    incidente grave.** Em 19/08/2026, uma carga malfeita no que então era um único projeto
    Supabase levou a CPU (plano free, compartilhada com produção) a 72%, causando 522 na API e
    derrubando o login de todas as cabanhas pagantes por minutos. O ADR que registrou a resposta
-   (`0005-onde-mora-a-area-de-dados.md`, branch `recuperacao/area-dados-fora-de-producao`, não
-   está na `main`) instituiu uma invariante explícita, que o próprio texto marca como valendo
+   (`0010-onde-mora-a-area-de-dados.md` — trazido para a `main` em 2026-08-26 e renumerado de
+   0005 para 0010 nessa mesma ocasião, pra não colidir com `0005-empacotamento-mobile-em-3-fases.md`;
+   até então só existia na branch `recuperacao/area-dados-fora-de-producao`, apesar de já ser
+   citado neste ADR) instituiu uma invariante explícita, que o próprio texto marca como valendo
    mais que qualquer detalhe de implementação: *"nenhuma requisição originada de uma cabanha pode
    tocar o projeto analítico — nem direta, nem por proxy. Se o projeto analítico estiver pausado,
    morto ou inexistente, o app continua funcionando por inteiro."* Aquele ADR também comparou
@@ -29,7 +31,7 @@ Três fatores relevantes, todos levantados em `docs/handoff-mimba-lab-cruzamento
    projeto analítico a partir de produção.
 2. **`analisar_cruzamento` é uma consulta paramétrica sob demanda** (par específico
    garanhão×égua escolhido na hora pelo usuário via chat), não um resumo agregado. O caminho que
-   o ADR 0005 desenhou para "consumo pelo app" — artefato estático publicado ~1×/temporada — foi
+   o ADR 0010 desenhou para "consumo pelo app" — artefato estático publicado ~1×/temporada — foi
    pensado para dado agregado que muda pouco (ex. resumo de resultados ABCCC por SBB) e **não
    serve para esse tipo de consulta**: não dá para pré-computar em lote todos os pares possíveis
    sem explodir combinatoriamente.
@@ -41,7 +43,7 @@ Três fatores relevantes, todos levantados em `docs/handoff-mimba-lab-cruzamento
 
 Nenhuma variação de acoplamento (proxy com allowlist rígida, cache com TTL, circuit breaker)
 resolve o fator 3, e todas as variações que envolvem chamada de rede de produção para o Lab
-tensionam diretamente a invariante do ADR 0005 — que só deveria ser reaberta por necessidade real
+tensionam diretamente a invariante do ADR 0010 — que só deveria ser reaberta por necessidade real
 validada, não para destravar um caso de uso ainda sem usuário esperando por ele.
 
 ## Decisão
@@ -65,7 +67,7 @@ o que destravaria:
 
 - **Demanda validada**: uso real do agente (casos 1, 2 e 4 em produção) mostra que usuários
   pedem análise de genealogia/cruzamento pelo chat com frequência que justifique o investimento
-  de reabrir a discussão de acoplamento do ADR 0005.
+  de reabrir a discussão de acoplamento do ADR 0010.
 - **Cobertura de genealogia sobe substancialmente** (hoje 836/26.000 SBBs) — sem isso, mesmo
   resolvendo o acesso, a resposta mais comum do agente seria "não tenho pedigree carregado para
   este animal", o que é uma experiência ruim para o primeiro contato do usuário com essa
@@ -81,7 +83,7 @@ Quando (e se) o caso de uso 3 for retomado, as opções a avaliar continuam send
 - **(B) Proxy de produção** (Edge Function dedicada, allowlist rígida das duas RPCs, credencial
   restrita por RLS a só essas RPCs read-only, timeout curto com fallback gracioso, rate
   limit/circuit breaker para proteger o Lab no plano free) — só é aceitável **substituindo
-  explicitamente a invariante do ADR 0005** para este caso específico, com `revisor-isolamento`
+  explicitamente a invariante do ADR 0010** para este caso específico, com `revisor-isolamento`
   no loop antes de implementar, e apenas depois que a demanda validada (acima) justificar reabrir
   esse acoplamento.
 
@@ -89,7 +91,7 @@ Quando (e se) o caso de uso 3 for retomado, as opções a avaliar continuam send
 
 - (+) O agente de IA sai do papel mais rápido: caso de uso 1 não tem nenhuma pendência de
   arquitetura, só implementação (RPCs `cab_*` + `revisor-isolamento`, já previsto no ADR 0006).
-- (+) Preserva intacta a invariante do ADR 0005 (nenhuma requisição de cabanha toca o projeto
+- (+) Preserva intacta a invariante do ADR 0010 (nenhuma requisição de cabanha toca o projeto
   analítico) — não é reaberta sem necessidade real, honrando o motivo pelo qual foi criada.
 - (+) Evita investir em uma ferramenta (`abccc_analisar_cruzamento` via chat) cuja cobertura de
   dado (3% dos SBBs conhecidos) tornaria a experiência inicial frustrante para a maioria das
@@ -98,7 +100,7 @@ Quando (e se) o caso de uso 3 for retomado, as opções a avaliar continuam send
   de sequenciamento e recomenda inverter para o caso de uso 1 primeiro. Fica registrado como
   divergência explícita para ele decidir se aceita o adiamento ou pede para seguir mesmo assim
   (nesse caso, a decisão mínima viável seria (B) com todas as guardas listadas acima, aceitando
-  reabrir o acoplamento do ADR 0005 conscientemente).
+  reabrir o acoplamento do ADR 0010 conscientemente).
 - (−) Casos de uso 2 (Conselho) e 4 (ajuda de uso) também ficam represados atrás da priorização
   de produto, mas nenhum dos dois tem uma pendência de arquitetura como o caso de uso 3 — podem
   ser sequenciados livremente depois do caso de uso 1.
@@ -118,7 +120,7 @@ par), Pedro confirmou explicitamente a versão reduzida:
   metodologia de pontos, estatísticas da raça, `genealogia_resumo()`) via artefato estático
   gerado fora do caminho de requisição de qualquer tenant — cruzado, na mesma conversa, com o
   dado específico da cabanha logada (ferramentas `cab_*` do ADR 0006). Isso não reabre a
-  invariante do ADR 0005: a geração do artefato é manutenção periódica nossa, não uma chamada
+  invariante do ADR 0010: a geração do artefato é manutenção periódica nossa, não uma chamada
   originada por uma cabanha.
 - **Continua adiado**: `analisar_cruzamento` sob demanda pra um par garanhão×égua específico
   escolhido no chat — é exatamente o pedaço parametrizado que não cabe em artefato estático e que
@@ -143,7 +145,7 @@ hipótese.
   caminho técnico se a demanda validada justificar retomar.
 - **Cache com TTL curto em produção para reduzir chamadas repetidas ao Lab**: mitigaria custo/
   carga de uma eventual opção (B), mas não resolve nenhum dos dois problemas centrais (a
-  invariante do ADR 0005 e a cobertura de dado) — é um detalhe de implementação de (B), não uma
+  invariante do ADR 0010 e a cobertura de dado) — é um detalhe de implementação de (B), não uma
   alternativa a ela.
 - **Seguir a ordem original do Pedro (caso de uso 3 primeiro) mesmo com as pendências**: seria
   possível, mas obrigaria a decidir (B) sem uma demanda validada que a justifique — trocaria
