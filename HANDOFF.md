@@ -707,6 +707,28 @@ Duas causas reais, não só "ajustar o tom":
 tiver ferramenta pra isso, só orientar a navegar a interface como último recurso — nunca trocar
 uma resposta que já dá pra dar por instrução de "vá em tal página". Publicado como `agente-ia` v9.
 
+### 🐛 Bug real corrigido (2026-08-28): pendência de vencido nunca disparava com histórico vazio
+Luciano conferiu a resposta do agente ("0 exames vencidos") contra o dado real e achou o erro:
+**Sesmaria da Rauna** tem exame vencido desde 27/09/2025, mas o sistema (e o `cab_listar_pendencias`
+que criei mais cedo hoje) reportava 0. Não era problema da ferramenta nova — o dado que ela lê
+(`pendencias`) já estava errado na origem.
+
+Causa: `_gerarPendenciasAnimaisAtivos()` checava "histórico vazio" e só verificava "venceu" dentro
+do `else` — ou seja, a checagem de vencido **nunca rodava** se `getHistExam`/`getHistVac`
+estivesse vazio, mesmo com `val_exame`/`prox_vac` preenchido e no passado. Isso é um estado real e
+válido, não só dado sujo: o modal "Cadastrar novo animal" tem um campo de próxima validade que
+grava direto no animal (`val_exame`/`prox_vac`) sem criar linha na tabela de histórico — alguém
+registrando um animal que já chega com exame em dia, sem logar o exame original em si.
+
+Corrigido: agora checa `val_exame`/`prox_vac` vencido **primeiro**, independente do histórico —
+"vencido" tem prioridade sobre "nunca registrado" sempre que existir uma data e ela já tiver
+passado. Testado isoladamente (6 cenários) antes de commitar.
+
+**Dado já errado em produção também corrigido** (não só o código pra frente): 4 animais na Mãe de
+Deus e 1 no Pedro teste tinham "Exame sanitário" (nunca registrado) quando deveriam ter "Exame
+vencido" — migration corretiva aplicada via MCP, removendo a pendência errada e inserindo a certa,
+confirmado consistente nos dois tenants (nenhum com as duas ao mesmo tempo, nenhum vencido faltando).
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado
