@@ -801,6 +801,35 @@ espaçamento que causou o drift.
 suporte desigual entre navegadores (Safari/iOS historicamente mais limitado), sem tempo de testar
 em dispositivo real com segurança antes do lançamento. Confirmado com o Luciano nesta sessão.
 
+### 🔁 O bug do Corcel voltou — correção em prosa não estava pegando (2026-08-28, v12)
+Depois da v11 (que corrigiu e testei via RPC que o Corcel tinha pedigree completo), Luciano
+testou de novo e o agente disse a **mesma frase errada pro mesmo animal** — "sem dado
+sincronizado". A instrução estava lá no prompt, mas em parágrafo de prosa, no meio de um texto
+longo — não estava sendo seguida de forma confiável.
+
+**Correção**: as 5 regras críticas (genealogia com duas ferramentas, não recalcular número, não
+afirmar garantia não confirmada, e as 2 novas abaixo) viraram um **bloco único, numerado, logo no
+topo do prompt** — antes de qualquer outra instrução, em vez de espalhadas em parágrafos.
+
+**Achado novo nesse mesmo teste, apontado pelo Luciano**: o agente estava vazando linguagem de
+arquitetura interna pro usuário — "Mimba Lab", "sincronizado", "análise de sangues registrada no
+histórico do app" como explicação técnica. Regra nova proíbe isso explicitamente: falar só o
+resultado, nunca o mecanismo por trás (o usuário é criador de cavalo, não opera o sistema).
+
+**Achado adicional**: o agente tentou rebuscar por nome (`cab_buscar_animal`) éguas cujo SBB já
+tinha vindo de `cab_listar_gestacoes_ativas` (campo `egua_sbb`) — ineficiente e provavelmente
+causou SBB errado na chamada seguinte de genealogia. Regra nova proíbe rebusca desnecessária.
+
+**Limitação honesta desta correção** (comunicada ao Luciano antes de publicar): diferente das
+correções de RPC/banco, testadas direto contra dado real, isto é instrução de comportamento pro
+modelo — não há acesso à `ANTHROPIC_API_KEY` pra simular a conversa e confirmar que o modelo vai
+obedecer de forma consistente antes de publicar. Sintaxe validada, mas o teste comportamental de
+verdade só acontece com uso real no app. **Se o mesmo padrão de erro voltar uma terceira vez**,
+o problema provavelmente não é mais "a regra não está clara o suficiente" — vale considerar que
+alguma correção precisa acontecer em nível de arquitetura (ex.: o backend forçar a chamada de
+`abccc_sangues_animal` sempre que `abccc_resumo_animal` retornar null, em vez de confiar no
+modelo decidir isso sozinho), não mais em texto de prompt.
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado
