@@ -7,6 +7,11 @@
 - **Landing:** sessão em `projetos/mimba-landing` (repo `mimba-app/mimba-landing`, clonado). O `index.html` é um bundle gerado; as páginas `/assinar` e `/obrigado` são hand-authored (editáveis à vontade).
 
 ## 🤖 Agente de IA interno — v1 no ar, falta só a API key da Anthropic (2026-08-23)
+> ⚠️ **Esta seção está desatualizada** — escrita antes da ADR 0008/0009 destravarem o caso de uso 3
+> (especialista ABCCC) e antes dos créditos da Anthropic serem carregados (2026-08-28). Estado
+> atual real: seção "🧠 Agente Mimba" mais abaixo neste documento — casos de uso 1, 3 e 4 no ar,
+> sem bloqueio de configuração/pagamento pendente. Mantida aqui só como registro histórico.
+
 ADR 0006 (arquitetura) + 0007 (adiamento do especialista ABCCC/cruzamento) já fechados. V1
 implementada e mergeada (PR #34): chat flutuante em `index.html` (FAB bottom-right, visível só
 logado), Edge Function nova `agente-ia` (`supabase/functions/agente-ia/index.ts` — primeira Edge
@@ -24,10 +29,11 @@ que derrubou a produção — ver `docs/handoff-mimba-lab-cruzamentos.md`) e con
 geral/agregado do Lab via artefato estático (depende de credencial de leitura ao projeto
 `mimba-analytics` que o Pedro ainda não passou).
 
-**Único bloqueio real**: `ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL` não configuradas como secret da
+**Único bloqueio real** *(histórico — resolvido, ver aviso no topo desta seção)*: `ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL` não configuradas como secret da
 Edge Function — o Pedro ainda não tem uma key da Anthropic. Sem isso o agente responde 500 com
 mensagem clara em vez de tentar chamar a Claude (comportamento testado e confirmado). Assim que a
 key existir: configurar os dois secrets no dashboard do Supabase (Edge Functions → agente-ia →
+
 Settings) e testar o fluxo completo de tool-calling ponta a ponta — todo o resto (RPCs, Edge
 Function, frontend) já está pronto e revisado.
 
@@ -627,8 +633,10 @@ mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha de
   (`revisor-isolamento`, aprovado) e conectadas ao `agente-ia` (v7) — system prompt reescrito com
   a terminologia/regras da base de conhecimento ABCCC. FAB do chat reativado no `index.html`
   (estava escondido a pedido do Luciano desde 2026-08-25).
-  **Único bloqueio real**: `ANTHROPIC_API_KEY` configurada, sem créditos carregados ainda — falta
-  só isso pra validar o comportamento do modelo numa conversa de verdade.
+  ✅ **Resolvido (2026-08-28)**: Luciano carregou US$ 20 de crédito na organização Anthropic
+  (confirmado via screenshot do console). O bloqueio que restava (`ANTHROPIC_API_KEY` configurada
+  mas sem crédito) está fechado — falta só um teste ponta a ponta numa conversa real pra confirmar
+  o comportamento do modelo em produção, não mais nenhum bloqueio de configuração/pagamento.
 
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto

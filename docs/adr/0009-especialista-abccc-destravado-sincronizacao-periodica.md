@@ -144,9 +144,11 @@ duas rodadas) e validado com dado real em produção:
   chamadas de tool-use separadas do modelo.
 - FAB do chat reativado no `index.html` (estava escondido a pedido do Luciano desde 2026-08-25).
 
-**Único bloqueio real**: `ANTHROPIC_API_KEY` configurada, mas sem créditos carregados ainda —
-sem isso não dá pra validar o comportamento do modelo numa conversa de verdade (a parte de banco/
-RPC/job já foi validada independente da Anthropic).
+**Único bloqueio real** *(resolvido em 2026-08-28 — Luciano carregou US$ 20 de crédito na
+organização Anthropic, confirmado via console)*: `ANTHROPIC_API_KEY` configurada, mas sem
+créditos carregados ainda — sem isso não dá pra validar o comportamento do modelo numa conversa
+de verdade (a parte de banco/RPC/job já foi validada independente da Anthropic). Falta só um
+teste ponta a ponta numa conversa real pra fechar de vez.
 
 **Achado corrigido no caminho**: "Doma de Ouro" (registrado nesta ADR como sem fonte de dado
 identificada) na verdade já estava carregada no Lab — não era um risco real. Metodologia de
