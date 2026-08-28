@@ -14354,6 +14354,7 @@ async function _trocarPlanoClick(planoId, planoNome, planoFeatures) {
     TENANT_INFO.plano_features = planoFeatures || null;
     const relBtn = document.getElementById('nav-btn-relatorios');
     if (relBtn) relBtn.style.display = planoFeatures?.relatorios === false ? 'none' : '';
+    _chatIAMostrarFab(planoFeatures?.agente_ia === true);
     _mostrarStatusSync(`✅ Plano alterado para ${planoNome}`, 'green');
     renderPlanosDisponiveis();
   } catch (e) {
@@ -16987,8 +16988,12 @@ function _entrarApp() {
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
   // Balão do agente de IA reativado em 2026-08-27 — caso de uso 3
-  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF.
-  _chatIAMostrarFab(true);
+  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF. Escondido de
+  // propósito (2026-08-28) pra planos sem Agente Mimba (cota_ia_mensal=0) —
+  // antes o balão aparecia igual e só travava com "limite atingido (0)" no
+  // envio da primeira mensagem, o que é confuso (parece bug, não é feature
+  // paga). `plano_features` já vem populado em TENANT_INFO por minhas_cabanhas().
+  _chatIAMostrarFab(TENANT_INFO?.plano_features?.agente_ia === true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
