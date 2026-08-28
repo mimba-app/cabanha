@@ -1,44 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// agente-ia — chat flutuante do agente de IA interno (ADR 0006, 0007, 0009).
-//
-// Diferente da maioria das Edge Functions deste projeto, esta é a primeira a
-// nascer versionada no repo (`supabase/functions/agente-ia/index.ts`) em vez
-// de só existir no dashboard do Supabase — vale a pena revisar código aqui.
-//
-// Roda com o JWT do usuário logado (verify_jwt=true, nunca service_role). O
-// modelo (Claude) NUNCA monta SQL livre: as únicas "ferramentas" que ele pode
-// chamar são RPCs Postgres já existentes e read-only (`cab_buscar_animal`,
-// `cab_listar_gestacoes_ativas`, `cab_resumo_periodo`, `abccc_resumo_animal`,
-// `abccc_ranking_linhagens`) mais uma busca estática (`ajuda_sistema`, sem RPC
-// nenhuma). A autorização real de cada ferramenta `cab_*` acontece no Postgres
-// via `tem_acesso_tenant` dentro da própria RPC — esta função nunca eleva
-// privilégio pra satisfazer uma chamada de ferramenta. As ferramentas `abccc_*`
-// não têm `tem_acesso_tenant` de propósito (dado agregado da raça, sincronizado
-// do Mimba Lab pro projeto de produção pelo job `sync-abccc-estatisticas` —
-// não pertence a nenhuma cabanha, ver ADR 0009/0010) — nunca fazem JOIN
-// cross-schema com dado de tenant; a ponte com o animal da própria cabanha do
-// usuário acontece em duas chamadas de ferramenta separadas (o modelo primeiro
-// acha o SBB via `cab_buscar_animal`, depois consulta `abccc_resumo_animal`
-// com esse SBB), nunca numa query só.
-//
-// Escopo desta v1 (ver docs/adr/0006, 0007, 0009): caso de uso 1 (dado da
-// própria cabanha) + caso de uso 3 (especialista ABCCC: genealogia, campeões,
-// linhagens em alta) + caso de uso 4 (ajuda de uso). Score de cruzamento ao
-// vivo entre um par garanhão×égua nunca testado continua fora de escopo
-// (ADR 0009, "o que continua fora de escopo").
-
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-// Sem fallback hardcoded de propósito — o ID de modelo certo na API pública da
-// Anthropic muda com o tempo; melhor exigir a variável explicitamente do que
-// arriscar embutir um ID desatualizado/errado. Configurar junto com a
-// ANTHROPIC_API_KEY quando ela existir (ver docs.anthropic.com/en/docs/about-claude/models).
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL");
 const MAX_RODADAS_TOOL_USE = 5;
 
@@ -46,8 +14,6 @@ function resp(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
-// Mantido em sincronia manual com docs/agente-ia-base-conhecimento.md — texto
-// curto o bastante pra caber inline no system prompt sem busca/embeddings.
 const BASE_CONHECIMENTO_USO = `
 O Mimba organiza a gestão da cabanha em: Dashboard (resumo geral e alertas), Animais (cadastro e
 ficha de cada animal), Reprodutivo (Gestações ativas, Planejador de ciclo, Cruzamentos/Conselho,
@@ -60,11 +26,6 @@ de Usuários. O agente é só consulta — não cadastra nem edita nada, e não 
 outra cabanha. Sugestões de manejo/cruzamento são apoio à decisão, não prescrição veterinária.
 `.trim();
 
-// Mantido em sincronia manual com docs/agente-ia-base-conhecimento-abccc.md —
-// versão condensada (a fonte completa tem exemplos/justificativas a mais que
-// não cabem no orçamento de tokens do system prompt). Qualquer correção de
-// metodologia feita lá (ex.: linhagens em alta, 2026-08-27) precisa ser
-// replicada aqui também.
 const BASE_CONHECIMENTO_ABCCC = `
 Você também tem acesso a dado agregado da raça Crioula (fonte "abccc_lab"), sincronizado
 periodicamente do Mimba Lab pro banco de produção — nunca em tempo real, nunca por proxy direto.
@@ -143,6 +104,17 @@ as duas são formas de "esse animal está sem exame válido agora", geralmente �
 quer saber, não só o match exato da palavra "vencido"). Se quiser só um tipo específico, filtre;
 se a pergunta for ampla, chame sem filtro e organize a resposta pelos tipos relevantes.
 
+Pra "quantos animais eu tenho", "como está minha cabanha", contagens gerais amplas: use
+cab_resumo_geral, não tente somar/adivinhar a partir de outras ferramentas.
+
+IMPORTANTE sobre listas e resumos: quando cab_listar_pendencias, cab_buscar_animal,
+cab_listar_gestacoes_ativas ou cab_resumo_geral devolverem uma lista/resumo, a interface já
+desenha esse dado como cartão visual pro usuário — você NÃO precisa (e não deve) reescrever cada
+item em texto corrido. Sua resposta em texto deve ser só um comentário curto contextualizando o
+que apareceu (ex.: "Você tem 4 gestações ativas, a mais próxima do parto é a Necajô Donana" em vez
+de listar as 4 de novo com todos os detalhes que o cartão já mostra). Exceção: se a ferramenta
+retornar vazio ([] ou 0), não tem cartão pra desenhar — aí sim descreva isso em texto.
+
 Evite responder só "vá em Relatórios e gere lá" quando cab_listar_pendencias já responde a
 pergunta com dado real — isso é exatamente o tipo de resposta pouco resolutiva a evitar. A seção
 Relatórios existe pra exportar em PDF, não é a única forma de responder uma pergunta sobre
@@ -207,6 +179,12 @@ const TOOLS = [
     },
   },
   {
+    name: "cab_resumo_geral",
+    description:
+      "Resumo geral da cabanha: total de animais (por sexo, por situação — na cabanha/empréstimo/vendido/morto/transferido), quantos confirmados/em desenvolvimento/aguardando confirmação na ABCCC, gestações ativas, pendências abertas. É a ferramenta certa pra 'quantos animais eu tenho', 'como está minha cabanha', 'me dá um resumo geral' — qualquer pergunta ampla de contagem que não pede um período específico.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
     name: "abccc_resumo_animal",
     description:
       "Consulta o resumo genealógico/competitivo de um animal da raça Crioula por SBB (linha alta/baixa, participações em provas com peso, finalistas produzidos, árvore de 5 gerações). Dado agregado da raça, sincronizado do Mimba Lab — não é específico de nenhuma cabanha. Pra usar com o animal da própria cabanha do usuário, ache o SBB antes com cab_buscar_animal.",
@@ -260,6 +238,11 @@ async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantI
       if (error) return { fonte: "cabanha", erro: error.message };
       return { fonte: "cabanha", resultado: data };
     }
+    case "cab_resumo_geral": {
+      const { data, error } = await supa.rpc("cab_resumo_geral", { p_tenant_id: tenantId });
+      if (error) return { fonte: "cabanha", erro: error.message };
+      return { fonte: "cabanha", resultado: data };
+    }
     case "ajuda_sistema":
       return { fonte: "sistema", resultado: BASE_CONHECIMENTO_USO };
     case "abccc_resumo_animal": {
@@ -293,8 +276,6 @@ Deno.serve(async (req: Request) => {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return resp(401, { erro: "nao autenticado" });
 
-  // Client com o JWT do próprio usuário — nunca service_role. Toda RPC chamada
-  // a partir daqui roda com a autorização real desse usuário.
   const supa = createClient(SUPA_URL, ANON, { global: { headers: { Authorization: authHeader } } });
   const { data: { user }, error: errUser } = await supa.auth.getUser();
   if (errUser || !user) return resp(401, { erro: "sessao invalida" });
@@ -306,7 +287,6 @@ Deno.serve(async (req: Request) => {
     return resp(400, { erro: "tenant_id e mensagens (array) sao obrigatorios" });
   }
 
-  // Cota mensal — checa e incrementa ANTES de gastar qualquer chamada de LLM.
   const { data: uso, error: errUso } = await supa.rpc("agente_ia_registrar_uso", { p_tenant_id: tenant_id });
   if (errUso) return resp(403, { erro: errUso.message });
   if (uso?.excedeu) {
@@ -348,8 +328,6 @@ Deno.serve(async (req: Request) => {
             return;
           }
 
-          // Consome o SSE da Claude, repassando texto pro cliente incrementalmente
-          // e acumulando blocos de tool_use (chegam em pedaços de JSON parcial).
           const reader = r.body.getReader();
           const decoder = new TextDecoder();
           let buffer = "";
@@ -386,13 +364,6 @@ Deno.serve(async (req: Request) => {
 
           const blocosFinais = blocosConteudo.map((b) => {
             if (b.type !== "tool_use") return b;
-            // b ainda carrega input_json (acumulador temporário de streaming, ver
-            // content_block_start acima) — precisa ser removido, não só ter `input`
-            // adicionado por cima, senão o bloco reenviado pra API na próxima rodada
-            // de tool-use fica com os dois campos e a API rejeita com 400
-            // ("Extra inputs are not permitted"). Bug real, achado em produção
-            // (2026-08-28) — travava qualquer pergunta que precisasse de 2+ rodadas
-            // de ferramenta, ou seja, quase toda pergunta útil.
             const { input_json, ...resto } = b;
             return { ...resto, input: JSON.parse(input_json || "{}") };
           });
@@ -409,6 +380,7 @@ Deno.serve(async (req: Request) => {
             chamadasFerramenta.map(async (chamada) => {
               enviar("ferramenta", { nome: chamada.name });
               const resultado = await executarFerramenta(supa, tenant_id, chamada);
+              enviar("ferramenta_resultado", { nome: chamada.name, resultado });
               return {
                 type: "tool_result" as const,
                 tool_use_id: chamada.id,
