@@ -729,6 +729,43 @@ Deus e 1 no Pedro teste tinham "Exame sanitário" (nunca registrado) quando deve
 vencido" — migration corretiva aplicada via MCP, removendo a pendência errada e inserindo a certa,
 confirmado consistente nos dois tenants (nenhum com as duas ao mesmo tempo, nenhum vencido faltando).
 
+### 🎨 Agente ganha identidade própria (2026-08-28): resumo geral, saudação, cartões visuais
+Luciano pediu explicitamente: "o Agente Mimba precisa nascer com sua identidade... não um agente
+de suporte". Três perguntas de produto respondidas antes de codar (componente gráfico? voz?
+saudação?) e um escopo fechado: nível 2 (ferramenta de resumo geral + identidade visual leve),
+deixando nível 3 (ferramenta de consulta genérica, voz) documentado pra depois do lançamento —
+ver seção "Achado de comportamento" logo acima pra o contexto completo de como chegamos aqui
+(o próprio "quantos animais eu tenho" sem ferramenta foi o gatilho).
+
+**Backend (`agente-ia` v10)**:
+- Ferramenta nova `cab_resumo_geral` — total de animais (por sexo/situação), confirmação ABCCC,
+  gestações ativas, pendências abertas, tudo numa chamada só. RPC testada direto no banco antes
+  de conectar (2 erros achados e corrigidos: `gestacoes.status='gestando'`, não `'ativa'` como eu
+  tinha assumido sem checar; `confirmacao_status` tem 4 valores reais, não 2).
+- O servidor agora manda pro front o **resultado estruturado** de cada chamada de ferramenta
+  (evento SSE novo `ferramenta_resultado`), não só o nome dela — é essa peça que permite cartão
+  visual nascer a partir do JSON que já veio do banco, sem o modelo precisar gerar HTML/markup
+  (mais seguro do que confiar em formatação livre do texto do modelo).
+- System prompt instruído a não reescrever em texto o que já vira cartão — só comentário curto.
+
+**Frontend (`index.html`)**:
+- Saudação personalizada (primeiro nome de quem está logado + "Bom dia/Boa tarde/Boa noite"), só
+  na primeira abertura da sessão, nunca entra no histórico enviado pra API.
+- Formatação leve (negrito, listas) — todo texto escapado como HTML ANTES de qualquer
+  formatação, testado especificamente contra tentativa de injeção via texto do modelo.
+- Cartões visuais pros 4 tipos de ferramenta mais perguntados: pendências, busca de animal,
+  gestações ativas, resumo geral. Nomes de campo de cada RPC conferidos direto na definição antes
+  de escrever o cartão (`egua_nome`/`parto_previsto`, não o que eu ia supor por padrão).
+
+Testado com jsdom (21 checagens): formatação, cartão por tipo (incl. vazio e ferramenta
+desconhecida, sem quebrar nada), XSS em dado vindo do banco, saudação (nome curto, horário certo,
+idempotente), ordem de inserção no DOM (cartão antes do comentário do agente).
+
+**Documentado como pendente pra depois do lançamento** (não cabia nos 2 dias com o mesmo
+cuidado): ferramenta de consulta genérica (filtro dinâmico em vez de RPC por pergunta — resolve
+"toda pergunta possível", não só as antecipadas), componentes gráficos de verdade (chart/mapa),
+entrada por voz (suporte desigual entre navegadores, precisa teste em dispositivo real).
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado
