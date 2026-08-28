@@ -766,6 +766,41 @@ cuidado): ferramenta de consulta genérica (filtro dinâmico em vez de RPC por p
 "toda pergunta possível", não só as antecipadas), componentes gráficos de verdade (chart/mapa),
 entrada por voz (suporte desigual entre navegadores, precisa teste em dispositivo real).
 
+### 🐛 Achado real: duas fontes de genealogia, agente só conhecia uma (2026-08-28)
+Luciano testou perguntar sobre o Corcel da Mãe de Deus e o agente respondeu "ainda não tem dado
+sincronizado da ABCCC". Reação dele: "Como não tem dado do Corcel? Temos tudo que precisa" —
+confirmado no banco: `sangues_linhagem` (a fonte que a própria Análise de Sangues do app já buscou
+direto na ABCCC) tinha o pedigree completo, 30 ancestrais, buscado 2 dias antes.
+
+O sistema tem **duas fontes de genealogia propositalmente separadas** (decisão em aberto sobre
+convergir ou não, ver seção "🧠 Agente Mimba" mais abaixo): `abccc_estatisticas_animal` (Mimba
+Lab — só cobre animal que já apareceu em resultado de prova/catálogo de finalista) e
+`sangues_linhagem` (pedigree cru da própria Análise de Sangues — cobre qualquer animal já
+buscado uma vez, mesmo os que nunca competiram, como um animal recém-nascido). O agente só sabia
+consultar a primeira.
+
+**Corrigido** (`agente-ia` v11): ferramenta nova `abccc_sangues_animal` expõe a segunda fonte
+(mesmo padrão simples de `abccc_resumo_animal` — SQL puro, sem `SECURITY DEFINER`, `authenticated`
+já tem `SELECT` direto na tabela, testado contra o Corcel e contra SBB inexistente). System
+prompt agora instrui reconhecer as duas fontes antes de concluir "sem dado".
+
+**Aproveitado pra corrigir também** (mesmo teste real revelou): o modelo pegou os números certos
+de um cartão (24 animais/19 fêmeas/5 machos) e, ao tentar reescrever em texto, errou a conta
+("19 éguas... 23 animais"). Prompt agora proíbe explicitamente recalcular/reformular número que
+já veio de ferramenta. Também corta afirmação de garantia não sustentada ("tudo dentro do
+esperado") quando a ferramenta não confirmou isso.
+
+**Erro de processo achado e corrigido na mesma sessão**: a v10 (`cab_resumo_geral`, cartões) tinha
+sido publicada direto no Supabase mas nunca comitada no repo — ficou um commit de atraso,
+silenciosamente. Sincronizado antes de aplicar a v11, pra não regredir a próxima publicação.
+**Lição pra próximas sessões**: sempre copiar o arquivo publicado de volta pro repo e commitar
+*na mesma ação*, nunca deixar publicação e commit em passos separados — foi exatamente esse
+espaçamento que causou o drift.
+
+**Decisão explícita, não esquecimento**: entrada de voz no chat continua fora de escopo — risco de
+suporte desigual entre navegadores (Safari/iOS historicamente mais limitado), sem tempo de testar
+em dispositivo real com segurança antes do lançamento. Confirmado com o Luciano nesta sessão.
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado
