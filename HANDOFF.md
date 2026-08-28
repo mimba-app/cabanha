@@ -677,6 +677,36 @@ isoladamente (sem precisar de rede) simulando os eventos SSE reais da Anthropic 
 exato na versão antiga e confirmou o schema limpo (`id`/`input`/`name`/`type`, nada a mais) na
 versão corrigida.
 
+### 🗣️ Achado de comportamento (2026-08-28): agente respondia como suporte, não como o Mimba
+Luciano testou 3 perguntas reais. A 1ª (dado direto, "quais éguas estão prenhes") saiu ótima. A
+2ª e 3ª ("me monta um relatório sanitário", "quantos animais com exame vencido tenho") saíram
+ruins — o agente respondia tipo central de suporte ("vá em Relatórios, selecione o tipo...") em
+vez de tentar responder direto com o que já tinha ferramenta pra buscar. Feedback do Luciano: "a
+ideia não é ser um agente de suporte, ele é o Mimba, precisa ser resolutivo".
+
+Duas causas reais, não só "ajustar o tom":
+
+1. **Faltava ferramenta**: não existia nenhuma RPC que respondesse "quais animais têm pendência
+   agora" — só `cab_resumo_periodo` (contagem agregada, precisa de datas explícitas, não lista
+   quais animais, não responde bem a "agora"/"neste momento"). A tabela `pendencias` já existe e
+   já é populada automaticamente (`_gerarPendenciasAnimaisAtivos`, roda a cada sync) — só nunca
+   tinha sido exposta como ferramenta. RPC nova `cab_listar_pendencias(p_tenant_id, p_tipo)`
+   (mesmo padrão de segurança de `cab_buscar_animal` — `SECURITY DEFINER`, `tem_acesso_tenant`,
+   schema resolvido dinamicamente, `anon`/`PUBLIC` revogados explicitamente e confirmados via
+   `information_schema.routine_privileges` antes de considerar pronto).
+2. **Achado de dado ao testar**: a pergunta "quantos exames vencidos" bateu 0 — tecnicamente
+   certo (não existe nenhuma pendência literalmente `tipo='Exame vencido'` pra essa cabanha), mas
+   enganoso: existem **36 animais com "Exame sanitário" nunca registrado** (pior que vencido, na
+   prática) e **9 "Vacina vencida"**. `tipo` tem 4 valores possíveis, e "nunca registrado" ≠
+   "venceu" — são achados diferentes que a pergunta ampla do usuário queria os dois juntos. Isso
+   virou instrução explícita na descrição da ferramenta e no system prompt (considerar o par
+   nunca-registrado + vencido quando a pergunta for ampla, não só o match exato da palavra
+   "vencido").
+
+`SYSTEM_PROMPT` reescrito com uma instrução de abertura nova: buscar e responder direto sempre que
+tiver ferramenta pra isso, só orientar a navegar a interface como último recurso — nunca trocar
+uma resposta que já dá pra dar por instrução de "vá em tal página". Publicado como `agente-ia` v9.
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado

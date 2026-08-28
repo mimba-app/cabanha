@@ -109,8 +109,14 @@ raça como se fosse específico da cabanha do usuário, nem o contrário — qua
 fontes numa resposta, deixe claro qual é qual.
 `.trim();
 
-const SYSTEM_PROMPT = `Você é o assistente interno do Mimba, um sistema de gestão para cabanhas de
-cavalo Crioulo. Responda em português do Brasil, de forma direta e objetiva, na língua de quem
+const SYSTEM_PROMPT = `Você é o Mimba — não um agente de suporte genérico. Quando o usuário pedir uma informação que
+você consegue buscar com as ferramentas disponíveis, BUSQUE E RESPONDA DIRETO, com o dado real.
+Só oriente a usar a interface (\"vá em tal página\", \"clique em tal botão\") quando genuinamente
+nenhuma ferramenta sua cobrir aquilo — e mesmo assim, tente primeiro entregar o que já dá pra
+responder com o que você tem, antes de mandar a pessoa navegar sozinha. Nunca troque uma resposta
+que você já pode dar por instruções de navegação.
+
+Responda em português do Brasil, de forma direta e objetiva, na língua de quem
 entende a raça (linha alta/baixa, "vem a ser", "irmã inteira de") — não a de um sistema genérico
 citando estatística.
 
@@ -124,6 +130,24 @@ sua cabanha..." vs. "sobre a raça..." vs. "sobre como o sistema funciona...").
 Pra falar da genealogia/linhagem de um animal específico da cabanha do usuário: primeiro ache o
 SBB dele com a ferramenta cab_buscar_animal, depois consulte abccc_resumo_animal com esse SBB — são duas
 chamadas separadas, nunca espere uma ferramenta só que já cruze as duas fontes.
+
+Pra perguntas do tipo "o que precisa da minha atenção", "quais animais têm vacina/exame vencido
+ou faltando", "quais são as pendências": use cab_listar_pendencias, NUNCA tente forçar isso com
+cab_resumo_periodo (que só dá contagem agregada num período explícito, não lista quais animais, e
+não responde bem a "agora"/"neste momento" — cab_resumo_periodo serve pra perguntas que já vêm
+com datas, tipo "quantas vacinas eu apliquei em agosto"). cab_listar_pendencias tem 4 tipos
+possíveis, e "vencido(a)" e "faltando" são coisas DIFERENTES — quando o usuário perguntar de forma
+ampla ("exames vencidos", "o que está pendente"), considere os dois tipos relacionados juntos (ex.:
+"Exame sanitário" = nunca foi registrado nenhum exame, "Exame vencido" = tinha exame mas venceu —
+as duas são formas de "esse animal está sem exame válido agora", geralmente é isso que a pessoa
+quer saber, não só o match exato da palavra "vencido"). Se quiser só um tipo específico, filtre;
+se a pergunta for ampla, chame sem filtro e organize a resposta pelos tipos relevantes.
+
+Evite responder só "vá em Relatórios e gere lá" quando cab_listar_pendencias já responde a
+pergunta com dado real — isso é exatamente o tipo de resposta pouco resolutiva a evitar. A seção
+Relatórios existe pra exportar em PDF, não é a única forma de responder uma pergunta sobre
+sanidade — se você consegue responder com uma ferramenta, responda, e só cite Relatórios se o
+usuário quiser especificamente o PDF pra imprimir/arquivar.
 
 Você NÃO tem acesso a dado de nenhuma outra cabanha, e não tem (por ora) um mecanismo de calcular
 o score de cruzamento sob demanda entre um garanhão e uma égua específicos fora da tela do
@@ -172,6 +196,17 @@ const TOOLS = [
     },
   },
   {
+    name: "cab_listar_pendencias",
+    description:
+      "Lista as pendências abertas (não resolvidas) da cabanha do usuário — animais com vacina ou exame sanitário vencido, ou nunca registrado. É a ferramenta certa pra 'o que precisa da minha atenção', 'quais animais têm exame/vacina vencido ou faltando', 'quais são as pendências' — NÃO use cab_resumo_periodo pra esse tipo de pergunta. Tipos possíveis: 'Vacina' (nunca registrada), 'Vacina vencida' (registrada mas venceu), 'Exame sanitário' (nunca registrado), 'Exame vencido' (registrado mas venceu). Pra perguntas amplas sobre exame ou vacina, considere o par (nunca registrado + vencido) junto, não só o tipo com a palavra 'vencido' exata.",
+    input_schema: {
+      type: "object",
+      properties: {
+        tipo: { type: "string", description: "Filtra por um tipo exato ('Vacina', 'Vacina vencida', 'Exame sanitário' ou 'Exame vencido'). Omitir pra trazer todas e organizar na resposta." },
+      },
+    },
+  },
+  {
     name: "abccc_resumo_animal",
     description:
       "Consulta o resumo genealógico/competitivo de um animal da raça Crioula por SBB (linha alta/baixa, participações em provas com peso, finalistas produzidos, árvore de 5 gerações). Dado agregado da raça, sincronizado do Mimba Lab — não é específico de nenhuma cabanha. Pra usar com o animal da própria cabanha do usuário, ache o SBB antes com cab_buscar_animal.",
@@ -213,6 +248,14 @@ async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantI
         p_tenant_id: tenantId,
         p_data_inicio: chamada.input.data_inicio,
         p_data_fim: chamada.input.data_fim,
+      });
+      if (error) return { fonte: "cabanha", erro: error.message };
+      return { fonte: "cabanha", resultado: data };
+    }
+    case "cab_listar_pendencias": {
+      const { data, error } = await supa.rpc("cab_listar_pendencias", {
+        p_tenant_id: tenantId,
+        p_tipo: chamada.input.tipo ?? null,
       });
       if (error) return { fonte: "cabanha", erro: error.message };
       return { fonte: "cabanha", resultado: data };
