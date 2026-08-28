@@ -9465,23 +9465,17 @@ function _gerarPendenciasAnimaisAtivos() {
     const nome = a.nome;
 
     // ── Vacina ──
+    // Corrigido 2026-08-28 (achado real: Sesmaria da Rauna, Cabanha Mãe de Deus): a ordem
+    // antiga checava "histórico vazio" ANTES de checar "venceu", então um animal cadastrado
+    // direto com prox_vac/val_exame já preenchido (ex.: modal "Cadastrar novo animal", que
+    // permite informar a próxima validade sem criar linha na tabela de histórico) sempre caía
+    // em "nunca registrado", mesmo com a data claramente vencida — o histórico vazio não quer
+    // dizer que a validade em si é desconhecida. Agora checa prox_vac/val_exame PRIMEIRO,
+    // independente do histórico — "vencida" tem prioridade sobre "nunca registrado" sempre que
+    // existir uma data e ela já tiver passado.
     const vacinas = getHistVac(i);
-    if (!vacinas || vacinas.length === 0) {
-      // Sem nenhuma vacina registrada
-      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Vacina' && !p.resolvida && !p.evento);
-      if (!jaExiste) {
-        const pend = {
-          id: gerarIdPend(), animal: nome,
-          tipo: 'Vacina', nivel: 'alta',
-          descricao: `${nome} não possui nenhuma vacina registrada no sistema.`,
-          evento: null, dataEvento: null,
-          geradaEm: hoje, resolvida: false
-        };
-        pendencias.push(pend);
-        _dbSalvarPendencia(pend);
-      }
-    } else if (a.prox_vac && a.prox_vac < hoje) {
-      // Vacina vencida
+    if (a.prox_vac && a.prox_vac < hoje) {
+      // Vencida
       const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Vacina vencida' && !p.resolvida);
       if (!jaExiste) {
         const pend = {
@@ -9494,25 +9488,26 @@ function _gerarPendenciasAnimaisAtivos() {
         pendencias.push(pend);
         _dbSalvarPendencia(pend);
       }
-    }
-
-    // ── Exame sanitário (AIE/Brucelose) ──
-    const exames = getHistExam(i);
-    if (!exames || exames.length === 0) {
-      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Exame sanitário' && !p.resolvida && !p.evento);
+    } else if (!a.prox_vac && (!vacinas || vacinas.length === 0)) {
+      // Nunca teve nada registrado, nem histórico nem previsão de data
+      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Vacina' && !p.resolvida && !p.evento);
       if (!jaExiste) {
         const pend = {
           id: gerarIdPend(), animal: nome,
-          tipo: 'Exame sanitário', nivel: 'alta',
-          descricao: `${nome} não possui nenhum exame sanitário (AIE/Brucelose) registrado.`,
+          tipo: 'Vacina', nivel: 'alta',
+          descricao: `${nome} não possui nenhuma vacina registrada no sistema.`,
           evento: null, dataEvento: null,
           geradaEm: hoje, resolvida: false
         };
         pendencias.push(pend);
         _dbSalvarPendencia(pend);
       }
-    } else if (a.val_exame && a.val_exame < hoje) {
-      // Exame vencido
+    }
+
+    // ── Exame sanitário (AIE/Brucelose) ── — mesma correção de prioridade que a Vacina acima
+    const exames = getHistExam(i);
+    if (a.val_exame && a.val_exame < hoje) {
+      // Vencido
       const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Exame vencido' && !p.resolvida);
       if (!jaExiste) {
         const pend = {
@@ -9520,6 +9515,20 @@ function _gerarPendenciasAnimaisAtivos() {
           tipo: 'Exame vencido', nivel: 'alta',
           descricao: `Exame sanitário de ${nome} venceu em ${fd(a.val_exame)}.`,
           evento: null, dataEvento: a.val_exame,
+          geradaEm: hoje, resolvida: false
+        };
+        pendencias.push(pend);
+        _dbSalvarPendencia(pend);
+      }
+    } else if (!a.val_exame && (!exames || exames.length === 0)) {
+      // Nunca teve nada registrado, nem histórico nem previsão de data
+      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Exame sanitário' && !p.resolvida && !p.evento);
+      if (!jaExiste) {
+        const pend = {
+          id: gerarIdPend(), animal: nome,
+          tipo: 'Exame sanitário', nivel: 'alta',
+          descricao: `${nome} não possui nenhum exame sanitário (AIE/Brucelose) registrado.`,
+          evento: null, dataEvento: null,
           geradaEm: hoje, resolvida: false
         };
         pendencias.push(pend);
