@@ -1,12 +1,51 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+// agente-ia — chat flutuante do agente de IA interno (ADR 0006, 0007, 0009).
+//
+// Diferente da maioria das Edge Functions deste projeto, esta é a primeira a
+// nascer versionada no repo (`supabase/functions/agente-ia/index.ts`) em vez
+// de só existir no dashboard do Supabase — vale a pena revisar código aqui.
+//
+// Roda com o JWT do usuário logado (verify_jwt=true, nunca service_role). O
+// modelo (Claude) NUNCA monta SQL livre: as únicas "ferramentas" que ele pode
+// chamar são RPCs Postgres já existentes e read-only. A autorização real de
+// cada ferramenta `cab_*` acontece no Postgres via `tem_acesso_tenant` dentro
+// da própria RPC — esta função nunca eleva privilégio pra satisfazer uma
+// chamada de ferramenta. As ferramentas `abccc_*` não têm `tem_acesso_tenant`
+// de propósito (dado público da raça, agregado ou cacheado — não pertence a
+// nenhuma cabanha) — nunca fazem JOIN cross-schema com dado de tenant; a
+// ponte com o animal da própria cabanha do usuário acontece em duas chamadas
+// de ferramenta separadas (o modelo primeiro acha o SBB via cab_buscar_animal,
+// depois consulta abccc_resumo_animal/abccc_sangues_animal com esse SBB),
+// nunca numa query só.
+//
+// Duas fontes DISTINTAS de genealogia/ABCCC, propositalmente separadas (não
+// convergidas — decisão em aberto, ver HANDOFF): abccc_estatisticas_animal
+// (Mimba Lab, dado competitivo — participações, finalistas — só cobre animal
+// que já apareceu em resultado/catálogo) e sangues_linhagem (pedigree cru
+// buscado direto na ABCCC pela própria Análise de Sangues do app — sem dado
+// competitivo, mas cobre qualquer animal já buscado uma vez, mesmo os muito
+// jovens que nunca competiram). Achado real (2026-08-28): um animal recém-
+// nascido tinha pedigree completo numa fonte mas o agente só sabia checar a
+// outra, e respondeu "sem dado" errado — daí a regra no system prompt de
+// sempre tentar as duas antes de concluir isso.
+//
+// Escopo desta v1 (ver docs/adr/0006, 0007, 0009): caso de uso 1 (dado da
+// própria cabanha) + caso de uso 3 (especialista ABCCC: genealogia, campeões,
+// linhagens em alta) + caso de uso 4 (ajuda de uso). Score de cruzamento ao
+// vivo entre um par garanhão×égua nunca testado continua fora de escopo
+// (ADR 0009, "o que continua fora de escopo").
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+// Sem fallback hardcoded de propósito — o ID de modelo certo na API pública da
+// Anthropic muda com o tempo; melhor exigir a variável explicitamente do que
+// arriscar embutir um ID desatualizado/errado.
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL");
 const MAX_RODADAS_TOOL_USE = 5;
 
@@ -92,6 +131,16 @@ Pra falar da genealogia/linhagem de um animal específico da cabanha do usuário
 SBB dele com a ferramenta cab_buscar_animal, depois consulte abccc_resumo_animal com esse SBB — são duas
 chamadas separadas, nunca espere uma ferramenta só que já cruze as duas fontes.
 
+IMPORTANTE — duas fontes DIFERENTES de genealogia, reconheça as duas antes de concluir "sem
+dado": abccc_resumo_animal (Mimba Lab, tem estatística competitiva — participações, finalistas
+produzidos — mas só cobre animal que já apareceu em resultado de prova ou catálogo de finalista)
+e abccc_sangues_animal (pedigree buscado direto na ABCCC pela Análise de Sangues do próprio app —
+sem estatística competitiva, mas cobre quase qualquer animal já buscado uma vez, mesmo os muito
+jovens que nunca competiram). Se abccc_resumo_animal não trouxer nada, SEMPRE tente
+abccc_sangues_animal antes de dizer que não há dado — só diga "sem dado" se as duas vierem
+vazias. Se as duas tiverem dado, combine (pedigree + qualquer estatística competitiva
+disponível), deixando claro que a estatística competitiva é mais limitada/pode faltar.
+
 Pra perguntas do tipo "o que precisa da minha atenção", "quais animais têm vacina/exame vencido
 ou faltando", "quais são as pendências": use cab_listar_pendencias, NUNCA tente forçar isso com
 cab_resumo_periodo (que só dá contagem agregada num período explícito, não lista quais animais, e
@@ -114,6 +163,16 @@ item em texto corrido. Sua resposta em texto deve ser só um comentário curto c
 que apareceu (ex.: "Você tem 4 gestações ativas, a mais próxima do parto é a Necajô Donana" em vez
 de listar as 4 de novo com todos os detalhes que o cartão já mostra). Exceção: se a ferramenta
 retornar vazio ([] ou 0), não tem cartão pra desenhar — aí sim descreva isso em texto.
+
+CRÍTICO — nunca recalcule ou reformule um número que já veio de uma ferramenta e já apareceu no
+cartão: cite o valor exatamente como veio (ex.: total_na_cabanha, femeas, machos de
+cab_resumo_geral). Achado real (2026-08-28): o modelo pegou os números certos de um cartão e, ao
+tentar reescrever em texto, errou a conta e citou um número diferente do que o próprio cartão
+mostrava — isso é pior do que não comentar nada. Se não tiver certeza de um número, não invente:
+cite o campo da ferramenta literalmente ou não mencione esse número específico.
+
+Não faça afirmações de garantia que a ferramenta não confirmou (ex.: "tudo dentro do esperado/dos
+prazos") — se a ferramenta não calculou isso explicitamente, não afirme.
 
 Evite responder só "vá em Relatórios e gere lá" quando cab_listar_pendencias já responde a
 pergunta com dado real — isso é exatamente o tipo de resposta pouco resolutiva a evitar. A seção
@@ -195,6 +254,16 @@ const TOOLS = [
     },
   },
   {
+    name: "abccc_sangues_animal",
+    description:
+      "Consulta o pedigree de um animal por SBB direto da fonte que a Análise de Sangues do app já buscou na ABCCC (pai, mãe, avô paterno, avô materno, total de ancestrais na árvore de 5 gerações). Diferente de abccc_resumo_animal: essa fonte NÃO tem estatística competitiva (sem participações, sem finalistas_produzidos) mas cobre praticamente qualquer animal já buscado uma vez, mesmo os que nunca competiram (ex.: animal muito jovem). Use isso quando abccc_resumo_animal não trouxer dado — NÃO conclua 'sem dado sincronizado' sem tentar essa também.",
+    input_schema: {
+      type: "object",
+      properties: { sbb: { type: "string", description: "Código SBB do animal na ABCCC" } },
+      required: ["sbb"],
+    },
+  },
+  {
     name: "abccc_ranking_linhagens",
     description:
       "Ranking dos garanhões que mais produziram finalistas no ciclo mais recente de cada prova principal (Morfologia Expointer, Final Freio de Ouro, Doma de Ouro) — 'linhagens em alta', dado derivado recalculado a cada sincronização.",
@@ -247,6 +316,11 @@ async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantI
       return { fonte: "sistema", resultado: BASE_CONHECIMENTO_USO };
     case "abccc_resumo_animal": {
       const { data, error } = await supa.rpc("abccc_resumo_animal", { p_sbb: chamada.input.sbb });
+      if (error) return { fonte: "abccc_lab", erro: error.message };
+      return { fonte: "abccc_lab", resultado: data };
+    }
+    case "abccc_sangues_animal": {
+      const { data, error } = await supa.rpc("abccc_sangues_animal", { p_sbb: chamada.input.sbb });
       if (error) return { fonte: "abccc_lab", erro: error.message };
       return { fonte: "abccc_lab", resultado: data };
     }
