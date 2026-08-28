@@ -783,6 +783,78 @@
   .sangue-bar-label { font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
   .sangue-bar-count { font-size:11px;color:var(--text2);white-space:nowrap; }
   .sangue-tag { display:inline-block;background:var(--bg3);border-radius:var(--radius);padding:2px 7px;font-size:10px;margin:2px; }
+
+  /* ── Mapa Genealógico (estrutura ABCCC — colunas por geração) — Análise de Sangues,
+     Detalhes por animal. Reaproveita literalmente o tratamento visual da Jornada de
+     Acasalamento, Direção A "O Dossiê Selado" (.ja-lado / .ja-bloco / .ja-selo) — cartões de
+     pergaminho com borda/sombra reais, selo carimbado no centro — em vez de formas SVG
+     preenchidas com cor sólida, que fugiam do design system (feedback do Luciano, 2026-08-26). */
+  @keyframes mapa-gen-sobe { from { opacity:0; transform:translateY(9px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes mapa-gen-carimbo { 0% { transform:scale(2.2) rotate(-16deg); opacity:0; } 60% { transform:scale(.94) rotate(-5deg); opacity:1; } 100% { transform:scale(1) rotate(-4deg); opacity:1; } }
+  @keyframes mapa-gen-traca { to { stroke-dashoffset:0; } }
+  .mapa-gen-container { position:relative; margin:0 auto; }
+  .mapa-gen-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .mapa-gen-linhas { position:absolute; top:0; left:0; pointer-events:none; }
+  .mapa-gen-conector { fill:none; stroke-width:1.4; opacity:.6; stroke-dasharray:var(--mgc-len); stroke-dashoffset:var(--mgc-len); animation:mapa-gen-traca .6s cubic-bezier(.4,0,.2,1) forwards; }
+  .mapa-gen-colhead { position:absolute; font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); transform:translateX(-50%); }
+  .mapa-gen-card { position:absolute; background:var(--pergaminho); border-radius:var(--radius); padding:8px 12px; border:var(--card-border); box-shadow:var(--sh-sm); opacity:0; animation:mapa-gen-sobe .45s cubic-bezier(.22,1,.36,1) forwards; transform:translate(-50%,-50%); }
+  .mapa-gen-card.gen1 { border-radius:var(--radius-lg); padding:12px 16px; box-shadow:var(--sh-md); }
+  .mapa-gen-card.gen1.mg-alta { background:linear-gradient(100deg,var(--campo-soft) 0%, var(--pergaminho) 62%); }
+  .mapa-gen-card.gen1.mg-baixa { background:linear-gradient(100deg,var(--terracota-soft) 0%, var(--pergaminho) 62%); }
+  .mapa-gen-nome { display:flex; align-items:center; font-family:var(--font); font-weight:600; font-size:11.5px; line-height:1.25; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mapa-gen-card.gen1 .mapa-gen-nome { font-family:var(--serif); font-weight:700; font-size:14px; }
+  .mapa-gen-dot { width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:5px; flex-shrink:0; }
+  .mapa-gen-selo { position:absolute; width:68px; height:68px; border-radius:50%; background:var(--pergaminho2); border:var(--card-border); box-shadow:var(--sh-md); display:flex; flex-direction:column; align-items:center; justify-content:center; transform:translate(-50%,-50%) rotate(-4deg); animation:mapa-gen-carimbo .6s cubic-bezier(.2,1.5,.4,1) both; }
+  .mapa-gen-selo-aro { position:absolute; inset:6px; border-radius:50%; border:1.3px dashed var(--text3); opacity:.5; }
+  .mapa-gen-selo-txt { font-family:var(--serif); font-weight:700; font-size:9px; text-align:center; padding:0 7px; line-height:1.18; position:relative; color:var(--text); }
+  .mapa-gen-legenda { display:flex; gap:16px; align-items:center; justify-content:center; margin-top:14px; font-size:10.5px; color:var(--text2); flex-wrap:wrap; }
+  .mapa-gen-legenda-item { display:flex; align-items:center; gap:5px; }
+  .mapa-gen-legenda-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .mapa-gen-narrativa { background:var(--bg3); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text); margin-top:14px; opacity:0; animation:mapa-gen-sobe .5s ease forwards; animation-delay:1.5s; }
+  .mapa-gen-narrativa strong { color:var(--campo-deep); }
+  .mapa-gen-narrativa .linha-baixa strong { color:var(--terracota-ink); }
+  .mapa-gen-irmao-badge { display:inline-flex; align-items:center; gap:4px; background:var(--purple-l); color:var(--purple-d); border-radius:var(--radius-badge); padding:3px 9px; font-size:10.5px; font-weight:700; margin-top:8px; }
+  .mapa-gen-toggle { cursor:pointer; user-select:none; }
+  .mapa-gen-toggle:hover { color:var(--campo-deep); }
+  .mapa-gen-wrap { display:none; padding-top:12px; border-top:0.5px solid var(--border); margin-top:10px; }
+  .mapa-gen-wrap.aberto { display:block; }
+
+  /* ── Onboarding (index-7.html, mockup do Luciano, 2026-08-27) — jornada de primeira
+     configuração da cabanha. Reaproveita .card/.btn/.btn-primary/.page-title já existentes;
+     só define o que é específico do wizard (overlay, steps, chat, grid de foco). ── */
+  .onb-overlay { position:fixed; inset:0; z-index:9999; background:var(--pergaminho); overflow-y:auto; display:none; }
+  .onb-overlay.on { display:block; }
+  .onb-header { height:64px; border-bottom:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; position:sticky; top:0; background:var(--pergaminho); z-index:2; }
+  .onb-brand { font-family:var(--serif); font-size:21px; font-weight:800; color:var(--text); }
+  .onb-brand .dot { color:var(--ouro); }
+  .onb-main { max-width:760px; margin:0 auto; padding:44px 20px 90px; position:relative; }
+  .onb-step { display:none; animation:onb-entra .4s cubic-bezier(.2,.8,.3,1); }
+  .onb-step.on { display:block; }
+  @keyframes onb-entra { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  .onb-eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--terracota-ink); font-weight:700; }
+  .onb-h1 { font-family:var(--serif); font-weight:800; font-size:clamp(32px,5.2vw,50px); line-height:1.04; letter-spacing:-0.02em; color:var(--text); margin:10px 0 16px; }
+  .onb-h2 { font-family:var(--serif); font-weight:800; font-size:clamp(24px,3.6vw,32px); line-height:1.1; letter-spacing:-0.01em; color:var(--text); margin:8px 0 14px; }
+  .onb-p { color:var(--text2); font-size:15px; line-height:1.6; max-width:560px; }
+  .onb-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .onb-stepnum { font-family:var(--mono); font-size:11px; color:var(--text3); }
+  .onb-back { border:0; background:none; color:var(--campo-deep); font-weight:700; cursor:pointer; font-size:13px; padding:6px 0; font-family:var(--font); }
+  .onb-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
+  .onb-label { font-size:12px; color:var(--text2); font-weight:600; margin:14px 0 6px; }
+  .onb-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+  .onb-card { cursor:pointer; }
+  .onb-card.sel { border:2px solid var(--campo); }
+  .onb-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0; }
+  .onb-stat { padding:16px 14px !important; }
+  .onb-stat b { font-family:var(--serif); font-size:26px; display:block; color:var(--text); }
+  .onb-chat { max-width:600px; background:var(--bg2); border:var(--card-border); border-radius:var(--radius-lg); box-shadow:var(--sh-sm); padding:18px; margin-top:18px; }
+  .onb-bubble { padding:10px 13px; border-radius:12px; margin:8px 0; max-width:85%; font-size:13.5px; line-height:1.5; }
+  .onb-bubble.bot { background:var(--bg3); color:var(--text); }
+  .onb-bubble.user { background:var(--campo-soft); color:var(--campo-deep); margin-left:auto; }
+  .onb-suggest { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .onb-suggest button { border:var(--card-border); background:var(--pergaminho); border-radius:999px; padding:7px 12px; cursor:pointer; font-size:12px; color:var(--text2); font-family:var(--font); }
+  .onb-suggest button:hover { border-color:var(--campo); color:var(--campo-deep); }
+  .onb-skip { position:absolute; top:0; right:20px; font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); }
+  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-skip{position:static;display:block;text-align:right;margin-bottom:10px;} }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -2527,33 +2599,6 @@
       </div>
       <div id="sangues-detalhe" style="display:none;margin-top:8px"></div>
     </div>
-  </div><div id="sangues-resultado" style="display:none">
-    <div id="sangues-meta" style="font-size:11px;color:var(--text2);margin-bottom:1rem"></div>
-    <div class="two-col" style="gap:1.5rem">
-      <div>
-        <div class="card">
-          <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Afixos / Cabanhas mais presentes</div>
-          <div id="sangues-afixos"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📛 Prefixos / Marcas mais frequentes</div>
-          <div id="sangues-prefixos"></div>
-        </div>
-      </div>
-      <div>
-        <div class="card">
-          <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 20l1-5 2-6c.5-1.5 2-3 4-3h2c2 0 3 1.5 3.5 3l1.5 4"/><path d="M17 9c1 0 2-1 2-2s-1-2-2-1-1 2 0 3z"/><path d="M9 6V3"/><path d="M6 20l1-3"/><path d="M13 20l1-3"/><circle cx="16" cy="7" r="0.5" fill="currentColor"/></svg> Ancestrais mais repetidos</div>
-          <div id="sangues-ancestrais"></div>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:1rem">
-      <div class="card-title" style="cursor:pointer" onclick="toggleSanguesDetalhe()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3h6v3H9z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg> Detalhes por animal
-        <span id="sangues-detalhe-icon" style="float:right;font-size:11px;color:var(--text2)">▼ expandir</span>
-      </div>
-      <div id="sangues-detalhe" style="display:none;margin-top:8px"></div>
-    </div>
   </div>
 </div>
 
@@ -3423,9 +3468,9 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Propriedade</div>
       <div class="form-grid">
-        <div class="form-group"><label>Proprietário</label><input type="text" id="aie-proprietario" value="Luciano Luis Mantelli"></div>
-        <div class="form-group"><label>Telefone</label><input type="text" id="aie-prop-tel" value="(51) 9 9216-0620"></div>
-        <div class="form-group" style="grid-column:1/-1"><label>Endereço completo</label><input type="text" id="aie-prop-end" value="Av Getulio Vargas 1000, centro, 98170-000"></div>
+        <div class="form-group"><label>Proprietário</label><input type="text" id="aie-proprietario" value=""></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="aie-prop-tel" value=""></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Endereço completo</label><input type="text" id="aie-prop-end" value=""></div>
         <div class="form-group"><label>Propriedade / Estabelecimento</label><input type="text" id="aie-estabelecimento" value=""></div>
         <div class="form-group"><label>Município / UF</label><input type="text" id="aie-municipio" value=""></div>
         <div class="form-group"><label>Nº Equídeos existentes</label><input type="number" id="aie-num-equideos" value="29" min="1"></div>
@@ -3448,10 +3493,10 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">👨‍⚕️ Veterinário Requisitante</div>
       <div class="form-grid">
-        <div class="form-group"><label>Nome</label><input type="text" id="aie-vet-nome" value="Felipe Farias Bender"></div>
-        <div class="form-group"><label>CRMV</label><input type="text" id="aie-vet-crmv" value="CRMV-RS 12563"></div>
-        <div class="form-group"><label>Endereço do veterinário</label><input type="text" id="aie-vet-end" value="Euclides da Cunha 711"></div>
-        <div class="form-group"><label>Telefone</label><input type="text" id="aie-vet-tel" value="5599001101"></div>
+        <div class="form-group"><label>Nome</label><input type="text" id="aie-vet-nome" value=""></div>
+        <div class="form-group"><label>CRMV</label><input type="text" id="aie-vet-crmv" value=""></div>
+        <div class="form-group"><label>Endereço do veterinário</label><input type="text" id="aie-vet-end" value=""></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="aie-vet-tel" value=""></div>
         <div class="form-group"><label>Motivo da análise</label>
           <select id="aie-motivo">
             <option value="TRANSPORTE NACIONAL">Transporte Nacional</option>
@@ -6076,10 +6121,9 @@ function _aieResetForm() {
   document.getElementById('aie-motivo').value = 'TRANSPORTE NACIONAL';
   document.getElementById('aie-classificacao').value = 'FC';
   document.getElementById('aie-num-equideos').value = '29';
-  // Defaults da cabanha
-  document.getElementById('aie-proprietario').value = 'Luciano Luis Mantelli';
-  document.getElementById('aie-prop-tel').value = '(51) 9 9216-0620';
-  document.getElementById('aie-prop-end').value = 'Av Getulio Vargas 1000, centro, 98170-000';
+  document.getElementById('aie-proprietario').value = '';
+  document.getElementById('aie-prop-tel').value = '';
+  document.getElementById('aie-prop-end').value = '';
   document.getElementById('aie-estabelecimento').value = (TENANT_INFO && (TENANT_INFO.nome_exibicao || TENANT_INFO.nome_cabanha)) || '';
   document.getElementById('aie-municipio').value = '';
   document.getElementById('aie-vet-nome').value = usuarioAtual?.perfil === 'vet' ? (usuarioAtual.nome || '') : '';
@@ -7942,7 +7986,220 @@ function _finalizarImportSBB(){
   populaCiclos(); renderDashboard(); renderAnimais();
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// Onboarding (index-7.html, mockup do Luciano, 2026-08-27) — jornada de
+// primeira configuração da cabanha. Só aparece pro admin, só se
+// tenants.onboarding_completo=false — ver gatilho em _sincronizarAoLogin.
+// Cabanhas já existentes na data desta migration foram marcadas como
+// concluídas, então isso nunca interrompe quem já usa o Mimba.
+//
+// Reaproveita infraestrutura já existente em vez de duplicar: a busca de
+// animal usa a mesma _buscarUmSbbParaImport() da importação em lote
+// (modal-import-sbb) — o mockup original sugeria "encontramos sua manada
+// inteira" buscando pelo criador na ABCCC, mas isso exigiria um endpoint
+// de busca por criador que não existe hoje e que eu não ia inventar sem
+// verificar contra HTML real (mesmo cuidado do parser de sangues). A
+// etapa 2 real primeiro confirma 1 animal, depois reaproveita o mesmo
+// fluxo de colar/importar lista de SBBs que já está em produção.
+// ═══════════════════════════════════════════════════════════════════════
+let _onbFocoEscolhido = null;
+let _onbAnimalConfirmado = null;
+
+function _abrirOnboarding() {
+  document.getElementById('onb-nome-cabanha').value = TENANT_INFO?.nome_cabanha || '';
+  document.getElementById('onb-afixo').value = TENANT_INFO?.afixo || '';
+  document.getElementById('onb-cidade').value = TENANT_INFO?.cidade || '';
+  document.getElementById('onb-uf').value = TENANT_INFO?.uf || '';
+  document.getElementById('onb-overlay').classList.add('on');
+  _onbGo(0);
+}
+
+function _onbGo(n) {
+  document.querySelectorAll('.onb-step').forEach(e => e.classList.remove('on'));
+  document.getElementById('onb-s'+n).classList.add('on');
+  document.getElementById('onb-overlay').scrollTo(0,0);
+  const lbl = document.getElementById('onb-lbl');
+  if (lbl) lbl.textContent = n===0 ? 'Bem-vindo' : n===5 ? 'Ativação concluída' : `Onboarding · etapa ${n} de 5`;
+  if (n === 4) _onbMontarPainel4();
+}
+
+async function _onbSalvarCabanha() {
+  const nome = document.getElementById('onb-nome-cabanha').value.trim();
+  if (!nome) return alert('Informe o nome da cabanha.');
+  const afixo = document.getElementById('onb-afixo').value.trim();
+  const cidade = document.getElementById('onb-cidade').value.trim();
+  const uf = document.getElementById('onb-uf').value.trim().toUpperCase();
+  await _rpc('atualizar_tenant_onboarding', {
+    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf
+  });
+  // A RPC sincroniza nome_exibicao com nome_cabanha quando não veio um valor explícito pra
+  // nome_exibicao (é a primeira nomeação da cabanha) — espelha isso localmente também, senão
+  // a sidebar (que prioriza nome_exibicao sobre nome_cabanha) continua com o nome antigo.
+  TENANT_INFO.nome_cabanha = nome; TENANT_INFO.nome_exibicao = nome;
+  TENANT_INFO.afixo = afixo; TENANT_INFO.cidade = cidade; TENANT_INFO.uf = uf;
+  const cabEl = document.getElementById('sidebar-cabanha');
+  if (cabEl) cabEl.textContent = nome;
+  _onbGo(2);
+}
+
+async function _onbBuscarAnimal() {
+  const sbb = document.getElementById('onb-sbb-busca').value.trim().toUpperCase();
+  const statusEl = document.getElementById('onb-sbb-status');
+  if (!sbb) { statusEl.textContent = 'Informe um SBB.'; return; }
+  statusEl.textContent = 'Buscando na ABCCC...';
+  document.getElementById('onb-found').style.display = 'none';
+  const r = await _buscarUmSbbParaImport(sbb);
+  if (!r.ok) {
+    statusEl.innerHTML = `<span style="color:var(--red-d)">${r.motivo}</span>`;
+    return;
+  }
+  statusEl.textContent = '';
+  _onbAnimalConfirmado = r;
+  const f = document.getElementById('onb-found');
+  f.style.display = '';
+  f.innerHTML = `<div style="display:flex;gap:12px;align-items:center">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--campo-soft);color:var(--campo-deep);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--serif);flex-shrink:0">${(r.dados.nome||'?').charAt(0)}</div>
+    <div><strong>${r.dados.nome}</strong><div style="font-size:12px;color:var(--text2)">SBB ${r.sbb} · ${r.dados.sexo||'—'} · ${r.dados.pelagem||'—'}</div></div>
+  </div>
+  <div class="onb-actions"><button class="btn btn-primary" onclick="_onbConfirmarPrimeiroAnimal()">É ele. Adicionar à cabanha</button></div>`;
+}
+
+function _onbPayloadAnimal(r) {
+  return {
+    rp: r.dados.rp||null, sbb: r.sbb, nome: r.dados.nome, ciclo: r.dados.ciclo||null,
+    nasc: r.dados.nasc||null, sexo: r.dados.sexo||null, pelagem: r.dados.pelagem||null,
+    mae: r.dados.mae||null, pai: r.dados.pai||null, situacao: 'NA CABANHA',
+    criado_por: usuarioAtual?.db_id || null
+  };
+}
+function _onbEmpurrarAnimalLocal(ins) {
+  animais.push({
+    db_id: ins.id, rp: ins.rp||'', sbb: ins.sbb||'', nome: ins.nome,
+    ciclo: ins.ciclo||'', nasc: ins.nasc||'', mae: ins.mae||'', pai: ins.pai||'',
+    situacao: 'NA CABANHA', estagio: '', obs: '', sexo: ins.sexo||'', pelagem: ins.pelagem||'',
+    ult_vac:'', prox_vac:'', ult_verm:'', val_exame:'', ativo: true
+  });
+}
+
+async function _onbConfirmarPrimeiroAnimal() {
+  const r = _onbAnimalConfirmado;
+  if (!r) return;
+  const inseridos = await _supa('POST','animais',[_onbPayloadAnimal(r)]);
+  if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  document.getElementById('onb-lote').style.display = '';
+}
+
+async function _onbImportarLote() {
+  const lista = _parseListaSBB(document.getElementById('onb-sbb-lote').value);
+  if (!lista.length) { _onbGo(3); return; }
+  const existentesSet = new Set(animais.filter(a=>a.sbb).map(a=>a.sbb.trim().toUpperCase()));
+  const pendentes = lista.filter(sbb => !existentesSet.has(sbb));
+  const progEl = document.getElementById('onb-lote-progresso');
+  if (!pendentes.length) { progEl.textContent = 'Todos esses já estavam cadastrados.'; setTimeout(()=>_onbGo(3), 900); return; }
+
+  let concluidos = 0;
+  const resultados = [];
+  const CONCORRENCIA = 3;
+  let cursor = 0;
+  async function worker() {
+    while (cursor < pendentes.length) {
+      const sbb = pendentes[cursor++];
+      const r = await _buscarUmSbbParaImport(sbb);
+      resultados.push(r);
+      concluidos++;
+      progEl.textContent = `Buscando na ABCCC... ${concluidos}/${pendentes.length}`;
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(CONCORRENCIA, pendentes.length)}, worker));
+
+  const encontrados = resultados.filter(r=>r.ok);
+  if (encontrados.length) {
+    const inseridos = await _supa('POST','animais', encontrados.map(_onbPayloadAnimal));
+    if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  }
+  const naoEncontrados = resultados.length - encontrados.length;
+  progEl.textContent = `Concluído: ${encontrados.length} importado(s)` + (naoEncontrados ? `, ${naoEncontrados} não encontrado(s).` : '.');
+  setTimeout(() => _onbGo(3), 1100);
+}
+
+function _onbEscolherFoco(el, foco) {
+  document.querySelectorAll('#onb-foco-grid .onb-card').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  _onbFocoEscolhido = foco;
+}
+
+// Etapa 4 usa dado real, não números fixos do mockup: os animais recém-importados ainda não
+// têm vacina/exame registrados, então _gerarPendenciasAnimaisAtivos() (já rodou sozinha ao
+// fim do sync) sempre encontra pendências de verdade aqui — é o "uau" de "o Mimba já sabe o
+// que sua manada precisa" sendo literalmente verdadeiro, não simulado.
+function _onbMontarPainel4() {
+  const ativos = animais.filter(isNaCabanha);
+  const femeas = ativos.filter(a => (a.sexo||'').toLowerCase().startsWith('f')).length;
+  const machos = ativos.length - femeas;
+  const abertas = pendencias.filter(p => !p.resolvida).length;
+  document.getElementById('onb-stats').innerHTML = `
+    <div class="card onb-stat"><b>${ativos.length}</b><span style="font-size:11px;color:var(--text2)">Crioulos na cabanha</span></div>
+    <div class="card onb-stat"><b>${femeas}</b><span style="font-size:11px;color:var(--text2)">fêmeas</span></div>
+    <div class="card onb-stat"><b>${machos}</b><span style="font-size:11px;color:var(--text2)">machos</span></div>
+    <div class="card onb-stat"><b style="color:${abertas>0?'var(--terracota-ink)':'var(--campo-deep)'}">${abertas}</b><span style="font-size:11px;color:var(--text2)">pendências já encontradas</span></div>`;
+
+  document.getElementById('onb-chat-intro').textContent = abertas > 0
+    ? `Já organizei uma primeira visão da sua cabanha — e encontrei ${abertas} pendência(s) só de olhar os animais que você trouxe. Quer ver?`
+    : 'Já organizei uma primeira visão da sua cabanha. Quer começar por alguma pergunta?';
+
+  document.getElementById('onb-suggest').innerHTML = `
+    <button onclick="_onbPerguntar('atencao')">Quais animais precisam da minha atenção?</button>
+    <button onclick="_onbPerguntar('sexo')">Quantos machos e fêmeas eu tenho?</button>
+    <button onclick="_onbPerguntar('pendencias')">O que são essas pendências?</button>`;
+  document.getElementById('onb-conv').innerHTML = '';
+}
+
+function _onbPerguntar(tipo) {
+  const perguntas = {
+    atencao: 'Quais animais precisam da minha atenção?',
+    sexo: 'Quantos machos e fêmeas eu tenho?',
+    pendencias: 'O que são essas pendências?'
+  };
+  const ativos = animais.filter(isNaCabanha);
+  const femeas = ativos.filter(a => (a.sexo||'').toLowerCase().startsWith('f')).length;
+  const abertas = pendencias.filter(p => !p.resolvida);
+  let resposta;
+  if (tipo === 'atencao') {
+    if (!abertas.length) {
+      resposta = 'Por enquanto nenhuma pendência em aberto — mas isso pode mudar conforme você registra vacinas e exames.';
+    } else {
+      const exemplos = abertas.slice(0,3).map(p => `${p.animal} (${p.tipo.toLowerCase()})`).join(', ');
+      resposta = `Encontrei ${abertas.length} pendência(s): ${exemplos}${abertas.length>3?', entre outras':''}. Dá pra ver a lista completa em Saúde → Pendências, a qualquer momento.`;
+    }
+  } else if (tipo === 'sexo') {
+    resposta = `${femeas} fêmea(s) e ${ativos.length-femeas} macho(s), de ${ativos.length} animal(is) na cabanha.`;
+  } else {
+    resposta = 'Pendências são coisas que o Mimba percebe sozinho olhando seus animais — tipo vacina ou exame sanitário que ainda não foi registrado. Elas somem assim que você completa o registro.';
+  }
+  document.getElementById('onb-conv').innerHTML =
+    `<div class="onb-bubble user">${perguntas[tipo]}</div><div class="onb-bubble bot">${resposta}</div>`;
+}
+
+async function _onbPular() {
+  if (!confirm('Pular o onboarding? Você pode configurar tudo isso depois, a qualquer momento.')) return;
+  await _onbFinalizar('dashboard');
+}
+
+async function _onbFinalizar(destino) {
+  await _rpc('atualizar_tenant_onboarding', {
+    p_tenant_id: TENANT_INFO.tenant_id,
+    p_foco_inicial: _onbFocoEscolhido,
+    p_onboarding_completo: true
+  });
+  TENANT_INFO.onboarding_completo = true;
+  TENANT_INFO.foco_inicial = _onbFocoEscolhido;
+  document.getElementById('onb-overlay').classList.remove('on');
+  populaCiclos(); renderDashboard(); renderAnimais();
+  if (destino && destino !== 'dashboard') showPage(destino);
+}
+
 function salvarEvento(){closeModal('modal-evento');}
+
 
 function salvarLancamento(){
   const desc=document.getElementById('lan-desc').value.trim(),val=document.getElementById('lan-val').value;
@@ -11186,7 +11443,7 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supa('GET', 'sangues_linhagem', null,
+        const rows = await _supaPub('GET', 'sangues_linhagem', null,
           '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
         const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
         const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
@@ -11801,7 +12058,7 @@ async function _jaConsanguinidade(egua, fonte) {
   if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
 
   try {
-    const rows = await _supa('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
+    const rows = await _supaPub('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
     const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
     const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
     if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
@@ -14351,7 +14608,7 @@ async function iniciarAnaliseSangues(forceAll) {
 
   // Verificar no banco quais SBBs já têm dados salvos
   const sbbs = animaisComSBB.map(a => a.sbb.trim().toUpperCase());
-  const cached = await _supa('GET','sangues_linhagem','',
+  const cached = await _supaPub('GET','sangues_linhagem',null,
     '?animal_sbb=in.('+sbbs.map(s=>`"${s}"`).join(',')+')&select=animal_sbb,total_anc,consultado_em');
 
   const cachedSBBs = (cached||[]).filter(r => r.total_anc > 0).map(r => r.animal_sbb);
@@ -14453,9 +14710,9 @@ function _renderSangues(data) {
   const maxA   = ranking.topAfixo[0]?.total || 1;
   const maxN   = ranking.topAncestral[0]?.total || 1;
   const maxP   = ranking.topPrefixo[0]?.total || 1;
-  const maxPai    = (ranking.topPai||[])[0]?.total || 1;
-  const maxAvoPat = (ranking.topAvoPat||[])[0]?.total || 1;
-  const maxAvoMat = (ranking.topAvoMat||[])[0]?.total || 1;
+  const maxPai    = (ranking.topPais||[])[0]?.total || 1;
+  const maxAvoPat = (ranking.topAvosPat||[])[0]?.total || 1;
+  const maxAvoMat = (ranking.topAvosMat||[])[0]?.total || 1;
 
   document.getElementById('sangues-afixos').innerHTML = barHTML(
     ranking.topAfixo.slice(0,20), maxA, d=>d.afixo,
@@ -14463,7 +14720,7 @@ function _renderSangues(data) {
   );
   document.getElementById('sangues-prefixos').innerHTML = barHTML(
     ranking.topPrefixo.slice(0,15), maxP,
-    d=>'<span style="font-family:var(--mono)">'+d.prefixo+'</span>',
+    d=>'<span style="font-family:var(--mono)">'+d.nome+'</span>',
     ()=>'var(--purple)'
   );
   document.getElementById('sangues-ancestrais').innerHTML = barHTML(
@@ -14476,17 +14733,17 @@ function _renderSangues(data) {
     i=>i<3?'var(--amber)':i<8?'var(--teal)':'var(--gray-d)'
   );
   document.getElementById('sangues-pais').innerHTML = barHTML(
-    (ranking.topPai||[]).slice(0,20), maxPai,
+    (ranking.topPais||[]).slice(0,20), maxPai,
     d=>'<strong>'+d.nome+'</strong>',
     i=>i<3?'var(--green)':i<8?'var(--blue)':'var(--gray-d)'
   );
   document.getElementById('sangues-avopat').innerHTML = barHTML(
-    (ranking.topAvoPat||[]).slice(0,20), maxAvoPat,
+    (ranking.topAvosPat||[]).slice(0,20), maxAvoPat,
     d=>d.nome,
     i=>i<3?'var(--blue)':i<8?'var(--teal)':'var(--gray-d)'
   );
   document.getElementById('sangues-avomat').innerHTML = barHTML(
-    (ranking.topAvoMat||[]).slice(0,20), maxAvoMat,
+    (ranking.topAvosMat||[]).slice(0,20), maxAvoMat,
     d=>d.nome,
     i=>i<3?'var(--red)':i<8?'var(--amber)':'var(--gray-d)'
   );
@@ -14498,21 +14755,223 @@ function _renderSangues(data) {
     const cacheTag = d.fromCache
       ? '<span class="badge bgr" style="font-size:9px">banco</span>'
       : '<span class="badge bg" style="font-size:9px">novo</span>';
-    const geoInfo = [
-      d.pai         ? '👨 <strong>'+d.pai+'</strong>' : '',
-      d.mae         ? '👩 <strong>'+d.mae+'</strong>' : '',
-      d.avo_paterno ? '<strong style="color:var(--blue-d)">'+d.avo_paterno+'</strong>' : '',
-      d.avo_materno ? '<strong style="color:var(--red-d)">'+d.avo_materno+'</strong>' : '',
-    ].filter(Boolean).join(' · ');
-    const ancs = (d.ancestrais||[]).slice(0,6).map(n=>'<span class="sangue-tag">'+n+'</span>').join('');
-    const mais = qtd>6 ? '<span style="font-size:10px;color:var(--text3)">+'+(qtd-6)+' mais</span>' : '';
-    return '<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
-      +'<span style="font-size:12px;font-weight:700">'+nome+'</span>'+cacheTag
-      +'<span style="font-size:10px;color:var(--text2)">SBB '+sbb+' · '+qtd+' ancestrais</span></div>'
-      +(geoInfo?'<div style="font-size:11px;color:var(--text2);margin-bottom:4px">'+geoInfo+'</div>':'')
-      +'<div>'+ancs+mais+'</div></div>';
+    const temArvore = d.ancestrais_pos && d.ancestrais_pos.length > 0;
+    return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div class="mapa-gen-toggle" style="display:flex;align-items:center;gap:6px" onclick="toggleMapaGenealogico('${sbb}')">
+        <span style="font-size:12px;font-weight:700">${nome}</span>${cacheTag}
+        <span style="font-size:10px;color:var(--text2)">SBB ${sbb} · ${qtd} ancestrais</span>
+        ${temArvore ? `<span style="margin-left:auto;font-size:10px;color:var(--text3)" id="mapa-gen-icon-${sbb}">▸ ver mapa genealógico</span>` : ''}
+      </div>
+      ${temArvore ? `<div class="mapa-gen-wrap" id="mapa-gen-wrap-${sbb}" data-carregado="0"></div>` : ''}
+    </div>`;
   }).join('');
+}
+
+// Reconstrói a árvore genealógica a partir da lista plana em pré-ordem que o parser da
+// analise-sangues produz (ver Edge Function, extrairAncestraraisComGen). A ordem do array
+// preserva a ordem de documento da ABCCC, que segue o padrão [pai-subárvore, nó, mãe-subárvore]
+// recursivamente — dá pra reconstruir a árvore real (quem é filho de quem) sem precisar de mais
+// nenhum dado além do que já está salvo em sangues_linhagem.ancestrais_pos.
+function _reconstruirLinhagem(entradas, geracaoAlvo) {
+  if (!entradas.length) return null;
+  const idxSelf = entradas.findIndex(e => e.gen === geracaoAlvo);
+  if (idxSelf === -1) return null;
+  const self = entradas[idxSelf];
+  const antes = entradas.slice(0, idxSelf);
+  const depois = entradas.slice(idxSelf + 1);
+  return {
+    nome: self.nome, gen: geracaoAlvo,
+    pai: _reconstruirLinhagem(antes, geracaoAlvo + 1),
+    mae: _reconstruirLinhagem(depois, geracaoAlvo + 1),
+  };
+}
+
+function _mapaGenEscXml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Layout tipo dendrograma: gerações mais distantes (folhas) recebem posições verticais
+// sequenciais, e cada geração mais próxima do animal fica na média Y dos seus dois "filhos"
+// genealógicos — mesmo princípio de árvore genealógica de qualquer software de pedigree.
+// maxGen limita o desenho até a 3ª geração (mais que isso fica ilegível em coluna) — 4ª/5ª,
+// quando existem, viram lista textual compacta abaixo do mapa.
+// maxGen agora é decidido por _mapaGenConfigTela() (responsivo à largura da tela), não mais
+// uma constante fixa — ver função abaixo, antes de _gerarMapaGenealogicoSVG.
+const _MAPA_GEN_ROWH = 26;
+
+function _mapaGenAssignY(node, contador, maxGen) {
+  if (!node) return;
+  if (node.gen >= maxGen || (!node.pai && !node.mae)) {
+    node.y = contador.v * _MAPA_GEN_ROWH;
+    contador.v++;
+    return;
+  }
+  _mapaGenAssignY(node.pai, contador, maxGen);
+  _mapaGenAssignY(node.mae, contador, maxGen);
+  const ys = [node.pai?.y, node.mae?.y].filter(v => v != null);
+  node.y = ys.length ? ys.reduce((a,b)=>a+b,0) / ys.length : (contador.v++ * _MAPA_GEN_ROWH);
+}
+function _mapaGenAplicarOffset(node, topo) {
+  if (!node) return;
+  node.yAbs = node.y + topo;
+  _mapaGenAplicarOffset(node.pai, topo);
+  _mapaGenAplicarOffset(node.mae, topo);
+}
+function _mapaGenElbow(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2;
+  return `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
+
+// Desenha um lado (linha alta OU linha baixa) recursivamente, coluna por geração. As linhas de
+// conexão continuam SVG (mais barato de curvar), mas cada ancestral agora é um cartão HTML de
+// verdade — pergaminho, borda e sombra reais (var(--card-border)/var(--sh-sm)), reaproveitando
+// literalmente o tratamento visual de .ja-lado/.ja-bloco (Jornada de Acasalamento, Direção A —
+// "O Dossiê Selado") em vez de formas SVG preenchidas com cor sólida.
+function _mapaGenDesenhar(node, corVar, ladoClasse, colX, filhoX, filhoY, conectores, cards, maxGen) {
+  if (!node || node.gen > maxGen) return;
+  const x = colX[node.gen];
+  const delay = (node.gen === 1 ? 0.15 : node.gen === 2 ? 0.55 : 0.95).toFixed(2);
+  conectores.push(`<path class="mapa-gen-conector" d="${_mapaGenElbow(x, node.yAbs, filhoX, filhoY)}" stroke="${corVar}" style="animation-delay:${delay}s"></path>`);
+
+  const ehGen1 = node.gen === 1;
+  const estreita = maxGen === 2;
+  const maxChar = node.gen === 1 ? (estreita?20:26) : node.gen === 2 ? (estreita?17:22) : 19;
+  const maxW = node.gen === 1 ? (estreita?150:190) : node.gen === 2 ? (estreita?128:168) : 152;
+  const nomeCurto = node.nome.length > maxChar ? node.nome.slice(0, maxChar-1) + '…' : node.nome;
+  const dot = ehGen1 ? '' : `<span class="mapa-gen-dot" style="background:${corVar}"></span>`;
+  cards.push(`<div class="mapa-gen-card gen${node.gen}${ehGen1?' '+ladoClasse:''}" style="left:${x}px;top:${node.yAbs}px;max-width:${maxW}px;animation-delay:${delay}s" title="${_mapaGenEscXml(node.nome)}">
+    <span class="mapa-gen-nome">${dot}${_mapaGenEscXml(nomeCurto)}</span>
+  </div>`);
+
+  _mapaGenDesenhar(node.pai, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards, maxGen);
+  _mapaGenDesenhar(node.mae, corVar, ladoClasse, colX, x, node.yAbs, conectores, cards, maxGen);
+}
+
+// Decide quantas gerações cabem no mapa sem estourar a tela ou encolher o texto até ficar
+// ilegível. Testado em produção (2026-08-27): telas de celular (~360-400px) cortavam a 1ª
+// coluna na borda, sem indicação de que dava pra rolar — dá pra estreitar as colunas, mas
+// escalar o layout inteiro pra caber deixaria a fonte pequena demais pra ler. Solução: mostrar
+// menos gerações no mapa (2, não 3) em telas estreitas — a 3ª cai na lista de texto que já
+// existe pra 4ª/5ª geração, em vez de tentar espremer tudo no desenho.
+function _mapaGenConfigTela() {
+  const estreita = (window.innerWidth || 999) < 480;
+  return estreita
+    ? { maxGen: 2, colX: {1:150, 2:300}, larguraTotal: 380, animalX: 40 }
+    : { maxGen: 3, colX: {1:200, 2:380, 3:560}, larguraTotal: 660, animalX: 56 };
+}
+
+function _gerarMapaGenealogicoSVG(nomeAnimal, ancestraisPos) {
+  const cfg = _mapaGenConfigTela();
+  const entradasPat = (ancestraisPos||[]).filter(a => a.lado==='pat' && a.gen && a.nome);
+  const entradasMat = (ancestraisPos||[]).filter(a => a.lado==='mat' && a.gen && a.nome);
+  const arvorePat = _reconstruirLinhagem(entradasPat, 1);
+  const arvoreMat = _reconstruirLinhagem(entradasMat, 1);
+
+  let c = {v:0}; _mapaGenAssignY(arvorePat, c, cfg.maxGen);
+  const alturaPat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
+  c = {v:0}; _mapaGenAssignY(arvoreMat, c, cfg.maxGen);
+  const alturaMat = Math.max(0, (c.v - 1) * _MAPA_GEN_ROWH);
+
+  const topoPat = 40, topoMat = topoPat + alturaPat + 60;
+  _mapaGenAplicarOffset(arvorePat, topoPat);
+  _mapaGenAplicarOffset(arvoreMat, topoMat);
+
+  const colX = cfg.colX;
+  const animalX = cfg.animalX, animalY = (topoPat + alturaPat + topoMat) / 2;
+  const alturaTotal = topoMat + alturaMat + 30;
+  const larguraTotal = cfg.larguraTotal;
+
+  const conectores = [], cards = [];
+  _mapaGenDesenhar(arvorePat, 'var(--campo)', 'mg-alta', colX, animalX, animalY, conectores, cards, cfg.maxGen);
+  _mapaGenDesenhar(arvoreMat, 'var(--terracota)', 'mg-baixa', colX, animalX, animalY, conectores, cards, cfg.maxGen);
+
+  const nomeCentro = nomeAnimal.length>14 ? nomeAnimal.slice(0,13)+'…' : nomeAnimal;
+  const selo = `<div class="mapa-gen-selo" style="left:${animalX}px;top:${animalY}px" title="${_mapaGenEscXml(nomeAnimal)}">
+    <div class="mapa-gen-selo-aro"></div>
+    <span class="mapa-gen-selo-txt">${_mapaGenEscXml(nomeCentro)}</span>
+  </div>`;
+
+  const cabecalhos = Object.keys(colX).map(g =>
+    `<div class="mapa-gen-colhead" style="left:${colX[g]}px;top:12px">${g}ª geração</div>`
+  ).join('');
+
+  const alemDoMax = [...entradasPat, ...entradasMat].filter(a => a.gen >= cfg.maxGen+1).sort((a,b)=>a.gen-b.gen);
+  const listaAlem = alemDoMax.length ? `<div style="margin-top:10px;font-size:10.5px;color:var(--text2);text-align:center">
+      <strong>${alemDoMax.length} ancestrais além da ${cfg.maxGen}ª geração:</strong> ${alemDoMax.map(a=>_mapaGenEscXml(a.nome)).join(', ')}
+    </div>` : '';
+
+  return `<div class="mapa-gen-scroll"><div class="mapa-gen-container" style="width:${larguraTotal}px;height:${alturaTotal.toFixed(0)}px;min-width:${larguraTotal}px">
+    <svg class="mapa-gen-linhas" width="${larguraTotal}" height="${alturaTotal.toFixed(0)}" viewBox="0 0 ${larguraTotal} ${alturaTotal.toFixed(0)}">
+      ${conectores.join('\n')}
+    </svg>
+    ${cabecalhos}
+    ${cards.join('\n')}
+    ${selo}
+  </div></div>${listaAlem}
+  <div class="mapa-gen-legenda">
+    <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--campo)"></span>Linha alta (via pai)</span>
+    <span class="mapa-gen-legenda-item"><span class="mapa-gen-legenda-dot" style="background:var(--terracota)"></span>Linha baixa (via mãe)</span>
+  </div>`;
+}
+
+// innerHTML nunca executa <script> injetado — a medição do comprimento real de cada conector
+// (pra animação de "puxar a linha", stroke-dasharray/--mgc-len) precisa rodar depois de inserir
+// o SVG no DOM de verdade. Chamado pelo toggleMapaGenealogico logo após o innerHTML.
+function _mapaGenMedirConectores(containerEl) {
+  containerEl.querySelectorAll('.mapa-gen-conector').forEach(p => {
+    const len = p.getTotalLength();
+    p.style.setProperty('--mgc-len', len);
+  });
+}
+
+// Narrativa em linguagem de mercado: "linha alta" = pai direto; "linha baixa" = mãe seguida do
+// pai dela ("X que vem a ser Y") — nunca só o nome da mãe sozinho, é assim que o mercado Crioulo
+// referencia a linhagem materna. Detecta também irmão/irmã inteiro(a) dentro da própria manada
+// (mesmo pai E mesma mãe de outro animal já analisado) — sinal de maior peso que existe.
+function _gerarNarrativaLinhagem(sbb, d, todosResultados) {
+  const linhas = [];
+  if (d.pai) {
+    linhas.push(`<div><strong>Linha alta:</strong> ${_mapaGenEscXml(d.pai)}</div>`);
+  }
+  if (d.mae) {
+    const linhaBaixa = d.avo_materno
+      ? `${_mapaGenEscXml(d.mae)} que vem a ser ${_mapaGenEscXml(d.avo_materno)}`
+      : _mapaGenEscXml(d.mae);
+    linhas.push(`<div class="linha-baixa"><strong>Linha baixa:</strong> ${linhaBaixa}</div>`);
+  }
+
+  let irmaoBadge = '';
+  if (d.pai && d.mae && todosResultados) {
+    const irmao = Object.entries(todosResultados).find(([outroSbb, outro]) =>
+      outroSbb !== sbb && outro.pai === d.pai && outro.mae === d.mae
+    );
+    if (irmao) {
+      const nomeIrmao = animais.find(a=>a.sbb===irmao[0])?.nome || irmao[0];
+      const sexoIrmao = (animais.find(a=>a.sbb===irmao[0])?.sexo||'').toLowerCase().includes('fêmea') ? 'irmã inteira' : 'irmão inteiro';
+      irmaoBadge = `<div class="mapa-gen-irmao-badge">🧬 ${sexoIrmao} de ${_mapaGenEscXml(nomeIrmao)} — mesmo pai e mesma mãe</div>`;
+    }
+  }
+
+  if (!linhas.length) return '<div class="mapa-gen-narrativa" style="color:var(--text3)">Sem dados de linha alta/baixa disponíveis pra este animal.</div>';
+  return `<div class="mapa-gen-narrativa">${linhas.join('')}${irmaoBadge}</div>`;
+}
+
+function toggleMapaGenealogico(sbb) {
+  const wrap = document.getElementById('mapa-gen-wrap-'+sbb);
+  const icon = document.getElementById('mapa-gen-icon-'+sbb);
+  if (!wrap) return;
+  const abrindo = !wrap.classList.contains('aberto');
+  wrap.classList.toggle('aberto');
+  if (icon) icon.textContent = abrindo ? '▾ recolher mapa' : '▸ ver mapa genealógico';
+  if (abrindo && wrap.dataset.carregado !== '1') {
+    const d = (_cacheSanguesSessao?.resultados||{})[sbb];
+    const anim = animais.find(a=>a.sbb===sbb);
+    const nome = anim?.nome || sbb;
+    if (d) {
+      wrap.innerHTML = _gerarMapaGenealogicoSVG(nome, d.ancestrais_pos)
+        + _gerarNarrativaLinhagem(sbb, d, _cacheSanguesSessao?.resultados);
+      _mapaGenMedirConectores(wrap);
+      wrap.dataset.carregado = '1';
+    }
+  }
 }
 
 function toggleSanguesDetalhe() {
@@ -15499,6 +15958,12 @@ async function _sincronizarAoLogin(opts) {
     if(_paginaAtivaAoTerminarSync) showPage(_paginaAtivaAoTerminarSync.id.replace('page-',''));
     _gerarPendenciasAnimaisAtivos();
     _mostrarStatusSync('✅ Dados sincronizados', 'green');
+    // Onboarding (index-7.html, 2026-08-27): só pra quem ainda não completou/pulou,
+    // e só pro admin (é ele quem configura a cabanha) — nunca interrompe um convidado
+    // entrando pela primeira vez numa cabanha que outra pessoa já configurou.
+    if (!viaPullRefresh && TENANT_INFO?.onboarding_completo === false && usuarioAtual?.perfil === 'adm') {
+      _abrirOnboarding();
+    }
 
   } catch(err) {
     console.error('Sync error:', err);
@@ -16497,10 +16962,9 @@ function _entrarApp() {
   const user = usuarioAtual;
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
-  // Balão do agente de IA escondido a pedido do Luciano (2026-08-25) até
-  // evoluir a funcionalidade — infra (Edge Function, RPCs, painel) continua
-  // pronta, só a exibição do FAB fica desligada aqui.
-  _chatIAMostrarFab(false);
+  // Balão do agente de IA reativado em 2026-08-27 — caso de uso 3
+  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF.
+  _chatIAMostrarFab(true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -17058,6 +17522,7 @@ async function _chatIAEnviar(){
     const decoder = new TextDecoder();
     let buffer = '';
     let respostaTexto = '';
+    let houveErro = false;
 
     while(true){
       const { done, value } = await reader.read();
@@ -17079,13 +17544,20 @@ async function _chatIAEnviar(){
         } else if(evento === 'ferramenta'){
           bolhaResposta.textContent = respostaTexto || 'consultando...';
         } else if(evento === 'erro'){
-          bolhaResposta.textContent = respostaTexto || (dados.erro || 'Erro no assistente.');
+          // Erro chegado NO MEIO do streaming (ex.: sem crédito na Anthropic) —
+          // servidor já respondeu 200 e abriu o stream antes de descobrir o
+          // problema, então isso não passa pelo `if(!r.ok)` acima. Sem o flag
+          // `houveErro`, a bolha com a mensagem era apagada logo depois (bug
+          // real: o código só olhava `respostaTexto`, que nunca recebe texto
+          // de erro) — usuário via a tela simplesmente não responder nada.
+          bolhaResposta.textContent = dados.erro || 'Erro no assistente.';
+          houveErro = true;
         }
       }
     }
 
     if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
-    else bolhaResposta.remove();
+    else if(!houveErro) bolhaResposta.remove();
   } catch(e) {
     bolhaResposta.textContent = 'Falha de conexão com o assistente.';
   } finally {
@@ -17145,6 +17617,106 @@ async function _chatIAEnviar(){
   </div>
 </div>
 
+<!-- Onboarding (index-7.html) — jornada de primeira configuração da cabanha -->
+<div class="onb-overlay" id="onb-overlay">
+  <div class="onb-header">
+    <div class="onb-brand">Mimba<span class="dot">.</span></div>
+    <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+  </div>
+  <div class="onb-main">
+    <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
+
+    <div class="onb-step on" id="onb-s0">
+      <div class="onb-eyebrow">BEM-VINDO AO MIMBA</div>
+      <div class="onb-h1">Sua cabanha começa aqui.</div>
+      <div class="onb-p">Vamos colocar seus Crioulos no Mimba e preparar o essencial pra você começar a usar. O resto pode ser completado depois.</div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbGo(1)">Começar</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s1">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(0)">← Voltar</button><span class="onb-stepnum">1 de 5</span></div>
+      <div class="onb-eyebrow">SUA CABANHA</div>
+      <div class="onb-h2">Primeiro, como ela se chama?</div>
+      <div class="onb-label">Nome da cabanha</div>
+      <input class="input" id="onb-nome-cabanha" style="width:100%;max-width:480px">
+      <div class="onb-label">Afixo</div>
+      <input class="input" id="onb-afixo" style="width:100%;max-width:480px">
+      <div class="onb-label">Cidade / UF</div>
+      <div style="display:flex;gap:8px;max-width:480px">
+        <input class="input" id="onb-cidade" placeholder="Cidade" style="flex:2">
+        <input class="input" id="onb-uf" placeholder="UF" maxlength="2" style="flex:1;text-transform:uppercase">
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbSalvarCabanha()">Continuar</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s2">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(1)">← Voltar</button><span class="onb-stepnum">2 de 5</span></div>
+      <div class="onb-eyebrow">SUA MANADA</div>
+      <div class="onb-h2">Agora vamos buscar seus Crioulos.</div>
+      <div class="onb-p">Digite o SBB de um animal seu pra confirmarmos que estamos no lugar certo.</div>
+      <div style="display:flex;gap:8px;max-width:420px">
+        <input class="input" id="onb-sbb-busca" placeholder="SBB">
+        <button class="btn btn-primary" onclick="_onbBuscarAnimal()">Buscar</button>
+      </div>
+      <div id="onb-sbb-status" style="margin-top:10px;font-size:13px;color:var(--text2)"></div>
+      <div id="onb-found" class="card" style="display:none;margin-top:18px"></div>
+      <div id="onb-lote" style="display:none;margin-top:26px">
+        <div class="onb-h2" style="font-size:21px">Agora cole o SBB dos demais animais.</div>
+        <p class="onb-p">Um por linha, ou separados por vírgula — buscamos todos na ABCCC e já trazemos pra cá. Se não tiver mais nenhum agora, pode pular.</p>
+        <textarea class="input" id="onb-sbb-lote" rows="5" style="width:100%;max-width:560px;font-family:var(--mono);font-size:12px" placeholder="B123456
+B234567
+B345678"></textarea>
+        <div class="onb-actions">
+          <button class="btn btn-primary" onclick="_onbImportarLote()">Buscar e importar</button>
+          <button class="btn" onclick="_onbGo(3)">Pular — só este animal por enquanto</button>
+        </div>
+        <div id="onb-lote-progresso" style="margin-top:14px;font-size:12px;color:var(--text2)"></div>
+      </div>
+    </div>
+
+    <div class="onb-step" id="onb-s3">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(2)">← Voltar</button><span class="onb-stepnum">3 de 5</span></div>
+      <div class="onb-eyebrow">PRIMEIRO FOCO</div>
+      <div class="onb-h2">O que você mais quer organizar agora?</div>
+      <div class="onb-p">Isso só personaliza os primeiros passos. Todo o Mimba continua disponível.</div>
+      <div class="onb-grid" id="onb-foco-grid">
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'manada')">🐴 <b>Minha manada</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Tudo sobre meus animais.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'reproducao')">🧬 <b>Reprodução</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Cruzamentos e gestações.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'eventos')">🏆 <b>Eventos</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Provas e exposições.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'saude')">💉 <b>Saúde</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Vacinas e exames.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'nutricao')">🌱 <b>Nutrição</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Projetos dos animais.</div></div>
+        <div class="card onb-card" onclick="_onbEscolherFoco(this,'confirmacao')">📏 <b>Confirmação ABCCC</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Desenvolvimento e preparação.</div></div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbGo(4)">Continuar</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s4">
+      <div class="onb-top"><button class="onb-back" onclick="_onbGo(3)">← Voltar</button><span class="onb-stepnum">4 de 5</span></div>
+      <div class="onb-eyebrow">O MIMBA JÁ COMEÇOU</div>
+      <div class="onb-h2">Pronto. O Mimba já conhece sua cabanha.</div>
+      <div class="onb-stats" id="onb-stats"></div>
+      <div class="onb-chat">
+        <b style="font-family:var(--serif)">Mimba.</b>
+        <div class="onb-bubble bot" id="onb-chat-intro"></div>
+        <div id="onb-conv"></div>
+        <div class="onb-suggest" id="onb-suggest"></div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbGo(5)">Entrar no Mimba</button></div>
+    </div>
+
+    <div class="onb-step" id="onb-s5">
+      <div class="onb-eyebrow">ATIVAÇÃO CONCLUÍDA</div>
+      <div class="onb-h1" style="font-size:clamp(28px,4.2vw,42px)">Agora a cabanha começa a ganhar vida.</div>
+      <div class="onb-p">O onboarding obrigatório termina aqui. Saúde, reprodução, eventos, nutrição, equipe e Registro Vivo passam a ser enriquecidos durante o uso.</div>
+      <div class="onb-grid">
+        <div class="card"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
+        <div class="card"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
+        <div class="card"><b>Equipe</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem cuida com você?</div><button class="btn" onclick="_onbFinalizar('conta')">Convidar</button></div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbFinalizar('dashboard')">Ir pro Dashboard</button></div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
