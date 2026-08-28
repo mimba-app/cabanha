@@ -596,6 +596,29 @@ Ctrl+U não funciona — reenvia o formulário de busca em vez de mostrar o HTML
   puxar a versão atual antes de editar, mesma disciplina do `index.html`.
 
 ## 🧠 Agente Mimba — caso de uso 3 (ABCCC) destravado pro lançamento (2026-08-25)
+
+### ⚠️ Achado ao testar com créditos carregados (2026-08-28): primeiro teste bateu "limite atingido (0)"
+Não era bug — é o novo modelo de preço (Potro/Arreio com e sem IA, Manada) funcionando como
+configurado. A Cabanha Mãe de Deus (usada pros testes) estava no plano **Arreio** simples, que
+tem `agente_ia:false` e `cota_ia_mensal:0` de propósito nos `features`. Confirmado os 5 planos:
+
+| Plano | Tem IA | Cota mensal |
+|---|---|---|
+| Arreio | não | 0 |
+| Potro | não | 0 |
+| Arreio + Agente Mimba | sim | 900 |
+| Potro + Agente Mimba | sim | 600 |
+| Manada | sim | 1500 |
+
+Trocado `tenants.plano_id` da Cabanha Mãe de Deus pra **Manada** (decisão do Luciano) — direto no
+banco, sem passar pelo fluxo de checkout/Asaas (é troca de teste, não assinatura real).
+
+**Achado secundário, não bloqueante**: `uso_ia_mensal.contagem` já estava em 4 pra essa cabanha
+mesmo com as tentativas anteriores tendo sido *bloqueadas* pela cota zerada — sugere que o
+contador incrementa antes (ou independente) da checagem de cota, não só em mensagens que de fato
+chegam a chamar o modelo. Não trava nada agora (cota nova é 1500), mas vale o Pedro conferir a
+ordem de operações na Edge Function se algum dia isso importar (ex.: cobrança por uso).
+
 Founder redefiniu o escopo: o Agente Mimba deve ter, desde o lançamento, "dois cérebros" —
 contexto completo da cabanha + inteligência estatística da raça (Mimba Lab), casando os dois no
 mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha decidido.
