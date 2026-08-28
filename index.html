@@ -582,6 +582,21 @@
   .chat-ia-input-row textarea { flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; font-family:var(--font); font-size:13px; background:var(--bg); color:var(--text); max-height:80px; }
   .chat-ia-input-row button { background:var(--green-d); color:#fff; border:none; border-radius:var(--radius); padding:0 16px; font-weight:700; cursor:pointer; }
   .chat-ia-input-row button:disabled { opacity:0.5; cursor:default; }
+  .chat-ia-msg.assistente strong { font-weight:700; }
+  .chat-ia-msg.assistente ul { margin:4px 0 2px 18px; padding:0; }
+  .chat-ia-msg.assistente li { margin:2px 0; }
+  .chat-ia-msg.assistente p { margin:0 0 6px; }
+  .chat-ia-msg.assistente p:last-child { margin-bottom:0; }
+  .chat-ia-cartao { align-self:flex-start; max-width:92%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 11px; font-size:12px; }
+  .chat-ia-cartao-titulo { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); margin-bottom:6px; }
+  .chat-ia-cartao-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); }
+  .chat-ia-cartao-item:last-child { border-bottom:none; }
+  .chat-ia-cartao-nivel { width:6px; height:6px; border-radius:50%; flex-shrink:0; display:inline-block; margin-right:6px; }
+  .chat-ia-cartao-mais { font-size:10px; color:var(--text3); margin-top:4px; text-align:center; }
+  .chat-ia-stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .chat-ia-stat { background:var(--bg3); border-radius:8px; padding:7px 8px; text-align:center; }
+  .chat-ia-stat b { display:block; font-size:17px; font-family:var(--serif); line-height:1.15; }
+  .chat-ia-stat span { font-size:9px; color:var(--text2); }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
   .san-panel-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
@@ -17476,12 +17491,113 @@ function _chatIAToggle(){
   const painel = document.getElementById('chat-ia-panel');
   const abrindo = !painel.classList.contains('open');
   painel.classList.toggle('open', abrindo);
-  if(abrindo) document.getElementById('chat-ia-input')?.focus();
+  if(abrindo){
+    document.getElementById('chat-ia-input')?.focus();
+    _chatIASaudacaoSeNecessario();
+  }
+}
+
+// Saudação personalizada — só na primeira abertura da sessão (_chatIAMensagens vazio), nunca
+// entra no histórico enviado pra API (é só interface, não faz parte da conversa de verdade).
+function _chatIASaudacaoSeNecessario(){
+  if(_chatIAMensagens.length > 0) return;
+  const box = document.getElementById('chat-ia-msgs');
+  const placeholder = box?.querySelector('.chat-ia-msg.sistema');
+  if(!placeholder) return;
+  const primeiroNome = (usuarioAtual?.nome || '').trim().split(' ')[0] || '';
+  const hora = HOJE instanceof Date ? HOJE.getHours() : new Date().getHours();
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  placeholder.textContent = primeiroNome
+    ? `${saudacao}, ${primeiroNome}! No que posso te ajudar?`
+    : `${saudacao}! No que posso te ajudar?`;
 }
 
 function _chatIAMostrarFab(mostrar){
   document.getElementById('chat-ia-fab')?.classList.toggle('visible', !!mostrar);
   if(!mostrar) document.getElementById('chat-ia-panel')?.classList.remove('open');
+}
+
+// Escapa HTML antes de qualquer coisa — nunca confia em texto de fora (nem do modelo, nem do
+// usuário) como HTML puro. As funções abaixo só permitem os padrões específicos que elas mesmas
+// reconhecem (negrito, lista) — nunca passam o texto adiante como innerHTML bruto.
+function _chatIAEscHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Markdown-leve: só **negrito** e listas com "- item" — o suficiente pro que o agente
+// realmente precisa formatar (nome de animal em destaque, lista curta de itens), sem abrir mão
+// de segurança tentando suportar markdown completo. Todo texto passa por _chatIAEscHtml antes.
+function _chatIAFormatarTexto(texto){
+  const linhas = _chatIAEscHtml(texto).split('\n');
+  const blocos = [];
+  let listaAtual = null;
+  for (const linha of linhas){
+    const itemLista = linha.match(/^[-*]\s+(.+)/);
+    if (itemLista){
+      if (!listaAtual){ listaAtual = []; blocos.push(listaAtual); }
+      listaAtual.push(itemLista[1]);
+    } else {
+      listaAtual = null;
+      blocos.push(linha);
+    }
+  }
+  const negrito = (s) => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return blocos.map(b =>
+    Array.isArray(b)
+      ? '<ul>' + b.map(item => `<li>${negrito(item)}</li>`).join('') + '</ul>'
+      : (b.trim() ? `<p>${negrito(b)}</p>` : '')
+  ).join('');
+}
+
+// Cartão visual a partir do resultado ESTRUTURADO de uma ferramenta (JSON que já veio do banco
+// via RPC) — nunca a partir de texto do modelo. Só os 4 tipos de ferramenta mais perguntados
+// (achado em produção, 2026-08-28) ganham cartão por ora; o resto continua só em texto.
+function _chatIARenderizarCartao(nome, resultado){
+  const d = resultado?.resultado;
+  if (d == null) return null;
+  const arr = Array.isArray(d) ? d : null;
+  if (arr && arr.length === 0) return null; // vazio — sem cartão, o texto do modelo cuida disso
+
+  if (nome === 'cab_listar_pendencias' && arr){
+    const cores = { alta:'var(--red-d)', media:'var(--amber-d)', baixa:'var(--text3)' };
+    const itens = arr.slice(0,12).map(p => `<div class="chat-ia-cartao-item">
+      <span><span class="chat-ia-cartao-nivel" style="background:${cores[p.nivel]||'var(--text3)'}"></span>${_chatIAEscHtml(p.animal_nome)} — ${_chatIAEscHtml(p.tipo)}</span>
+    </div>`).join('');
+    const mais = arr.length>12 ? `<div class="chat-ia-cartao-mais">+${arr.length-12} mais</div>` : '';
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Pendências (${arr.length})</div>${itens}${mais}</div>`;
+  }
+
+  if (nome === 'cab_buscar_animal' && arr){
+    const itens = arr.slice(0,8).map(a => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(a.nome)}</strong>${a.sbb?(' · '+_chatIAEscHtml(a.sbb)):''}</span>
+      <span style="color:var(--text3)">${_chatIAEscHtml(a.sexo||'')}</span>
+    </div>`).join('');
+    const mais = arr.length>8 ? `<div class="chat-ia-cartao-mais">+${arr.length-8} mais</div>` : '';
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Animais encontrados (${arr.length})</div>${itens}${mais}</div>`;
+  }
+
+  if (nome === 'cab_listar_gestacoes_ativas' && arr){
+    const itens = arr.map(g => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(g.egua_nome)}</strong></span>
+      <span style="color:var(--text3)">${g.parto_previsto?_chatIAEscHtml(fd(g.parto_previsto)):''}</span>
+    </div>`).join('');
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Gestações ativas (${arr.length})</div>${itens}</div>`;
+  }
+
+  if (nome === 'cab_resumo_geral' && !arr && typeof d === 'object'){
+    return `<div class="chat-ia-cartao">
+      <div class="chat-ia-cartao-titulo">Resumo da cabanha</div>
+      <div class="chat-ia-stats-grid">
+        <div class="chat-ia-stat"><b>${d.total_na_cabanha??'—'}</b><span>animais</span></div>
+        <div class="chat-ia-stat"><b>${d.gestacoes_ativas??'—'}</b><span>gestando</span></div>
+        <div class="chat-ia-stat"><b>${d.femeas??'—'}</b><span>fêmeas</span></div>
+        <div class="chat-ia-stat"><b>${d.machos??'—'}</b><span>machos</span></div>
+        <div class="chat-ia-stat" style="grid-column:1/-1"><b>${d.pendencias_abertas??'—'}</b><span>pendências abertas</span></div>
+      </div>
+    </div>`;
+  }
+
+  return null;
 }
 
 function _chatIARenderMsg(texto, classe){
@@ -17552,6 +17668,18 @@ async function _chatIAEnviar(){
           document.getElementById('chat-ia-msgs').scrollTop = 9e9;
         } else if(evento === 'ferramenta'){
           bolhaResposta.textContent = respostaTexto || 'consultando...';
+        } else if(evento === 'ferramenta_resultado'){
+          // Cartão visual a partir do resultado ESTRUTURADO da ferramenta (não texto do
+          // modelo) — inserido antes da bolha de resposta, pra ficar "aqui está o que achei,
+          // agora meu comentário sobre isso", na ordem natural de leitura.
+          const cartaoHtml = _chatIARenderizarCartao(dados.nome, dados.resultado);
+          if(cartaoHtml){
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = cartaoHtml;
+            const box = document.getElementById('chat-ia-msgs');
+            box.insertBefore(wrapper.firstElementChild, bolhaResposta);
+            box.scrollTop = 9e9;
+          }
         } else if(evento === 'erro'){
           // Erro chegado NO MEIO do streaming (ex.: sem crédito na Anthropic) —
           // servidor já respondeu 200 e abriu o stream antes de descobrir o
@@ -17565,8 +17693,10 @@ async function _chatIAEnviar(){
       }
     }
 
-    if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
-    else if(!houveErro) bolhaResposta.remove();
+    if(respostaTexto){
+      bolhaResposta.innerHTML = _chatIAFormatarTexto(respostaTexto);
+      _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
+    } else if(!houveErro) bolhaResposta.remove();
   } catch(e) {
     bolhaResposta.textContent = 'Falha de conexão com o assistente.';
   } finally {
