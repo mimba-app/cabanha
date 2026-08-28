@@ -661,6 +661,22 @@ mesmo raciocínio. Isso tira o caso de uso 3 do "adiado" que a ADR 0007 tinha de
   mas sem crédito) está fechado — falta só um teste ponta a ponta numa conversa real pra confirmar
   o comportamento do modelo em produção, não mais nenhum bloqueio de configuração/pagamento.
 
+### 🐛 Bug real achado testando com crédito carregado (2026-08-28): tool_use com campo extra
+Primeira pergunta que precisou de ferramenta deu `Claude API 400: messages.1.content.1.tool_use.
+input_json: Extra inputs are not permitted`. Causa: ao montar o histórico depois de consumir o
+streaming SSE, o código fazia `{ ...b, input: JSON.parse(b.input_json||'{}') }` — isso **espalha**
+`b` inteiro (que ainda carrega `input_json`, o acumulador temporário de JSON parcial usado durante
+o streaming) e só *adiciona* `input` por cima, sem remover o campo velho. O bloco reenviado pra API
+na rodada seguinte ficava com os dois campos ao mesmo tempo, e a API rejeita.
+
+Travava **qualquer pergunta que precisasse de 2+ rodadas de ferramenta** — ou seja, quase toda
+pergunta útil (a primeira rodada nunca falhava, porque o histórico contaminado só era reenviado
+na rodada seguinte). Corrigido (`agente-ia` v8, `supabase/functions/agente-ia/index.ts`): agora
+desestrutura `b` removendo `input_json` explicitamente antes de montar o bloco final. Testado
+isoladamente (sem precisar de rede) simulando os eventos SSE reais da Anthropic — reproduziu o bug
+exato na versão antiga e confirmou o schema limpo (`id`/`input`/`name`/`type`, nada a mais) na
+versão corrigida.
+
 ## 🥕 Nutrição — refactor implementado (2026-08-21)
 Luciano reportou 3 problemas reais, confirmados lendo o código antes de propor solução: projeto
 nutricional não persistia no banco (o módulo inteiro rodava em memória — `nutProj` era recriado

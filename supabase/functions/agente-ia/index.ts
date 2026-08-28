@@ -341,9 +341,18 @@ Deno.serve(async (req: Request) => {
             }
           }
 
-          const blocosFinais = blocosConteudo.map((b) =>
-            b.type === "tool_use" ? { ...b, input: JSON.parse(b.input_json || "{}") } : b
-          );
+          const blocosFinais = blocosConteudo.map((b) => {
+            if (b.type !== "tool_use") return b;
+            // b ainda carrega input_json (acumulador temporário de streaming, ver
+            // content_block_start acima) — precisa ser removido, não só ter `input`
+            // adicionado por cima, senão o bloco reenviado pra API na próxima rodada
+            // de tool-use fica com os dois campos e a API rejeita com 400
+            // ("Extra inputs are not permitted"). Bug real, achado em produção
+            // (2026-08-28) — travava qualquer pergunta que precisasse de 2+ rodadas
+            // de ferramenta, ou seja, quase toda pergunta útil.
+            const { input_json, ...resto } = b;
+            return { ...resto, input: JSON.parse(input_json || "{}") };
+          });
           historico.push({ role: "assistant", content: blocosFinais });
 
           if (stopReason !== "tool_use") {
