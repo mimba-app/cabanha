@@ -8559,7 +8559,7 @@ function saudeTabGrupo(btn,tabId,subId){
 }
 function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
 function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function populaCiclos(){
@@ -11496,6 +11496,30 @@ function _acFonteChange() {
   _renderSimulacaoAcasalamento();
 }
 
+// Ancestrais_pos (5 gerações) por SBB, combinando as duas fontes que o Mimba tem: o que a
+// própria cabanha já confirmou via Análise de Sangues (public.sangues_linhagem — cache
+// compartilhado entre cabanhas, mesmo pedigree bruto da ABCCC não muda por tenant) e o que
+// o Mimba Lab já sincronizou (abccc_estatisticas_animal, mesmo formato ancestrais_pos).
+// Achado real (2026-08-29): consanguinidade/dossiê só olhavam sangues_linhagem, que tinha
+// só ~20 animais em cache na plataforma inteira — a maior parte das consultas caía em "sem
+// dados suficientes" mesmo o Lab já tendo a árvore completa (~95% da raça, 28 mil+ animais)
+// de quase todo mundo, incluindo os garanhões testados (Golpe Seco do Itaó, Las Gurizas
+// Fogonero etc.). Cache manual tem prioridade quando existe (mesma fonte, mas já confirmada
+// direto pela própria cabanha); Lab preenche o resto.
+async function _buscarAncestraisPosCombinado(sbbs) {
+  const lista = [...new Set(sbbs.filter(Boolean))];
+  if (!lista.length) return {};
+  const filtro = lista.map(s => `"${s}"`).join(',');
+  const [manual, lab] = await Promise.all([
+    _supaPub('GET', 'sangues_linhagem', null, `?animal_sbb=in.(${filtro})&select=animal_sbb,ancestrais_pos`),
+    _supaPub('GET', 'abccc_estatisticas_animal', null, `?sbb=in.(${filtro})&select=sbb,ancestrais_pos`),
+  ]);
+  const resultado = {};
+  (lab || []).forEach(r => { if (r.ancestrais_pos?.length) resultado[r.sbb] = r.ancestrais_pos; });
+  (manual || []).forEach(r => { if (r.ancestrais_pos?.length) resultado[r.animal_sbb] = r.ancestrais_pos; });
+  return resultado;
+}
+
 // Painel de simulação: cruzamentos anteriores + alerta de consanguinidade (raso,
 // até geração 3) + saldo da fonte. NÃO inclui a análise de concentração de
 // sangue projetada completa da spec (fica para uma fase futura, se quiser).
@@ -11570,22 +11594,20 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supaPub('GET', 'sangues_linhagem', null,
-          '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-        const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-        const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
-        if (rEgua?.ancestrais_pos && rGar?.ancestrais_pos) {
+        const anc = await _buscarAncestraisPosCombinado([sbbEgua, sbbGar]);
+        const ancEgua = anc[sbbEgua], ancGar = anc[sbbGar];
+        if (ancEgua && ancGar) {
           // Nível 2: ancestrais comuns nas gerações 1-2
-          const anc2Egua = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
-          const comuns2  = rGar.ancestrais_pos.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
+          const anc2Egua = new Set(ancEgua.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
+          const comuns2  = ancGar.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
           // Nível 3: IC estimado via ancestrais comuns gen 3-5
           // IC ≈ Σ (0.5)^(gen_egua + gen_gar + 1) para cada ancestral comum
           const anc5Egua = {};
-          rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+          ancEgua.filter(x => x.gen <= 5 && x.nome).forEach(x => {
             if (!anc5Egua[x.nome]) anc5Egua[x.nome] = x.gen;
           });
           let icEstimado = 0;
-          const anc5Gar = rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome);
+          const anc5Gar = ancGar.filter(x => x.gen <= 5 && x.nome);
           const comunsNomes5 = new Set();
           anc5Gar.forEach(x => {
             if (anc5Egua[x.nome] !== undefined) {
@@ -12129,9 +12151,12 @@ function _jaConselhoRender() {
   document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
   document.getElementById('ja-passo-dossie').style.display = fase === 4 ? '' : 'none';
   if (fase >= 0 && fase !== 3) _jaRenderAlvo();
-  // Seletor de modo só faz sentido antes de começar a análise — trocar de modo no meio do
-  // ranking/confluência/dossiê seria confuso (a essa altura já se está "dentro" da jornada).
-  document.getElementById('ja-modo-wrap').style.display = fase <= 0 ? '' : 'none';
+  // Achado real (2026-08-29): esconder o seletor de modo depois que o ranking/dossiê aparece
+  // virava beco sem saída — só dava pra sair clicando "trocar égua" antes. jaSelecionarModo()
+  // já troca de modo de forma segura em qualquer fase (renderAcasalamentosMatch() despacha
+  // pro modo escolhido sem depender de _jaFase), então manter sempre visível resolve sem
+  // reintroduzir confusão — voltar depois pra Inteligência retoma exatamente de onde parou.
+  document.getElementById('ja-modo-wrap').style.display = '';
 }
 
 function _jaEscolherEgua(eguaDbId) {
@@ -12185,25 +12210,24 @@ async function _jaConsanguinidade(egua, fonte) {
   if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
 
   try {
-    const rows = await _supaPub('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-    const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-    const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
-    if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
+    const anc = await _buscarAncestraisPosCombinado([sbbEgua, sbbGar]);
+    const ancEguaFull = anc[sbbEgua], ancGarFull = anc[sbbGar];
+    if (!ancEguaFull || !ancGarFull) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
     // Direção B (Confluência de Sangues) reaproveita esses arrays brutos pra desenhar a
     // árvore, sem precisar consultar sangues_linhagem de novo.
-    const ancEgua = rEgua.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
-    const ancGar = rGar.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
+    const ancEgua = ancEguaFull.filter(x => x.gen && x.lado && x.nome);
+    const ancGar = ancGarFull.filter(x => x.gen && x.lado && x.nome);
 
-    const nomesEgua3 = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
-    const nomesGar3 = new Set(rGar.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesEgua3 = new Set(ancEguaFull.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesGar3 = new Set(ancGarFull.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
     const uniao = new Set([...nomesEgua3, ...nomesGar3]);
     const intersec = [...nomesEgua3].filter(n => nomesGar3.has(n));
     const diversidade = uniao.size ? 1 - (intersec.length / uniao.size) : 1;
 
     const anc5Egua = {};
-    rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
+    ancEguaFull.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
     let ic = 0; const comuns5 = [];
-    rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+    ancGarFull.filter(x => x.gen <= 5 && x.nome).forEach(x => {
       if (anc5Egua[x.nome] !== undefined) { ic += Math.pow(0.5, anc5Egua[x.nome] + x.gen + 1); comuns5.push(x.nome); }
     });
     ic = Math.round(ic * 10000) / 100;
@@ -16281,11 +16305,20 @@ async function _dbSalvarFonteCobertura(f, idx) {
   if(f.db_id) {
     const ok = await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
     return !!ok;
-  } else {
-    const res = await _supa('POST','fontes_cobertura', payload);
-    if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
-    return false;
   }
+  const res = await _supa('POST','fontes_cobertura', payload);
+  if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
+  // Achado real (2026-08-29): a checagem de duplicata do "Próprio" era só em memória —
+  // se a tela renderizasse de novo antes desse POST confirmar, criava outra fonte igual
+  // (mesmo garanhão/ciclo/tipo). Agora o banco tem um índice único que recusa a segunda
+  // (23505/409) — em vez de deixar essa fonte órfã sem db_id, busca a que já existe de
+  // verdade e adota o id dela, então o resultado é o mesmo de sempre ter achado na hora.
+  if (f.tipo === 'proprio') {
+    const existentes = await _supa('GET', 'fontes_cobertura', null,
+      `?tipo=eq.proprio&ciclo=eq.${encodeURIComponent(f.ciclo)}&garanhao_nome=eq.${encodeURIComponent(f.garanhao_nome)}&limit=1`);
+    if (existentes?.[0]?.id) { fontesCobertura[idx].db_id = existentes[0].id; return true; }
+  }
+  return false;
 }
 
 async function _dbExcluirFonteCobertura(db_id) {
@@ -17187,8 +17220,11 @@ function fazerLogout() {
   // não deixar dado da cabanha na memória/localStorage após sair
   _limparEstadoLocal();
   _limparSessaoSalva(); // sair de verdade não pode voltar sozinho no próximo reload
-  // fechar a Tela de Conta, se estiver aberta
-  closeModal('modal-conta');
+  // Achado real (2026-08-29): "modal-conta" nunca existiu — Conta é uma página
+  // (#page-conta), não um modal. closeModal() sem guarda contra elemento nulo
+  // (ver fix acima) lançava TypeError aqui em TODO logout, interrompendo o resto
+  // da função — a tela de login (linha abaixo) nunca chegava a aparecer, só no
+  // F5 seguinte. Não há modal de Conta pra fechar; a linha só existia por engano.
   // limpar a marca da cabanha (logo/nome/título/cor) ao voltar para o login
   const _lg = document.getElementById('sidebar-logo-img');
   if(_lg){ _lg.removeAttribute('src'); _lg.style.display='none'; }
