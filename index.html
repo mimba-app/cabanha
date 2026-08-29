@@ -868,6 +868,8 @@
   .onb-suggest { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
   .onb-suggest button { border:var(--card-border); background:var(--pergaminho); border-radius:999px; padding:7px 12px; cursor:pointer; font-size:12px; color:var(--text2); font-family:var(--font); }
   .onb-suggest button:hover { border-color:var(--campo); color:var(--campo-deep); }
+  .onb-foco-destaque { border:2px solid var(--campo) !important; position:relative; }
+  .onb-foco-destaque::before { content:"SEU FOCO"; position:absolute; top:-9px; left:12px; background:var(--campo); color:#fff; font-family:var(--mono); font-size:9px; letter-spacing:.08em; padding:2px 7px; border-radius:999px; }
   .onb-header-right { display:flex; align-items:center; gap:14px; }
   .onb-skip { font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); padding:0; }
   @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-header-right{gap:10px;} .onb-stepnum{display:none;} }
@@ -8038,6 +8040,25 @@ function _onbGo(n) {
   const lbl = document.getElementById('onb-lbl');
   if (lbl) lbl.textContent = n===0 ? 'Bem-vindo' : n===5 ? 'Ativação concluída' : `Onboarding · etapa ${n} de 5`;
   if (n === 4) _onbMontarPainel4();
+  if (n === 5) _onbMontarPainel5();
+}
+
+// Foco escolhido na etapa 3 -> página real que _onbFinalizar() abre no botão principal da
+// etapa 5, e card que ganha destaque visual. Antes disso (2026-08-29) a escolha da etapa 3
+// era salva e nunca lida em lugar nenhum — a etapa existia mas não mudava nada no fluxo.
+const ONB_FOCO_PAGINA = {
+  manada: 'animais', reproducao: 'reprodutivo', eventos: 'eventos',
+  saude: 'saude', nutricao: 'nutricional', confirmacao: 'animais',
+};
+const ONB_FOCO_LABEL = {
+  manada: 'Ir pra Minha Manada', reproducao: 'Ir pra Reprodução', eventos: 'Ir pros Eventos',
+  saude: 'Ir pra Saúde', nutricao: 'Ir pra Nutrição', confirmacao: 'Ir pros Animais',
+};
+function _onbMontarPainel5() {
+  document.getElementById('onb-card-eventos')?.classList.toggle('onb-foco-destaque', _onbFocoEscolhido === 'eventos');
+  document.getElementById('onb-card-reproducao')?.classList.toggle('onb-foco-destaque', _onbFocoEscolhido === 'reproducao');
+  const btn = document.getElementById('onb-btn-finalizar');
+  if (btn) btn.textContent = ONB_FOCO_LABEL[_onbFocoEscolhido] || 'Ir pro Dashboard';
 }
 
 async function _onbSalvarCabanha() {
@@ -8117,9 +8138,21 @@ function _onbEmpurrarAnimalLocal(ins) {
 
 async function _onbConfirmarPrimeiroAnimal() {
   const r = _onbAnimalConfirmado;
-  if (!r) return;
+  // Trava contra clique repetido (achado ao vivo, 2026-08-29): sem isso, cada clique em
+  // "É ele. Adicionar à cabanha" reenviava um POST novo pro mesmo animal — o card ficava
+  // clicável pra sempre, sem nenhum feedback visual de que já tinha sido adicionado, e uma
+  // pessoa clicando 3-4x sem perceber acabava com 3-4 cópias duplicadas do mesmo animal.
+  if (!r || r._confirmado) return;
+  r._confirmado = true;
+  const btn = document.querySelector('#onb-found .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adicionando...'; }
   const inseridos = await _supa('POST','animais',[_onbPayloadAnimal(r)]);
   if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  const f = document.getElementById('onb-found');
+  if (f) f.innerHTML = `<div style="display:flex;gap:10px;align-items:center;color:var(--campo-deep);font-weight:700">
+    <span style="width:22px;height:22px;border-radius:50%;background:var(--campo-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">✓</span>
+    <span>${r.dados.nome} adicionado à cabanha.</span>
+  </div>`;
   document.getElementById('onb-lote').style.display = '';
 }
 
@@ -8220,6 +8253,9 @@ async function _onbPular() {
 }
 
 async function _onbFinalizar(destino) {
+  // Sem destino explícito (botão principal da etapa 5): usa a página do foco escolhido na
+  // etapa 3, se houver — antes disso o foco era só salvo e nunca influenciava o destino.
+  if (!destino) destino = ONB_FOCO_PAGINA[_onbFocoEscolhido] || 'dashboard';
   await _rpc('atualizar_tenant_onboarding', {
     p_tenant_id: TENANT_INFO.tenant_id,
     p_foco_inicial: _onbFocoEscolhido,
@@ -17864,7 +17900,7 @@ B345678"></textarea>
       <div class="onb-top"><button class="onb-back" onclick="_onbGo(2)">← Voltar</button><span class="onb-stepnum">3 de 5</span></div>
       <div class="onb-eyebrow">PRIMEIRO FOCO</div>
       <div class="onb-h2">O que você mais quer organizar agora?</div>
-      <div class="onb-p">Isso só personaliza os primeiros passos. Todo o Mimba continua disponível.</div>
+      <div class="onb-p">Escolha pra onde a gente te leva direto ao terminar — o botão final abre essa área específica em vez do Dashboard genérico. Todo o resto do Mimba continua disponível normalmente, isso não bloqueia nada.</div>
       <div class="onb-grid" id="onb-foco-grid">
         <div class="card onb-card" onclick="_onbEscolherFoco(this,'manada')">🐴 <b>Minha manada</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Tudo sobre meus animais.</div></div>
         <div class="card onb-card" onclick="_onbEscolherFoco(this,'reproducao')">🧬 <b>Reprodução</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Cruzamentos e gestações.</div></div>
@@ -17895,11 +17931,11 @@ B345678"></textarea>
       <div class="onb-h1" style="font-size:clamp(28px,4.2vw,42px)">Agora a cabanha começa a ganhar vida.</div>
       <div class="onb-p">O onboarding obrigatório termina aqui. Saúde, reprodução, eventos, nutrição, equipe e Registro Vivo passam a ser enriquecidos durante o uso.</div>
       <div class="onb-grid">
-        <div class="card"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
-        <div class="card"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
+        <div class="card" id="onb-card-eventos"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
+        <div class="card" id="onb-card-reproducao"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
         <div class="card"><b>Equipe</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem cuida com você?</div><button class="btn" onclick="_onbFinalizar('conta')">Convidar</button></div>
       </div>
-      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbFinalizar('dashboard')">Ir pro Dashboard</button></div>
+      <div class="onb-actions"><button class="btn btn-primary" id="onb-btn-finalizar" onclick="_onbFinalizar()">Ir pro Dashboard</button></div>
     </div>
   </div>
 </div>
