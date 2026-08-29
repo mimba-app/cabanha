@@ -8025,6 +8025,7 @@ function _abrirOnboarding() {
   document.getElementById('onb-afixo').value = TENANT_INFO?.afixo || '';
   document.getElementById('onb-cidade').value = TENANT_INFO?.cidade || '';
   document.getElementById('onb-uf').value = TENANT_INFO?.uf || '';
+  document.getElementById('onb-abccc-codigo').value = TENANT_INFO?.abccc_codigo || '';
   document.getElementById('onb-overlay').classList.add('on');
   _onbGo(0);
 }
@@ -8044,14 +8045,31 @@ async function _onbSalvarCabanha() {
   const afixo = document.getElementById('onb-afixo').value.trim();
   const cidade = document.getElementById('onb-cidade').value.trim();
   const uf = document.getElementById('onb-uf').value.trim().toUpperCase();
+  const abcccCodigo = document.getElementById('onb-abccc-codigo').value.trim();
+  const anoFundacao = parseInt(document.getElementById('onb-ano-fundacao').value) || null;
+  const assinatura = document.getElementById('onb-assinatura').value.trim();
   await _rpc('atualizar_tenant_onboarding', {
-    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf
+    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf,
+    p_abccc_codigo: abcccCodigo
   });
+  // Cidade/UF/ano de fundação/assinatura também alimentam o perfil público (Conta → Dados da
+  // Cabanha → Perfil público) — achado auditando a jornada (2026-08-29): antes disso, o que
+  // era preenchido aqui no onboarding nunca aparecia em Conta, porque Conta lê de
+  // cabanha_perfil_publico, uma tabela diferente de tenants.cidade/uf. Grava nas duas agora.
+  if (cidade || uf || anoFundacao || assinatura) {
+    await _supaPub('POST', 'cabanha_perfil_publico', {
+      tenant_id: TENANT_INFO.tenant_id,
+      cidade: cidade || null, estado: uf || null,
+      ano_fundacao: anoFundacao, assinatura: assinatura || null,
+      atualizado_em: new Date().toISOString(),
+    });
+  }
   // A RPC sincroniza nome_exibicao com nome_cabanha quando não veio um valor explícito pra
   // nome_exibicao (é a primeira nomeação da cabanha) — espelha isso localmente também, senão
   // a sidebar (que prioriza nome_exibicao sobre nome_cabanha) continua com o nome antigo.
   TENANT_INFO.nome_cabanha = nome; TENANT_INFO.nome_exibicao = nome;
   TENANT_INFO.afixo = afixo; TENANT_INFO.cidade = cidade; TENANT_INFO.uf = uf;
+  TENANT_INFO.abccc_codigo = abcccCodigo || TENANT_INFO.abccc_codigo;
   const cabEl = document.getElementById('sidebar-cabanha');
   if (cabEl) cabEl.textContent = nome;
   _onbGo(2);
@@ -17789,7 +17807,7 @@ async function _chatIAEnviar(){
       <div class="onb-top"><button class="onb-back" onclick="_onbGo(0)">← Voltar</button><span class="onb-stepnum">1 de 5</span></div>
       <div class="onb-eyebrow">SUA CABANHA</div>
       <div class="onb-h2">Confirma os dados da sua cabanha.</div>
-      <div class="onb-p">Você já nos contou o nome no cadastro — confirme abaixo e complete afixo, cidade e UF.</div>
+      <div class="onb-p">Você já nos contou o nome no cadastro — confirme abaixo e complete o resto. Isso já deixa o perfil da sua cabanha pronto (editável depois em Conta → Dados da Cabanha).</div>
       <div class="onb-label">Nome da cabanha</div>
       <input class="input" id="onb-nome-cabanha" style="width:100%;max-width:480px">
       <div class="onb-label">Afixo</div>
@@ -17799,6 +17817,18 @@ async function _chatIAEnviar(){
         <input class="input" id="onb-cidade" placeholder="Cidade" style="flex:2">
         <input class="input" id="onb-uf" placeholder="UF" maxlength="2" style="flex:1;text-transform:uppercase">
       </div>
+      <div style="display:flex;gap:8px;max-width:480px">
+        <div style="flex:2">
+          <div class="onb-label">Código ABCCC <span style="font-weight:400;color:var(--text3)">(opcional)</span></div>
+          <input class="input" id="onb-abccc-codigo" style="width:100%" placeholder="Registro da cabanha na ABCCC">
+        </div>
+        <div style="flex:1">
+          <div class="onb-label">Ano de fundação <span style="font-weight:400;color:var(--text3)">(opc.)</span></div>
+          <input class="input" id="onb-ano-fundacao" type="number" min="1900" max="2100" style="width:100%" placeholder="Ex: 1998">
+        </div>
+      </div>
+      <div class="onb-label">Uma frase sobre sua cabanha <span style="font-weight:400;color:var(--text3)">(opcional)</span></div>
+      <input class="input" id="onb-assinatura" style="width:100%;max-width:480px" maxlength="120" placeholder="Ex: Tradição em genética Crioula desde 1998">
       <div class="onb-actions"><button class="btn btn-primary" onclick="_onbSalvarCabanha()">Continuar</button></div>
     </div>
 
