@@ -194,8 +194,16 @@ se a pergunta for ampla, chame sem filtro e organize a resposta pelos tipos rele
 Pra "quantos animais eu tenho", "como está minha cabanha", contagens gerais amplas: use
 cab_resumo_geral, não tente somar/adivinhar a partir de outras ferramentas.
 
-Sobre listas e resumos: quando cab_listar_pendencias, cab_buscar_animal, cab_listar_gestacoes_ativas
-ou cab_resumo_geral devolverem uma lista/resumo, a interface já desenha esse dado como cartão
+CUIDADO — "estágio" tem DOIS sentidos diferentes no sistema, não confunda: "estágio de
+atividade" (Campo, Cria, Pista Morfologia, Arreio Cabanha, Pista Funcional, Laço — o que o
+animal está fazendo agora) vem de cab_agrupar_por_estagio; "estágio de confirmação na ABCCC"
+(confirmado/em desenvolvimento/aguardando confirmação — status de registro na raça) vem de
+cab_resumo_geral. "Relatório dos animais por estágio" sem mais contexto quase sempre quer
+dizer o primeiro (atividade) — já aconteceu em produção do modelo responder com o segundo por
+engano.
+
+Sobre listas e resumos: quando cab_listar_pendencias, cab_buscar_animal, cab_listar_gestacoes_ativas,
+cab_agrupar_por_estagio ou cab_resumo_geral devolverem uma lista/resumo, a interface já desenha esse dado como cartão
 visual pro usuário — você NÃO precisa (e não deve) reescrever cada item em texto corrido. Sua
 resposta em texto deve ser só um comentário curto contextualizando o que apareceu (ex.: "Você tem
 4 gestações ativas, a mais próxima do parto é a Necajô Donana" em vez de listar as 4 de novo com
@@ -266,6 +274,12 @@ const TOOLS = [
         tipo: { type: "string", description: "Filtra por um tipo exato ('Vacina', 'Vacina vencida', 'Exame sanitário' ou 'Exame vencido'). Omitir pra trazer todas e organizar na resposta." },
       },
     },
+  },
+  {
+    name: "cab_agrupar_por_estagio",
+    description:
+      "Contagem de animais ativos da cabanha agrupada por ESTÁGIO DE ATIVIDADE (ex.: Campo, Cria, Pista Morfologia, Arreio Cabanha, Pista Funcional, Laço) — mesmo dado do card 'Estágio / atividade' do Dashboard. É a ferramenta certa pra 'relatório dos animais por estágio', 'quantos animais estão em cada estágio', 'quantos estão em pista/cria/campo'. NÃO confundir com estágio de CONFIRMAÇÃO NA ABCCC (confirmado/em desenvolvimento/aguardando) — isso é outra coisa e vem de cab_resumo_geral.",
+    input_schema: { type: "object", properties: {} },
   },
   {
     name: "cab_resumo_geral",
@@ -357,6 +371,11 @@ async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantI
     }
     case "cab_resumo_geral": {
       const { data, error } = await supa.rpc("cab_resumo_geral", { p_tenant_id: tenantId });
+      if (error) return { fonte: "cabanha", erro: error.message };
+      return { fonte: "cabanha", resultado: data };
+    }
+    case "cab_agrupar_por_estagio": {
+      const { data, error } = await supa.rpc("cab_agrupar_por_estagio", { p_tenant_id: tenantId });
       if (error) return { fonte: "cabanha", erro: error.message };
       return { fonte: "cabanha", resultado: data };
     }
@@ -484,6 +503,13 @@ Deno.serve(async (req: Request) => {
                   enviar("texto", { delta: evento.delta.text });
                 } else if (evento.delta.type === "input_json_delta") {
                   blocosConteudo[evento.index].input_json += evento.delta.partial_json;
+                } else if (evento.delta.type === "thinking_delta") {
+                  // Extended thinking (2026-08-28): sem isso, o bloco "thinking" ficava vazio
+                  // e a API rejeitava com 400 ("each thinking block must contain thinking") assim
+                  // que o histórico com esse bloco era reenviado na proxima rodada de tool use.
+                  blocosConteudo[evento.index].thinking = (blocosConteudo[evento.index].thinking ?? "") + evento.delta.thinking;
+                } else if (evento.delta.type === "signature_delta") {
+                  blocosConteudo[evento.index].signature = (blocosConteudo[evento.index].signature ?? "") + evento.delta.signature;
                 }
               } else if (evento.type === "message_delta") {
                 if (evento.delta.stop_reason) stopReason = evento.delta.stop_reason;

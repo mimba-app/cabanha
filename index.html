@@ -17589,6 +17589,14 @@ function _chatIARenderizarCartao(nome, resultado){
     return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Gestações ativas (${arr.length})</div>${itens}</div>`;
   }
 
+  if (nome === 'cab_agrupar_por_estagio' && arr){
+    const itens = arr.map(e => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(e.estagio)}</strong></span>
+      <span style="color:var(--text3)">${_chatIAEscHtml(String(e.total))}</span>
+    </div>`).join('');
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Animais por estágio</div>${itens}</div>`;
+  }
+
   if (nome === 'cab_resumo_geral' && !arr && typeof d === 'object'){
     return `<div class="chat-ia-cartao">
       <div class="chat-ia-cartao-titulo">Resumo da cabanha</div>
