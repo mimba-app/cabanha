@@ -868,8 +868,9 @@
   .onb-suggest { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
   .onb-suggest button { border:var(--card-border); background:var(--pergaminho); border-radius:999px; padding:7px 12px; cursor:pointer; font-size:12px; color:var(--text2); font-family:var(--font); }
   .onb-suggest button:hover { border-color:var(--campo); color:var(--campo-deep); }
-  .onb-skip { position:absolute; top:0; right:20px; font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); }
-  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-skip{position:static;display:block;text-align:right;margin-bottom:10px;} }
+  .onb-header-right { display:flex; align-items:center; gap:14px; }
+  .onb-skip { font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); padding:0; }
+  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-header-right{gap:10px;} .onb-stepnum{display:none;} }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -17791,10 +17792,12 @@ async function _chatIAEnviar(){
 <div class="onb-overlay" id="onb-overlay">
   <div class="onb-header">
     <div class="onb-brand">Mimba<span class="dot">.</span></div>
-    <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+    <div class="onb-header-right">
+      <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+      <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
+    </div>
   </div>
   <div class="onb-main">
-    <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
 
     <div class="onb-step on" id="onb-s0">
       <div class="onb-eyebrow">BEM-VINDO AO MIMBA</div>
