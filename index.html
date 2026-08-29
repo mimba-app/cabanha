@@ -6981,9 +6981,9 @@ async function salvarEdicaoAnimal() {
   // em vez de fechar e dar a entender que salvou quando não salvou.
   const btnSalvar = document.getElementById('det-btn-salvar');
   if (btnSalvar) { btnSalvar.disabled = true; }
-  const ok = await _dbSalvarAnimal(a, i);
+  const resultado = await _dbSalvarAnimal(a, i);
   if (btnSalvar) { btnSalvar.disabled = false; }
-  if (!ok) { alert('Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
+  if (!resultado.ok) { alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
   cancelarEdicaoAnimal();
   renderAnimais();
   renderDashboard();
@@ -7624,13 +7624,13 @@ async function salvarNovaReceptora() {
   const idxNova = animais.length - 1;
   const btn = document.querySelector('#modal-nova-receptora .modal-footer .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-  const ok = await _dbSalvarAnimal(animais[idxNova], idxNova);
+  const resultado = await _dbSalvarAnimal(animais[idxNova], idxNova);
   if (btn) { btn.disabled = false; btn.textContent = 'Salvar receptora'; }
   // Achado real: fechar o modal sem confirmar a resposta do banco deixava a receptora presa
   // sem db_id se o POST falhasse (sessão, rede) — aí ela aparecia em selects (ex.: doadora de
   // embrião) com um id inválido, e qualquer ação que dependesse de um FK real quebrava mais na
   // frente, longe da causa. Se falhar, desfaz o push local e deixa tentar de novo.
-  if (!ok) { animais.splice(idxNova, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
+  if (!resultado.ok) { animais.splice(idxNova, 1); return alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-nova-receptora');
   populaCiclos(); renderDashboard(); renderAnimais();
   renderPlanejadorReprodutivo();
@@ -7735,9 +7735,9 @@ async function salvarAnimal(){
   const idxNovo = animais.length-1;
   const btnSalvar = document.querySelector('#modal-novo .modal-footer .btn-primary');
   if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = 'Salvando...'; }
-  const ok = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
+  const resultado = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
   if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar animal'; }
-  if (!ok) { animais.splice(idxNovo, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
+  if (!resultado.ok) { animais.splice(idxNovo, 1); return alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-novo');
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
@@ -8146,9 +8146,31 @@ async function _onbConfirmarPrimeiroAnimal() {
   r._confirmado = true;
   const btn = document.querySelector('#onb-found .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Adicionando...'; }
-  const inseridos = await _supa('POST','animais',[_onbPayloadAnimal(r)]);
-  if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  // Fetch direto (não _supa()) pra capturar a mensagem real de erro — precisa distinguir
+  // falha de verdade (ex.: trg_limite_animais, 2026-08-29) de sucesso antes de estampar
+  // "✓ adicionado", senão mentiria pro usuário quando o insert falhasse.
+  await _garantirTokenValido();
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json', 'Accept-Profile': TENANT_SCHEMA, 'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify([_onbPayloadAnimal(r)])
+  });
   const f = document.getElementById('onb-found');
+  if (!resp.ok) {
+    const texto = await resp.text().catch(()=>'');
+    let msg = 'Não foi possível adicionar esse animal agora. Tente de novo em alguns instantes.';
+    try { const j = JSON.parse(texto); if ((j.message||'').includes('limite_plano_animais')) msg = j.message.replace('limite_plano_animais: ',''); } catch(_) {}
+    r._confirmado = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'É ele. Adicionar à cabanha'; }
+    if (f) f.insertAdjacentHTML('beforeend', `<div style="margin-top:10px;color:var(--red-d);font-size:13px">${msg}</div>`);
+    return;
+  }
+  const inseridos = await resp.json().catch(()=>[]);
+  inseridos.forEach(_onbEmpurrarAnimalLocal);
   if (f) f.innerHTML = `<div style="display:flex;gap:10px;align-items:center;color:var(--campo-deep);font-weight:700">
     <span style="width:22px;height:22px;border-radius:50%;background:var(--campo-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">✓</span>
     <span>${r.dados.nome} adicionado à cabanha.</span>
@@ -8180,11 +8202,37 @@ async function _onbImportarLote() {
   await Promise.all(Array.from({length: Math.min(CONCORRENCIA, pendentes.length)}, worker));
 
   const encontrados = resultados.filter(r=>r.ok);
-  if (encontrados.length) {
-    const inseridos = await _supa('POST','animais', encontrados.map(_onbPayloadAnimal));
-    if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
-  }
   const naoEncontrados = resultados.length - encontrados.length;
+  let erroLimite = null;
+  if (encontrados.length) {
+    // Fetch direto (não _supa()): um insert em lote é UMA transação só — se o limite do
+    // plano (trg_limite_animais, 2026-08-29) estourar no meio do lote, o Postgres desfaz
+    // o lote INTEIRO, não só os excedentes. _supa() engolia isso e o texto ainda dizia
+    // "Concluído: N importado(s)" mesmo quando NADA tinha sido salvo de verdade.
+    await _garantirTokenValido();
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+        'Content-Type': 'application/json', 'Accept-Profile': TENANT_SCHEMA, 'Content-Profile': TENANT_SCHEMA,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(encontrados.map(_onbPayloadAnimal))
+    });
+    if (resp.ok) {
+      const inseridos = await resp.json().catch(()=>[]);
+      inseridos.forEach(_onbEmpurrarAnimalLocal);
+    } else {
+      const texto = await resp.text().catch(()=>'');
+      try { const j = JSON.parse(texto); if ((j.message||'').includes('limite_plano_animais')) erroLimite = j.message.replace('limite_plano_animais: ',''); } catch(_) {}
+      if (resp.status !== 403) console.error('Supabase error', resp.status, texto);
+    }
+  }
+  if (erroLimite) {
+    progEl.innerHTML = `<span style="color:var(--red-d)">${erroLimite}</span>`;
+    setTimeout(() => _onbGo(3), 2400);
+    return;
+  }
   progEl.textContent = `Concluído: ${encontrados.length} importado(s)` + (naoEncontrados ? `, ${naoEncontrados} não encontrado(s).` : '.');
   setTimeout(() => _onbGo(3), 1100);
 }
@@ -16091,12 +16139,34 @@ async function _dbSalvarAnimal(a, idx) {
   };
   if(a.db_id) {
     const ok = await _supa('PATCH','animais',payload,`?id=eq.${a.db_id}`);
-    return !!ok;
-  } else {
-    const res = await _supa('POST','animais',payload);
-    if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return true; }
-    return false;
+    return { ok: !!ok };
   }
+  // Insert vai por fetch direto (não _supa()) pra capturar a mensagem de erro real —
+  // é o único jeito de mostrar "seu plano permite no máximo X animais" (trg_limite_animais,
+  // 2026-08-29) em vez do genérico "não foi possível salvar" de sempre.
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile': TENANT_SCHEMA,
+      'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) {
+    const texto = await r.text().catch(()=>'');
+    if (r.status !== 403) console.error('Supabase error', r.status, texto);
+    let erro = null;
+    try { const j = JSON.parse(texto); erro = (j.message||'').includes('limite_plano_animais') ? j.message.replace('limite_plano_animais: ','') : null; } catch(_) {}
+    return { ok: false, erro };
+  }
+  const res = await r.json().catch(()=>[]);
+  if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return { ok: true }; }
+  return { ok: false };
 }
 
 // Exclusão de animal: tenta apagar de verdade. Vários históricos (acasalamentos, gestações,
