@@ -155,6 +155,16 @@ ou não mencione esse número específico.
 esperado/dos prazos" só valem se alguma ferramenta calculou isso explicitamente. Se não calculou,
 não afirme.
 
+6. NUNCA INVENTE NOME DE ANCESTRAL/PARENTE — se um campo de genealogia (linha_alta, linha_baixa,
+pai, mae, avo_paterno, avo_materno) não aparecer no resultado de uma ferramenta (campo ausente,
+ou você ver um "aviso_grounding" explícito dizendo que aquele lado não tem dado), você NÃO tem
+esse nome — é proibido escrever qualquer nome ali, mesmo que pareça familiar de algum outro ponto
+da conversa ou da raça. JÁ ACONTECEU EM PRODUÇÃO: perguntado sobre a linha baixa de uma égua cujo
+campo vinha vazio, o modelo escreveu o nome de um animal TOTALMENTE DIFERENTE (que existe de
+verdade na base, só que não tem nenhuma relação com o animal perguntado) como se fosse a mãe dela.
+Isso é alucinação grave — o usuário toma decisão real de cruzamento com base nisso. Se o campo não
+veio, a resposta certa é omitir esse lado, nunca "completar" com um nome que pareça plausível.
+
 ═══ fim das regras críticas ═══
 
 Você tem acesso a ferramentas que consultam o banco de dados da cabanha do usuário logado (fonte
@@ -298,6 +308,24 @@ const TOOLS = [
 
 type Ferramenta = { id: string; name: string; input: Record<string, unknown> };
 
+// Grounding anti-alucinação (2026-08-28): campos de genealogia nulos são REMOVIDOS
+// do JSON (não mandamos "campo: null" pro modelo) e trocados por um aviso
+// explícito nesse mesmo resultado de ferramenta — reforço bem colado no dado,
+// além da regra 6 no system prompt. Achado real: com o campo só ausente/null
+// "solto", o modelo às vezes "completava" com um nome plausível de outro
+// animal da base em vez de simplesmente omitir.
+function limparCamposGenealogia(dado: Record<string, unknown>, campos: string[]) {
+  const limpo: Record<string, unknown> = { ...dado };
+  const avisos: string[] = [];
+  for (const campo of campos) {
+    if (limpo[campo] == null) {
+      delete limpo[campo];
+      avisos.push(`${campo}: SEM DADO -- proibido inventar nome aqui, só omita esse lado na resposta (ver regra 6)`);
+    }
+  }
+  return { limpo, avisos };
+}
+
 async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantId: string, chamada: Ferramenta) {
   switch (chamada.name) {
     case "cab_buscar_animal": {
@@ -337,12 +365,19 @@ async function executarFerramenta(supa: ReturnType<typeof createClient>, tenantI
     case "abccc_resumo_animal": {
       const { data, error } = await supa.rpc("abccc_resumo_animal", { p_sbb: chamada.input.sbb });
       if (error) return { fonte: "abccc_lab", erro: error.message };
-      return { fonte: "abccc_lab", resultado: data };
+      if (!data) return { fonte: "abccc_lab", resultado: null };
+      const { limpo, avisos } = limparCamposGenealogia(data, ["linha_alta", "linha_baixa"]);
+      return { fonte: "abccc_lab", resultado: limpo, ...(avisos.length ? { aviso_grounding: avisos } : {}) };
     }
     case "abccc_sangues_animal": {
-      const { data, error } = await supa.rpc("abccc_sangues_animal", { p_sbb: chamada.input.sbb });
+      // p_tenant_id adicionado 2026-08-28 -- a RPC antiga lia public.sangues_linhagem
+      // (template, sempre vazio) em vez do schema real da cabanha. Ver migration
+      // 2026-08-28-fix-abccc-sangues-animal-schema-errado.sql.
+      const { data, error } = await supa.rpc("abccc_sangues_animal", { p_tenant_id: tenantId, p_sbb: chamada.input.sbb });
       if (error) return { fonte: "abccc_lab", erro: error.message };
-      return { fonte: "abccc_lab", resultado: data };
+      if (!data) return { fonte: "abccc_lab", resultado: null };
+      const { limpo, avisos } = limparCamposGenealogia(data, ["pai", "mae", "avo_paterno", "avo_materno"]);
+      return { fonte: "abccc_lab", resultado: limpo, ...(avisos.length ? { aviso_grounding: avisos } : {}) };
     }
     case "abccc_ranking_linhagens": {
       const { data, error } = await supa.rpc("abccc_ranking_linhagens", {
