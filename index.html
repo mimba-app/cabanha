@@ -10885,12 +10885,21 @@ async function _atualizarTodosAbccc() {
   if (btn) { btn.disabled = true; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green-d)'; }
   if (iconEl) iconEl.classList.add('abccc-spin');
 
+  // Achado real (2026-08-30): rodando pra manada inteira (não mais só 30), o processo demora
+  // minutos — sem sinalização visível fora da página de Animais, dava a impressão de que
+  // "travou" se a pessoa saísse dessa tela. Toast fixo (visível em qualquer página do app,
+  // não some sozinho) + aviso antes de fechar/recarregar a aba pra não perder o progresso.
+  const avisarSair = (e) => { e.preventDefault(); e.returnValue = ''; return ''; };
+  window.addEventListener('beforeunload', avisarSair);
+  _mostrarStatusSync('🔄 Sincronizando ABCCC: 0/' + alvo.length, 'amber', true);
+
   let ok = 0, erros = 0, confirmados = 0;
 
   for (let idx = 0; idx < alvo.length; idx++) {
     const a = alvo[idx];
     const pct = Math.round(((idx+1)/alvo.length)*100);
     if (fillEl) fillEl.style.width = pct + '%';
+    _mostrarStatusSync('🔄 Sincronizando ABCCC: ' + (idx+1) + '/' + alvo.length, 'amber', true);
     if (labelEl) labelEl.textContent = 'Atualizando... ' + (idx+1) + '/' + alvo.length;
     if (idx > 0 && idx % 5 === 0) { try { await _garantirTokenValido(); } catch(e) {} }
     try {
@@ -10962,6 +10971,7 @@ async function _atualizarTodosAbccc() {
     if (idx < alvo.length-1) await new Promise(r => setTimeout(r, 1500));
   }
   // Estado concluído
+  window.removeEventListener('beforeunload', avisarSair);
   if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="20 6 9 17 4 12"/>'; }
   if (fillEl) fillEl.style.width = '100%';
   if (labelEl) labelEl.textContent = ok + ' atualizados' + (erros ? ' (' + erros + ' erros)' : '');
@@ -15682,14 +15692,18 @@ window.salvarRegistroExame = function() {
 }
 
 // ── STATUS SYNC ───────────────────────────────────────────────────────────────
-function _mostrarStatusSync(msg, tipo) {
+// persistente=true não esconde sozinho (uso: barra de progresso de algo em andamento,
+// tipo o "Atualizar ABCCC" em lote — a pessoa pode navegar pra qualquer página do app,
+// esse toast é fixo na tela inteira, então continua visível dizendo que ainda tá rodando).
+function _mostrarStatusSync(msg, tipo, persistente) {
   const el = document.getElementById('sync-status');
   if(!el) return;
   el.textContent = msg;
   el.style.display = 'block';
   el.style.background = tipo==='green'?'var(--green-l)':tipo==='red'?'var(--red-l)':'var(--amber-l)';
   el.style.color = tipo==='green'?'var(--green-d)':tipo==='red'?'var(--red-d)':'var(--amber-d)';
-  setTimeout(()=>el.style.display='none', 4000);
+  clearTimeout(window._syncStatusTimeout);
+  if(!persistente) window._syncStatusTimeout = setTimeout(()=>el.style.display='none', 4000);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
