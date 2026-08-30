@@ -582,6 +582,21 @@
   .chat-ia-input-row textarea { flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; font-family:var(--font); font-size:13px; background:var(--bg); color:var(--text); max-height:80px; }
   .chat-ia-input-row button { background:var(--green-d); color:#fff; border:none; border-radius:var(--radius); padding:0 16px; font-weight:700; cursor:pointer; }
   .chat-ia-input-row button:disabled { opacity:0.5; cursor:default; }
+  .chat-ia-msg.assistente strong { font-weight:700; }
+  .chat-ia-msg.assistente ul { margin:4px 0 2px 18px; padding:0; }
+  .chat-ia-msg.assistente li { margin:2px 0; }
+  .chat-ia-msg.assistente p { margin:0 0 6px; }
+  .chat-ia-msg.assistente p:last-child { margin-bottom:0; }
+  .chat-ia-cartao { align-self:flex-start; max-width:92%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 11px; font-size:12px; }
+  .chat-ia-cartao-titulo { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); margin-bottom:6px; }
+  .chat-ia-cartao-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 0; border-bottom:0.5px solid var(--border); }
+  .chat-ia-cartao-item:last-child { border-bottom:none; }
+  .chat-ia-cartao-nivel { width:6px; height:6px; border-radius:50%; flex-shrink:0; display:inline-block; margin-right:6px; }
+  .chat-ia-cartao-mais { font-size:10px; color:var(--text3); margin-top:4px; text-align:center; }
+  .chat-ia-stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .chat-ia-stat { background:var(--bg3); border-radius:8px; padding:7px 8px; text-align:center; }
+  .chat-ia-stat b { display:block; font-size:17px; font-family:var(--serif); line-height:1.15; }
+  .chat-ia-stat span { font-size:9px; color:var(--text2); }
   /* VERIFICAÇÃO SANITÁRIA */
   .san-panel { margin-top:1rem; border-top:0.5px solid var(--border); padding-top:1rem; }
   .san-panel-title { font-size:var(--fs-caption); font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.6rem; display:flex; align-items:center; gap:6px; }
@@ -853,8 +868,11 @@
   .onb-suggest { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
   .onb-suggest button { border:var(--card-border); background:var(--pergaminho); border-radius:999px; padding:7px 12px; cursor:pointer; font-size:12px; color:var(--text2); font-family:var(--font); }
   .onb-suggest button:hover { border-color:var(--campo); color:var(--campo-deep); }
-  .onb-skip { position:absolute; top:0; right:20px; font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); }
-  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-skip{position:static;display:block;text-align:right;margin-bottom:10px;} }
+  .onb-foco-destaque { border:2px solid var(--campo) !important; position:relative; }
+  .onb-foco-destaque::before { content:"SEU FOCO"; position:absolute; top:-9px; left:12px; background:var(--campo); color:#fff; font-family:var(--mono); font-size:9px; letter-spacing:.08em; padding:2px 7px; border-radius:999px; }
+  .onb-header-right { display:flex; align-items:center; gap:14px; }
+  .onb-skip { font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); padding:0; }
+  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-header-right{gap:10px;} .onb-stepnum{display:none;} }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -6963,9 +6981,9 @@ async function salvarEdicaoAnimal() {
   // em vez de fechar e dar a entender que salvou quando não salvou.
   const btnSalvar = document.getElementById('det-btn-salvar');
   if (btnSalvar) { btnSalvar.disabled = true; }
-  const ok = await _dbSalvarAnimal(a, i);
+  const resultado = await _dbSalvarAnimal(a, i);
   if (btnSalvar) { btnSalvar.disabled = false; }
-  if (!ok) { alert('Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
+  if (!resultado.ok) { alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
   cancelarEdicaoAnimal();
   renderAnimais();
   renderDashboard();
@@ -7606,13 +7624,13 @@ async function salvarNovaReceptora() {
   const idxNova = animais.length - 1;
   const btn = document.querySelector('#modal-nova-receptora .modal-footer .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-  const ok = await _dbSalvarAnimal(animais[idxNova], idxNova);
+  const resultado = await _dbSalvarAnimal(animais[idxNova], idxNova);
   if (btn) { btn.disabled = false; btn.textContent = 'Salvar receptora'; }
   // Achado real: fechar o modal sem confirmar a resposta do banco deixava a receptora presa
   // sem db_id se o POST falhasse (sessão, rede) — aí ela aparecia em selects (ex.: doadora de
   // embrião) com um id inválido, e qualquer ação que dependesse de um FK real quebrava mais na
   // frente, longe da causa. Se falhar, desfaz o push local e deixa tentar de novo.
-  if (!ok) { animais.splice(idxNova, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
+  if (!resultado.ok) { animais.splice(idxNova, 1); return alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-nova-receptora');
   populaCiclos(); renderDashboard(); renderAnimais();
   renderPlanejadorReprodutivo();
@@ -7717,9 +7735,9 @@ async function salvarAnimal(){
   const idxNovo = animais.length-1;
   const btnSalvar = document.querySelector('#modal-novo .modal-footer .btn-primary');
   if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = 'Salvando...'; }
-  const ok = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
+  const resultado = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
   if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar animal'; }
-  if (!ok) { animais.splice(idxNovo, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
+  if (!resultado.ok) { animais.splice(idxNovo, 1); return alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-novo');
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
@@ -8010,6 +8028,7 @@ function _abrirOnboarding() {
   document.getElementById('onb-afixo').value = TENANT_INFO?.afixo || '';
   document.getElementById('onb-cidade').value = TENANT_INFO?.cidade || '';
   document.getElementById('onb-uf').value = TENANT_INFO?.uf || '';
+  document.getElementById('onb-abccc-codigo').value = TENANT_INFO?.abccc_codigo || '';
   document.getElementById('onb-overlay').classList.add('on');
   _onbGo(0);
 }
@@ -8021,6 +8040,25 @@ function _onbGo(n) {
   const lbl = document.getElementById('onb-lbl');
   if (lbl) lbl.textContent = n===0 ? 'Bem-vindo' : n===5 ? 'Ativação concluída' : `Onboarding · etapa ${n} de 5`;
   if (n === 4) _onbMontarPainel4();
+  if (n === 5) _onbMontarPainel5();
+}
+
+// Foco escolhido na etapa 3 -> página real que _onbFinalizar() abre no botão principal da
+// etapa 5, e card que ganha destaque visual. Antes disso (2026-08-29) a escolha da etapa 3
+// era salva e nunca lida em lugar nenhum — a etapa existia mas não mudava nada no fluxo.
+const ONB_FOCO_PAGINA = {
+  manada: 'animais', reproducao: 'reprodutivo', eventos: 'eventos',
+  saude: 'saude', nutricao: 'nutricional', confirmacao: 'animais',
+};
+const ONB_FOCO_LABEL = {
+  manada: 'Ir pra Minha Manada', reproducao: 'Ir pra Reprodução', eventos: 'Ir pros Eventos',
+  saude: 'Ir pra Saúde', nutricao: 'Ir pra Nutrição', confirmacao: 'Ir pros Animais',
+};
+function _onbMontarPainel5() {
+  document.getElementById('onb-card-eventos')?.classList.toggle('onb-foco-destaque', _onbFocoEscolhido === 'eventos');
+  document.getElementById('onb-card-reproducao')?.classList.toggle('onb-foco-destaque', _onbFocoEscolhido === 'reproducao');
+  const btn = document.getElementById('onb-btn-finalizar');
+  if (btn) btn.textContent = ONB_FOCO_LABEL[_onbFocoEscolhido] || 'Ir pro Dashboard';
 }
 
 async function _onbSalvarCabanha() {
@@ -8029,14 +8067,31 @@ async function _onbSalvarCabanha() {
   const afixo = document.getElementById('onb-afixo').value.trim();
   const cidade = document.getElementById('onb-cidade').value.trim();
   const uf = document.getElementById('onb-uf').value.trim().toUpperCase();
+  const abcccCodigo = document.getElementById('onb-abccc-codigo').value.trim();
+  const anoFundacao = parseInt(document.getElementById('onb-ano-fundacao').value) || null;
+  const assinatura = document.getElementById('onb-assinatura').value.trim();
   await _rpc('atualizar_tenant_onboarding', {
-    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf
+    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf,
+    p_abccc_codigo: abcccCodigo
   });
+  // Cidade/UF/ano de fundação/assinatura também alimentam o perfil público (Conta → Dados da
+  // Cabanha → Perfil público) — achado auditando a jornada (2026-08-29): antes disso, o que
+  // era preenchido aqui no onboarding nunca aparecia em Conta, porque Conta lê de
+  // cabanha_perfil_publico, uma tabela diferente de tenants.cidade/uf. Grava nas duas agora.
+  if (cidade || uf || anoFundacao || assinatura) {
+    await _supaPub('POST', 'cabanha_perfil_publico', {
+      tenant_id: TENANT_INFO.tenant_id,
+      cidade: cidade || null, estado: uf || null,
+      ano_fundacao: anoFundacao, assinatura: assinatura || null,
+      atualizado_em: new Date().toISOString(),
+    });
+  }
   // A RPC sincroniza nome_exibicao com nome_cabanha quando não veio um valor explícito pra
   // nome_exibicao (é a primeira nomeação da cabanha) — espelha isso localmente também, senão
   // a sidebar (que prioriza nome_exibicao sobre nome_cabanha) continua com o nome antigo.
   TENANT_INFO.nome_cabanha = nome; TENANT_INFO.nome_exibicao = nome;
   TENANT_INFO.afixo = afixo; TENANT_INFO.cidade = cidade; TENANT_INFO.uf = uf;
+  TENANT_INFO.abccc_codigo = abcccCodigo || TENANT_INFO.abccc_codigo;
   const cabEl = document.getElementById('sidebar-cabanha');
   if (cabEl) cabEl.textContent = nome;
   _onbGo(2);
@@ -8083,9 +8138,43 @@ function _onbEmpurrarAnimalLocal(ins) {
 
 async function _onbConfirmarPrimeiroAnimal() {
   const r = _onbAnimalConfirmado;
-  if (!r) return;
-  const inseridos = await _supa('POST','animais',[_onbPayloadAnimal(r)]);
-  if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  // Trava contra clique repetido (achado ao vivo, 2026-08-29): sem isso, cada clique em
+  // "É ele. Adicionar à cabanha" reenviava um POST novo pro mesmo animal — o card ficava
+  // clicável pra sempre, sem nenhum feedback visual de que já tinha sido adicionado, e uma
+  // pessoa clicando 3-4x sem perceber acabava com 3-4 cópias duplicadas do mesmo animal.
+  if (!r || r._confirmado) return;
+  r._confirmado = true;
+  const btn = document.querySelector('#onb-found .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adicionando...'; }
+  // Fetch direto (não _supa()) pra capturar a mensagem real de erro — precisa distinguir
+  // falha de verdade (ex.: trg_limite_animais, 2026-08-29) de sucesso antes de estampar
+  // "✓ adicionado", senão mentiria pro usuário quando o insert falhasse.
+  await _garantirTokenValido();
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json', 'Accept-Profile': TENANT_SCHEMA, 'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify([_onbPayloadAnimal(r)])
+  });
+  const f = document.getElementById('onb-found');
+  if (!resp.ok) {
+    const texto = await resp.text().catch(()=>'');
+    let msg = 'Não foi possível adicionar esse animal agora. Tente de novo em alguns instantes.';
+    try { const j = JSON.parse(texto); if ((j.message||'').includes('limite_plano_animais')) msg = j.message.replace('limite_plano_animais: ',''); } catch(_) {}
+    r._confirmado = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'É ele. Adicionar à cabanha'; }
+    if (f) f.insertAdjacentHTML('beforeend', `<div style="margin-top:10px;color:var(--red-d);font-size:13px">${msg}</div>`);
+    return;
+  }
+  const inseridos = await resp.json().catch(()=>[]);
+  inseridos.forEach(_onbEmpurrarAnimalLocal);
+  if (f) f.innerHTML = `<div style="display:flex;gap:10px;align-items:center;color:var(--campo-deep);font-weight:700">
+    <span style="width:22px;height:22px;border-radius:50%;background:var(--campo-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">✓</span>
+    <span>${r.dados.nome} adicionado à cabanha.</span>
+  </div>`;
   document.getElementById('onb-lote').style.display = '';
 }
 
@@ -8113,11 +8202,37 @@ async function _onbImportarLote() {
   await Promise.all(Array.from({length: Math.min(CONCORRENCIA, pendentes.length)}, worker));
 
   const encontrados = resultados.filter(r=>r.ok);
-  if (encontrados.length) {
-    const inseridos = await _supa('POST','animais', encontrados.map(_onbPayloadAnimal));
-    if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
-  }
   const naoEncontrados = resultados.length - encontrados.length;
+  let erroLimite = null;
+  if (encontrados.length) {
+    // Fetch direto (não _supa()): um insert em lote é UMA transação só — se o limite do
+    // plano (trg_limite_animais, 2026-08-29) estourar no meio do lote, o Postgres desfaz
+    // o lote INTEIRO, não só os excedentes. _supa() engolia isso e o texto ainda dizia
+    // "Concluído: N importado(s)" mesmo quando NADA tinha sido salvo de verdade.
+    await _garantirTokenValido();
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+        'Content-Type': 'application/json', 'Accept-Profile': TENANT_SCHEMA, 'Content-Profile': TENANT_SCHEMA,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(encontrados.map(_onbPayloadAnimal))
+    });
+    if (resp.ok) {
+      const inseridos = await resp.json().catch(()=>[]);
+      inseridos.forEach(_onbEmpurrarAnimalLocal);
+    } else {
+      const texto = await resp.text().catch(()=>'');
+      try { const j = JSON.parse(texto); if ((j.message||'').includes('limite_plano_animais')) erroLimite = j.message.replace('limite_plano_animais: ',''); } catch(_) {}
+      if (resp.status !== 403) console.error('Supabase error', resp.status, texto);
+    }
+  }
+  if (erroLimite) {
+    progEl.innerHTML = `<span style="color:var(--red-d)">${erroLimite}</span>`;
+    setTimeout(() => _onbGo(3), 2400);
+    return;
+  }
   progEl.textContent = `Concluído: ${encontrados.length} importado(s)` + (naoEncontrados ? `, ${naoEncontrados} não encontrado(s).` : '.');
   setTimeout(() => _onbGo(3), 1100);
 }
@@ -8186,6 +8301,9 @@ async function _onbPular() {
 }
 
 async function _onbFinalizar(destino) {
+  // Sem destino explícito (botão principal da etapa 5): usa a página do foco escolhido na
+  // etapa 3, se houver — antes disso o foco era só salvo e nunca influenciava o destino.
+  if (!destino) destino = ONB_FOCO_PAGINA[_onbFocoEscolhido] || 'dashboard';
   await _rpc('atualizar_tenant_onboarding', {
     p_tenant_id: TENANT_INFO.tenant_id,
     p_foco_inicial: _onbFocoEscolhido,
@@ -8441,7 +8559,7 @@ function saudeTabGrupo(btn,tabId,subId){
 }
 function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
 function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function populaCiclos(){
@@ -9465,23 +9583,17 @@ function _gerarPendenciasAnimaisAtivos() {
     const nome = a.nome;
 
     // ── Vacina ──
+    // Corrigido 2026-08-28 (achado real: Sesmaria da Rauna, Cabanha Mãe de Deus): a ordem
+    // antiga checava "histórico vazio" ANTES de checar "venceu", então um animal cadastrado
+    // direto com prox_vac/val_exame já preenchido (ex.: modal "Cadastrar novo animal", que
+    // permite informar a próxima validade sem criar linha na tabela de histórico) sempre caía
+    // em "nunca registrado", mesmo com a data claramente vencida — o histórico vazio não quer
+    // dizer que a validade em si é desconhecida. Agora checa prox_vac/val_exame PRIMEIRO,
+    // independente do histórico — "vencida" tem prioridade sobre "nunca registrado" sempre que
+    // existir uma data e ela já tiver passado.
     const vacinas = getHistVac(i);
-    if (!vacinas || vacinas.length === 0) {
-      // Sem nenhuma vacina registrada
-      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Vacina' && !p.resolvida && !p.evento);
-      if (!jaExiste) {
-        const pend = {
-          id: gerarIdPend(), animal: nome,
-          tipo: 'Vacina', nivel: 'alta',
-          descricao: `${nome} não possui nenhuma vacina registrada no sistema.`,
-          evento: null, dataEvento: null,
-          geradaEm: hoje, resolvida: false
-        };
-        pendencias.push(pend);
-        _dbSalvarPendencia(pend);
-      }
-    } else if (a.prox_vac && a.prox_vac < hoje) {
-      // Vacina vencida
+    if (a.prox_vac && a.prox_vac < hoje) {
+      // Vencida
       const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Vacina vencida' && !p.resolvida);
       if (!jaExiste) {
         const pend = {
@@ -9494,25 +9606,26 @@ function _gerarPendenciasAnimaisAtivos() {
         pendencias.push(pend);
         _dbSalvarPendencia(pend);
       }
-    }
-
-    // ── Exame sanitário (AIE/Brucelose) ──
-    const exames = getHistExam(i);
-    if (!exames || exames.length === 0) {
-      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Exame sanitário' && !p.resolvida && !p.evento);
+    } else if (!a.prox_vac && (!vacinas || vacinas.length === 0)) {
+      // Nunca teve nada registrado, nem histórico nem previsão de data
+      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Vacina' && !p.resolvida && !p.evento);
       if (!jaExiste) {
         const pend = {
           id: gerarIdPend(), animal: nome,
-          tipo: 'Exame sanitário', nivel: 'alta',
-          descricao: `${nome} não possui nenhum exame sanitário (AIE/Brucelose) registrado.`,
+          tipo: 'Vacina', nivel: 'alta',
+          descricao: `${nome} não possui nenhuma vacina registrada no sistema.`,
           evento: null, dataEvento: null,
           geradaEm: hoje, resolvida: false
         };
         pendencias.push(pend);
         _dbSalvarPendencia(pend);
       }
-    } else if (a.val_exame && a.val_exame < hoje) {
-      // Exame vencido
+    }
+
+    // ── Exame sanitário (AIE/Brucelose) ── — mesma correção de prioridade que a Vacina acima
+    const exames = getHistExam(i);
+    if (a.val_exame && a.val_exame < hoje) {
+      // Vencido
       const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Exame vencido' && !p.resolvida);
       if (!jaExiste) {
         const pend = {
@@ -9520,6 +9633,20 @@ function _gerarPendenciasAnimaisAtivos() {
           tipo: 'Exame vencido', nivel: 'alta',
           descricao: `Exame sanitário de ${nome} venceu em ${fd(a.val_exame)}.`,
           evento: null, dataEvento: a.val_exame,
+          geradaEm: hoje, resolvida: false
+        };
+        pendencias.push(pend);
+        _dbSalvarPendencia(pend);
+      }
+    } else if (!a.val_exame && (!exames || exames.length === 0)) {
+      // Nunca teve nada registrado, nem histórico nem previsão de data
+      const jaExiste = pendencias.find(p => p.animal === nome && p.tipo === 'Exame sanitário' && !p.resolvida && !p.evento);
+      if (!jaExiste) {
+        const pend = {
+          id: gerarIdPend(), animal: nome,
+          tipo: 'Exame sanitário', nivel: 'alta',
+          descricao: `${nome} não possui nenhum exame sanitário (AIE/Brucelose) registrado.`,
+          evento: null, dataEvento: null,
           geradaEm: hoje, resolvida: false
         };
         pendencias.push(pend);
@@ -11369,6 +11496,30 @@ function _acFonteChange() {
   _renderSimulacaoAcasalamento();
 }
 
+// Ancestrais_pos (5 gerações) por SBB, combinando as duas fontes que o Mimba tem: o que a
+// própria cabanha já confirmou via Análise de Sangues (public.sangues_linhagem — cache
+// compartilhado entre cabanhas, mesmo pedigree bruto da ABCCC não muda por tenant) e o que
+// o Mimba Lab já sincronizou (abccc_estatisticas_animal, mesmo formato ancestrais_pos).
+// Achado real (2026-08-29): consanguinidade/dossiê só olhavam sangues_linhagem, que tinha
+// só ~20 animais em cache na plataforma inteira — a maior parte das consultas caía em "sem
+// dados suficientes" mesmo o Lab já tendo a árvore completa (~95% da raça, 28 mil+ animais)
+// de quase todo mundo, incluindo os garanhões testados (Golpe Seco do Itaó, Las Gurizas
+// Fogonero etc.). Cache manual tem prioridade quando existe (mesma fonte, mas já confirmada
+// direto pela própria cabanha); Lab preenche o resto.
+async function _buscarAncestraisPosCombinado(sbbs) {
+  const lista = [...new Set(sbbs.filter(Boolean))];
+  if (!lista.length) return {};
+  const filtro = lista.map(s => `"${s}"`).join(',');
+  const [manual, lab] = await Promise.all([
+    _supaPub('GET', 'sangues_linhagem', null, `?animal_sbb=in.(${filtro})&select=animal_sbb,ancestrais_pos`),
+    _supaPub('GET', 'abccc_estatisticas_animal', null, `?sbb=in.(${filtro})&select=sbb,ancestrais_pos`),
+  ]);
+  const resultado = {};
+  (lab || []).forEach(r => { if (r.ancestrais_pos?.length) resultado[r.sbb] = r.ancestrais_pos; });
+  (manual || []).forEach(r => { if (r.ancestrais_pos?.length) resultado[r.animal_sbb] = r.ancestrais_pos; });
+  return resultado;
+}
+
 // Painel de simulação: cruzamentos anteriores + alerta de consanguinidade (raso,
 // até geração 3) + saldo da fonte. NÃO inclui a análise de concentração de
 // sangue projetada completa da spec (fica para uma fase futura, se quiser).
@@ -11443,22 +11594,20 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supaPub('GET', 'sangues_linhagem', null,
-          '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-        const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-        const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
-        if (rEgua?.ancestrais_pos && rGar?.ancestrais_pos) {
+        const anc = await _buscarAncestraisPosCombinado([sbbEgua, sbbGar]);
+        const ancEgua = anc[sbbEgua], ancGar = anc[sbbGar];
+        if (ancEgua && ancGar) {
           // Nível 2: ancestrais comuns nas gerações 1-2
-          const anc2Egua = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
-          const comuns2  = rGar.ancestrais_pos.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
+          const anc2Egua = new Set(ancEgua.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
+          const comuns2  = ancGar.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
           // Nível 3: IC estimado via ancestrais comuns gen 3-5
           // IC ≈ Σ (0.5)^(gen_egua + gen_gar + 1) para cada ancestral comum
           const anc5Egua = {};
-          rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+          ancEgua.filter(x => x.gen <= 5 && x.nome).forEach(x => {
             if (!anc5Egua[x.nome]) anc5Egua[x.nome] = x.gen;
           });
           let icEstimado = 0;
-          const anc5Gar = rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome);
+          const anc5Gar = ancGar.filter(x => x.gen <= 5 && x.nome);
           const comunsNomes5 = new Set();
           anc5Gar.forEach(x => {
             if (anc5Egua[x.nome] !== undefined) {
@@ -12002,9 +12151,12 @@ function _jaConselhoRender() {
   document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
   document.getElementById('ja-passo-dossie').style.display = fase === 4 ? '' : 'none';
   if (fase >= 0 && fase !== 3) _jaRenderAlvo();
-  // Seletor de modo só faz sentido antes de começar a análise — trocar de modo no meio do
-  // ranking/confluência/dossiê seria confuso (a essa altura já se está "dentro" da jornada).
-  document.getElementById('ja-modo-wrap').style.display = fase <= 0 ? '' : 'none';
+  // Achado real (2026-08-29): esconder o seletor de modo depois que o ranking/dossiê aparece
+  // virava beco sem saída — só dava pra sair clicando "trocar égua" antes. jaSelecionarModo()
+  // já troca de modo de forma segura em qualquer fase (renderAcasalamentosMatch() despacha
+  // pro modo escolhido sem depender de _jaFase), então manter sempre visível resolve sem
+  // reintroduzir confusão — voltar depois pra Inteligência retoma exatamente de onde parou.
+  document.getElementById('ja-modo-wrap').style.display = '';
 }
 
 function _jaEscolherEgua(eguaDbId) {
@@ -12058,25 +12210,24 @@ async function _jaConsanguinidade(egua, fonte) {
   if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
 
   try {
-    const rows = await _supaPub('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-    const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-    const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
-    if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
+    const anc = await _buscarAncestraisPosCombinado([sbbEgua, sbbGar]);
+    const ancEguaFull = anc[sbbEgua], ancGarFull = anc[sbbGar];
+    if (!ancEguaFull || !ancGarFull) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
     // Direção B (Confluência de Sangues) reaproveita esses arrays brutos pra desenhar a
     // árvore, sem precisar consultar sangues_linhagem de novo.
-    const ancEgua = rEgua.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
-    const ancGar = rGar.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
+    const ancEgua = ancEguaFull.filter(x => x.gen && x.lado && x.nome);
+    const ancGar = ancGarFull.filter(x => x.gen && x.lado && x.nome);
 
-    const nomesEgua3 = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
-    const nomesGar3 = new Set(rGar.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesEgua3 = new Set(ancEguaFull.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesGar3 = new Set(ancGarFull.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
     const uniao = new Set([...nomesEgua3, ...nomesGar3]);
     const intersec = [...nomesEgua3].filter(n => nomesGar3.has(n));
     const diversidade = uniao.size ? 1 - (intersec.length / uniao.size) : 1;
 
     const anc5Egua = {};
-    rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
+    ancEguaFull.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
     let ic = 0; const comuns5 = [];
-    rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+    ancGarFull.filter(x => x.gen <= 5 && x.nome).forEach(x => {
       if (anc5Egua[x.nome] !== undefined) { ic += Math.pow(0.5, anc5Egua[x.nome] + x.gen + 1); comuns5.push(x.nome); }
     });
     ic = Math.round(ic * 10000) / 100;
@@ -14330,6 +14481,7 @@ async function _trocarPlanoClick(planoId, planoNome, planoFeatures) {
     TENANT_INFO.plano_features = planoFeatures || null;
     const relBtn = document.getElementById('nav-btn-relatorios');
     if (relBtn) relBtn.style.display = planoFeatures?.relatorios === false ? 'none' : '';
+    _chatIAMostrarFab(planoFeatures?.agente_ia === true);
     _mostrarStatusSync(`✅ Plano alterado para ${planoNome}`, 'green');
     renderPlanosDisponiveis();
   } catch (e) {
@@ -16011,12 +16163,34 @@ async function _dbSalvarAnimal(a, idx) {
   };
   if(a.db_id) {
     const ok = await _supa('PATCH','animais',payload,`?id=eq.${a.db_id}`);
-    return !!ok;
-  } else {
-    const res = await _supa('POST','animais',payload);
-    if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return true; }
-    return false;
+    return { ok: !!ok };
   }
+  // Insert vai por fetch direto (não _supa()) pra capturar a mensagem de erro real —
+  // é o único jeito de mostrar "seu plano permite no máximo X animais" (trg_limite_animais,
+  // 2026-08-29) em vez do genérico "não foi possível salvar" de sempre.
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile': TENANT_SCHEMA,
+      'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) {
+    const texto = await r.text().catch(()=>'');
+    if (r.status !== 403) console.error('Supabase error', r.status, texto);
+    let erro = null;
+    try { const j = JSON.parse(texto); erro = (j.message||'').includes('limite_plano_animais') ? j.message.replace('limite_plano_animais: ','') : null; } catch(_) {}
+    return { ok: false, erro };
+  }
+  const res = await r.json().catch(()=>[]);
+  if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return { ok: true }; }
+  return { ok: false };
 }
 
 // Exclusão de animal: tenta apagar de verdade. Vários históricos (acasalamentos, gestações,
@@ -16131,11 +16305,20 @@ async function _dbSalvarFonteCobertura(f, idx) {
   if(f.db_id) {
     const ok = await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
     return !!ok;
-  } else {
-    const res = await _supa('POST','fontes_cobertura', payload);
-    if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
-    return false;
   }
+  const res = await _supa('POST','fontes_cobertura', payload);
+  if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
+  // Achado real (2026-08-29): a checagem de duplicata do "Próprio" era só em memória —
+  // se a tela renderizasse de novo antes desse POST confirmar, criava outra fonte igual
+  // (mesmo garanhão/ciclo/tipo). Agora o banco tem um índice único que recusa a segunda
+  // (23505/409) — em vez de deixar essa fonte órfã sem db_id, busca a que já existe de
+  // verdade e adota o id dela, então o resultado é o mesmo de sempre ter achado na hora.
+  if (f.tipo === 'proprio') {
+    const existentes = await _supa('GET', 'fontes_cobertura', null,
+      `?tipo=eq.proprio&ciclo=eq.${encodeURIComponent(f.ciclo)}&garanhao_nome=eq.${encodeURIComponent(f.garanhao_nome)}&limit=1`);
+    if (existentes?.[0]?.id) { fontesCobertura[idx].db_id = existentes[0].id; return true; }
+  }
+  return false;
 }
 
 async function _dbExcluirFonteCobertura(db_id) {
@@ -16963,8 +17146,12 @@ function _entrarApp() {
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
   // Balão do agente de IA reativado em 2026-08-27 — caso de uso 3
-  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF.
-  _chatIAMostrarFab(true);
+  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF. Escondido de
+  // propósito (2026-08-28) pra planos sem Agente Mimba (cota_ia_mensal=0) —
+  // antes o balão aparecia igual e só travava com "limite atingido (0)" no
+  // envio da primeira mensagem, o que é confuso (parece bug, não é feature
+  // paga). `plano_features` já vem populado em TENANT_INFO por minhas_cabanhas().
+  _chatIAMostrarFab(TENANT_INFO?.plano_features?.agente_ia === true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -17033,8 +17220,11 @@ function fazerLogout() {
   // não deixar dado da cabanha na memória/localStorage após sair
   _limparEstadoLocal();
   _limparSessaoSalva(); // sair de verdade não pode voltar sozinho no próximo reload
-  // fechar a Tela de Conta, se estiver aberta
-  closeModal('modal-conta');
+  // Achado real (2026-08-29): "modal-conta" nunca existiu — Conta é uma página
+  // (#page-conta), não um modal. closeModal() sem guarda contra elemento nulo
+  // (ver fix acima) lançava TypeError aqui em TODO logout, interrompendo o resto
+  // da função — a tela de login (linha abaixo) nunca chegava a aparecer, só no
+  // F5 seguinte. Não há modal de Conta pra fechar; a linha só existia por engano.
   // limpar a marca da cabanha (logo/nome/título/cor) ao voltar para o login
   const _lg = document.getElementById('sidebar-logo-img');
   if(_lg){ _lg.removeAttribute('src'); _lg.style.display='none'; }
@@ -17467,12 +17657,121 @@ function _chatIAToggle(){
   const painel = document.getElementById('chat-ia-panel');
   const abrindo = !painel.classList.contains('open');
   painel.classList.toggle('open', abrindo);
-  if(abrindo) document.getElementById('chat-ia-input')?.focus();
+  if(abrindo){
+    document.getElementById('chat-ia-input')?.focus();
+    _chatIASaudacaoSeNecessario();
+  }
+}
+
+// Saudação personalizada — só na primeira abertura da sessão (_chatIAMensagens vazio), nunca
+// entra no histórico enviado pra API (é só interface, não faz parte da conversa de verdade).
+function _chatIASaudacaoSeNecessario(){
+  if(_chatIAMensagens.length > 0) return;
+  const box = document.getElementById('chat-ia-msgs');
+  const placeholder = box?.querySelector('.chat-ia-msg.sistema');
+  if(!placeholder) return;
+  const primeiroNome = (usuarioAtual?.nome || '').trim().split(' ')[0] || '';
+  const hora = HOJE instanceof Date ? HOJE.getHours() : new Date().getHours();
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  placeholder.textContent = primeiroNome
+    ? `${saudacao}, ${primeiroNome}! No que posso te ajudar?`
+    : `${saudacao}! No que posso te ajudar?`;
 }
 
 function _chatIAMostrarFab(mostrar){
   document.getElementById('chat-ia-fab')?.classList.toggle('visible', !!mostrar);
   if(!mostrar) document.getElementById('chat-ia-panel')?.classList.remove('open');
+}
+
+// Escapa HTML antes de qualquer coisa — nunca confia em texto de fora (nem do modelo, nem do
+// usuário) como HTML puro. As funções abaixo só permitem os padrões específicos que elas mesmas
+// reconhecem (negrito, lista) — nunca passam o texto adiante como innerHTML bruto.
+function _chatIAEscHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Markdown-leve: só **negrito** e listas com "- item" — o suficiente pro que o agente
+// realmente precisa formatar (nome de animal em destaque, lista curta de itens), sem abrir mão
+// de segurança tentando suportar markdown completo. Todo texto passa por _chatIAEscHtml antes.
+function _chatIAFormatarTexto(texto){
+  const linhas = _chatIAEscHtml(texto).split('\n');
+  const blocos = [];
+  let listaAtual = null;
+  for (const linha of linhas){
+    const itemLista = linha.match(/^[-*]\s+(.+)/);
+    if (itemLista){
+      if (!listaAtual){ listaAtual = []; blocos.push(listaAtual); }
+      listaAtual.push(itemLista[1]);
+    } else {
+      listaAtual = null;
+      blocos.push(linha);
+    }
+  }
+  const negrito = (s) => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return blocos.map(b =>
+    Array.isArray(b)
+      ? '<ul>' + b.map(item => `<li>${negrito(item)}</li>`).join('') + '</ul>'
+      : (b.trim() ? `<p>${negrito(b)}</p>` : '')
+  ).join('');
+}
+
+// Cartão visual a partir do resultado ESTRUTURADO de uma ferramenta (JSON que já veio do banco
+// via RPC) — nunca a partir de texto do modelo. Só os 4 tipos de ferramenta mais perguntados
+// (achado em produção, 2026-08-28) ganham cartão por ora; o resto continua só em texto.
+function _chatIARenderizarCartao(nome, resultado){
+  const d = resultado?.resultado;
+  if (d == null) return null;
+  const arr = Array.isArray(d) ? d : null;
+  if (arr && arr.length === 0) return null; // vazio — sem cartão, o texto do modelo cuida disso
+
+  if (nome === 'cab_listar_pendencias' && arr){
+    const cores = { alta:'var(--red-d)', media:'var(--amber-d)', baixa:'var(--text3)' };
+    const itens = arr.slice(0,12).map(p => `<div class="chat-ia-cartao-item">
+      <span><span class="chat-ia-cartao-nivel" style="background:${cores[p.nivel]||'var(--text3)'}"></span>${_chatIAEscHtml(p.animal_nome)} — ${_chatIAEscHtml(p.tipo)}</span>
+    </div>`).join('');
+    const mais = arr.length>12 ? `<div class="chat-ia-cartao-mais">+${arr.length-12} mais</div>` : '';
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Pendências (${arr.length})</div>${itens}${mais}</div>`;
+  }
+
+  if (nome === 'cab_buscar_animal' && arr){
+    const itens = arr.slice(0,8).map(a => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(a.nome)}</strong>${a.sbb?(' · '+_chatIAEscHtml(a.sbb)):''}</span>
+      <span style="color:var(--text3)">${_chatIAEscHtml(a.sexo||'')}</span>
+    </div>`).join('');
+    const mais = arr.length>8 ? `<div class="chat-ia-cartao-mais">+${arr.length-8} mais</div>` : '';
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Animais encontrados (${arr.length})</div>${itens}${mais}</div>`;
+  }
+
+  if (nome === 'cab_listar_gestacoes_ativas' && arr){
+    const itens = arr.map(g => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(g.egua_nome)}</strong></span>
+      <span style="color:var(--text3)">${g.parto_previsto?_chatIAEscHtml(fd(g.parto_previsto)):''}</span>
+    </div>`).join('');
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Gestações ativas (${arr.length})</div>${itens}</div>`;
+  }
+
+  if (nome === 'cab_agrupar_por_estagio' && arr){
+    const itens = arr.map(e => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(e.estagio)}</strong></span>
+      <span style="color:var(--text3)">${_chatIAEscHtml(String(e.total))}</span>
+    </div>`).join('');
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Animais por estágio</div>${itens}</div>`;
+  }
+
+  if (nome === 'cab_resumo_geral' && !arr && typeof d === 'object'){
+    return `<div class="chat-ia-cartao">
+      <div class="chat-ia-cartao-titulo">Resumo da cabanha</div>
+      <div class="chat-ia-stats-grid">
+        <div class="chat-ia-stat"><b>${d.total_na_cabanha??'—'}</b><span>animais</span></div>
+        <div class="chat-ia-stat"><b>${d.gestacoes_ativas??'—'}</b><span>gestando</span></div>
+        <div class="chat-ia-stat"><b>${d.femeas??'—'}</b><span>fêmeas</span></div>
+        <div class="chat-ia-stat"><b>${d.machos??'—'}</b><span>machos</span></div>
+        <div class="chat-ia-stat" style="grid-column:1/-1"><b>${d.pendencias_abertas??'—'}</b><span>pendências abertas</span></div>
+      </div>
+    </div>`;
+  }
+
+  return null;
 }
 
 function _chatIARenderMsg(texto, classe){
@@ -17543,6 +17842,18 @@ async function _chatIAEnviar(){
           document.getElementById('chat-ia-msgs').scrollTop = 9e9;
         } else if(evento === 'ferramenta'){
           bolhaResposta.textContent = respostaTexto || 'consultando...';
+        } else if(evento === 'ferramenta_resultado'){
+          // Cartão visual a partir do resultado ESTRUTURADO da ferramenta (não texto do
+          // modelo) — inserido antes da bolha de resposta, pra ficar "aqui está o que achei,
+          // agora meu comentário sobre isso", na ordem natural de leitura.
+          const cartaoHtml = _chatIARenderizarCartao(dados.nome, dados.resultado);
+          if(cartaoHtml){
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = cartaoHtml;
+            const box = document.getElementById('chat-ia-msgs');
+            box.insertBefore(wrapper.firstElementChild, bolhaResposta);
+            box.scrollTop = 9e9;
+          }
         } else if(evento === 'erro'){
           // Erro chegado NO MEIO do streaming (ex.: sem crédito na Anthropic) —
           // servidor já respondeu 200 e abriu o stream antes de descobrir o
@@ -17556,8 +17867,10 @@ async function _chatIAEnviar(){
       }
     }
 
-    if(respostaTexto) _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
-    else if(!houveErro) bolhaResposta.remove();
+    if(respostaTexto){
+      bolhaResposta.innerHTML = _chatIAFormatarTexto(respostaTexto);
+      _chatIAMensagens.push({ role: 'assistant', content: respostaTexto });
+    } else if(!houveErro) bolhaResposta.remove();
   } catch(e) {
     bolhaResposta.textContent = 'Falha de conexão com o assistente.';
   } finally {
@@ -17621,10 +17934,12 @@ async function _chatIAEnviar(){
 <div class="onb-overlay" id="onb-overlay">
   <div class="onb-header">
     <div class="onb-brand">Mimba<span class="dot">.</span></div>
-    <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+    <div class="onb-header-right">
+      <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+      <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
+    </div>
   </div>
   <div class="onb-main">
-    <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
 
     <div class="onb-step on" id="onb-s0">
       <div class="onb-eyebrow">BEM-VINDO AO MIMBA</div>
@@ -17636,7 +17951,8 @@ async function _chatIAEnviar(){
     <div class="onb-step" id="onb-s1">
       <div class="onb-top"><button class="onb-back" onclick="_onbGo(0)">← Voltar</button><span class="onb-stepnum">1 de 5</span></div>
       <div class="onb-eyebrow">SUA CABANHA</div>
-      <div class="onb-h2">Primeiro, como ela se chama?</div>
+      <div class="onb-h2">Confirma os dados da sua cabanha.</div>
+      <div class="onb-p">Você já nos contou o nome no cadastro — confirme abaixo e complete o resto. Isso já deixa o perfil da sua cabanha pronto (editável depois em Conta → Dados da Cabanha).</div>
       <div class="onb-label">Nome da cabanha</div>
       <input class="input" id="onb-nome-cabanha" style="width:100%;max-width:480px">
       <div class="onb-label">Afixo</div>
@@ -17646,6 +17962,18 @@ async function _chatIAEnviar(){
         <input class="input" id="onb-cidade" placeholder="Cidade" style="flex:2">
         <input class="input" id="onb-uf" placeholder="UF" maxlength="2" style="flex:1;text-transform:uppercase">
       </div>
+      <div style="display:flex;gap:8px;max-width:480px">
+        <div style="flex:2">
+          <div class="onb-label">Código ABCCC <span style="font-weight:400;color:var(--text3)">(opcional)</span></div>
+          <input class="input" id="onb-abccc-codigo" style="width:100%" placeholder="Registro da cabanha na ABCCC">
+        </div>
+        <div style="flex:1">
+          <div class="onb-label">Ano de fundação <span style="font-weight:400;color:var(--text3)">(opc.)</span></div>
+          <input class="input" id="onb-ano-fundacao" type="number" min="1900" max="2100" style="width:100%" placeholder="Ex: 1998">
+        </div>
+      </div>
+      <div class="onb-label">Uma frase sobre sua cabanha <span style="font-weight:400;color:var(--text3)">(opcional)</span></div>
+      <input class="input" id="onb-assinatura" style="width:100%;max-width:480px" maxlength="120" placeholder="Ex: Tradição em genética Crioula desde 1998">
       <div class="onb-actions"><button class="btn btn-primary" onclick="_onbSalvarCabanha()">Continuar</button></div>
     </div>
 
@@ -17678,7 +18006,7 @@ B345678"></textarea>
       <div class="onb-top"><button class="onb-back" onclick="_onbGo(2)">← Voltar</button><span class="onb-stepnum">3 de 5</span></div>
       <div class="onb-eyebrow">PRIMEIRO FOCO</div>
       <div class="onb-h2">O que você mais quer organizar agora?</div>
-      <div class="onb-p">Isso só personaliza os primeiros passos. Todo o Mimba continua disponível.</div>
+      <div class="onb-p">Escolha pra onde a gente te leva direto ao terminar — o botão final abre essa área específica em vez do Dashboard genérico. Todo o resto do Mimba continua disponível normalmente, isso não bloqueia nada.</div>
       <div class="onb-grid" id="onb-foco-grid">
         <div class="card onb-card" onclick="_onbEscolherFoco(this,'manada')">🐴 <b>Minha manada</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Tudo sobre meus animais.</div></div>
         <div class="card onb-card" onclick="_onbEscolherFoco(this,'reproducao')">🧬 <b>Reprodução</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Cruzamentos e gestações.</div></div>
@@ -17709,11 +18037,11 @@ B345678"></textarea>
       <div class="onb-h1" style="font-size:clamp(28px,4.2vw,42px)">Agora a cabanha começa a ganhar vida.</div>
       <div class="onb-p">O onboarding obrigatório termina aqui. Saúde, reprodução, eventos, nutrição, equipe e Registro Vivo passam a ser enriquecidos durante o uso.</div>
       <div class="onb-grid">
-        <div class="card"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
-        <div class="card"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
+        <div class="card" id="onb-card-eventos"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
+        <div class="card" id="onb-card-reproducao"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
         <div class="card"><b>Equipe</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem cuida com você?</div><button class="btn" onclick="_onbFinalizar('conta')">Convidar</button></div>
       </div>
-      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbFinalizar('dashboard')">Ir pro Dashboard</button></div>
+      <div class="onb-actions"><button class="btn btn-primary" id="onb-btn-finalizar" onclick="_onbFinalizar()">Ir pro Dashboard</button></div>
     </div>
   </div>
 </div>
