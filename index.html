@@ -14819,24 +14819,59 @@ async function iniciarAnaliseSangues(forceAll) {
   if(btnForce) btnForce.disabled = false;
 }
 
+// Achado real (2026-08-30): a Edge Function busca cada SBB sequencialmente na ABCCC
+// (~1.2s/animal) dentro de UMA invocação só — numa manada grande (420 animais na Cabanha
+// dos Sonhos da Expointer, todos sem cache ainda) isso passa do tempo máximo de execução
+// da function/gateway, estourando com HTTP 504 antes de terminar. Envia em lotes menores
+// (a própria function já pula quem está em cache dentro de 30 dias, então repetir um SBB
+// já buscado num lote anterior não tem custo extra) e, no final, faz UMA chamada com a
+// lista inteira e force:false só pra montar o ranking consolidado a partir do cache —
+// rápida, sem tocar a ABCCC de novo.
 async function _carregarESalvar(sbbs, force) {
   const btn = document.getElementById('btn-analisar-sangues');
   const btnForce = document.getElementById('btn-rebuscar-sangues');
+  const TAMANHO_LOTE = 25;
+  const lotes = [];
+  for (let i = 0; i < sbbs.length; i += TAMANHO_LOTE) lotes.push(sbbs.slice(i, i + TAMANHO_LOTE));
+
   try {
+    let lotesComErro = 0;
+    for (let i = 0; i < lotes.length; i++) {
+      document.getElementById('sangues-status-txt').textContent =
+        `Buscando lote ${i + 1} de ${lotes.length} (${lotes[i].length} animal(is)) na ABCCC...`;
+      document.getElementById('sangues-progress-bar').style.width = Math.round((i / lotes.length) * 90) + '%';
+      try {
+        const resLote = await fetch(SUPABASE_URL+'/functions/v1/analise-sangues', {
+          method:'POST',
+          headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+          body: JSON.stringify({ sbbs: lotes[i], force: !!force }),
+          signal: AbortSignal.timeout(60000),
+        });
+        if(!resLote.ok) throw new Error('HTTP '+resLote.status);
+        await resLote.json();
+      } catch (eLote) {
+        lotesComErro++;
+        console.error('Lote '+(i+1)+' de análise de sangues falhou:', eLote);
+      }
+    }
+
+    document.getElementById('sangues-status-txt').textContent = 'Consolidando resultado...';
+    document.getElementById('sangues-progress-bar').style.width = '95%';
     const res = await fetch(SUPABASE_URL+'/functions/v1/analise-sangues', {
       method:'POST',
       headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({ sbbs, force: !!force }),
-      signal: AbortSignal.timeout(180000),
+      body: JSON.stringify({ sbbs, force: false }),
+      signal: AbortSignal.timeout(60000),
     });
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     // Enriquecer com nomes dos animais locais
     data.qtdAnimais = sbbs.length;
     data.timestamp  = Date.now();
+    if (lotesComErro > 0) data.avisoLotes = lotesComErro+' de '+lotes.length+' lote(s) falharam — o resultado pode estar incompleto. Clique em "Atualizar" pra tentar de novo.';
     _cacheSanguesSessao = data;
     document.getElementById('sangues-progress-bar').style.width='100%';
-    document.getElementById('sangues-status-txt').textContent='✅ Pronto!';
+    document.getElementById('sangues-status-txt').textContent = data.avisoLotes ? '⚠️ '+data.avisoLotes : '✅ Pronto!';
     setTimeout(() => {
       document.getElementById('sangues-status').style.display='none';
       _renderSangues(data);
@@ -14845,6 +14880,7 @@ async function _carregarESalvar(sbbs, force) {
     document.getElementById('sangues-status-txt').textContent='Erro: '+e.message;
     document.getElementById('sangues-spinner').style.display='none';
     console.error(e);
+  } finally {
     if(btn) { btn.disabled=false; btn.textContent='🔄 Atualizar'; }
     if(btnForce) btnForce.disabled = false;
   }
