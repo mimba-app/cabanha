@@ -868,8 +868,11 @@
   .onb-suggest { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
   .onb-suggest button { border:var(--card-border); background:var(--pergaminho); border-radius:999px; padding:7px 12px; cursor:pointer; font-size:12px; color:var(--text2); font-family:var(--font); }
   .onb-suggest button:hover { border-color:var(--campo); color:var(--campo-deep); }
-  .onb-skip { position:absolute; top:0; right:20px; font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); }
-  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-skip{position:static;display:block;text-align:right;margin-bottom:10px;} }
+  .onb-foco-destaque { border:2px solid var(--campo) !important; position:relative; }
+  .onb-foco-destaque::before { content:"SEU FOCO"; position:absolute; top:-9px; left:12px; background:var(--campo); color:#fff; font-family:var(--mono); font-size:9px; letter-spacing:.08em; padding:2px 7px; border-radius:999px; }
+  .onb-header-right { display:flex; align-items:center; gap:14px; }
+  .onb-skip { font-size:12px; color:var(--text3); background:none; border:0; cursor:pointer; text-decoration:underline; font-family:var(--font); padding:0; }
+  @media(max-width:640px){ .onb-grid,.onb-stats{grid-template-columns:1fr 1fr;} .onb-header-right{gap:10px;} .onb-stepnum{display:none;} }
   /* KANBAN SAÚDE */
   .kanban-board { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
   .kanban-board.cols-2 { grid-template-columns:1fr 1fr; gap:14px; }
@@ -6978,9 +6981,9 @@ async function salvarEdicaoAnimal() {
   // em vez de fechar e dar a entender que salvou quando não salvou.
   const btnSalvar = document.getElementById('det-btn-salvar');
   if (btnSalvar) { btnSalvar.disabled = true; }
-  const ok = await _dbSalvarAnimal(a, i);
+  const resultado = await _dbSalvarAnimal(a, i);
   if (btnSalvar) { btnSalvar.disabled = false; }
-  if (!ok) { alert('Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
+  if (!resultado.ok) { alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Os dados continuam preenchidos — clique em Salvar de novo em alguns instantes.'); return; }
   cancelarEdicaoAnimal();
   renderAnimais();
   renderDashboard();
@@ -7621,13 +7624,13 @@ async function salvarNovaReceptora() {
   const idxNova = animais.length - 1;
   const btn = document.querySelector('#modal-nova-receptora .modal-footer .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-  const ok = await _dbSalvarAnimal(animais[idxNova], idxNova);
+  const resultado = await _dbSalvarAnimal(animais[idxNova], idxNova);
   if (btn) { btn.disabled = false; btn.textContent = 'Salvar receptora'; }
   // Achado real: fechar o modal sem confirmar a resposta do banco deixava a receptora presa
   // sem db_id se o POST falhasse (sessão, rede) — aí ela aparecia em selects (ex.: doadora de
   // embrião) com um id inválido, e qualquer ação que dependesse de um FK real quebrava mais na
   // frente, longe da causa. Se falhar, desfaz o push local e deixa tentar de novo.
-  if (!ok) { animais.splice(idxNova, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
+  if (!resultado.ok) { animais.splice(idxNova, 1); return alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-nova-receptora');
   populaCiclos(); renderDashboard(); renderAnimais();
   renderPlanejadorReprodutivo();
@@ -7732,9 +7735,9 @@ async function salvarAnimal(){
   const idxNovo = animais.length-1;
   const btnSalvar = document.querySelector('#modal-novo .modal-footer .btn-primary');
   if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = 'Salvando...'; }
-  const ok = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
+  const resultado = await _dbSalvarAnimal(animais[idxNovo], idxNovo);
   if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar animal'; }
-  if (!ok) { animais.splice(idxNovo, 1); return alert('Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
+  if (!resultado.ok) { animais.splice(idxNovo, 1); return alert(resultado.erro || 'Não foi possível salvar no banco agora (sessão ou rede). Tente salvar de novo em alguns instantes.'); }
   closeModal('modal-novo');
   _limparFormNovoAnimal();
   populaCiclos();renderDashboard();renderAnimais();
@@ -8025,6 +8028,7 @@ function _abrirOnboarding() {
   document.getElementById('onb-afixo').value = TENANT_INFO?.afixo || '';
   document.getElementById('onb-cidade').value = TENANT_INFO?.cidade || '';
   document.getElementById('onb-uf').value = TENANT_INFO?.uf || '';
+  document.getElementById('onb-abccc-codigo').value = TENANT_INFO?.abccc_codigo || '';
   document.getElementById('onb-overlay').classList.add('on');
   _onbGo(0);
 }
@@ -8036,6 +8040,25 @@ function _onbGo(n) {
   const lbl = document.getElementById('onb-lbl');
   if (lbl) lbl.textContent = n===0 ? 'Bem-vindo' : n===5 ? 'Ativação concluída' : `Onboarding · etapa ${n} de 5`;
   if (n === 4) _onbMontarPainel4();
+  if (n === 5) _onbMontarPainel5();
+}
+
+// Foco escolhido na etapa 3 -> página real que _onbFinalizar() abre no botão principal da
+// etapa 5, e card que ganha destaque visual. Antes disso (2026-08-29) a escolha da etapa 3
+// era salva e nunca lida em lugar nenhum — a etapa existia mas não mudava nada no fluxo.
+const ONB_FOCO_PAGINA = {
+  manada: 'animais', reproducao: 'reprodutivo', eventos: 'eventos',
+  saude: 'saude', nutricao: 'nutricional', confirmacao: 'animais',
+};
+const ONB_FOCO_LABEL = {
+  manada: 'Ir pra Minha Manada', reproducao: 'Ir pra Reprodução', eventos: 'Ir pros Eventos',
+  saude: 'Ir pra Saúde', nutricao: 'Ir pra Nutrição', confirmacao: 'Ir pros Animais',
+};
+function _onbMontarPainel5() {
+  document.getElementById('onb-card-eventos')?.classList.toggle('onb-foco-destaque', _onbFocoEscolhido === 'eventos');
+  document.getElementById('onb-card-reproducao')?.classList.toggle('onb-foco-destaque', _onbFocoEscolhido === 'reproducao');
+  const btn = document.getElementById('onb-btn-finalizar');
+  if (btn) btn.textContent = ONB_FOCO_LABEL[_onbFocoEscolhido] || 'Ir pro Dashboard';
 }
 
 async function _onbSalvarCabanha() {
@@ -8044,14 +8067,31 @@ async function _onbSalvarCabanha() {
   const afixo = document.getElementById('onb-afixo').value.trim();
   const cidade = document.getElementById('onb-cidade').value.trim();
   const uf = document.getElementById('onb-uf').value.trim().toUpperCase();
+  const abcccCodigo = document.getElementById('onb-abccc-codigo').value.trim();
+  const anoFundacao = parseInt(document.getElementById('onb-ano-fundacao').value) || null;
+  const assinatura = document.getElementById('onb-assinatura').value.trim();
   await _rpc('atualizar_tenant_onboarding', {
-    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf
+    p_tenant_id: TENANT_INFO.tenant_id, p_nome_cabanha: nome, p_afixo: afixo, p_cidade: cidade, p_uf: uf,
+    p_abccc_codigo: abcccCodigo
   });
+  // Cidade/UF/ano de fundação/assinatura também alimentam o perfil público (Conta → Dados da
+  // Cabanha → Perfil público) — achado auditando a jornada (2026-08-29): antes disso, o que
+  // era preenchido aqui no onboarding nunca aparecia em Conta, porque Conta lê de
+  // cabanha_perfil_publico, uma tabela diferente de tenants.cidade/uf. Grava nas duas agora.
+  if (cidade || uf || anoFundacao || assinatura) {
+    await _supaPub('POST', 'cabanha_perfil_publico', {
+      tenant_id: TENANT_INFO.tenant_id,
+      cidade: cidade || null, estado: uf || null,
+      ano_fundacao: anoFundacao, assinatura: assinatura || null,
+      atualizado_em: new Date().toISOString(),
+    });
+  }
   // A RPC sincroniza nome_exibicao com nome_cabanha quando não veio um valor explícito pra
   // nome_exibicao (é a primeira nomeação da cabanha) — espelha isso localmente também, senão
   // a sidebar (que prioriza nome_exibicao sobre nome_cabanha) continua com o nome antigo.
   TENANT_INFO.nome_cabanha = nome; TENANT_INFO.nome_exibicao = nome;
   TENANT_INFO.afixo = afixo; TENANT_INFO.cidade = cidade; TENANT_INFO.uf = uf;
+  TENANT_INFO.abccc_codigo = abcccCodigo || TENANT_INFO.abccc_codigo;
   const cabEl = document.getElementById('sidebar-cabanha');
   if (cabEl) cabEl.textContent = nome;
   _onbGo(2);
@@ -8098,9 +8138,43 @@ function _onbEmpurrarAnimalLocal(ins) {
 
 async function _onbConfirmarPrimeiroAnimal() {
   const r = _onbAnimalConfirmado;
-  if (!r) return;
-  const inseridos = await _supa('POST','animais',[_onbPayloadAnimal(r)]);
-  if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
+  // Trava contra clique repetido (achado ao vivo, 2026-08-29): sem isso, cada clique em
+  // "É ele. Adicionar à cabanha" reenviava um POST novo pro mesmo animal — o card ficava
+  // clicável pra sempre, sem nenhum feedback visual de que já tinha sido adicionado, e uma
+  // pessoa clicando 3-4x sem perceber acabava com 3-4 cópias duplicadas do mesmo animal.
+  if (!r || r._confirmado) return;
+  r._confirmado = true;
+  const btn = document.querySelector('#onb-found .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adicionando...'; }
+  // Fetch direto (não _supa()) pra capturar a mensagem real de erro — precisa distinguir
+  // falha de verdade (ex.: trg_limite_animais, 2026-08-29) de sucesso antes de estampar
+  // "✓ adicionado", senão mentiria pro usuário quando o insert falhasse.
+  await _garantirTokenValido();
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json', 'Accept-Profile': TENANT_SCHEMA, 'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify([_onbPayloadAnimal(r)])
+  });
+  const f = document.getElementById('onb-found');
+  if (!resp.ok) {
+    const texto = await resp.text().catch(()=>'');
+    let msg = 'Não foi possível adicionar esse animal agora. Tente de novo em alguns instantes.';
+    try { const j = JSON.parse(texto); if ((j.message||'').includes('limite_plano_animais')) msg = j.message.replace('limite_plano_animais: ',''); } catch(_) {}
+    r._confirmado = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'É ele. Adicionar à cabanha'; }
+    if (f) f.insertAdjacentHTML('beforeend', `<div style="margin-top:10px;color:var(--red-d);font-size:13px">${msg}</div>`);
+    return;
+  }
+  const inseridos = await resp.json().catch(()=>[]);
+  inseridos.forEach(_onbEmpurrarAnimalLocal);
+  if (f) f.innerHTML = `<div style="display:flex;gap:10px;align-items:center;color:var(--campo-deep);font-weight:700">
+    <span style="width:22px;height:22px;border-radius:50%;background:var(--campo-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">✓</span>
+    <span>${r.dados.nome} adicionado à cabanha.</span>
+  </div>`;
   document.getElementById('onb-lote').style.display = '';
 }
 
@@ -8128,11 +8202,37 @@ async function _onbImportarLote() {
   await Promise.all(Array.from({length: Math.min(CONCORRENCIA, pendentes.length)}, worker));
 
   const encontrados = resultados.filter(r=>r.ok);
-  if (encontrados.length) {
-    const inseridos = await _supa('POST','animais', encontrados.map(_onbPayloadAnimal));
-    if (inseridos) inseridos.forEach(_onbEmpurrarAnimalLocal);
-  }
   const naoEncontrados = resultados.length - encontrados.length;
+  let erroLimite = null;
+  if (encontrados.length) {
+    // Fetch direto (não _supa()): um insert em lote é UMA transação só — se o limite do
+    // plano (trg_limite_animais, 2026-08-29) estourar no meio do lote, o Postgres desfaz
+    // o lote INTEIRO, não só os excedentes. _supa() engolia isso e o texto ainda dizia
+    // "Concluído: N importado(s)" mesmo quando NADA tinha sido salvo de verdade.
+    await _garantirTokenValido();
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+        'Content-Type': 'application/json', 'Accept-Profile': TENANT_SCHEMA, 'Content-Profile': TENANT_SCHEMA,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(encontrados.map(_onbPayloadAnimal))
+    });
+    if (resp.ok) {
+      const inseridos = await resp.json().catch(()=>[]);
+      inseridos.forEach(_onbEmpurrarAnimalLocal);
+    } else {
+      const texto = await resp.text().catch(()=>'');
+      try { const j = JSON.parse(texto); if ((j.message||'').includes('limite_plano_animais')) erroLimite = j.message.replace('limite_plano_animais: ',''); } catch(_) {}
+      if (resp.status !== 403) console.error('Supabase error', resp.status, texto);
+    }
+  }
+  if (erroLimite) {
+    progEl.innerHTML = `<span style="color:var(--red-d)">${erroLimite}</span>`;
+    setTimeout(() => _onbGo(3), 2400);
+    return;
+  }
   progEl.textContent = `Concluído: ${encontrados.length} importado(s)` + (naoEncontrados ? `, ${naoEncontrados} não encontrado(s).` : '.');
   setTimeout(() => _onbGo(3), 1100);
 }
@@ -8201,6 +8301,9 @@ async function _onbPular() {
 }
 
 async function _onbFinalizar(destino) {
+  // Sem destino explícito (botão principal da etapa 5): usa a página do foco escolhido na
+  // etapa 3, se houver — antes disso o foco era só salvo e nunca influenciava o destino.
+  if (!destino) destino = ONB_FOCO_PAGINA[_onbFocoEscolhido] || 'dashboard';
   await _rpc('atualizar_tenant_onboarding', {
     p_tenant_id: TENANT_INFO.tenant_id,
     p_foco_inicial: _onbFocoEscolhido,
@@ -8456,7 +8559,7 @@ function saudeTabGrupo(btn,tabId,subId){
 }
 function saudeSubTab(subId,tabId,btn){const sub=document.getElementById(subId);if(sub)sub.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');switchTab(btn,tabId);}
 function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function populaCiclos(){
@@ -11302,7 +11405,9 @@ function _acEguasAtivas() {
   return animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a));
 }
 function _acFontesAtivas() {
-  return fontesCobertura.filter(f => f.status === 'ativa' && _saldoFonteCobertura(f).disponivel > 0);
+  // embriao fica de fora -- não é fonte pra uma cobertura nova, é genética já fechada que só
+  // precisa de receptora (fluxo próprio: "Atribuir embrião" no card da receptora).
+  return fontesCobertura.filter(f => f.status === 'ativa' && f.tipo !== 'embriao' && _saldoFonteCobertura(f).disponivel > 0);
 }
 
 // Reprodutivo v4, Fase 8 (spec 3b): entrada padrão passou a ser a tela de duas colunas
@@ -11393,6 +11498,30 @@ function _acFonteChange() {
   _renderSimulacaoAcasalamento();
 }
 
+// Ancestrais_pos (5 gerações) por SBB, combinando as duas fontes que o Mimba tem: o que a
+// própria cabanha já confirmou via Análise de Sangues (public.sangues_linhagem — cache
+// compartilhado entre cabanhas, mesmo pedigree bruto da ABCCC não muda por tenant) e o que
+// o Mimba Lab já sincronizou (abccc_estatisticas_animal, mesmo formato ancestrais_pos).
+// Achado real (2026-08-29): consanguinidade/dossiê só olhavam sangues_linhagem, que tinha
+// só ~20 animais em cache na plataforma inteira — a maior parte das consultas caía em "sem
+// dados suficientes" mesmo o Lab já tendo a árvore completa (~95% da raça, 28 mil+ animais)
+// de quase todo mundo, incluindo os garanhões testados (Golpe Seco do Itaó, Las Gurizas
+// Fogonero etc.). Cache manual tem prioridade quando existe (mesma fonte, mas já confirmada
+// direto pela própria cabanha); Lab preenche o resto.
+async function _buscarAncestraisPosCombinado(sbbs) {
+  const lista = [...new Set(sbbs.filter(Boolean))];
+  if (!lista.length) return {};
+  const filtro = lista.map(s => `"${s}"`).join(',');
+  const [manual, lab] = await Promise.all([
+    _supaPub('GET', 'sangues_linhagem', null, `?animal_sbb=in.(${filtro})&select=animal_sbb,ancestrais_pos`),
+    _supaPub('GET', 'abccc_estatisticas_animal', null, `?sbb=in.(${filtro})&select=sbb,ancestrais_pos`),
+  ]);
+  const resultado = {};
+  (lab || []).forEach(r => { if (r.ancestrais_pos?.length) resultado[r.sbb] = r.ancestrais_pos; });
+  (manual || []).forEach(r => { if (r.ancestrais_pos?.length) resultado[r.animal_sbb] = r.ancestrais_pos; });
+  return resultado;
+}
+
 // Painel de simulação: cruzamentos anteriores + alerta de consanguinidade (raso,
 // até geração 3) + saldo da fonte. NÃO inclui a análise de concentração de
 // sangue projetada completa da spec (fica para uma fase futura, se quiser).
@@ -11467,22 +11596,20 @@ async function _renderSimulacaoAcasalamento() {
       htmlConsang = `<div class="alert alert-r" style="font-size:12px">${nivel2}<br><span style="color:var(--text2)">Consanguinidade de 2º grau — IC estimado ≈ 12,5%. Avalie com cautela.</span></div>`;
     } else if (sbbEgua && sbbGar) {
       try {
-        const rows = await _supaPub('GET', 'sangues_linhagem', null,
-          '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-        const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-        const rGar  = (rows || []).find(r => r.animal_sbb === sbbGar);
-        if (rEgua?.ancestrais_pos && rGar?.ancestrais_pos) {
+        const anc = await _buscarAncestraisPosCombinado([sbbEgua, sbbGar]);
+        const ancEgua = anc[sbbEgua], ancGar = anc[sbbGar];
+        if (ancEgua && ancGar) {
           // Nível 2: ancestrais comuns nas gerações 1-2
-          const anc2Egua = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
-          const comuns2  = rGar.ancestrais_pos.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
+          const anc2Egua = new Set(ancEgua.filter(x => x.gen <= 2 && x.nome).map(x => x.nome));
+          const comuns2  = ancGar.filter(x => x.gen <= 2 && x.nome && anc2Egua.has(x.nome));
           // Nível 3: IC estimado via ancestrais comuns gen 3-5
           // IC ≈ Σ (0.5)^(gen_egua + gen_gar + 1) para cada ancestral comum
           const anc5Egua = {};
-          rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+          ancEgua.filter(x => x.gen <= 5 && x.nome).forEach(x => {
             if (!anc5Egua[x.nome]) anc5Egua[x.nome] = x.gen;
           });
           let icEstimado = 0;
-          const anc5Gar = rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome);
+          const anc5Gar = ancGar.filter(x => x.gen <= 5 && x.nome);
           const comunsNomes5 = new Set();
           anc5Gar.forEach(x => {
             if (anc5Egua[x.nome] !== undefined) {
@@ -11932,6 +12059,26 @@ function renderAcasalamentosMatch() {
   _jaConselhoRender();
 }
 
+// Achado real (2026-08-30): embrião aparecia na coluna "Garanhões / Fontes" do Cruzamentos
+// (modo rápido e inteligência) como se fosse uma fonte disponível pra uma cobertura nova —
+// mas um embrião já tem a genética fechada (doadora × garanhão), só falta achar receptora,
+// e isso já tem fluxo próprio ("Atribuir embrião" no card da receptora, no Planejador).
+// Some daqui; e quando a doadora já tem embrião deste ciclo, o card dela na coluna Éguas
+// mostra isso em vez de um "Acasalada" genérico que escondia a receptora.
+function _matchEguaInfo(a, ciclo) {
+  const ac = acasalamentos.find(x => String(x.egua_id) === String(a.db_id) && x.ciclo === ciclo && x.status !== 'cancelado');
+  if (!ac) return { jaTem: false, badge: '', info: a.sbb ? 'SBB ' + a.sbb : 'sem SBB' };
+  if (ac.receptora_animal_id) {
+    const receptora = animais.find(x => String(x.db_id) === String(ac.receptora_animal_id));
+    return {
+      jaTem: true,
+      badge: ' <span class="badge bg" style="font-size:9px">Embrião</span>',
+      info: receptora ? `na receptora <strong>${receptora.nome}</strong>` : (a.sbb ? 'SBB ' + a.sbb : 'sem SBB'),
+    };
+  }
+  return { jaTem: true, badge: ' <span class="badge bg" style="font-size:9px">Acasalada</span>', info: a.sbb ? 'SBB ' + a.sbb : 'sem SBB' };
+}
+
 // MODO RÁPIDO — tela clássica de duas colunas (fontes × éguas disponíveis no ciclo do
 // Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem remover) fonte sem saldo ou
 // égua já com match feito nesse ciclo, em vez de escondê-las. Ao escolher os dois lados, abre
@@ -11942,7 +12089,7 @@ function _acMatchRapidoRender() {
   const cicloLabel = document.getElementById('ac-match-ciclo-label');
   if (cicloLabel) cicloLabel.textContent = ciclo;
 
-  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada' && f.tipo !== 'embriao');
   const elF = document.getElementById('ac-match-fontes');
   if (elF) {
     elF.innerHTML = fontes.length ? fontes.map(f => {
@@ -11961,10 +12108,10 @@ function _acMatchRapidoRender() {
   const elE = document.getElementById('ac-match-eguas');
   if (elE) {
     elE.innerHTML = eguas.length ? eguas.map(a => {
-      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      const { jaTem, badge, info } = _matchEguaInfo(a, ciclo);
       return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_acMatchSelecionarEgua('${a.db_id}')"`}>
-        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
-        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+        <div class="kanban-card-nome">${a.nome}${badge}</div>
+        <div class="kanban-card-info">${info}</div>
       </div>`;
     }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
   }
@@ -12010,10 +12157,10 @@ function _jaConselhoRender() {
   const elLista = document.getElementById('ja-eguas-lista');
   if (elLista) {
     elLista.innerHTML = eguas.length ? eguas.map(a => {
-      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      const { jaTem, badge, info } = _matchEguaInfo(a, ciclo);
       return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_jaEscolherEgua('${a.db_id}')"`}>
-        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
-        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+        <div class="kanban-card-nome">${a.nome}${badge}</div>
+        <div class="kanban-card-info">${info}</div>
       </div>`;
     }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
   }
@@ -12026,9 +12173,12 @@ function _jaConselhoRender() {
   document.getElementById('ja-passo-confluencia').style.display = fase === 3 ? '' : 'none';
   document.getElementById('ja-passo-dossie').style.display = fase === 4 ? '' : 'none';
   if (fase >= 0 && fase !== 3) _jaRenderAlvo();
-  // Seletor de modo só faz sentido antes de começar a análise — trocar de modo no meio do
-  // ranking/confluência/dossiê seria confuso (a essa altura já se está "dentro" da jornada).
-  document.getElementById('ja-modo-wrap').style.display = fase <= 0 ? '' : 'none';
+  // Achado real (2026-08-29): esconder o seletor de modo depois que o ranking/dossiê aparece
+  // virava beco sem saída — só dava pra sair clicando "trocar égua" antes. jaSelecionarModo()
+  // já troca de modo de forma segura em qualquer fase (renderAcasalamentosMatch() despacha
+  // pro modo escolhido sem depender de _jaFase), então manter sempre visível resolve sem
+  // reintroduzir confusão — voltar depois pra Inteligência retoma exatamente de onde parou.
+  document.getElementById('ja-modo-wrap').style.display = '';
 }
 
 function _jaEscolherEgua(eguaDbId) {
@@ -12082,25 +12232,24 @@ async function _jaConsanguinidade(egua, fonte) {
   if (!sbbEgua || !sbbGar) return { nivel: 0, ic: null, texto: 'SBB incompleto de um dos lados — sem dado de linhagem pra cruzar.', diversidade: null };
 
   try {
-    const rows = await _supaPub('GET', 'sangues_linhagem', null, '?animal_sbb=in.("' + sbbEgua + '","' + sbbGar + '")&select=animal_sbb,ancestrais_pos');
-    const rEgua = (rows || []).find(r => r.animal_sbb === sbbEgua);
-    const rGar = (rows || []).find(r => r.animal_sbb === sbbGar);
-    if (!rEgua?.ancestrais_pos || !rGar?.ancestrais_pos) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
+    const anc = await _buscarAncestraisPosCombinado([sbbEgua, sbbGar]);
+    const ancEguaFull = anc[sbbEgua], ancGarFull = anc[sbbGar];
+    if (!ancEguaFull || !ancGarFull) return { nivel: 0, ic: null, texto: 'Linhagem incompleta na ABCCC — sem dado suficiente pra cruzar.', diversidade: null };
     // Direção B (Confluência de Sangues) reaproveita esses arrays brutos pra desenhar a
     // árvore, sem precisar consultar sangues_linhagem de novo.
-    const ancEgua = rEgua.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
-    const ancGar = rGar.ancestrais_pos.filter(x => x.gen && x.lado && x.nome);
+    const ancEgua = ancEguaFull.filter(x => x.gen && x.lado && x.nome);
+    const ancGar = ancGarFull.filter(x => x.gen && x.lado && x.nome);
 
-    const nomesEgua3 = new Set(rEgua.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
-    const nomesGar3 = new Set(rGar.ancestrais_pos.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesEgua3 = new Set(ancEguaFull.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
+    const nomesGar3 = new Set(ancGarFull.filter(x => x.gen <= 3 && x.nome).map(x => x.nome));
     const uniao = new Set([...nomesEgua3, ...nomesGar3]);
     const intersec = [...nomesEgua3].filter(n => nomesGar3.has(n));
     const diversidade = uniao.size ? 1 - (intersec.length / uniao.size) : 1;
 
     const anc5Egua = {};
-    rEgua.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
+    ancEguaFull.filter(x => x.gen <= 5 && x.nome).forEach(x => { if (anc5Egua[x.nome] === undefined) anc5Egua[x.nome] = x.gen; });
     let ic = 0; const comuns5 = [];
-    rGar.ancestrais_pos.filter(x => x.gen <= 5 && x.nome).forEach(x => {
+    ancGarFull.filter(x => x.gen <= 5 && x.nome).forEach(x => {
       if (anc5Egua[x.nome] !== undefined) { ic += Math.pow(0.5, anc5Egua[x.nome] + x.gen + 1); comuns5.push(x.nome); }
     });
     ic = Math.round(ic * 10000) / 100;
@@ -12137,7 +12286,7 @@ function _jaScoreSaldo(fonte) {
 async function _jaAnalisar() {
   const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada' && f.tipo !== 'embriao');
   if (!egua || !fontes.length) { alert('Nenhuma fonte de cobertura cadastrada neste ciclo. Cadastre em "Garanhões e Coberturas".'); return; }
 
   window._jaFase = 1;
@@ -14354,6 +14503,7 @@ async function _trocarPlanoClick(planoId, planoNome, planoFeatures) {
     TENANT_INFO.plano_features = planoFeatures || null;
     const relBtn = document.getElementById('nav-btn-relatorios');
     if (relBtn) relBtn.style.display = planoFeatures?.relatorios === false ? 'none' : '';
+    _chatIAMostrarFab(planoFeatures?.agente_ia === true);
     _mostrarStatusSync(`✅ Plano alterado para ${planoNome}`, 'green');
     renderPlanosDisponiveis();
   } catch (e) {
@@ -14669,24 +14819,59 @@ async function iniciarAnaliseSangues(forceAll) {
   if(btnForce) btnForce.disabled = false;
 }
 
+// Achado real (2026-08-30): a Edge Function busca cada SBB sequencialmente na ABCCC
+// (~1.2s/animal) dentro de UMA invocação só — numa manada grande (420 animais na Cabanha
+// dos Sonhos da Expointer, todos sem cache ainda) isso passa do tempo máximo de execução
+// da function/gateway, estourando com HTTP 504 antes de terminar. Envia em lotes menores
+// (a própria function já pula quem está em cache dentro de 30 dias, então repetir um SBB
+// já buscado num lote anterior não tem custo extra) e, no final, faz UMA chamada com a
+// lista inteira e force:false só pra montar o ranking consolidado a partir do cache —
+// rápida, sem tocar a ABCCC de novo.
 async function _carregarESalvar(sbbs, force) {
   const btn = document.getElementById('btn-analisar-sangues');
   const btnForce = document.getElementById('btn-rebuscar-sangues');
+  const TAMANHO_LOTE = 25;
+  const lotes = [];
+  for (let i = 0; i < sbbs.length; i += TAMANHO_LOTE) lotes.push(sbbs.slice(i, i + TAMANHO_LOTE));
+
   try {
+    let lotesComErro = 0;
+    for (let i = 0; i < lotes.length; i++) {
+      document.getElementById('sangues-status-txt').textContent =
+        `Buscando lote ${i + 1} de ${lotes.length} (${lotes[i].length} animal(is)) na ABCCC...`;
+      document.getElementById('sangues-progress-bar').style.width = Math.round((i / lotes.length) * 90) + '%';
+      try {
+        const resLote = await fetch(SUPABASE_URL+'/functions/v1/analise-sangues', {
+          method:'POST',
+          headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+          body: JSON.stringify({ sbbs: lotes[i], force: !!force }),
+          signal: AbortSignal.timeout(60000),
+        });
+        if(!resLote.ok) throw new Error('HTTP '+resLote.status);
+        await resLote.json();
+      } catch (eLote) {
+        lotesComErro++;
+        console.error('Lote '+(i+1)+' de análise de sangues falhou:', eLote);
+      }
+    }
+
+    document.getElementById('sangues-status-txt').textContent = 'Consolidando resultado...';
+    document.getElementById('sangues-progress-bar').style.width = '95%';
     const res = await fetch(SUPABASE_URL+'/functions/v1/analise-sangues', {
       method:'POST',
       headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({ sbbs, force: !!force }),
-      signal: AbortSignal.timeout(180000),
+      body: JSON.stringify({ sbbs, force: false }),
+      signal: AbortSignal.timeout(60000),
     });
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     // Enriquecer com nomes dos animais locais
     data.qtdAnimais = sbbs.length;
     data.timestamp  = Date.now();
+    if (lotesComErro > 0) data.avisoLotes = lotesComErro+' de '+lotes.length+' lote(s) falharam — o resultado pode estar incompleto. Clique em "Atualizar" pra tentar de novo.';
     _cacheSanguesSessao = data;
     document.getElementById('sangues-progress-bar').style.width='100%';
-    document.getElementById('sangues-status-txt').textContent='✅ Pronto!';
+    document.getElementById('sangues-status-txt').textContent = data.avisoLotes ? '⚠️ '+data.avisoLotes : '✅ Pronto!';
     setTimeout(() => {
       document.getElementById('sangues-status').style.display='none';
       _renderSangues(data);
@@ -14695,6 +14880,7 @@ async function _carregarESalvar(sbbs, force) {
     document.getElementById('sangues-status-txt').textContent='Erro: '+e.message;
     document.getElementById('sangues-spinner').style.display='none';
     console.error(e);
+  } finally {
     if(btn) { btn.disabled=false; btn.textContent='🔄 Atualizar'; }
     if(btnForce) btnForce.disabled = false;
   }
@@ -16035,12 +16221,34 @@ async function _dbSalvarAnimal(a, idx) {
   };
   if(a.db_id) {
     const ok = await _supa('PATCH','animais',payload,`?id=eq.${a.db_id}`);
-    return !!ok;
-  } else {
-    const res = await _supa('POST','animais',payload);
-    if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return true; }
-    return false;
+    return { ok: !!ok };
   }
+  // Insert vai por fetch direto (não _supa()) pra capturar a mensagem de erro real —
+  // é o único jeito de mostrar "seu plano permite no máximo X animais" (trg_limite_animais,
+  // 2026-08-29) em vez do genérico "não foi possível salvar" de sempre.
+  await _garantirTokenValido();
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/animais`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${AUTH_TOKEN || SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile': TENANT_SCHEMA,
+      'Content-Profile': TENANT_SCHEMA,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) {
+    const texto = await r.text().catch(()=>'');
+    if (r.status !== 403) console.error('Supabase error', r.status, texto);
+    let erro = null;
+    try { const j = JSON.parse(texto); erro = (j.message||'').includes('limite_plano_animais') ? j.message.replace('limite_plano_animais: ','') : null; } catch(_) {}
+    return { ok: false, erro };
+  }
+  const res = await r.json().catch(()=>[]);
+  if(res?.[0]?.id) { animais[idx].db_id = res[0].id; return { ok: true }; }
+  return { ok: false };
 }
 
 // Exclusão de animal: tenta apagar de verdade. Vários históricos (acasalamentos, gestações,
@@ -16155,11 +16363,20 @@ async function _dbSalvarFonteCobertura(f, idx) {
   if(f.db_id) {
     const ok = await _supa('PATCH','fontes_cobertura', payload, '?id=eq.'+f.db_id);
     return !!ok;
-  } else {
-    const res = await _supa('POST','fontes_cobertura', payload);
-    if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
-    return false;
   }
+  const res = await _supa('POST','fontes_cobertura', payload);
+  if(res?.[0]?.id) { fontesCobertura[idx].db_id = res[0].id; return true; }
+  // Achado real (2026-08-29): a checagem de duplicata do "Próprio" era só em memória —
+  // se a tela renderizasse de novo antes desse POST confirmar, criava outra fonte igual
+  // (mesmo garanhão/ciclo/tipo). Agora o banco tem um índice único que recusa a segunda
+  // (23505/409) — em vez de deixar essa fonte órfã sem db_id, busca a que já existe de
+  // verdade e adota o id dela, então o resultado é o mesmo de sempre ter achado na hora.
+  if (f.tipo === 'proprio') {
+    const existentes = await _supa('GET', 'fontes_cobertura', null,
+      `?tipo=eq.proprio&ciclo=eq.${encodeURIComponent(f.ciclo)}&garanhao_nome=eq.${encodeURIComponent(f.garanhao_nome)}&limit=1`);
+    if (existentes?.[0]?.id) { fontesCobertura[idx].db_id = existentes[0].id; return true; }
+  }
+  return false;
 }
 
 async function _dbExcluirFonteCobertura(db_id) {
@@ -16987,8 +17204,12 @@ function _entrarApp() {
   document.getElementById('login-screen').style.display='none';
   _ajustarStatusBarNativa();
   // Balão do agente de IA reativado em 2026-08-27 — caso de uso 3
-  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF.
-  _chatIAMostrarFab(true);
+  // (especialista ABCCC) conectado, ver ADR 0009/HANDOFF. Escondido de
+  // propósito (2026-08-28) pra planos sem Agente Mimba (cota_ia_mensal=0) —
+  // antes o balão aparecia igual e só travava com "limite atingido (0)" no
+  // envio da primeira mensagem, o que é confuso (parece bug, não é feature
+  // paga). `plano_features` já vem populado em TENANT_INFO por minhas_cabanhas().
+  _chatIAMostrarFab(TENANT_INFO?.plano_features?.agente_ia === true);
   const badge = document.getElementById('sidebar-perfil-badge');
   const uname = document.getElementById('sidebar-username');
   if(badge) badge.innerHTML=`<span class="perfil-badge perfil-${user.perfil}">${user.label}</span>`;
@@ -17057,8 +17278,11 @@ function fazerLogout() {
   // não deixar dado da cabanha na memória/localStorage após sair
   _limparEstadoLocal();
   _limparSessaoSalva(); // sair de verdade não pode voltar sozinho no próximo reload
-  // fechar a Tela de Conta, se estiver aberta
-  closeModal('modal-conta');
+  // Achado real (2026-08-29): "modal-conta" nunca existiu — Conta é uma página
+  // (#page-conta), não um modal. closeModal() sem guarda contra elemento nulo
+  // (ver fix acima) lançava TypeError aqui em TODO logout, interrompendo o resto
+  // da função — a tela de login (linha abaixo) nunca chegava a aparecer, só no
+  // F5 seguinte. Não há modal de Conta pra fechar; a linha só existia por engano.
   // limpar a marca da cabanha (logo/nome/título/cor) ao voltar para o login
   const _lg = document.getElementById('sidebar-logo-img');
   if(_lg){ _lg.removeAttribute('src'); _lg.style.display='none'; }
@@ -17584,6 +17808,14 @@ function _chatIARenderizarCartao(nome, resultado){
     return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Gestações ativas (${arr.length})</div>${itens}</div>`;
   }
 
+  if (nome === 'cab_agrupar_por_estagio' && arr){
+    const itens = arr.map(e => `<div class="chat-ia-cartao-item">
+      <span><strong>${_chatIAEscHtml(e.estagio)}</strong></span>
+      <span style="color:var(--text3)">${_chatIAEscHtml(String(e.total))}</span>
+    </div>`).join('');
+    return `<div class="chat-ia-cartao"><div class="chat-ia-cartao-titulo">Animais por estágio</div>${itens}</div>`;
+  }
+
   if (nome === 'cab_resumo_geral' && !arr && typeof d === 'object'){
     return `<div class="chat-ia-cartao">
       <div class="chat-ia-cartao-titulo">Resumo da cabanha</div>
@@ -17760,10 +17992,12 @@ async function _chatIAEnviar(){
 <div class="onb-overlay" id="onb-overlay">
   <div class="onb-header">
     <div class="onb-brand">Mimba<span class="dot">.</span></div>
-    <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+    <div class="onb-header-right">
+      <span class="onb-stepnum" id="onb-lbl">Bem-vindo</span>
+      <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
+    </div>
   </div>
   <div class="onb-main">
-    <button class="onb-skip" onclick="_onbPular()">Pular por agora</button>
 
     <div class="onb-step on" id="onb-s0">
       <div class="onb-eyebrow">BEM-VINDO AO MIMBA</div>
@@ -17775,7 +18009,8 @@ async function _chatIAEnviar(){
     <div class="onb-step" id="onb-s1">
       <div class="onb-top"><button class="onb-back" onclick="_onbGo(0)">← Voltar</button><span class="onb-stepnum">1 de 5</span></div>
       <div class="onb-eyebrow">SUA CABANHA</div>
-      <div class="onb-h2">Primeiro, como ela se chama?</div>
+      <div class="onb-h2">Confirma os dados da sua cabanha.</div>
+      <div class="onb-p">Você já nos contou o nome no cadastro — confirme abaixo e complete o resto. Isso já deixa o perfil da sua cabanha pronto (editável depois em Conta → Dados da Cabanha).</div>
       <div class="onb-label">Nome da cabanha</div>
       <input class="input" id="onb-nome-cabanha" style="width:100%;max-width:480px">
       <div class="onb-label">Afixo</div>
@@ -17785,6 +18020,18 @@ async function _chatIAEnviar(){
         <input class="input" id="onb-cidade" placeholder="Cidade" style="flex:2">
         <input class="input" id="onb-uf" placeholder="UF" maxlength="2" style="flex:1;text-transform:uppercase">
       </div>
+      <div style="display:flex;gap:8px;max-width:480px">
+        <div style="flex:2">
+          <div class="onb-label">Código ABCCC <span style="font-weight:400;color:var(--text3)">(opcional)</span></div>
+          <input class="input" id="onb-abccc-codigo" style="width:100%" placeholder="Registro da cabanha na ABCCC">
+        </div>
+        <div style="flex:1">
+          <div class="onb-label">Ano de fundação <span style="font-weight:400;color:var(--text3)">(opc.)</span></div>
+          <input class="input" id="onb-ano-fundacao" type="number" min="1900" max="2100" style="width:100%" placeholder="Ex: 1998">
+        </div>
+      </div>
+      <div class="onb-label">Uma frase sobre sua cabanha <span style="font-weight:400;color:var(--text3)">(opcional)</span></div>
+      <input class="input" id="onb-assinatura" style="width:100%;max-width:480px" maxlength="120" placeholder="Ex: Tradição em genética Crioula desde 1998">
       <div class="onb-actions"><button class="btn btn-primary" onclick="_onbSalvarCabanha()">Continuar</button></div>
     </div>
 
@@ -17817,7 +18064,7 @@ B345678"></textarea>
       <div class="onb-top"><button class="onb-back" onclick="_onbGo(2)">← Voltar</button><span class="onb-stepnum">3 de 5</span></div>
       <div class="onb-eyebrow">PRIMEIRO FOCO</div>
       <div class="onb-h2">O que você mais quer organizar agora?</div>
-      <div class="onb-p">Isso só personaliza os primeiros passos. Todo o Mimba continua disponível.</div>
+      <div class="onb-p">Escolha pra onde a gente te leva direto ao terminar — o botão final abre essa área específica em vez do Dashboard genérico. Todo o resto do Mimba continua disponível normalmente, isso não bloqueia nada.</div>
       <div class="onb-grid" id="onb-foco-grid">
         <div class="card onb-card" onclick="_onbEscolherFoco(this,'manada')">🐴 <b>Minha manada</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Tudo sobre meus animais.</div></div>
         <div class="card onb-card" onclick="_onbEscolherFoco(this,'reproducao')">🧬 <b>Reprodução</b><div style="color:var(--text2);font-size:12px;margin-top:4px">Cruzamentos e gestações.</div></div>
@@ -17848,11 +18095,11 @@ B345678"></textarea>
       <div class="onb-h1" style="font-size:clamp(28px,4.2vw,42px)">Agora a cabanha começa a ganhar vida.</div>
       <div class="onb-p">O onboarding obrigatório termina aqui. Saúde, reprodução, eventos, nutrição, equipe e Registro Vivo passam a ser enriquecidos durante o uso.</div>
       <div class="onb-grid">
-        <div class="card"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
-        <div class="card"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
+        <div class="card" id="onb-card-eventos"><b>Próximo evento</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Preparar a saída</div><button class="btn" onclick="_onbFinalizar('eventos')">Começar</button></div>
+        <div class="card" id="onb-card-reproducao"><b>Reprodução</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem combina com ela?</div><button class="btn" onclick="_onbFinalizar('reprodutivo')">Planejar</button></div>
         <div class="card"><b>Equipe</b><div style="font-family:var(--serif);font-size:16px;margin:6px 0 10px">Quem cuida com você?</div><button class="btn" onclick="_onbFinalizar('conta')">Convidar</button></div>
       </div>
-      <div class="onb-actions"><button class="btn btn-primary" onclick="_onbFinalizar('dashboard')">Ir pro Dashboard</button></div>
+      <div class="onb-actions"><button class="btn btn-primary" id="onb-btn-finalizar" onclick="_onbFinalizar()">Ir pro Dashboard</button></div>
     </div>
   </div>
 </div>
