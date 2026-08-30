@@ -10866,11 +10866,16 @@ async function _atualizarTodosAbccc() {
   const comSbb = animais.filter(a => a.sbb && a.sbb.trim() && isNaCabanha(a));
   if (!comSbb.length) { _mostrarStatusSync('Nenhum animal com SBB cadastrado.', 'amber'); return; }
 
-  const LOTE_MAX = 30;
-  const avisoLote = comSbb.length > LOTE_MAX ? '\n\nAtenção: apenas os primeiros ' + LOTE_MAX + ' serão processados.' : '';
-  if (!confirm('Atualizar dados de ' + comSbb.length + ' animal(is) via ABCCC?' + avisoLote)) return;
+  // Achado real (2026-08-30): "apenas os primeiros 30 serão processados" travava o resto
+  // do plantel pra sempre — não tinha como rodar de novo pra pegar os demais, o corte era
+  // fixo na mesma fatia. Cada animal já é uma chamada separada à Edge Function (sem risco
+  // de timeout tipo o da Análise de Sangues), então processa a lista inteira — só avisa
+  // quanto tempo vai levar, já que o intervalo de 1.5s entre chamadas soma pra manadas grandes.
+  const minutosEstimados = Math.ceil(comSbb.length * 2 / 60);
+  const avisoTempo = comSbb.length > 30 ? `\n\nIsso deve levar uns ${minutosEstimados} minuto(s) — mantenha essa aba aberta até terminar.` : '';
+  if (!confirm('Atualizar dados de ' + comSbb.length + ' animal(is) via ABCCC?' + avisoTempo)) return;
 
-  const alvo = comSbb.slice(0, LOTE_MAX);
+  const alvo = comSbb;
 
   // Controle visual do botão
   const btn = document.getElementById('btn-abccc-update');
