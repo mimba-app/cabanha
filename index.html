@@ -6543,30 +6543,34 @@ function _renderVacObrigatorias() {
     alertas.push({
       t:'a', ico:_iconVacina(14),
       msg:`<strong>Influenza Equina</strong> — ${semInfluenza.length} animal(is) sem vacina ou a vencer (≤30d)`,
-      nomes: semInfluenza.map(a=>a.nome).join(', '),
+      nomesLista: semInfluenza.map(a=>a.nome),
       proto:'influenza'
     });
   if(semLepto.length)
     alertas.push({
       t:'r', ico:_iconVacina(14),
       msg:`<strong>Leptospirose</strong> — ${semLepto.length} égua(s) prenhe(s) sem vacinação registrada`,
-      nomes: semLepto.map(a=>a.nome).join(', '),
+      nomesLista: semLepto.map(a=>a.nome),
       proto:'leptospirose'
     });
 
   if(!alertas.length) { el.innerHTML=''; return; }
 
+  // Achado real (2026-08-30): com manada grande (420 animais), a lista de nomes de uma
+  // pendência vira uma parede de texto (dezenas de nomes soltos) — trava em 2 linhas por
+  // padrão (CSS line-clamp) com um link pra expandir, em vez de despejar tudo sempre aberto.
   el.innerHTML = `
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;border:0.5px solid var(--border2);margin-bottom:4px">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">
         ⚠️ Vacinas obrigatórias com pendências
       </div>
-      ${alertas.map(a=>`
+      ${alertas.map((a,i)=>`
         <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
           <span style="font-size:18px;flex-shrink:0">${a.ico}</span>
-          <div style="flex:1">
+          <div style="flex:1;min-width:0">
             <div style="font-size:12px">${a.msg}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${a.nomes}</div>
+            <div id="vacobrig-nomes-${i}" style="font-size:11px;color:var(--text3);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${a.nomesLista.join(', ')}</div>
+            ${a.nomesLista.length > 8 ? `<span id="vacobrig-toggle-${i}" data-qtd="${a.nomesLista.length}" onclick="_toggleVacObrigNomes(${i})" style="font-size:11px;color:var(--blue-d);cursor:pointer;font-weight:600">ver todos (${a.nomesLista.length})</span>` : ''}
           </div>
           <button class="btn btn-sm" style="white-space:nowrap;background:var(--green-l);color:var(--green-d);border-color:var(--green)"
             onclick="aplicarProtocolo('${a.proto}');document.getElementById('kvac-busca').value='';abrirModalVac()">
@@ -6574,6 +6578,15 @@ function _renderVacObrigatorias() {
           </button>
         </div>`).join('')}
     </div>`;
+}
+
+function _toggleVacObrigNomes(i) {
+  const el = document.getElementById('vacobrig-nomes-'+i);
+  const toggle = document.getElementById('vacobrig-toggle-'+i);
+  if(!el || !toggle) return;
+  const estaExpandido = el.style.webkitLineClamp === 'unset';
+  el.style.webkitLineClamp = estaExpandido ? '2' : 'unset';
+  toggle.textContent = estaExpandido ? `ver todos (${toggle.dataset.qtd})` : 'ver menos';
 }
 
 function renderKanbanExam() {
