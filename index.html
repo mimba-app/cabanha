@@ -11405,7 +11405,9 @@ function _acEguasAtivas() {
   return animais.filter(a => a.sexo === 'Fêmea' && isNaCabanha(a));
 }
 function _acFontesAtivas() {
-  return fontesCobertura.filter(f => f.status === 'ativa' && _saldoFonteCobertura(f).disponivel > 0);
+  // embriao fica de fora -- não é fonte pra uma cobertura nova, é genética já fechada que só
+  // precisa de receptora (fluxo próprio: "Atribuir embrião" no card da receptora).
+  return fontesCobertura.filter(f => f.status === 'ativa' && f.tipo !== 'embriao' && _saldoFonteCobertura(f).disponivel > 0);
 }
 
 // Reprodutivo v4, Fase 8 (spec 3b): entrada padrão passou a ser a tela de duas colunas
@@ -12057,6 +12059,26 @@ function renderAcasalamentosMatch() {
   _jaConselhoRender();
 }
 
+// Achado real (2026-08-30): embrião aparecia na coluna "Garanhões / Fontes" do Cruzamentos
+// (modo rápido e inteligência) como se fosse uma fonte disponível pra uma cobertura nova —
+// mas um embrião já tem a genética fechada (doadora × garanhão), só falta achar receptora,
+// e isso já tem fluxo próprio ("Atribuir embrião" no card da receptora, no Planejador).
+// Some daqui; e quando a doadora já tem embrião deste ciclo, o card dela na coluna Éguas
+// mostra isso em vez de um "Acasalada" genérico que escondia a receptora.
+function _matchEguaInfo(a, ciclo) {
+  const ac = acasalamentos.find(x => String(x.egua_id) === String(a.db_id) && x.ciclo === ciclo && x.status !== 'cancelado');
+  if (!ac) return { jaTem: false, badge: '', info: a.sbb ? 'SBB ' + a.sbb : 'sem SBB' };
+  if (ac.receptora_animal_id) {
+    const receptora = animais.find(x => String(x.db_id) === String(ac.receptora_animal_id));
+    return {
+      jaTem: true,
+      badge: ' <span class="badge bg" style="font-size:9px">Embrião</span>',
+      info: receptora ? `na receptora <strong>${receptora.nome}</strong>` : (a.sbb ? 'SBB ' + a.sbb : 'sem SBB'),
+    };
+  }
+  return { jaTem: true, badge: ' <span class="badge bg" style="font-size:9px">Acasalada</span>', info: a.sbb ? 'SBB ' + a.sbb : 'sem SBB' };
+}
+
 // MODO RÁPIDO — tela clássica de duas colunas (fontes × éguas disponíveis no ciclo do
 // Planejador), clique-clique pra ligar. Sinaliza (esmaece, sem remover) fonte sem saldo ou
 // égua já com match feito nesse ciclo, em vez de escondê-las. Ao escolher os dois lados, abre
@@ -12067,7 +12089,7 @@ function _acMatchRapidoRender() {
   const cicloLabel = document.getElementById('ac-match-ciclo-label');
   if (cicloLabel) cicloLabel.textContent = ciclo;
 
-  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada' && f.tipo !== 'embriao');
   const elF = document.getElementById('ac-match-fontes');
   if (elF) {
     elF.innerHTML = fontes.length ? fontes.map(f => {
@@ -12086,10 +12108,10 @@ function _acMatchRapidoRender() {
   const elE = document.getElementById('ac-match-eguas');
   if (elE) {
     elE.innerHTML = eguas.length ? eguas.map(a => {
-      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      const { jaTem, badge, info } = _matchEguaInfo(a, ciclo);
       return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_acMatchSelecionarEgua('${a.db_id}')"`}>
-        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
-        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+        <div class="kanban-card-nome">${a.nome}${badge}</div>
+        <div class="kanban-card-info">${info}</div>
       </div>`;
     }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
   }
@@ -12135,10 +12157,10 @@ function _jaConselhoRender() {
   const elLista = document.getElementById('ja-eguas-lista');
   if (elLista) {
     elLista.innerHTML = eguas.length ? eguas.map(a => {
-      const jaTem = acasalamentos.some(ac => String(ac.egua_id) === String(a.db_id) && ac.ciclo === ciclo && ac.status !== 'cancelado');
+      const { jaTem, badge, info } = _matchEguaInfo(a, ciclo);
       return `<div class="kanban-card" style="cursor:${jaTem ? 'default' : 'pointer'};opacity:${jaTem ? 0.45 : 1}" ${jaTem ? '' : `onclick="_jaEscolherEgua('${a.db_id}')"`}>
-        <div class="kanban-card-nome">${a.nome}${jaTem ? ' <span class="badge bg" style="font-size:9px">Acasalada</span>' : ''}</div>
-        <div class="kanban-card-info">${a.sbb ? 'SBB ' + a.sbb : 'sem SBB'}</div>
+        <div class="kanban-card-nome">${a.nome}${badge}</div>
+        <div class="kanban-card-info">${info}</div>
       </div>`;
     }).join('') : '<div class="kanban-empty">Nenhuma égua com estágio "Cria" cadastrada.</div>';
   }
@@ -12264,7 +12286,7 @@ function _jaScoreSaldo(fonte) {
 async function _jaAnalisar() {
   const egua = animais.find(a => String(a.db_id) === String(window._jaEguaId));
   const ciclo = window._cicloPlanejador || _cicloAtualTexto();
-  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada');
+  const fontes = fontesCobertura.filter(f => f.ciclo === ciclo && f.status !== 'cancelada' && f.tipo !== 'embriao');
   if (!egua || !fontes.length) { alert('Nenhuma fonte de cobertura cadastrada neste ciclo. Cadastre em "Garanhões e Coberturas".'); return; }
 
   window._jaFase = 1;
