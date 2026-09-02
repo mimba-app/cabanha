@@ -19,6 +19,28 @@ function resp(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
+// Achado real (2026-09-01): o GA4 registrou um "lead_submit" (o frontend só
+// dispara isso depois de {sucesso:true}) mas a linha correspondente nunca
+// existiu em public.leads — e o log da Edge Function já tinha expirado (janela
+// de 24h) quando fomos investigar, então não deu pra recuperar nem diagnosticar
+// a causa raiz. Daqui pra frente, qualquer falha em qualquer etapa (rate-limit,
+// payload, insert) grava em public.leads_erros (mesmo padrão de leads: RLS on,
+// zero grant, só service_role) — nunca mais silenciosa, mesmo que o log de
+// runtime da function já tenha expirado quando alguém for olhar.
+async function logErro(
+  supa: ReturnType<typeof createClient>,
+  etapa: string,
+  erro: string,
+  campos: Record<string, unknown> = {},
+) {
+  try {
+    await supa.from("leads_erros").insert({ etapa, erro: String(erro).slice(0, 2000), ...campos });
+  } catch (_) {
+    // Se até o log de erro falhar, não tem mais rede de segurança — mas pelo
+    // menos não deixa isso quebrar a resposta ao visitante.
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return resp(405, { erro: "metodo" });
@@ -30,25 +52,54 @@ Deno.serve(async (req: Request) => {
   // Rate-limit por IP — 5 tentativas / 60min (mais folgado que o checkout,
   // mas ainda protege contra bot enchendo a tabela).
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "desconhecido";
-  const { data: liberado } = await supa.rpc("checar_rate_limit", { p_chave: `capturar-lead:${ip}`, p_limite: 5, p_janela_minutos: 60 });
+  const { data: liberado, error: errRate } = await supa.rpc("checar_rate_limit", { p_chave: `capturar-lead:${ip}`, p_limite: 5, p_janela_minutos: 60 });
+  if (errRate) {
+    // Bug corrigido aqui: antes o erro da própria checagem de rate-limit era
+    // ignorado, e `liberado` indefinido caía direto no bloqueio de "muitas
+    // tentativas" — escondendo um problema real (RPC fora do ar, etc.) atrás
+    // de uma mensagem de rate-limit enganosa, sem deixar rastro nenhum.
+    await logErro(supa, "rate_limit", errRate.message, { origem: "capturar-lead", pagina_url: null });
+    return resp(500, { erro: "Falha ao registrar. Tente novamente." });
+  }
   if (liberado !== true) return resp(429, { erro: "Muitas tentativas. Tente novamente mais tarde." });
 
   let body: any;
-  try { body = await req.json(); } catch { return resp(400, { erro: "payload" }); }
+  try { body = await req.json(); } catch {
+    await logErro(supa, "payload", "corpo da requisição não é JSON válido");
+    return resp(400, { erro: "payload" });
+  }
   const { nome, contato, origem, pagina_url, utm_source, utm_medium, utm_campaign } = body;
-  if (!nome || !contato) return resp(400, { erro: "Preencha nome e contato." });
-  if (String(nome).length > 200 || String(contato).length > 200) return resp(400, { erro: "Campo muito longo." });
-
-  const { error } = await supa.from("leads").insert({
-    nome: String(nome).trim(),
-    contato: String(contato).trim(),
+  const campos = {
+    nome: nome ? String(nome).slice(0, 200) : null,
+    contato: contato ? String(contato).slice(0, 200) : null,
     origem: origem ? String(origem).slice(0, 100) : "landing",
     pagina_url: pagina_url ? String(pagina_url).slice(0, 500) : null,
     utm_source: utm_source ? String(utm_source).slice(0, 200) : null,
     utm_medium: utm_medium ? String(utm_medium).slice(0, 200) : null,
     utm_campaign: utm_campaign ? String(utm_campaign).slice(0, 200) : null,
+  };
+  if (!nome || !contato) {
+    await logErro(supa, "validacao", "nome ou contato ausente", campos);
+    return resp(400, { erro: "Preencha nome e contato." });
+  }
+  if (String(nome).length > 200 || String(contato).length > 200) {
+    await logErro(supa, "validacao", "campo muito longo", campos);
+    return resp(400, { erro: "Campo muito longo." });
+  }
+
+  const { error } = await supa.from("leads").insert({
+    nome: String(nome).trim(),
+    contato: String(contato).trim(),
+    origem: campos.origem,
+    pagina_url: campos.pagina_url,
+    utm_source: campos.utm_source,
+    utm_medium: campos.utm_medium,
+    utm_campaign: campos.utm_campaign,
   });
-  if (error) return resp(500, { erro: "Falha ao registrar. Tente novamente." });
+  if (error) {
+    await logErro(supa, "insert", error.message, campos);
+    return resp(500, { erro: "Falha ao registrar. Tente novamente." });
+  }
 
   return resp(200, { sucesso: true });
 });
