@@ -2685,8 +2685,16 @@
             <img id="conta-logo-preview" alt="" style="display:none">
             <svg id="conta-logo-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
           </div>
+          <!-- Achado real (crash reportado pela revisão da Apple, 2026-09-12, iPad Air 11"
+               ao tocar "Take Photo"): inputs de arquivo com display:none não têm bounding
+               rect (offsetWidth/Height = 0), e o iPadOS apresenta o picker de câmera como
+               popover ancorado nesse rect — rect zerado derruba o app com
+               NSInternalInconsistencyException. No iPhone passa despercebido (apresentação
+               full-screen, sem popover). Todos os <input type="file"> do arquivo usam o
+               padrão "visualmente oculto mas com 1x1px de layout" abaixo em vez de
+               display:none, pelo mesmo motivo. -->
           <label class="btn-outline" style="cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="display:none" onchange="_onLogoFileSelect(event)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar logo<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="_onLogoFileSelect(event)">
           </label>
         </div>
         <div class="form-grid">
@@ -2801,7 +2809,7 @@
             <svg id="perfil-foto-placeholder" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
           </div>
           <label class="btn-outline" style="cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="display:none" onchange="_onFotoPerfilFileSelect(event)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg> Trocar foto<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="_onFotoPerfilFileSelect(event)">
           </label>
         </div>
         <div class="form-grid">
@@ -3277,7 +3285,7 @@
           <div style="font-size:13px;color:var(--text2)" id="midia-drop-label">Toque ou arraste foto aqui</div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG, WebP · máx 5MB</div>
         </div>
-        <input type="file" id="midia-file-input" accept="image/*,video/*" style="display:none" onchange="_onMidiaFileSelect(event)">
+        <input type="file" id="midia-file-input" accept="image/*,video/*" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="_onMidiaFileSelect(event)">
         <div id="midia-preview" style="display:none;margin-top:10px;text-align:center">
           <img id="midia-preview-img" style="max-width:100%;max-height:200px;border-radius:10px;border:1px solid var(--border)" src="">
           <div id="midia-preview-video-label" style="display:none;font-size:12px;color:var(--text2);margin-top:4px"></div>
@@ -3424,7 +3432,7 @@
           <span style="font-weight:400;text-transform:none;font-size:10px;color:var(--text3)">— opcional · PDF ou imagem · múltiplos</span>
         </label>
         <input type="file" id="rv-laudo-input" accept=".pdf,image/*" multiple
-          style="display:none" onchange="rvAnexosAdd(this)">
+          style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="rvAnexosAdd(this)">
         <label for="rv-laudo-input" class="laudo-dropzone" id="rv-dropzone"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
@@ -3562,7 +3570,7 @@
     <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem">
       <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">📎 Laudo Digital</div>
       <input type="file" id="aie-laudo-input" accept=".pdf,image/*"
-        style="display:none" onchange="aieLaudoSelecionado(this)">
+        style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="aieLaudoSelecionado(this)">
       <label for="aie-laudo-input" class="laudo-dropzone" id="aie-laudo-dropzone"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
         ondragleave="this.classList.remove('drag-over')"
@@ -3606,7 +3614,7 @@
           <span style="font-weight:400;text-transform:none;font-size:10px;color:var(--text3)">— opcional · PDF ou imagem · múltiplos</span>
         </label>
         <input type="file" id="re-laudo-input" accept=".pdf,image/*" multiple
-          style="display:none" onchange="exameLaudoSelecionado(this)">
+          style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="exameLaudoSelecionado(this)">
         <label for="re-laudo-input" class="laudo-dropzone" id="laudo-dropzone"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
@@ -3859,7 +3867,7 @@
         <label>Foto <span style="font-weight:400;font-size:10px;color:var(--text3)"> — opcional, até 5MB</span></label>
         <div style="display:flex;align-items:center;gap:10px">
           <img id="nfoto-preview" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:none;border:0.5px solid var(--border)">
-          <label class="btn btn-sm" style="cursor:pointer">📷 Escolher foto<input type="file" accept="image/*" style="display:none" onchange="_animalFotoSelect(event,'nfoto-preview','nfoto-b64')"></label>
+          <label class="btn btn-sm" style="cursor:pointer">📷 Escolher foto<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="_animalFotoSelect(event,'nfoto-preview','nfoto-b64')"></label>
           <button class="btn btn-sm" id="nfoto-remover" style="display:none" onclick="_animalFotoRemover('nfoto-preview','nfoto-b64')">Remover</button>
         </div>
         <input type="hidden" id="nfoto-b64" value="">
@@ -3941,7 +3949,7 @@
       <textarea id="import-sbb-textarea" rows="9" style="width:100%;font-family:var(--mono);font-size:12px;padding:10px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);resize:vertical" placeholder="B649459&#10;B712233&#10;B998877&#10;..."></textarea>
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
         <label class="btn btn-sm" style="cursor:pointer">
-          📁 Carregar arquivo (.txt/.csv)<input type="file" accept=".txt,.csv" style="display:none" onchange="_onImportSbbFileSelect(event)">
+          📁 Carregar arquivo (.txt/.csv)<input type="file" accept=".txt,.csv" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="_onImportSbbFileSelect(event)">
         </label>
         <span id="import-sbb-arquivo-nome" style="font-size:11px;color:var(--text3)"></span>
       </div>
@@ -6681,7 +6689,7 @@ function _renderDetCorpo(i, editando) {
         <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Foto</label>
         <div style="display:flex;align-items:center;gap:10px">
           <img id="ed-foto-preview" src="${a.foto_url||''}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:${a.foto_url?'':'none'};border:0.5px solid var(--border)">
-          <label class="btn btn-sm" style="cursor:pointer">📷 Escolher foto<input type="file" accept="image/*" style="display:none" onchange="_animalFotoSelect(event,'ed-foto-preview','ed-foto-b64')"></label>
+          <label class="btn btn-sm" style="cursor:pointer">📷 Escolher foto<input type="file" accept="image/*" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px" onchange="_animalFotoSelect(event,'ed-foto-preview','ed-foto-b64')"></label>
           <button class="btn btn-sm" id="ed-foto-remover" style="display:${a.foto_url?'':'none'}" onclick="_animalFotoRemover('ed-foto-preview','ed-foto-b64')">Remover</button>
         </div>
         <input type="hidden" id="ed-foto-b64" value="${a.foto_url||''}">
