@@ -14141,8 +14141,11 @@ function abrirTelaConta(abaAlvo) {
   const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
   const usrBtn = document.querySelector('#page-conta .tab-row .tab[onclick*="conta-tab-usuarios"]');
   if (usrBtn) usrBtn.style.display = isAdm ? '' : 'none';
+  // Faturamento (troca de plano/cartão via Asaas) some no app nativo — regra 3.1.1 da
+  // Apple exige que compra de assinatura dentro do app passe pela In-App Purchase deles;
+  // gestão de assinatura continua disponível pelo site (mimba.com.br).
   const fatBtn = document.getElementById('conta-tab-btn-faturamento');
-  if (fatBtn) fatBtn.style.display = isAdm ? '' : 'none';
+  if (fatBtn) fatBtn.style.display = (isAdm && !window.Capacitor) ? '' : 'none';
 
   if (alvo === 'conta-tab-perfil')       carregarMeuPerfil();
   if (alvo === 'conta-tab-preferencias') carregarPreferenciasSistema();
@@ -14165,7 +14168,7 @@ function _toggleDropdownConta(ev) {
     document.getElementById('cdh-email-usuario').textContent = usuarioAtual?.email || '—';
     const isAdm = usuarioAtual?.perfil === 'adm' || usuarioAtual?.perfil === 'admin';
     const fatItem = document.getElementById('cdi-faturamento');
-    if (fatItem) fatItem.style.display = isAdm ? '' : 'none';
+    if (fatItem) fatItem.style.display = (isAdm && !window.Capacitor) ? '' : 'none';
     // Fechar ao clicar fora
     setTimeout(() => document.addEventListener('click', _fecharDropdownConta, { once: true }), 0);
   }
