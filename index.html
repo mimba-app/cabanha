@@ -7011,6 +7011,16 @@ async function salvarEdicaoAnimal() {
   _mostrarStatusSync('✅ Animal atualizado', 'green');
 }
 
+// A ABCCC reformulou o site de pesquisa e passou a exigir verificação humana
+// (reCAPTCHA) antes de aceitar uma busca — a busca automática por SBB fica
+// indisponível até a ABCCC abrir uma via oficial (não dá pra contornar
+// reCAPTCHA a partir do servidor). A edge function `buscar-abccc` sinaliza
+// isso com `indisponivel:true`; essa mensagem evita que o usuário confunda
+// "integração fora do ar" com "animal não encontrado na ABCCC".
+function _abcccIndisponivelMsg() {
+  return `<span style="color:var(--amber-d)">⚠️ Busca automática na ABCCC indisponível no momento — o site deles mudou e passou a exigir verificação humana. Preencha manualmente por enquanto.</span>`;
+}
+
 // Busca ABCCC via proxy CORS e preenche campos de edição
 
 // ── BUSCA ABCCC VIA EDGE FUNCTION SUPABASE ───────────────────────────────────
@@ -7090,6 +7100,8 @@ async function _buscarAbccc(ctx) {
     if (statEl) {
       statEl.innerHTML = `<span style="color:var(--green-d)">✅ ${campos} campo(s) preenchido(s) automaticamente a partir do ABCCC. Revise e salve.</span>`;
     }
+  } else if (dados?.indisponivel) {
+    if (statEl) statEl.innerHTML = _abcccIndisponivelMsg();
   } else if (dados?.encontrado === 'nao') {
     if (statEl) {
       statEl.innerHTML = `<span style="color:var(--amber-d)">⚠️ SBB <strong>${sbb}</strong> não encontrado no registro ABCCC. Preencha os dados manualmente.</span>`;
@@ -7556,6 +7568,8 @@ async function _buscarAbcccParaFonte() {
     const nomeEl = document.getElementById('fc-garanhao-nome');
     if (nomeEl && !nomeEl.value.trim()) nomeEl.value = dados.nome || '';
     if (statEl) statEl.innerHTML = `<span style="color:var(--green-d)">✅ Encontrado: ${dados.nome || sbb}. Revise e salve.</span>`;
+  } else if (dados?.indisponivel) {
+    if (statEl) statEl.innerHTML = _abcccIndisponivelMsg();
   } else if (dados?.encontrado === 'nao') {
     if (statEl) statEl.innerHTML = `<span style="color:var(--amber-d)">⚠️ SBB <strong>${sbb}</strong> não encontrado no registro ABCCC. Preencha o nome manualmente.</span>`;
   } else if (statEl) {
@@ -7621,6 +7635,8 @@ async function _buscarAbcccParaReceptora() {
     if (dados.pelagem) document.getElementById('nr-pel').value = dados.pelagem;
     if (dados.nasc) document.getElementById('nr-nasc').value = dados.nasc;
     if (statEl) statEl.innerHTML = `<span style="color:var(--green-d)">✅ Encontrada: ${dados.nome || sbb}. Revise e salve.</span>`;
+  } else if (dados?.indisponivel) {
+    if (statEl) statEl.innerHTML = _abcccIndisponivelMsg();
   } else if (dados?.encontrado === 'nao') {
     if (statEl) statEl.innerHTML = `<span style="color:var(--amber-d)">⚠️ SBB <strong>${sbb}</strong> não encontrado no registro ABCCC. Preencha o nome manualmente.</span>`;
   } else if (statEl) {
@@ -7936,6 +7952,7 @@ async function _buscarUmSbbParaImport(sbb){
       { headers: { 'apikey': SUPABASE_KEY }, signal: AbortSignal.timeout(15000) });
     if(!res.ok) return { sbb, ok:false, motivo:'Erro de comunicação' };
     const d = await res.json();
+    if(d.indisponivel) return { sbb, ok:false, motivo:'Busca ABCCC indisponível no momento (site deles exige verificação humana)' };
     if(d.encontrado !== 'sim') return { sbb, ok:false, motivo:'Não encontrado na ABCCC' };
     return { sbb, ok:true, dados: d };
   } catch(e) {
@@ -10931,6 +10948,20 @@ async function _atualizarTodosAbccc() {
       if (!res.ok) { console.log('[ABCCC] HTTP', res.status, a.nome); erros++; continue; }
       const d = await res.json();
       console.log('[ABCCC]', a.nome, d?.encontrado, d?.situacao||'');
+      // A busca inteira depende do mesmo site da ABCCC — se o primeiro animal
+      // já volta "indisponível" (reCAPTCHA bloqueando), todos os próximos vão
+      // dar o mesmo resultado. Sem esse corte, o usuário ficava esperando
+      // minutos só pra ver "0 atualizados" no final, martelando o site deles
+      // à toa pra cada animal do plantel.
+      if (d?.indisponivel) {
+        window.removeEventListener('beforeunload', avisarSair);
+        if (iconEl) { iconEl.classList.remove('abccc-spin'); iconEl.innerHTML = '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>'; }
+        if (fillEl) fillEl.style.width = '0%';
+        if (labelEl) labelEl.textContent = 'Atualizar ABCCC';
+        if (btn) { btn.disabled = false; btn.style.borderColor = ''; btn.style.color = ''; }
+        _mostrarStatusSync('⚠️ ABCCC: busca automática indisponível no momento — o site deles mudou e passou a exigir verificação humana. Preencha manualmente por enquanto.', 'amber');
+        return;
+      }
       if (d?.encontrado !== 'sim') { erros++; continue; }
       // Proteção crítica contra animal errado:
       // 1. Se a ABCCC retornou um SBB diferente do enviado → ignorar
